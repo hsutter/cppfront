@@ -1171,8 +1171,8 @@ basic_enum: (
     (copy to_string: std::string = "    to_string: (this) -> std::string = { \n")
     {
         if bitwise {
-            to_string += "    _ret   : std::string = \"(\";\n"
-                         "    _comma : std::string = ();\n"
+            to_string += "    _ret : std::string = \"(\";\n"
+                         "    _or  : std::string = ();\n"
                          "    if this == none { return \"(none)\"; }\n";
         }
 
@@ -1182,7 +1182,7 @@ basic_enum: (
                 if bitwise {
                     if e.name != "none" {
                         to_string += "    if (this & (e.name)$) == (e.name)$ { "
-                                             "_ret += _comma + \"(e.name)$\"; _comma = \", \"; "
+                                             "_ret += _or + \"(e.name)$\"; _or = \" | \"; "
                                          "}\n";
                     }
                 }
@@ -1215,6 +1215,7 @@ basic_enum: (
             combine_op  = "ret |=";
 
             from_string += "        ret := none;\n"
+                           "        outer: do {\n"
                            "        for cpp2::string_util::split_string_list(s) do (x) {\n";
         }
         //  Otherwise, accept just a single string
@@ -1230,9 +1231,10 @@ basic_enum: (
         }
 
         if bitwise {
-            from_string += "            else { break; }\n"
+            from_string += "            else { break outer; }\n"
                            "        }\n"
-                           "        return ret;";
+                           "        return ret;\n"
+                           "        } while false;\n";
         }
 
         from_string += "        cpp2::type_safety.report_violation( (\"can't convert string '\" + cpp2::to_string(s) + \"' to (prefix)$enum of type (t.name())$\").c_str() );\n"

@@ -264,30 +264,36 @@ constexpr auto file_attributes::operator=(file_attributes&& that) noexcept -> fi
 
 std::string _ret {"("}; 
 
-std::string _comma {}; 
+std::string _or {}; 
 if ((*this) == none) {return "(none)"; }
-if (((*this) & cached) == cached) {_ret += _comma + "cached";_comma = ", ";}
-if (((*this) & current) == current) {_ret += _comma + "current";_comma = ", ";}
-if (((*this) & obsolete) == obsolete) {_ret += _comma + "obsolete";_comma = ", ";}
-if (((*this) & cached_and_current) == cached_and_current) {_ret += _comma + "cached_and_current";_comma = ", ";}
+if (((*this) & cached) == cached) {_ret += _or + "cached";_or = " | ";}
+if (((*this) & current) == current) {_ret += _or + "current";_or = " | ";}
+if (((*this) & obsolete) == obsolete) {_ret += _or + "obsolete";_or = " | ";}
+if (((*this) & cached_and_current) == cached_and_current) {_ret += _or + "cached_and_current";_or = " | ";}
 return cpp2::move(_ret) + ")"; 
 }
 
 [[nodiscard]] auto file_attributes::from_string(cpp2::impl::in<std::string_view> s) -> file_attributes{
 
 auto ret {none}; 
+do {{
 for ( auto const& x : cpp2::string_util::split_string_list(s) ) {
 if ("cached" == x) {ret |= cached;}
 else {if ("current" == x) {ret |= current;}
 else {if ("obsolete" == x) {ret |= obsolete;}
 else {if ("cached_and_current" == x) {ret |= cached_and_current;}
 else {if ("none" == x) {ret |= none;}
-else {break;}
+else {goto BREAK_outer;}
 #line 1 "pure2-enum.cpp2"
 }}}}
 }
 
-return ret; CPP2_UFCS(report_violation)(cpp2::type_safety, CPP2_UFCS(c_str)(("can't convert string '" + cpp2::to_string(s) + "' to flag_enum of type file_attributes")));
+return ret; 
+} CPP2_CONTINUE_BREAK(outer) }
+ while ( 
+false
+);
+CPP2_UFCS(report_violation)(cpp2::type_safety, CPP2_UFCS(c_str)(("can't convert string '" + cpp2::to_string(s) + "' to flag_enum of type file_attributes")));
 return none; 
 }
 

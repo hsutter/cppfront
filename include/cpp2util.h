@@ -375,36 +375,27 @@ using _uchar     = unsigned char;    // normally use u8 instead
 
 namespace string_util {
 
-//  Break a string_view that could be a single string or a parenthesized 
-//  and comma/whitepace delimited list of strings into a vector of views
+//  Break a string_view into a vector of views of simple qidentifier
+//  substrings separated by other characters
 auto split_string_list(std::string_view str)
     -> std::vector<std::string_view>
 {
     std::vector<std::string_view> ret;
 
-    //  Remove leading '(' and trailing ')' if present
-    if (!str.empty() && str.front() == '(') {
-        str.remove_prefix(1);
-    }
-    if (!str.empty() && str.back() == ')') {
-        str.remove_suffix(1);
-    }
-
-    auto pos = 0;
-    
-    auto at_delimiter = [&]{ 
-        return std::isspace(str[pos]) || str[pos] == ',';
+    auto is_id_char = [](char c) { 
+        return std::isalnum(c) || c == '_';
     };
 
+    auto pos = 0;
     while( pos < std::ssize(str) ) {
-        //  Skip spaces and commas
-        while (pos < std::ssize(str) && at_delimiter()) {
+        //  Skip non-alnum
+        while (pos < std::ssize(str) && !is_id_char(str[pos])) {
             ++pos;
         }
         auto start = pos;
 
         //  Find the end of the current component
-        while (pos < std::ssize(str) && !at_delimiter()) {
+        while (pos < std::ssize(str) && is_id_char(str[pos])) {
             ++pos;
         }
 

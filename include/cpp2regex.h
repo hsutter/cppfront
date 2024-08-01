@@ -1545,20 +1545,21 @@ constexpr auto expression_flags::operator=(expression_flags&& that) noexcept -> 
 
 std::string _ret {"("}; 
 
-std::string _comma {}; 
+std::string _or {}; 
 if ((*this) == none) {return "(none)"; }
-if (((*this) & case_insensitive) == case_insensitive) {_ret += _comma + "case_insensitive";_comma = ", ";}
-if (((*this) & multiple_lines) == multiple_lines) {_ret += _comma + "multiple_lines";_comma = ", ";}
-if (((*this) & single_line) == single_line) {_ret += _comma + "single_line";_comma = ", ";}
-if (((*this) & no_group_captures) == no_group_captures) {_ret += _comma + "no_group_captures";_comma = ", ";}
-if (((*this) & perl_code_syntax) == perl_code_syntax) {_ret += _comma + "perl_code_syntax";_comma = ", ";}
-if (((*this) & perl_code_syntax_in_classes) == perl_code_syntax_in_classes) {_ret += _comma + "perl_code_syntax_in_classes";_comma = ", ";}
+if (((*this) & case_insensitive) == case_insensitive) {_ret += _or + "case_insensitive";_or = " | ";}
+if (((*this) & multiple_lines) == multiple_lines) {_ret += _or + "multiple_lines";_or = " | ";}
+if (((*this) & single_line) == single_line) {_ret += _or + "single_line";_or = " | ";}
+if (((*this) & no_group_captures) == no_group_captures) {_ret += _or + "no_group_captures";_or = " | ";}
+if (((*this) & perl_code_syntax) == perl_code_syntax) {_ret += _or + "perl_code_syntax";_or = " | ";}
+if (((*this) & perl_code_syntax_in_classes) == perl_code_syntax_in_classes) {_ret += _or + "perl_code_syntax_in_classes";_or = " | ";}
 return cpp2::move(_ret) + ")"; 
 }
 
 [[nodiscard]] auto expression_flags::from_string(cpp2::impl::in<std::string_view> s) -> expression_flags{
 
 auto ret {none}; 
+do {{
 for ( auto const& x : cpp2::string_util::split_string_list(s) ) {
 if ("case_insensitive" == x) {ret |= case_insensitive;}
 else {if ("multiple_lines" == x) {ret |= multiple_lines;}
@@ -1567,11 +1568,16 @@ else {if ("no_group_captures" == x) {ret |= no_group_captures;}
 else {if ("perl_code_syntax" == x) {ret |= perl_code_syntax;}
 else {if ("perl_code_syntax_in_classes" == x) {ret |= perl_code_syntax_in_classes;}
 else {if ("none" == x) {ret |= none;}
-else {break;}
+else {goto BREAK_outer;}
 #line 1 "cpp2regex.h2"
 }}}}}}
 }
 
+return ret; 
+} CPP2_CONTINUE_BREAK(outer) }
+ while ( 
+false
+);
 CPP2_UFCS(report_violation)(cpp2::type_safety, CPP2_UFCS(c_str)(("can't convert string '" + cpp2::to_string(s) + "' to flag_enum of type expression_flags")));
 return none; 
 }
