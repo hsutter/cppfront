@@ -1167,13 +1167,18 @@ basic_enum: (
     t.add_member( "    operator=         : (out this, that) == { }");
     t.add_member( "    operator<=>       : (this, that) -> std::strong_ordering;");
 
-    //  Provide a 'to_string' function to print enumerator name(s)
-    (copy to_string: std::string = "    to_string: (this) -> std::string = { \n")
+    //  Provide 'to_string' and 'to_code' functions to print enumerator
+    //  name(s) as human-readable strings or as code expressions
+    (copy to_string_impl: std::string = "    to_string_impl: (this, prefix: std::string_view")
     {
         if bitwise {
-            to_string += "    _ret : std::string = \"(\";\n"
-                         "    _or  : std::string = ();\n"
-                         "    if this == none { return \"(none)\"; }\n";
+            to_string_impl += ", separator: std::string_view ) -> std::string = { \n"
+                              "    ret : std::string = \"(\";\n"
+                              "    sep : std::string = ();\n"
+                              "    if this == none { return \"(none)\"; }\n";
+        }
+        else {
+            to_string_impl += ") -> std::string = { \n";
         }
 
         for  enumerators
@@ -1181,25 +1186,34 @@ basic_enum: (
             if e.name != "_" {  // ignore unnamed values
                 if bitwise {
                     if e.name != "none" {
-                        to_string += "    if (this & (e.name)$) == (e.name)$ { "
-                                             "_ret += _or + \"(e.name)$\"; _or = \" | \"; "
-                                         "}\n";
+                        to_string_impl += "    if (this & (e.name)$) == (e.name)$ { "
+                                                  "ret += sep + cpp2::to_string(prefix) + \"(e.name)$\"; sep = separator; "
+                                              "}\n";
                     }
                 }
                 else {
-                    to_string += "    if this == (e.name)$ { return \"(e.name)$\"; }\n";
+                    to_string_impl += "    if this == (e.name)$ { return cpp2::to_string(prefix) + \"(e.name)$\"; }\n";
                 }
             }
         }
 
         if bitwise {
-            to_string += "    return _ret+\")\";\n}\n";
+            to_string_impl += "    return ret+\")\";\n}\n";
         }
         else {
-            to_string += "    return \"invalid (t.name())$ value\";\n}\n";
+            to_string_impl += "    return \"invalid (t.name())$ value\";\n}\n";
         }
 
-        t.add_member( to_string );
+        t.add_member( to_string_impl );
+    }
+
+    if bitwise {
+        t.add_member( "    to_string: (this) -> std::string = to_string_impl( \"\", \", \" );" );
+        t.add_member( "    to_code  : (this) -> std::string = to_string_impl( \"(t.name())$::\", \" | \" );" );
+    }
+    else {
+        t.add_member( "    to_string: (this) -> std::string = to_string_impl( \"\" );" );
+        t.add_member( "    to_code  : (this) -> std::string = to_string_impl( \"(t.name())$::\" );" );
     }
 
     //  Provide a 'from_string' function to parse strings into enumerators    
@@ -1243,6 +1257,8 @@ basic_enum: (
 
         t.add_member( from_string );
     }
+
+    t.add_member( "    from_code: (s: std::string_view) -> (t.name())$ = { str: std::string = s; return from_string( cpp2::string_util::replace_all(str, \"(t.name())$::\", \"\" ) ); }" );
 }
 
 

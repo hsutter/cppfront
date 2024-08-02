@@ -211,8 +211,11 @@ public: constexpr auto operator=(expression_flags const& that) -> expression_fla
 public: constexpr expression_flags(expression_flags&& that) noexcept;
 public: constexpr auto operator=(expression_flags&& that) noexcept -> expression_flags& ;
 public: [[nodiscard]] auto operator<=>(expression_flags const& that) const& -> std::strong_ordering = default;
+public: [[nodiscard]] auto to_string_impl(cpp2::impl::in<std::string_view> prefix, cpp2::impl::in<std::string_view> separator) const& -> std::string;
 public: [[nodiscard]] auto to_string() const& -> std::string;
+public: [[nodiscard]] auto to_code() const& -> std::string;
 public: [[nodiscard]] static auto from_string(cpp2::impl::in<std::string_view> s) -> expression_flags;
+public: [[nodiscard]] static auto from_code(cpp2::impl::in<std::string_view> s) -> expression_flags;
 
 #line 55 "cpp2regex.h2"
 };
@@ -1541,21 +1544,23 @@ constexpr expression_flags::expression_flags(expression_flags&& that) noexcept
 constexpr auto expression_flags::operator=(expression_flags&& that) noexcept -> expression_flags& {
                                               _value = std::move(that)._value;
                                               return *this;}
-[[nodiscard]] auto expression_flags::to_string() const& -> std::string{
+[[nodiscard]] auto expression_flags::to_string_impl(cpp2::impl::in<std::string_view> prefix, cpp2::impl::in<std::string_view> separator) const& -> std::string{
 
-std::string _ret {"("}; 
+std::string ret {"("}; 
 
-std::string _or {}; 
+std::string sep {}; 
 if ((*this) == none) {return "(none)"; }
-if (((*this) & case_insensitive) == case_insensitive) {_ret += _or + "case_insensitive";_or = " | ";}
-if (((*this) & multiple_lines) == multiple_lines) {_ret += _or + "multiple_lines";_or = " | ";}
-if (((*this) & single_line) == single_line) {_ret += _or + "single_line";_or = " | ";}
-if (((*this) & no_group_captures) == no_group_captures) {_ret += _or + "no_group_captures";_or = " | ";}
-if (((*this) & perl_code_syntax) == perl_code_syntax) {_ret += _or + "perl_code_syntax";_or = " | ";}
-if (((*this) & perl_code_syntax_in_classes) == perl_code_syntax_in_classes) {_ret += _or + "perl_code_syntax_in_classes";_or = " | ";}
-return cpp2::move(_ret) + ")"; 
+if (((*this) & case_insensitive) == case_insensitive) {ret += sep + cpp2::to_string(prefix) + "case_insensitive";sep = separator;}
+if (((*this) & multiple_lines) == multiple_lines) {ret += sep + cpp2::to_string(prefix) + "multiple_lines";sep = separator;}
+if (((*this) & single_line) == single_line) {ret += sep + cpp2::to_string(prefix) + "single_line";sep = separator;}
+if (((*this) & no_group_captures) == no_group_captures) {ret += sep + cpp2::to_string(prefix) + "no_group_captures";sep = separator;}
+if (((*this) & perl_code_syntax) == perl_code_syntax) {ret += sep + cpp2::to_string(prefix) + "perl_code_syntax";sep = separator;}
+if (((*this) & perl_code_syntax_in_classes) == perl_code_syntax_in_classes) {ret += sep + cpp2::to_string(prefix) + "perl_code_syntax_in_classes";sep = separator;}
+return cpp2::move(ret) + ")"; 
 }
 
+[[nodiscard]] auto expression_flags::to_string() const& -> std::string { return to_string_impl("", ", "); }
+[[nodiscard]] auto expression_flags::to_code() const& -> std::string { return to_string_impl("expression_flags::", " | "); }
 [[nodiscard]] auto expression_flags::from_string(cpp2::impl::in<std::string_view> s) -> expression_flags{
 
 auto ret {none}; 
@@ -1582,6 +1587,8 @@ CPP2_UFCS(report_violation)(cpp2::type_safety, CPP2_UFCS(c_str)(("can't convert 
 return none; 
 }
 
+[[nodiscard]] auto expression_flags::from_code(cpp2::impl::in<std::string_view> s) -> expression_flags{
+std::string str {s}; std::cout << cpp2::string_util::replace_all(str, "expression_flags::", "");return from_string(cpp2::string_util::replace_all(cpp2::move(str), "expression_flags::", "")); }
 template <typename Iter> match_group<Iter>::match_group(auto const& start_, auto const& end_, auto const& matched_)
                                                                  : start{ start_ }
                                                                  , end{ end_ }
