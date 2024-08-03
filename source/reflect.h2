@@ -1181,18 +1181,20 @@ basic_enum: (
             to_string_impl += ") -> std::string = { \n";
         }
 
+        to_string_impl += "    pref := cpp2::to_string(prefix);\n";
+
         for  enumerators
         do   (e) {
             if e.name != "_" {  // ignore unnamed values
                 if bitwise {
                     if e.name != "none" {
                         to_string_impl += "    if (this & (e.name)$) == (e.name)$ { "
-                                                  "ret += sep + cpp2::to_string(prefix) + \"(e.name)$\"; sep = separator; "
+                                                  "ret += sep + pref + \"(e.name)$\"; sep = separator; "
                                               "}\n";
                     }
                 }
                 else {
-                    to_string_impl += "    if this == (e.name)$ { return cpp2::to_string(prefix) + \"(e.name)$\"; }\n";
+                    to_string_impl += "    if this == (e.name)$ { return pref + \"(e.name)$\"; }\n";
                 }
             }
         }

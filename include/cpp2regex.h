@@ -1588,7 +1588,7 @@ return none;
 }
 
 [[nodiscard]] auto expression_flags::from_code(cpp2::impl::in<std::string_view> s) -> expression_flags{
-std::string str {s}; std::cout << cpp2::string_util::replace_all(str, "expression_flags::", "");return from_string(cpp2::string_util::replace_all(cpp2::move(str), "expression_flags::", "")); }
+std::string str {s}; return from_string(cpp2::string_util::replace_all(cpp2::move(str), "expression_flags::", "")); }
 template <typename Iter> match_group<Iter>::match_group(auto const& start_, auto const& end_, auto const& matched_)
                                                                  : start{ start_ }
                                                                  , end{ end_ }

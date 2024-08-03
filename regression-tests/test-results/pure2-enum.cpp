@@ -42,8 +42,11 @@ public: constexpr auto operator=(skat_game const& that) -> skat_game& ;
 public: constexpr skat_game(skat_game&& that) noexcept;
 public: constexpr auto operator=(skat_game&& that) noexcept -> skat_game& ;
 public: [[nodiscard]] auto operator<=>(skat_game const& that) const& -> std::strong_ordering = default;
+public: [[nodiscard]] auto to_string_impl(cpp2::impl::in<std::string_view> prefix) const& -> std::string;
 public: [[nodiscard]] auto to_string() const& -> std::string;
+public: [[nodiscard]] auto to_code() const& -> std::string;
 public: [[nodiscard]] static auto from_string(cpp2::impl::in<std::string_view> s) -> skat_game;
+public: [[nodiscard]] static auto from_code(cpp2::impl::in<std::string_view> s) -> skat_game;
 
 #line 4 "pure2-enum.cpp2"
              // 10
@@ -69,8 +72,11 @@ public: constexpr auto operator=(janus const& that) -> janus& ;
 public: constexpr janus(janus&& that) noexcept;
 public: constexpr auto operator=(janus&& that) noexcept -> janus& ;
 public: [[nodiscard]] auto operator<=>(janus const& that) const& -> std::strong_ordering = default;
+public: [[nodiscard]] auto to_string_impl(cpp2::impl::in<std::string_view> prefix) const& -> std::string;
 public: [[nodiscard]] auto to_string() const& -> std::string;
+public: [[nodiscard]] auto to_code() const& -> std::string;
 public: [[nodiscard]] static auto from_string(cpp2::impl::in<std::string_view> s) -> janus;
+public: [[nodiscard]] static auto from_code(cpp2::impl::in<std::string_view> s) -> janus;
 
 #line 19 "pure2-enum.cpp2"
 };
@@ -100,8 +106,11 @@ public: constexpr auto operator=(file_attributes const& that) -> file_attributes
 public: constexpr file_attributes(file_attributes&& that) noexcept;
 public: constexpr auto operator=(file_attributes&& that) noexcept -> file_attributes& ;
 public: [[nodiscard]] auto operator<=>(file_attributes const& that) const& -> std::strong_ordering = default;
+public: [[nodiscard]] auto to_string_impl(cpp2::impl::in<std::string_view> prefix, cpp2::impl::in<std::string_view> separator) const& -> std::string;
 public: [[nodiscard]] auto to_string() const& -> std::string;
+public: [[nodiscard]] auto to_code() const& -> std::string;
 public: [[nodiscard]] static auto from_string(cpp2::impl::in<std::string_view> s) -> file_attributes;
+public: [[nodiscard]] static auto from_code(cpp2::impl::in<std::string_view> s) -> file_attributes;
 
 #line 22 "pure2-enum.cpp2"
                 // 1
@@ -149,16 +158,20 @@ constexpr skat_game::skat_game(skat_game&& that) noexcept
 constexpr auto skat_game::operator=(skat_game&& that) noexcept -> skat_game& {
                                               _value = std::move(that)._value;
                                               return *this;}
-[[nodiscard]] auto skat_game::to_string() const& -> std::string{
-if ((*this) == diamonds) {return "diamonds"; }
-if ((*this) == hearts) {return "hearts"; }
-if ((*this) == spades) {return "spades"; }
-if ((*this) == clubs) {return "clubs"; }
-if ((*this) == grand) {return "grand"; }
-if ((*this) == null) {return "null"; }
+[[nodiscard]] auto skat_game::to_string_impl(cpp2::impl::in<std::string_view> prefix) const& -> std::string{
+
+auto pref {cpp2::to_string(prefix)}; 
+if ((*this) == diamonds) {return pref + "diamonds"; }
+if ((*this) == hearts) {return pref + "hearts"; }
+if ((*this) == spades) {return pref + "spades"; }
+if ((*this) == clubs) {return pref + "clubs"; }
+if ((*this) == grand) {return pref + "grand"; }
+if ((*this) == null) {return cpp2::move(pref) + "null"; }
 return "invalid skat_game value"; 
 }
 
+[[nodiscard]] auto skat_game::to_string() const& -> std::string { return to_string_impl(""); }
+[[nodiscard]] auto skat_game::to_code() const& -> std::string { return to_string_impl("skat_game::"); }
 [[nodiscard]] auto skat_game::from_string(cpp2::impl::in<std::string_view> s) -> skat_game{
 
 auto x {s}; 
@@ -173,6 +186,9 @@ else {if ("null" == cpp2::move(x)) {return null; }
 CPP2_UFCS(report_violation)(cpp2::type_safety, CPP2_UFCS(c_str)(("can't convert string '" + cpp2::to_string(s) + "' to enum of type skat_game")));
 return diamonds; 
 }
+
+[[nodiscard]] auto skat_game::from_code(cpp2::impl::in<std::string_view> s) -> skat_game{
+std::string str {s}; return from_string(cpp2::string_util::replace_all(cpp2::move(str), "skat_game::", "")); }
 
 #line 15 "pure2-enum.cpp2"
     constexpr auto janus::flip() & -> void{
@@ -204,13 +220,17 @@ constexpr janus::janus(janus&& that) noexcept
 constexpr auto janus::operator=(janus&& that) noexcept -> janus& {
                                               _value = std::move(that)._value;
                                               return *this;}
-[[nodiscard]] auto janus::to_string() const& -> std::string{
-    if ((*this) == past) {return "past"; }
-    if ((*this) == future) {return "future"; }
+[[nodiscard]] auto janus::to_string_impl(cpp2::impl::in<std::string_view> prefix) const& -> std::string{
+
+    auto pref {cpp2::to_string(prefix)}; 
+    if ((*this) == past) {return pref + "past"; }
+    if ((*this) == future) {return cpp2::move(pref) + "future"; }
     return "invalid janus value"; 
     }
 
-    [[nodiscard]] auto janus::from_string(cpp2::impl::in<std::string_view> s) -> janus{
+    [[nodiscard]] auto janus::to_string() const& -> std::string { return to_string_impl(""); }
+[[nodiscard]] auto janus::to_code() const& -> std::string { return to_string_impl("janus::"); }
+[[nodiscard]] auto janus::from_string(cpp2::impl::in<std::string_view> s) -> janus{
 
     auto x {s}; 
     if ("past" == x) {return past; }
@@ -221,6 +241,8 @@ CPP2_UFCS(report_violation)(cpp2::type_safety, CPP2_UFCS(c_str)(("can't convert 
 return past; 
 }
 
+[[nodiscard]] auto janus::from_code(cpp2::impl::in<std::string_view> s) -> janus{
+std::string str {s}; return from_string(cpp2::string_util::replace_all(cpp2::move(str), "janus::", "")); }
 
 constexpr file_attributes::file_attributes(cpp2::impl::in<cpp2::i64> _val)
                                                           : _value{ cpp2::unsafe_narrow<cpp2::u8>(_val) } {  }
@@ -260,19 +282,23 @@ constexpr file_attributes::file_attributes(file_attributes&& that) noexcept
 constexpr auto file_attributes::operator=(file_attributes&& that) noexcept -> file_attributes& {
                                               _value = std::move(that)._value;
                                               return *this;}
-[[nodiscard]] auto file_attributes::to_string() const& -> std::string{
+[[nodiscard]] auto file_attributes::to_string_impl(cpp2::impl::in<std::string_view> prefix, cpp2::impl::in<std::string_view> separator) const& -> std::string{
 
-std::string _ret {"("}; 
+std::string ret {"("}; 
 
-std::string _or {}; 
+std::string sep {}; 
 if ((*this) == none) {return "(none)"; }
-if (((*this) & cached) == cached) {_ret += _or + "cached";_or = " | ";}
-if (((*this) & current) == current) {_ret += _or + "current";_or = " | ";}
-if (((*this) & obsolete) == obsolete) {_ret += _or + "obsolete";_or = " | ";}
-if (((*this) & cached_and_current) == cached_and_current) {_ret += _or + "cached_and_current";_or = " | ";}
-return cpp2::move(_ret) + ")"; 
+
+auto pref {cpp2::to_string(prefix)}; 
+if (((*this) & cached) == cached) {ret += sep + pref + "cached";sep = separator;}
+if (((*this) & current) == current) {ret += sep + pref + "current";sep = separator;}
+if (((*this) & obsolete) == obsolete) {ret += sep + pref + "obsolete";sep = separator;}
+if (((*this) & cached_and_current) == cached_and_current) {ret += sep + cpp2::move(pref) + "cached_and_current";sep = separator;}
+return cpp2::move(ret) + ")"; 
 }
 
+[[nodiscard]] auto file_attributes::to_string() const& -> std::string { return to_string_impl("", ", "); }
+[[nodiscard]] auto file_attributes::to_code() const& -> std::string { return to_string_impl("file_attributes::", " | "); }
 [[nodiscard]] auto file_attributes::from_string(cpp2::impl::in<std::string_view> s) -> file_attributes{
 
 auto ret {none}; 
@@ -297,6 +323,9 @@ CPP2_UFCS(report_violation)(cpp2::type_safety, CPP2_UFCS(c_str)(("can't convert 
 return none; 
 }
 
+[[nodiscard]] auto file_attributes::from_code(cpp2::impl::in<std::string_view> s) -> file_attributes{
+std::string str {s}; return from_string(cpp2::string_util::replace_all(cpp2::move(str), "file_attributes::", "")); }
+
 #line 28 "pure2-enum.cpp2"
 auto main() -> int{
     auto j {janus::past}; 
@@ -309,13 +338,16 @@ auto main() -> int{
     auto x2 {skat_game::diamonds}; 
     x2 = x;
     auto x3 {skat_game::from_string("hearts")}; 
+    auto x4 {skat_game::from_code("skat_game::hearts")}; 
 
     // if x == 9 { }                    // error, can't compare skat_game and integer
     // if x == rgb::red { }             // error, can't compare skat_game and rgb color
 
     std::cout << "x.to_string() is " + cpp2::to_string(CPP2_UFCS(to_string)(x)) + "\n";
     std::cout << "x2.to_string() is " + cpp2::to_string(CPP2_UFCS(to_string)(cpp2::move(x2))) + "\n";
-    std::cout << "x3.to_string() is " + cpp2::to_string(CPP2_UFCS(to_string)(cpp2::move(x3))) + "\n";
+    std::cout << "x3.to_string() is " + cpp2::to_string(CPP2_UFCS(to_string)(x3)) + "\n";
+    std::cout << "x3.to_code() is " + cpp2::to_string(CPP2_UFCS(to_code)(x3)) + "\n";
+    std::cout << "x4.to_string() is " + cpp2::to_string(CPP2_UFCS(to_string)(cpp2::move(x3))) + "\n";
 
     std::cout << "with if else: ";
     if (x == skat_game::diamonds) {     // ok, can compare two skat_games
@@ -397,6 +429,10 @@ auto main() -> int{
     std::cout << "f_from_string is " << CPP2_UFCS(to_string)(f_from_string) << "\n";
 
     f_from_string = file_attributes::from_string("(current, obsolete)");
+    std::cout << "f_from_string is " << CPP2_UFCS(to_string)(f_from_string) << "\n";
+    std::cout << "f_from_string.to_code() is " << CPP2_UFCS(to_code)(f_from_string) << "\n";
+
+    f_from_string = file_attributes::from_code("(file_attributes::cached | file_attributes::obsolete)");
     std::cout << "f_from_string is " << CPP2_UFCS(to_string)(cpp2::move(f_from_string)) << "\n";
 }
 
