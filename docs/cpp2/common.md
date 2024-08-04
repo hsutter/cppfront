@@ -105,7 +105,7 @@ main: () = {
 ```
 
 
-## <a id="keywords"></a> Reserved keywords
+## <a id="keywords"></a> Contextual keywords
 
 Cpp2 has very few globally reserved keywords; nearly all keywords are contextual, where they have their special meaning when they appear in a particular place in the grammar. For example:
 
@@ -114,6 +114,8 @@ Cpp2 has very few globally reserved keywords; nearly all keywords are contextual
 - `struct` and `enum` are used as function names in the metafunctions library.
 
 - `type` can be used as an ordinary name (e.g., `std::common_type<T1,T2>::type`).
+
+- Unqualified `type_of(x)` is a synonym for Cpp1 `std::remove_cvref_t<decltype(x)>`.
 
 In rare cases, usually when consuming code written in other languages, you may need to write a name that is a reserved keyword. The way to do that is to prefix it with `__identifer__`, which treats it as an ordinary identifier (without the prefix).
 
