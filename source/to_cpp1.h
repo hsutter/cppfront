@@ -131,6 +131,14 @@ static cmdline_processor::register_flag cmd_safe_null_pointers(
     []{ flag_safe_null_pointers = false; }
 );
 
+static auto flag_safe_zero_division = true;
+static cmdline_processor::register_flag cmd_safe_zero_division(
+    2,
+    "no-div-zero-checks",
+    "Disable integer division by zero checks",
+    []{ flag_safe_zero_division = false; }
+);
+
 static auto flag_safe_subscripts = true;
 static cmdline_processor::register_flag cmd_safe_subscripts(
     2,
@@ -149,7 +157,7 @@ static cmdline_processor::register_flag cmd_safe_comparisons(
 
 static auto flag_cpp1_filename = std::string{};
 static cmdline_processor::register_flag cmd_cpp1_filename(
-    8,
+    9,
     "output filename",
     "Output to 'filename' (can be 'stdout') - default is *.cpp/*.h",
     nullptr,
@@ -1627,8 +1635,8 @@ public:
             pos = n.position();
         }
 
-        //  Implicit "cpp2::" qualification of Cpp2 fixed-width type aliases
-        //  and cpp2::finally
+        //  Implicit "cpp2::" qualification of utilities we want to
+        //  make usable without cpp2:: qualification
         if (
             !is_qualified
             && (
@@ -1636,6 +1644,8 @@ public:
                 || n == "finally"
                 || n == "cpp1_ref"
                 || n == "cpp1_rvalue_ref"
+                || n == "unsafe_narrow"
+                || n == "unsafe_cast"
                 )
             )
         {
@@ -3464,8 +3474,11 @@ public:
                 {
                     prefix.emplace_back( "cpp2::range(", i->op->position() );
                     auto print = print_to_string( *i->last_expr );
-                    if (i->op->type() == lexeme::EllipsisEq) {
+                    if (i->op->type() == lexeme::EllipsisEqual) {
                         print += ",true";
+                    }
+                    else {
+                        assert(i->op->type() == lexeme::EllipsisLess);
                     }
                     suffix.emplace_back( "," + print + ")", i->last_expr->position());
                 }
@@ -3868,6 +3881,7 @@ public:
         }
         //  If it's "_ =" then emit static_cast<void>()
         bool emit_discard = false;
+        auto last_expr    = decltype(n.expr.get()){};
         if (
             !n.terms.empty()
             && n.terms.front().op->type() == lexeme::Assignment
@@ -3881,6 +3895,7 @@ public:
         }
         else
         {
+            last_expr = n.expr.get();
             emit(*n.expr);
         }
         suppress_move_from_last_use = false;
@@ -3972,7 +3987,33 @@ public:
                 }
                 //  Otherwise, just emit the general expression as usual
                 else {
+                    //  If this is a division, wrap the denominator in a not-zero check
+                    auto suffix = std::string{};
+                    if (
+                        flag_safe_zero_division
+                        && (
+                            x.op->type() == lexeme::Slash
+                            || x.op->type() == lexeme::SlashEq
+                            )
+                        )
+                    {
+                        assert(last_expr && "ICE: shouldn't get here without having captured a pointer to the numerator expression");
+                        if (auto lit = x.expr->get_literal();
+                            lit
+                            && lit->get_token()->type() == lexeme::DecimalLiteral
+                            )
+                        {
+                            printer.print_cpp2( "CPP2_ASSERT_NOT_ZERO_LITERAL(CPP2_TYPEOF(" + print_to_string(*last_expr) + "),", x.op->position() );
+                        }
+                        else
+                        {
+                            printer.print_cpp2( "CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(" + print_to_string(*last_expr) + "),", x.op->position() );
+                        }
+                        suffix = ")";
+                    }
+                    last_expr = x.expr.get();
                     emit(*x.expr);
+                    printer.print_cpp2( suffix, x.expr->position() );
                 }
             }
 
@@ -6548,12 +6589,18 @@ public:
                     printer.print_cpp2( suffix2, n.position() );
 
                     //  If this is ++ or --, also generate a Cpp1 postfix version of the operator
+                    //  (as long as we don't know for sure this isn't a copyable type)
                     if (func->is_increment_or_decrement())
                     {
                         if (generating_postfix_inc_dec_from) {
                             assert (generating_postfix_inc_dec_from == &n);
                         }
-                        else {
+                        else if (
+                                !n.parent_declaration
+                                || !n.parent_declaration->is_type()
+                                || !n.parent_declaration->cannot_be_a_copy_constructible_type()
+                                )
+                        {
                             need_to_generate_postfix_inc_dec = true;
                         }
                     }

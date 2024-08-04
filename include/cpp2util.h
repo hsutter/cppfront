@@ -153,6 +153,9 @@
             #include <hazard_pointer>
         #endif
         #include <initializer_list>
+        #ifdef __cpp_lib_inplace_vector
+            #include <inplace_vector>
+        #endif
         #include <iomanip>
         #include <ios>
         #include <iosfwd>
@@ -829,7 +832,7 @@ namespace impl {
 
 //-----------------------------------------------------------------------
 // 
-//  Check for invalid dereference or indirection which would result in undefined behavior.
+//  Invalid/null dereference checking - cases that would result in UB.
 //
 //     - Null pointer
 //     - std::unique_ptr that owns nothing
@@ -892,11 +895,60 @@ auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decl
     return CPP2_FORWARD(arg);
 }
 
-//  Subscript bounds checking
+
+//-----------------------------------------------------------------------
+// 
+//  Integer divide-by-zero checking - cases that would result in UB.
+//  
+//  Notes:
+//      NumType is the Numerator type
+//      arg is the denominator value
+//      Both must be integral to enable the check
+//
+
+#define CPP2_ASSERT_NOT_ZERO_IMPL \
+    requires (std::is_integral_v<CPP2_TYPEOF(arg)> && \
+              std::is_integral_v<NumType>) \
+{ \
+    if (0 == arg) { \
+        type_safety.report_violation("integer division by zero attempt detected"  CPP2_SOURCE_LOCATION_ARG); \
+    } \
+    return arg; \
+}
+
+template<typename NumType, auto arg>
+auto assert_not_zero([[maybe_unused]] char _ CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto
+    CPP2_ASSERT_NOT_ZERO_IMPL
+
+template<typename NumType, auto arg>
+auto assert_not_zero([[maybe_unused]] char _ CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto
+{
+    return arg;
+}
+
+template<typename NumType>
+auto assert_not_zero(auto   arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto
+    CPP2_ASSERT_NOT_ZERO_IMPL
+
+template<typename NumType>
+auto assert_not_zero(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+    requires (!std::is_integral_v<CPP2_TYPEOF(arg)>
+              || !std::is_integral_v<NumType>)
+{
+    return CPP2_FORWARD(arg);
+}
+
+#define CPP2_ASSERT_NOT_ZERO(NumType, arg)          (cpp2::impl::assert_not_zero<NumType>((arg)))
+#define CPP2_ASSERT_NOT_ZERO_LITERAL(NumType, arg)  (cpp2::impl::assert_not_zero<NumType, (arg)>('_'))
+
+
+//-----------------------------------------------------------------------
+// 
+//  Subscript bounds checking - cases that would result in UB.
 //
 #define CPP2_ASSERT_IN_BOUNDS_IMPL \
     requires (std::is_integral_v<CPP2_TYPEOF(arg)> && \
-             requires { std::size(x); std::ssize(x); x[arg]; std::begin(x) + 2; }) \
+              requires { std::size(x); std::ssize(x); x[arg]; std::begin(x) + 2; }) \
 { \
     auto max = [&]() -> auto { \
         if constexpr (std::is_signed_v<CPP2_TYPEOF(arg)>) { return std::ssize(x); } \
@@ -919,14 +971,14 @@ template<auto arg>
 auto assert_in_bounds(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
     CPP2_ASSERT_IN_BOUNDS_IMPL
 
-auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
-    CPP2_ASSERT_IN_BOUNDS_IMPL
-
 template<auto arg>
 auto assert_in_bounds(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
 {
     return CPP2_FORWARD(x) [ arg ];
 }
+
+auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+    CPP2_ASSERT_IN_BOUNDS_IMPL
 
 auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
 {
@@ -1663,6 +1715,7 @@ inline constexpr auto is( X const& x, bool (*value)(X const&) ) -> bool {
 
 //  The 'as' cast functions are <To, From> so use that order here
 //  If it's confusing, we can switch this to <From, To>
+
 template< typename To, typename From >
 inline constexpr auto is_narrowing_v =
     // [dcl.init.list] 7.1
@@ -1676,7 +1729,20 @@ inline constexpr auto is_narrowing_v =
     (std::is_integral_v<From> && std::is_integral_v<To> && sizeof(From) > sizeof(To)) ||
     (std::is_enum_v<From> && std::is_integral_v<To> && sizeof(From) > sizeof(To)) ||
     // [dcl.init.list] 7.5
-    (std::is_pointer_v<From> && std::is_same_v<To, bool>);
+    (std::is_pointer_v<From> && std::is_same_v<To, bool>)
+    ;
+
+template< typename To, typename From >
+inline constexpr auto is_unsafe_pointer_conversion_v =
+    std::is_pointer_v<To>
+    && std::is_pointer_v<From>
+// Work around Clang <= 15 C++20 mode not conforming to C++20 P0929
+#if (defined(__clang_major__) && __clang_major__ <= 15)
+    && !std::is_same_v<std::remove_cvref_t<To>, void*>
+#else
+    && !requires (To t, From f) { t = f; }
+#endif
+    ;
 
 template <typename... Ts>
 inline constexpr auto program_violates_type_safety_guarantee = sizeof...(Ts) < 0;
@@ -1788,6 +1854,12 @@ auto as(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT_AS) -> decltype(auto)
     )
     {
         return Dynamic_cast<C>(CPP2_FORWARD(x));
+    }
+    else if constexpr (
+        is_unsafe_pointer_conversion_v<C, CPP2_TYPEOF(x)>
+        )
+    {
+        return nonesuch;
     }
     else if constexpr (requires { C{CPP2_FORWARD(x)}; }) {
         //  Experiment: Recognize the nested `::value_type` pattern for some dynamic library types
@@ -2224,7 +2296,23 @@ private:
 //-----------------------------------------------------------------------
 //
 template <typename C, typename X>
-constexpr auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
+constexpr auto unsafe_narrow( X x ) noexcept 
+    -> decltype(auto)
+    requires (
+        impl::is_narrowing_v<C, X>
+        || (
+            std::is_arithmetic_v<C>
+            && std::is_arithmetic_v<X>
+            )
+            )
+{
+    return static_cast<C>(x);
+}
+
+
+template <typename C, typename X>
+constexpr auto unsafe_cast( X&& x ) noexcept 
+    -> decltype(auto)
 {
     return static_cast<C>(CPP2_FORWARD(x));
 }
@@ -2273,16 +2361,16 @@ struct args
         int    curr;
     };
 
-    auto begin()  const -> iterator    { return iterator{ argc, argv, 0    }; }
-    auto end()    const -> iterator    { return iterator{ argc, argv, argc }; }
-    auto cbegin() const -> iterator    { return begin(); }
-    auto cend()   const -> iterator    { return end(); }
-    auto size()   const -> std::size_t { return cpp2::unsafe_narrow<std::size_t>(ssize()); }
-    auto ssize()  const -> int         { return argc; }
+    auto begin()  const -> iterator       { return iterator{ argc, argv, 0    }; }
+    auto end()    const -> iterator       { return iterator{ argc, argv, argc }; }
+    auto cbegin() const -> iterator       { return begin(); }
+    auto cend()   const -> iterator       { return end(); }
+    auto size()   const -> std::size_t    { return cpp2::unsafe_narrow<std::size_t>(ssize()); }
+    auto ssize()  const -> std::ptrdiff_t { return argc; }
 
     auto operator[](int i) const {
-        if (0 <= i && i < ssize())     { return std::string_view{ argv[i] }; }
-        else                           { return std::string_view{}; }
+        if (0 <= i && i < ssize())        { return std::string_view{ argv[i] }; }
+        else                              { return std::string_view{}; }
     }
 
     mutable int        argc = 0;        //  mutable for compatibility with frameworks that take 'int& argc'
@@ -2686,8 +2774,15 @@ inline constexpr auto as_( auto&& x ) -> decltype(auto)
     if constexpr (is_narrowing_v<C, CPP2_TYPEOF(x)>) {
         static_assert(
             program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
-            "'as' does not allow unsafe narrowing conversions - if you're sure you want this, use `unsafe_narrow<T>()` to force the conversion"
+            "'as' does not allow unsafe possibly-lossy narrowing conversions - if you're sure you want this, use 'unsafe_narrow<T>' to explicitly force the conversion and possibly lose information"
         );
+    }
+    else if constexpr (is_unsafe_pointer_conversion_v<C, CPP2_TYPEOF(x)>)
+    {
+        static_assert(
+            program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
+            "'as' does not allow unsafe pointer conversions - if you're sure you want this, use `unsafe_cast<T>()` to explicitly force the unsafe cast"
+            );
     }
     else if constexpr( std::is_same_v< CPP2_TYPEOF(as<C>(CPP2_FORWARD(x))), nonesuch_ > ) {
         static_assert(
@@ -2706,8 +2801,8 @@ inline constexpr auto as_() -> decltype(auto)
         if constexpr( std::is_same_v< CPP2_TYPEOF((as<C, x>())), nonesuch_ > ) {
             static_assert(
                 program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
-                "Literal cannot be narrowed using 'as' -  if you're sure you want this, use 'unsafe_narrow<T>()' to force the conversion"
-            );
+                "'as' does not allow unsafe possibly-lossy narrowing conversions - if you're sure you want this, use `unsafe_narrow<T>()` to explicitly force the conversion and possibly lose information"
+                );
         }
     }
     else {

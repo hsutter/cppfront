@@ -220,7 +220,7 @@ Postfix notation lets the code read fluidly left-to-right, in the same order in 
 
 > Note: The `...` pack expansion syntax is also supported. The above `...` and `..=` are the Cpp2 range operators, which overlap in syntax.
 
-> Note: Because `++` and `--` always have in-place update semantics, we never need to remember "use prefix `++`/`--` unless you need a copy of the old value." If you do need a copy of the old value, just take the copy before calling `++`/`--`.
+> Note: Because `++` and `--` always have in-place update semantics, we never need to remember "use prefix `++`/`--` unless you need a copy of the old value." If you do need a copy of the old value, just take the copy before calling `++`/`--`. When you write a copyable type that overloads `operator++` or `operator--`, cppfront generates also the copy-old-value overload of that function to support natural use of the type from Cpp1 code.
 
 
 ### <a id="binary-operators"></a> Binary operators

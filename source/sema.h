@@ -2068,13 +2068,7 @@ public:
 
         //  An increment/decrement function must have a single 'inout' parameter,
         //  and if it's a member flag it if we know the type is not copyable
-        if (
-            n.my_decl
-            && (
-                n.my_decl->has_name("operator++")
-                || n.my_decl->has_name("operator--")
-                )
-            )
+        if (n.is_increment_or_decrement())
         {
             if (
                 (*n.parameters).ssize() != 1
@@ -2092,18 +2086,6 @@ public:
                 errors.emplace_back(
                     n.position(),
                     "a user-defined " + n.my_decl->name()->to_string() + " must have a specific (not deduced) return type"
-                );
-                return false;
-            }
-
-            if (
-                n.my_decl->parent_declaration
-                && n.my_decl->parent_declaration->cannot_be_a_copy_constructible_type()
-                )
-            {
-                errors.emplace_back(
-                    n.position(),
-                    "a user-defined " + n.my_decl->name()->to_string() + " in type scope must be a member of a copyable type"
                 );
                 return false;
             }

@@ -78,9 +78,13 @@ wrap_f: (
 
 A function can return either of the following. The default is `#!cpp -> void`.
 
-(1) **`#!cpp -> X`** to return a single unnamed value of type `X`, which can be  `#!cpp void` to signify the function has no return value. If `X` is not `#!cpp void`, the function body must have a `#!cpp return /*value*/;` statement that returns a value of type `X` on every path that exits the function. For example:
+(1) **`#!cpp -> X`** to return a single unnamed value of type `X`, which can be  `#!cpp void` to signify the function has no return value. If `X` is not `#!cpp void`, the function body must have a `#!cpp return /*value*/;` statement that returns a value of type `X` on every path that exits the function.
 
-``` cpp title="Functions with an unnamed return value" hl_lines="2 4 7 9 12 14"
+To deduce the return type, write `-> _`. A function whose body returns a single expression `expr` can deduce the return type, and omit writing the leading `-> _ = { return` and trailing `; }`.
+
+For example:
+
+``` cpp title="Functions with an unnamed return value" hl_lines="2 4 7 9 12 14 15 18 20 22"
 //  A function returning no value (void)
 increment_in_place: (inout a: i32) -> void = { a++; }
 //  Or, using syntactic defaults, the following has identical meaning:
@@ -93,8 +97,16 @@ add_one: (a: i32) -> i32 = a+1;
 
 //  A generic function returning a single value of deduced type
 add: <T: type, U: type> (a:T, b:U) -> decltype(a+b) = { return a+b; }
-//  Or, using syntactic defaults, the following has identical meaning:
+//  Or, using syntactic defaults, the following have identical meaning:
 add: (a, b) -> _ = a+b;
+add: (a, b) a+b;
+
+//  A generic function expression returning a single value of deduced type
+vec.std::ranges::sort( :(x:_, y:_) -> _ = { return y<x; } );
+//  Or, using syntactic defaults, the following has identical meaning:
+vec.std::ranges::sort( :(x,y) y<x );
+//  Both are identical to this, which uses the most verbose possible syntax:
+vec.std::ranges::sort( :<T:type, U:type> (x:T, y:U) -> _ = { return y<x; } );
 ```
 
 (2) **`#!cpp -> ( /* parameter list */ )`** to return a list of named return parameters using the same [parameters](#parameters) syntax, but where the only passing styles are `out` (the default, which moves where possible) or `forward`. The function body must [initialize](objects.md#init) the value of each return-parameter `ret` in its body the same way as any other local variable. An explicit return statement is written just `#!cpp return;` and returns the named values; the function has an implicit `#!cpp return;` at the end. If only a single return parameter is in the list, it is emitted in the lowered Cpp1 code the same way as (1) above, so its name is only available inside the function body.

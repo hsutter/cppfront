@@ -32,7 +32,7 @@ We can't make an improvement that large to C++ via gradual evolution to today's 
 
 ## <a id="what-is-cppfront"></a> What is cppfront?
 
-[**Cppfront**](https://github.com/hsutter/cppfront) is a compiler that compiles Cpp2 syntax to today's Cpp1 syntax. This lets you start trying out Cpp2 syntax in any existing C++ project and build system just by renaming a source file from `.cpp` to `.cpp2` and [adding a build step](#adding-cppfront-in-your-ide-build-system), and the result Just Works with every C++20 or higher compiler and all existing C++ tools (debuggers, build systems, sanitizers, etc.).
+[**Cppfront**](https://github.com/hsutter/cppfront) is a compiler that compiles Cpp2 syntax to today's Cpp1 syntax. This lets you start trying out Cpp2 syntax in any existing C++ project and build system just by renaming a source file from `.cpp` to `.cpp2` and [adding a build step](welcome/integration.md), and the result Just Works with every C++20 or higher compiler and all existing C++ tools (debuggers, build systems, sanitizers, etc.).
 
 This deliberately follows Bjarne Stroustrup's wise approach with [**cfront**](https://en.wikipedia.org/wiki/Cfront), the original C++ compiler: In the 1980s and 1990s, Stroustrup created cfront to translate C++ to pure C, and similarly ensured that C++ could be interleaved with C in the same source file, and that C++ could always call any C code with no wrapping/marshaling/thunking. By providing a C++ compiler that emitted pure C, Stroustrup ensured full compatibility with the C ecosystems that already existed, and made it easy for people to start trying out C++ code in any existing C project by adding just another build step to translate the C++ to C first, and the result Just Worked with existing C tools.
 

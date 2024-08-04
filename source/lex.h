@@ -85,7 +85,8 @@ enum class lexeme : std::int8_t {
     Dot,
     DotDot,
     Ellipsis,
-    EllipsisEq,
+    EllipsisLess,
+    EllipsisEqual,
     QuestionMark,
     At,
     Dollar,
@@ -184,7 +185,8 @@ auto _as(lexeme l)
     break;case lexeme::Dot:                 return "Dot";
     break;case lexeme::DotDot:              return "DotDot";
     break;case lexeme::Ellipsis:            return "Ellipsis";
-    break;case lexeme::EllipsisEq:          return "EllipsisEq";
+    break;case lexeme::EllipsisLess:        return "EllipsisLess";
+    break;case lexeme::EllipsisEqual:       return "EllipsisEqual";
     break;case lexeme::QuestionMark:        return "QuestionMark";
     break;case lexeme::At:                  return "At";
     break;case lexeme::Dollar:              return "Dollar";
@@ -1114,15 +1116,15 @@ auto lex_line(
     //G     one of: 'import' 'module' 'export' 'is' 'as'
     //G
     auto do_is_keyword = [&](std::vector<std::string_view> const& r) {
-        auto remaining_line = std::string_view(line).substr(unsafe_narrow<std::size_t>(i));
+        auto remaining_line = std::string_view(line).substr(i);
         auto m = std::find_if(r.begin(), r.end(), [&](std::string_view s) {
             return remaining_line.starts_with(s);
         });
         if (m != r.end()) {
             //  If we matched and what's next is EOL or a non-identifier char, we matched!
             if (
-                i+std::ssize(*m) == std::ssize(line)                                            // EOL
-                || !is_identifier_continue(line[unsafe_narrow<std::size_t>(i)+std::size(*m)])   // non-identifier char
+                i+std::ssize(*m) == std::ssize(line)                // EOL
+                || !is_identifier_continue(line[i+std::size(*m)])   // non-identifier char
                 )
             {
                 return static_cast<int>(std::ssize(*m));
@@ -1440,10 +1442,11 @@ auto lex_line(
 
             //G
             //G punctuator: one of
-            //G     '.' '..' '...' '..='
+            //G     '.' '..' '...' '..<' '..='
             break;case '.':
                 if      (peek1 == '.' && peek2 == '.') { store(3, lexeme::Ellipsis); }
-                else if (peek1 == '.' && peek2 == '=') { store(3, lexeme::EllipsisEq); }
+                else if (peek1 == '.' && peek2 == '<') { store(3, lexeme::EllipsisLess); }
+                else if (peek1 == '.' && peek2 == '=') { store(3, lexeme::EllipsisEqual); }
                 else if (peek1 == '.')                 { store(2, lexeme::DotDot); }
                 else                                   { store(1, lexeme::Dot); }
 

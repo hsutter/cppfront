@@ -61,7 +61,8 @@ auto is_postfix_operator(lexeme l)
           case lexeme::Tilde:
           case lexeme::Dollar:
           case lexeme::Ellipsis:
-          case lexeme::EllipsisEq:
+          case lexeme::EllipsisLess:
+          case lexeme::EllipsisEqual:
               return true;
     break;default:
         return false;
@@ -2273,7 +2274,13 @@ struct parameter_declaration_node
 
     std::unique_ptr<declaration_node> declaration;
 
-    parameter_declaration_node(parameter_declaration_list_node const* my) : my_list{my} { }
+    // Out-of-line definition of the ctor is necessary due to the forward-declared
+    // type(s) used in a std::unique_ptr as a member
+    parameter_declaration_node(parameter_declaration_list_node const* my);
+
+    // Out-of-line definition of the dtor is necessary due to the forward-declared
+    // type(s) used in a std::unique_ptr as a member
+    ~parameter_declaration_node();
 
     //  API
     //
@@ -2858,6 +2865,10 @@ struct declaration_node
     declaration_node(declaration_node* parent)
         : parent_declaration{parent}
     { }
+
+    // Out-of-line definition of the dtor is necessary due to the forward-declared
+    // type(s) used in a std::unique_ptr as a member
+    ~declaration_node();
 
     //  API
     //
@@ -4512,7 +4523,13 @@ struct translation_unit_node
     }
 };
 
-// Definitions of out-of-line dtors for nodes with unique_ptr members of forward-declared types
+// Definitions of out-of-line ctors & dtors for nodes with unique_ptr members of forward-declared types
+
+parameter_declaration_node::parameter_declaration_node(parameter_declaration_list_node const* my)
+    : my_list{my}
+{ }
+
+parameter_declaration_node::~parameter_declaration_node() = default;
 
 type_id_node::~type_id_node() = default;
 
@@ -4535,6 +4552,8 @@ template_argument::~template_argument() = default;
 inspect_expression_node::~inspect_expression_node() = default;
 
 statement_node::~statement_node() = default;
+
+declaration_node::~declaration_node() = default;
 
 
 //-----------------------------------------------------------------------
@@ -6011,7 +6030,7 @@ private:
     //G     postfix-expression '(' expression-list? ','? ')'
     //G     postfix-expression '.' id-expression
     //G     postfix-expression '..' id-expression
-    //G     postfix-expression '...' primary-expression
+    //G     postfix-expression '..<' primary-expression
     //G     postfix-expression '..=' primary-expression
     //G
     auto postfix_expression()
@@ -6031,8 +6050,8 @@ private:
                 || curr().type() == lexeme::LeftParen
                 || curr().type() == lexeme::Dot
                 || curr().type() == lexeme::DotDot
-                || curr().type() == lexeme::Ellipsis
-                || curr().type() == lexeme::EllipsisEq
+                || curr().type() == lexeme::EllipsisLess
+                || curr().type() == lexeme::EllipsisEqual
                 )
             )
         {
@@ -6127,8 +6146,8 @@ private:
             }
             else if (
                 ( 
-                    term.op->type() == lexeme::Ellipsis
-                    || term.op->type() == lexeme::EllipsisEq
+                    term.op->type() == lexeme::EllipsisLess
+                    || term.op->type() == lexeme::EllipsisEqual
                     )
                 && n->expr->to_string() != "sizeof"
                 )
@@ -6728,11 +6747,6 @@ private:
             assert (n->id.index() == type_id_node::function);
         }
         else if (!allow_omitting_type_name) {
-            return {};
-        }
-
-        if (curr().type() == lexeme::Multiply) {
-            error("'T*' is not a valid Cpp2 type; use '*T' for a pointer instead", false);
             return {};
         }
 
