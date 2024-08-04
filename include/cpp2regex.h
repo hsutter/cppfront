@@ -1550,12 +1550,14 @@ std::string ret {"("};
 
 std::string sep {}; 
 if ((*this) == none) {return "(none)"; }
-if (((*this) & case_insensitive) == case_insensitive) {ret += sep + cpp2::to_string(prefix) + "case_insensitive";sep = separator;}
-if (((*this) & multiple_lines) == multiple_lines) {ret += sep + cpp2::to_string(prefix) + "multiple_lines";sep = separator;}
-if (((*this) & single_line) == single_line) {ret += sep + cpp2::to_string(prefix) + "single_line";sep = separator;}
-if (((*this) & no_group_captures) == no_group_captures) {ret += sep + cpp2::to_string(prefix) + "no_group_captures";sep = separator;}
-if (((*this) & perl_code_syntax) == perl_code_syntax) {ret += sep + cpp2::to_string(prefix) + "perl_code_syntax";sep = separator;}
-if (((*this) & perl_code_syntax_in_classes) == perl_code_syntax_in_classes) {ret += sep + cpp2::to_string(prefix) + "perl_code_syntax_in_classes";sep = separator;}
+
+auto pref {cpp2::to_string(prefix)}; 
+if (((*this) & case_insensitive) == case_insensitive) {ret += sep + pref + "case_insensitive";sep = separator;}
+if (((*this) & multiple_lines) == multiple_lines) {ret += sep + pref + "multiple_lines";sep = separator;}
+if (((*this) & single_line) == single_line) {ret += sep + pref + "single_line";sep = separator;}
+if (((*this) & no_group_captures) == no_group_captures) {ret += sep + pref + "no_group_captures";sep = separator;}
+if (((*this) & perl_code_syntax) == perl_code_syntax) {ret += sep + pref + "perl_code_syntax";sep = separator;}
+if (((*this) & perl_code_syntax_in_classes) == perl_code_syntax_in_classes) {ret += sep + cpp2::move(pref) + "perl_code_syntax_in_classes";sep = separator;}
 return cpp2::move(ret) + ")"; 
 }
 
