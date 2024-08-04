@@ -378,6 +378,40 @@ using _uchar     = unsigned char;    // normally use u8 instead
 
 namespace string_util {
 
+//  Break a string_view into a vector of views of simple qidentifier
+//  substrings separated by other characters
+auto split_string_list(std::string_view str)
+    -> std::vector<std::string_view>
+{
+    std::vector<std::string_view> ret;
+
+    auto is_id_char = [](char c) { 
+        return std::isalnum(c) || c == '_';
+    };
+
+    auto pos = 0;
+    while( pos < std::ssize(str) ) {
+        //  Skip non-alnum
+        while (pos < std::ssize(str) && !is_id_char(str[pos])) {
+            ++pos;
+        }
+        auto start = pos;
+
+        //  Find the end of the current component
+        while (pos < std::ssize(str) && is_id_char(str[pos])) {
+            ++pos;
+        }
+
+        //  Add nonempty substring to the vector
+        if (start < pos) {
+            ret.emplace_back(str.substr(start, pos - start));
+        }
+    }
+
+    return ret;
+}
+
+
 //  From https://stackoverflow.com/questions/216823/how-to-trim-a-stdstring
 
 //  Trim from start (in place)

@@ -35,12 +35,17 @@ main: () = {
     x: skat_game = skat_game::clubs;
     x2 := skat_game::diamonds;
     x2 = x;
+    x3 := skat_game::from_string("hearts");
+    x4 := skat_game::from_code("skat_game::hearts");
 
     // if x == 9 { }                    // error, can't compare skat_game and integer
     // if x == rgb::red { }             // error, can't compare skat_game and rgb color
 
     std::cout << "x.to_string() is (x.to_string())$\n";
     std::cout << "x2.to_string() is (x2.to_string())$\n";
+    std::cout << "x3.to_string() is (x3.to_string())$\n";
+    std::cout << "x3.to_code() is (x3.to_code())$\n";
+    std::cout << "x4.to_string() is (x3.to_string())$\n";
 
     std::cout << "with if else: ";
     if x == skat_game::diamonds {       // ok, can compare two skat_games
@@ -117,4 +122,14 @@ main: () = {
         is (cpp2::has_flags(f2))      = "includes all f2's flags ('cached' and 'current')";
         is _                          = "something else";
     } << "\n";
+
+    f_from_string := file_attributes::from_string("cached_and_current");
+    std::cout << "f_from_string is " << f_from_string.to_string() << "\n";
+
+    f_from_string = file_attributes::from_string("(current, obsolete)");
+    std::cout << "f_from_string is " << f_from_string.to_string() << "\n";
+    std::cout << "f_from_string.to_code() is " << f_from_string.to_code() << "\n";
+
+    f_from_string = file_attributes::from_code("(file_attributes::cached | file_attributes::obsolete)");
+    std::cout << "f_from_string is " << f_from_string.to_string() << "\n";
 }

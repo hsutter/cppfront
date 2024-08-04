@@ -1167,40 +1167,100 @@ basic_enum: (
     t.add_member( "    operator=         : (out this, that) == { }");
     t.add_member( "    operator<=>       : (this, that) -> std::strong_ordering;");
 
-    //  Provide a 'to_string' function to print enumerator name(s)
-    (copy to_string: std::string = "    to_string: (this) -> std::string = { \n")
+    //  Provide 'to_string' and 'to_code' functions to print enumerator
+    //  name(s) as human-readable strings or as code expressions
+    (copy to_string_impl: std::string = "    to_string_impl: (this, prefix: std::string_view")
     {
         if bitwise {
-            to_string += "    _ret   : std::string = \"(\";\n"
-                         "    _comma : std::string = ();\n"
-                         "    if this == none { return \"(none)\"; }\n";
+            to_string_impl += ", separator: std::string_view ) -> std::string = { \n"
+                              "    ret : std::string = \"(\";\n"
+                              "    sep : std::string = ();\n"
+                              "    if this == none { return \"(none)\"; }\n";
         }
+        else {
+            to_string_impl += ") -> std::string = { \n";
+        }
+
+        to_string_impl += "    pref := cpp2::to_string(prefix);\n";
 
         for  enumerators
         do   (e) {
             if e.name != "_" {  // ignore unnamed values
                 if bitwise {
                     if e.name != "none" {
-                        to_string += "    if (this & (e.name)$) == (e.name)$ { "
-                                             "_ret += _comma + \"(e.name)$\"; _comma = \", \"; "
-                                         "}\n";
+                        to_string_impl += "    if (this & (e.name)$) == (e.name)$ { "
+                                                  "ret += sep + pref + \"(e.name)$\"; sep = separator; "
+                                              "}\n";
                     }
                 }
                 else {
-                    to_string += "    if this == (e.name)$ { return \"(e.name)$\"; }\n";
+                    to_string_impl += "    if this == (e.name)$ { return pref + \"(e.name)$\"; }\n";
                 }
             }
         }
 
         if bitwise {
-            to_string += "    return _ret+\")\";\n}\n";
+            to_string_impl += "    return ret+\")\";\n}\n";
         }
         else {
-            to_string += "    return \"invalid (t.name())$ value\";\n}\n";
+            to_string_impl += "    return \"invalid (t.name())$ value\";\n}\n";
         }
 
-        t.add_member( to_string );
+        t.add_member( to_string_impl );
     }
+
+    if bitwise {
+        t.add_member( "    to_string: (this) -> std::string = to_string_impl( \"\", \", \" );" );
+        t.add_member( "    to_code  : (this) -> std::string = to_string_impl( \"(t.name())$::\", \" | \" );" );
+    }
+    else {
+        t.add_member( "    to_string: (this) -> std::string = to_string_impl( \"\" );" );
+        t.add_member( "    to_code  : (this) -> std::string = to_string_impl( \"(t.name())$::\" );" );
+    }
+
+    //  Provide a 'from_string' function to parse strings into enumerators    
+    (copy from_string: std::string = "    from_string: (s: std::string_view) -> (t.name())$ = { \n")
+    {
+        prefix    : std::string_view = "";
+        combine_op: std::string_view = "return";
+
+        //  For flags, accept a list that we break apart and then |= together
+        if bitwise 
+        {
+            prefix      = "flag_";
+            combine_op  = "ret |=";
+
+            from_string += "        ret := none;\n"
+                           "        outer: do {\n"
+                           "        for cpp2::string_util::split_string_list(s) do (x) {\n";
+        }
+        //  Otherwise, accept just a single string
+        else {
+            from_string += "        x := s;\n";
+        }
+
+        (copy else_: std::string_view = "")
+        for  enumerators
+        do   (e) {
+            from_string += "            (else_)$if \"(e.name)$\" == x { (combine_op)$ (e.name)$; }\n";
+            else_ = "else ";
+        }
+
+        if bitwise {
+            from_string += "            else { break outer; }\n"
+                           "        }\n"
+                           "        return ret;\n"
+                           "        } while false;\n";
+        }
+
+        from_string += "        cpp2::type_safety.report_violation( (\"can't convert string '\" + cpp2::to_string(s) + \"' to (prefix)$enum of type (t.name())$\").c_str() );\n"
+                       "        return (default_value)$;\n"
+                       "    }\n\n";
+
+        t.add_member( from_string );
+    }
+
+    t.add_member( "    from_code: (s: std::string_view) -> (t.name())$ = { str: std::string = s; return from_string( cpp2::string_util::replace_all(str, \"(t.name())$::\", \"\" ) ); }" );
 }
 
 
