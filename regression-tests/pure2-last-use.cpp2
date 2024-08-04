@@ -136,12 +136,12 @@ issue_847_0: (copy v: std::vector<std::unique_ptr<int>>) = {
   do (_) {
   }
 }
-issue_847_1: (move v: std::vector<std::unique_ptr<int>>) = {
-  for v.make_copy()
-  do (move x) {
-    f_inout(x);
-  }
-}
+// issue_847_1: (move v: std::vector<std::unique_ptr<int>>) = {
+//   for v.make_copy()
+//   do (move x) {
+//     f_inout(x);  // error, can't pass rvalue to inout param
+//   }
+// }
 issue_847_5: (forward v) = {
   for v.make_copy()
   do (forward x) {
@@ -170,10 +170,10 @@ issue_857: type = {
   a: std::unique_ptr<int>;
   b: std::unique_ptr<int>;
   operator=: (out this, move that) = { }
-  operator=: (move this) = {
-    f_inout(a);
-    f_inout(this.b);
-  }
+//   operator=: (move this) = {
+//     f_inout(a);      // error, can't pass rvalue to inout param
+//     f_inout(this.b); // error, can't pass rvalue to inout param
+//   }
   //f: (move this) = f_copy(this);
   //f: (move this, move that) = f_copy(this, that);
   //g: (move this) = f_copy(this.a);
@@ -363,7 +363,7 @@ issue_857_9: @struct type = {
 //f3: (move this) = d();
 
   // OK: Explicit 'this' for base members, like in templates.
-  g0: (move this) = f_inout(this.a);
+  //g0: (move this) = f_inout(this.a);  // error, can't pass rvalue to inout param
   //g1: (move this) = _ = this.b();
   g2: (move this) = f_inout(this.c);
   //g3: (move this) = this.d();
@@ -806,6 +806,7 @@ enum_0: () = {
 enum_1: () = {
     max_value := new<int>(0);
     min_value: std::reference_wrapper<const std::unique_ptr<int>> = max_value;
+    _ = max_value;
 
     // for  (0)
     // do   (copy x)
@@ -947,7 +948,7 @@ g: () = {
   _ = :() = {
     x := new<int>(0);
     f_inout(x);
-    // _ = :() -> int = (:() x$*)$();
+    _ = :() -> int = (:() x$*)$();
   };
 }
 

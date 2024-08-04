@@ -1,4 +1,4 @@
-pure2-last-use.cpp2:944:44: error: a lambda expression cannot appear in this context
+pure2-last-use.cpp2:945:44: error: a lambda expression cannot appear in this context
     static_cast<void>([_0 = std::array<int,[](auto const& x) mutable -> auto { return identity(x); }(0)>()]() mutable -> auto { return _0;  });// Fails on Clang 12 (lambda in unevaluated context).
                                            ^
 1 error generated.
