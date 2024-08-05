@@ -1659,6 +1659,16 @@ auto is( X const& x ) -> bool {
     {
         return x == X();
     }
+    else if constexpr (
+        std::is_same_v<X, std::any>
+    )
+    {
+        if constexpr (std::is_same_v<C, empty>) {
+            return !x.has_value();
+        } else {
+            return x.type() == Typeid<C>();
+        }
+    }
     else {
         return false;
     }
@@ -2087,18 +2097,6 @@ auto as( std::variant<Ts...> const& x ) -> decltype(auto) {
 //-------------------------------------------------------------------------------------------------------------
 //  std::any is and as
 //
-
-//  is Type
-//
-template<typename T, typename X>
-    requires (std::is_same_v<X,std::any> && !std::is_same_v<T,std::any> && !std::is_same_v<T,empty>)
-constexpr auto is( X const& x ) -> bool
-    { return x.type() == Typeid<T>(); }
-
-template<typename T, typename X>
-    requires (std::is_same_v<X,std::any> && std::is_same_v<T,empty>)
-constexpr auto is( X const& x ) -> bool
-    { return !x.has_value(); }
 
 
 //  is Value
