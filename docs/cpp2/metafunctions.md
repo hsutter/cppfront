@@ -360,6 +360,88 @@ main: () = {
 ```
 
 
+### For computational and functional types
+
+
+#### `regex`
+
+A `regex` type has data members that are regular expression objects. This metafunction replaces all of the type's data members named `regex` or `regex_*` with regular expression objects of the same type. For example:
+
+``` cpp title="Regular expression example"  hl_lines="1 3 4 16 17 19 27 30 31"
+name_matcher: @regex type
+= {
+    regex         := R"((\w+) (\w+))";  // for example: Margaret Hamilton
+    regex_no_case := R"(/(ab)+/i)";
+}
+
+main: (args) = {
+    m: name_matcher = ();
+
+    data: std::string = "Donald Duck";
+    if args.ssize() >= 2 {
+        data = args[1];
+    }
+
+    //  regex.match requires matches to start at the beginning the target string
+    result := m.regex.match(data);
+    if result.matched {
+        //  We found a match; reverse the order of the substrings
+        std::cout << "Hello (result.group(2))$, (result.group(1))$!\n";
+    }
+    else {
+        std::cout << "I only know names of the form: <name> <family name>.\n";
+    }
+
+    //  regex.search finds a match anywhere within the target string
+    std::cout << "Case insensitive match: "
+                 "(m.regex_no_case.search(\"blubabABblah\").group(0))$\n";
+}
+//  Prints:
+//      Hello Duck, Donald!
+//      Case insensitive match: abAB
+```
+
+The `@regex` metafunction currently supports most of [Perl regex syntax](https://perldoc.perl.org/perlre), except for Unicode characters and the syntax tokens associated with them. See [Supported regular expression features](../notes/regex_status.md) for a list of regex options.
+
+Each regex object has the type `cpp2::regex::regular_expression`, which is defined in `include/cpp2regex.h2`. The member functions are:
+
+``` cpp title="Member functions for regular expressions"
+//  .match() requires matches to start at the beginning the target string
+//  .search() finds a match anywhere within the target string
+
+match :        (this, str: std::string_view)                -> search_return;
+search:        (this, str: std::string_view)                -> search_return;
+
+match :        (this, str: std::string_view, start)         -> search_return;
+search:        (this, str: std::string_view, start)         -> search_return;
+
+match :        (this, str: std::string_view, start, length) -> search_return;
+search:        (this, str: std::string_view, start, length) -> search_return;
+
+match : <Iter> (this, start: Iter, end: Iter)               -> search_return;
+search: <Iter> (this, start: Iter, end: Iter)               -> search_return;
+```
+
+The return type `search_return` is defined in `cpp2::regex::regular_expression`. It has these members:
+
+``` cpp title="Members of a regular expression result"
+matched: bool;
+pos:     int;
+
+//  Functions to access groups by number
+group_number: (this) -> size_t;;
+group:        (this, g: int) -> std::string;
+group_start:  (this, g: int) -> int;
+group_end:    (this, g: int) -> int;
+
+//  Functions to access groups by name
+group:        (this, g: bstring<CharT>) -> std::string;
+group_start:  (this, g: bstring<CharT>) -> int;
+group_end:    (this, g: bstring<CharT>) -> int;
+```
+
+
+
 ### Helpers and utilities
 
 
@@ -372,66 +454,6 @@ A `cpp1_rule_of_zero` type is one that has no user-written copy/move/destructor 
 > This is known as "the rule of zero".
 > — Stroustrup, Sutter, et al. (C++ Core Guidelines)
 
-#### `regex`
-
-Replaces fields in the class with regular expression objects. All fields named `regex` or starting with `regex_` are replaced with a regular expression of the same type.
-
-``` cpp title="Regular expression example"
-name_matcher: @regex type
-= {
-    regex         := R"((\w+) (\w+))";
-    regex_no_case := R"(/(ab)+/i)";
-}
-
-main: (args) = {
-    m: name_matcher = ();
-
-    data: std::string = "Donald Duck";
-    if args.ssize() >= 2 {
-        data = args[1];
-    }
-
-    result := m.regex.match(data);
-    if result.matched {
-        std::cout << "Hello (result.group(2))$, (result.group(1))$!" << std::endl;
-    }
-    else {
-        std::cout << "I only know names of the form: <name> <family name>." << std::endl;
-    }
-
-    std::cout << "Case insensitive match: " << m.regex_no_case.search("blubabABblah").group(0) << std::endl;
-}
-```
-
-The regex syntax used by cppfront is the [perl syntax](https://perldoc.perl.org/perlre). Most of the syntax is available. Currently we do not support unicode characters and the syntax tokens associated with them. In [supported features](../other/regex_status.md) all the available regex syntax is listed.
-
-The fields have the type `cpp2::regex::regular_expression`, which is defined in `include/cpp2regex.h2`. The member functions are
-``` cpp title="Member functions for regular expressions"
-    match:        (in this, str: std::string_view) -> search_return;
-    match:        (in this, str: std::string_view, start) -> search_return;
-    match:        (in this, str: std::string_view, start, length) -> search_return;
-    match: <Iter> (in this, start: Iter, end: Iter) -> search_return;
-
-    search:        (in this, str: std::string_view) -> search_return;
-    search:        (in this, str: std::string_view, start) -> search_return;
-    search:        (in this, str: std::string_view, start, length) -> search_return;
-    search: <Iter> (in this, start: Iter, end: Iter) -> search_return;
-```
-
-The return type `search_return` is defined inside of `cpp2::regex::regular_expression` and has the fields/functions:
-``` cpp title="Function and fields of a regular expression result."
-    matched: bool;
-    pos:     int;
-
-    group_number: (this) -> size_t;;
-    group:        (this, g: int) -> std::string;
-    group_start:  (this, g: int) -> int;
-    group_end:    (this, g: int) -> int;
-
-    group:        (this, g: bstring<CharT>) -> std::string;
-    group_start:  (this, g: bstring<CharT>) -> int;
-    group_end:    (this, g: bstring<CharT>) -> int;
-```
 
 #### `print`
 
