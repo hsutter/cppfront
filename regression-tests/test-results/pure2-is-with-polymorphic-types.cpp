@@ -49,7 +49,7 @@ class VD: public VA<0> {
 
 auto fun(auto const& v, auto const& name) -> void;
 
-#line 25 "pure2-is-with-polymorphic-types.cpp2"
+#line 26 "pure2-is-with-polymorphic-types.cpp2"
 auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -69,10 +69,11 @@ auto fun(auto const& v, auto const& name) -> void{
     if (cpp2::impl::is<VA<0>*>(v)) {std::cout << " *VA<0>";}
     if (cpp2::impl::is<VA<1>*>(v)) {std::cout << " *VA<1>";}
     if (cpp2::impl::is<VD*>(v)) {std::cout << " *VD";}
+    if (cpp2::impl::is<void>(v)) {std::cout << " empty";}
     std::cout << std::endl;
 }
 
-#line 25 "pure2-is-with-polymorphic-types.cpp2"
+#line 26 "pure2-is-with-polymorphic-types.cpp2"
 auto main() -> int{
 
     VC vc {}; 
@@ -87,5 +88,6 @@ auto main() -> int{
     fun(cpp2::move(p0), "p0");
     fun(cpp2::move(p1), "p1");
 
+    fun(nullptr, "nullptr");
 }
 
