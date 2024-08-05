@@ -1,41 +1,41 @@
 In file included from mixed-bugfix-for-ufcs-non-local.cpp:6:
 ../../../include/cpp2util.h:2100:1: error: lambda-expression in template parameter type
- 2100 | //
+ 2100 | constexpr auto is( X const& x ) -> bool
       | ^
 ../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 |     //  Value case
+ 2137 | 
       |                                                           ^         
 mixed-bugfix-for-ufcs-non-local.cpp2:13:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 mixed-bugfix-for-ufcs-non-local.cpp2:13:36: error: template argument 1 is invalid
 ../../../include/cpp2util.h:2100:1: error: lambda-expression in template parameter type
- 2100 | //
+ 2100 | constexpr auto is( X const& x ) -> bool
       | ^
 ../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 |     //  Value case
+ 2137 | 
       |                                                           ^         
 mixed-bugfix-for-ufcs-non-local.cpp2:21:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 mixed-bugfix-for-ufcs-non-local.cpp2:21:36: error: template argument 1 is invalid
 ../../../include/cpp2util.h:2100:1: error: lambda-expression in template parameter type
- 2100 | //
+ 2100 | constexpr auto is( X const& x ) -> bool
       | ^
 ../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 |     //  Value case
+ 2137 | 
       |                                                           ^         
 mixed-bugfix-for-ufcs-non-local.cpp2:31:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 mixed-bugfix-for-ufcs-non-local.cpp2:31:36: error: template argument 1 is invalid
 ../../../include/cpp2util.h:2100:1: error: lambda-expression in template parameter type
- 2100 | //
+ 2100 | constexpr auto is( X const& x ) -> bool
       | ^
 ../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 |     //  Value case
+ 2137 | 
       |                                                           ^         
 mixed-bugfix-for-ufcs-non-local.cpp2:33:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 mixed-bugfix-for-ufcs-non-local.cpp2:33:36: error: template argument 1 is invalid
 ../../../include/cpp2util.h:2100:1: error: lambda-expression in template parameter type
- 2100 | //
+ 2100 | constexpr auto is( X const& x ) -> bool
       | ^
 ../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 |     //  Value case
+ 2137 | 
       |                                                           ^         
 mixed-bugfix-for-ufcs-non-local.cpp2:21:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 mixed-bugfix-for-ufcs-non-local.cpp2:21:36: error: template argument 1 is invalid
