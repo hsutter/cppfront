@@ -27,7 +27,7 @@ The listings are taken from the [Perl regex docs](https://perldoc.perl.org/perlr
 | **`\r`** | Return (CR) | <span style="color:green">Supported</span> | 
 | **`\f`** | Form feed (FF) | <span style="color:green">Supported</span> | 
 | **`\a`** | Alarm (bell) (BEL) | <span style="color:green">Supported</span> | 
-| **`\3`** | Escape (think troff) (ESC) | <span style="color:green">Supported</span> | 
+| **`\e`** | Escape (think troff) (ESC) | <span style="color:green">Supported</span> |
 | **`\x{}`, `\x00`** | Character whose ordinal is the given hexadecimal number | <span style="color:green">Supported</span> | 
 | **`\o{}`, `\000`** | Character whose ordinal is the given octal number | <span style="color:green">Supported</span> | 
 

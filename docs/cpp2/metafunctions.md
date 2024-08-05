@@ -371,7 +371,7 @@ A `regex` type has data members that are regular expression objects. This metafu
 name_matcher: @regex type
 = {
     regex         := R"((\w+) (\w+))";  // for example: Margaret Hamilton
-    regex_no_case := R"(/(ab)+/i)";
+    regex_no_case := R"(/(ab)+/i)";     // case insensitive match of `ab`
 }
 
 main: (args) = {
@@ -382,7 +382,7 @@ main: (args) = {
         data = args[1];
     }
 
-    //  regex.match requires matches to start at the beginning the target string
+    //  regex.match requires matches to match the entire string, from start to end
     result := m.regex.match(data);
     if result.matched {
         //  We found a match; reverse the order of the substrings
@@ -406,7 +406,7 @@ The `@regex` metafunction currently supports most of [Perl regex syntax](https:/
 Each regex object has the type `cpp2::regex::regular_expression`, which is defined in `include/cpp2regex.h2`. The member functions are:
 
 ``` cpp title="Member functions for regular expressions"
-//  .match() requires matches to start at the beginning the target string
+//  .match() requires matches to match the entire string, from start to end
 //  .search() finds a match anywhere within the target string
 
 match :        (this, str: std::string_view)                -> search_return;
