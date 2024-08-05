@@ -389,7 +389,7 @@ auto split_string_list(std::string_view str)
         return std::isalnum(c) || c == '_';
     };
 
-    auto pos = 0;
+    auto pos = decltype(std::ssize(str)){ 0 };
     while( pos < std::ssize(str) ) {
         //  Skip non-alnum
         while (pos < std::ssize(str) && !is_id_char(str[pos])) {
