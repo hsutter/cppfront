@@ -26,6 +26,21 @@ bar result_expr: $1-$2 expected_results foo-
 bar result_expr: $1-$2 expected_results 
 
 
+
+bar result_expr: $1-$2 expected_results foo-
+13_y: OK regex: (\v+)(\V) parsed_regex: (\v+)(\V) str: foo
+
+
+bar result_expr: $1-$2 expected_results 
+
+
+-b
+14_y: OK regex: foo(\v)bar parsed_regex: foo(\v)bar str: foo
+bar result_expr: $1 expected_results 
+15_y: OK regex: (\V)(\v) parsed_regex: (\V)(\v) str: foo
+bar result_expr: $1-$2 expected_results o-
+16_y: OK regex: (\v)(\V) parsed_regex: (\v)(\V) str: foo
+bar result_expr: $1-$2 expected_results 
 -b
 14_y: OK regex: foo(\v)bar parsed_regex: foo(\v)bar str: foo
 bar result_expr: $1 expected_results 
