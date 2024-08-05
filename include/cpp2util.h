@@ -1644,12 +1644,7 @@ auto is( X const& x ) -> bool {
             )
     )
     {
-        if constexpr (std::is_pointer_v<X>) {
-            return Dynamic_cast<C const*>(x) != nullptr;
-        }
-        else {
             return Dynamic_cast<C const*>(&x) != nullptr;
-        }
     }
     else if constexpr (
         requires { *x; X(); }
