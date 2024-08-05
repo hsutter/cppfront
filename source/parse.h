@@ -3244,6 +3244,43 @@ public:
     auto parent_is_polymorphic() const -> bool
         { return  parent_declaration && parent_declaration->is_polymorphic(); }
 
+    auto is_inline() const -> bool
+    {
+        return is_alias()
+            || is_constexpr
+            || template_parameters != nullptr;
+    }
+
+    auto parent_is_inline() const -> bool
+    {
+        for (auto p = parent_declaration; p; p = p->parent_declaration)
+        {
+            if (p->is_inline())
+                return true;
+        }
+        return false;
+    }
+
+    auto last_parent_function_is_not_inline() const -> bool
+    {
+        auto p = parent_declaration;
+
+        if (!p)
+            return false;
+
+        auto pp = p->parent_declaration;
+        if (!p->is_function())
+            p = nullptr;
+
+        while (pp) {
+            if (pp->is_function())
+                p = pp;
+            pp = pp->parent_declaration;
+        }
+
+        return p && !p->is_inline();
+    }
+
     enum which {
         functions = 1,
         objects   = 2,
