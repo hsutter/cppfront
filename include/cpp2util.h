@@ -1659,6 +1659,16 @@ auto is( X const& x ) -> bool {
     {
         return x == X();
     }
+    else if constexpr (
+        specialization_of_template<X, std::optional>
+    )
+    {
+        if (x.has_value()) {
+            return is<C>(x.value());
+        } else {
+            return std::is_same_v<C, empty>;
+        }
+    }
     else {
         return false;
     }
@@ -2134,19 +2144,6 @@ constexpr auto as( X const& x ) -> T
 //-------------------------------------------------------------------------------------------------------------
 //  std::optional is and as
 //
-
-//  is Type
-//
-template<typename T, typename X>
-    requires std::is_same_v<X,std::optional<T>>
-constexpr auto is( X const& x ) -> bool
-    { return x.has_value(); }
-
-template<typename T, typename U>
-    requires std::is_same_v<T,empty>
-constexpr auto is( std::optional<U> const& x ) -> bool
-    { return !x.has_value(); }
-
 
 //  is Value
 //
