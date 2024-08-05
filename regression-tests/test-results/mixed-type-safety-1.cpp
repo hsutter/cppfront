@@ -24,12 +24,13 @@ class Square : public Shape { };
 //--- printing helpers -----------------
 
 #line 13 "mixed-type-safety-1.cpp2"
-auto print(cpp2::impl::in<std::string> msg, auto const& x) -> void;
+template<typename T> auto print(cpp2::impl::in<std::string> msg, T const& x) -> void
+CPP2_REQUIRES (!(std::convertible_to<T,bool>)) ;
 
-#line 16 "mixed-type-safety-1.cpp2"
+#line 17 "mixed-type-safety-1.cpp2"
 auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void;
 
-#line 24 "mixed-type-safety-1.cpp2"
+#line 25 "mixed-type-safety-1.cpp2"
 //--- examples -------------------------
 
 [[nodiscard]] auto main() -> int;
@@ -39,10 +40,13 @@ auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void;
 #line 1 "mixed-type-safety-1.cpp2"
 
 #line 13 "mixed-type-safety-1.cpp2"
-auto print(cpp2::impl::in<std::string> msg, auto const& x) -> void { 
+template<typename T> auto print(cpp2::impl::in<std::string> msg, T const& x) -> void
+requires (!(std::convertible_to<T,bool>))  { 
+
+#line 15 "mixed-type-safety-1.cpp2"
     std::cout << msg << x << "\n";  }
 
-#line 16 "mixed-type-safety-1.cpp2"
+#line 17 "mixed-type-safety-1.cpp2"
 auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void
 {
     cpp2::impl::deferred_init<char const*> bmsg; 
@@ -51,7 +55,7 @@ auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void
     std::cout << msg << cpp2::move(bmsg.value()) << "\n";
 }
 
-#line 26 "mixed-type-safety-1.cpp2"
+#line 27 "mixed-type-safety-1.cpp2"
 [[nodiscard]] auto main() -> int
 {
     print("1.1 is int? ", cpp2::impl::is<int>(1.1));
