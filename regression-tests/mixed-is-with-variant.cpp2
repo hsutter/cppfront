@@ -1,0 +1,57 @@
+test: (v) = {
+    std::cout << "v is empty = (v is  void)$" << std::endl;
+    std::cout << "v is std::monostate = (v is std::monostate)$" << std::endl;
+    std::cout << "v is X< 0> = (v is X< 0>)$" << std::endl;
+    std::cout << "v is X<10> = (v is X<10>)$" << std::endl;
+    std::cout << "v is X<29> = (v is X<29>)$" << std::endl;
+    std::cout << "v is X<30> = (v is X<30>)$" << std::endl;
+    std::cout << "v is ThrowingConstruction = (v is ThrowingConstruction)$" << std::endl;
+    std::cout << std::endl;
+}
+
+set_and_test: (inout v, what, forward value) = {
+    std::cout << "set v to (what)$" << std::endl;
+    v = value;
+    test(v);
+}
+
+main: () -> int = {
+
+    v: std::variant<std::monostate,
+                    ThrowingConstruction,
+                    X< 0>, X< 1>, X< 2>, X< 3>, X< 4>, X< 5>, X< 6>, X< 7>, X< 8>, X< 9>, 
+                    X<10>, X<11>, X<12>, X<13>, X<14>, X<15>, X<16>, X<17>, X<18>, X<19>,
+                    PotentiallyThrowingVariant,
+                    X<20>, X<21>, X<22>, X<23>, X<24>, X<25>, X<26>, X<27>, X<28>, X<29>> = ();
+
+
+    set_and_test(v, "std::monostate", std::monostate());
+    set_and_test(v, "X<19>", X<19>());
+    set_and_test(v, "X<29>", X<29>());
+    set_and_test(v, "X<0> in std::variant<std::monostate, PotentiallyThrowingVariant, X<0>, X<1>, X<2>>", PotentiallyThrowingVariant(X<0>()));
+    set_and_test(v, "std::monostate in std::variant<std::monostate, PotentiallyThrowingVariant, X<0>, X<1>, X<2>>", PotentiallyThrowingVariant(std::monostate()));
+    set_and_test(v, "ThrowingConstruction", ThrowingConstruction());
+    
+    std::cout << "set v to valueless by exception state" << std::endl;
+    set_to_valueless_by_exception(v);
+    test(v);
+    
+    std::cout << "set v element to valueless by exception state" << std::endl;
+    v.emplace<22>();
+    set_to_valueless_by_exception(v.get<22>());
+    test(v);
+}
+
+template<int I>
+struct X { operator int() const { return I; } };
+
+struct ThrowingConstruction {
+    constexpr ThrowingConstruction() = default;
+    ThrowingConstruction(int) { throw 1; }
+};
+
+PotentiallyThrowingVariant: type == std::variant<std::monostate, ThrowingConstruction, X<0>, X<1>, X<2>>;
+
+void set_to_valueless_by_exception(auto& v) try {
+    v.template emplace<1>(42);
+} catch (...) {}
