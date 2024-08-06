@@ -374,7 +374,7 @@ A `cpp1_rule_of_zero` type is one that has no user-written copy/move/destructor 
 
 #### `regex`
 
-Replaces fields in the class with regular expression objects. Each field starting with `regex` is replaced with a regular expression of the same type.
+Replaces fields in the class with regular expression objects. All fields named `regex` or starting with `regex_` are replaced with a regular expression of the same type.
 
 ``` cpp title="Regular expression example"
 name_matcher: @regex type
@@ -401,7 +401,6 @@ main: (args) = {
 
     std::cout << "Case insensitive match: " << m.regex_no_case.search("blubabABblah").group(0) << std::endl;
 }
-
 ```
 
 The regex syntax used by cppfront is the [perl syntax](https://perldoc.perl.org/perlre). Most of the syntax is available. Currently we do not support unicode characters and the syntax tokens associated with them. In [supported features](../other/regex_status.md) all the available regex syntax is listed.

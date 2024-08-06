@@ -10,7 +10,7 @@ The listings are taken from [perl regex docs](https://perldoc.perl.org/perlre). 
  - [x] m                Treat the string being matched against as multiple lines. That is, change "^" and "$" from matching the start of the string's first line and the end of its last line to matching the start and end of each line within the string.
  - [x] s                Treat the string as single line. That is, change "." to match any character whatsoever, even a newline, which normally it would not match.
  - [x] x and xx         Extend your pattern's legibility by permitting whitespace and comments. Details in "/x and /xx"
- - [x] n                Prevent the grouping metacharacters () from capturing. This modifier, new in 5.22, will stop $1, $2, etc... from being filled in.
+ - [x] n                Prevent the grouping metacharacters () from capturing. This modifier will stop $1, $2, etc... from being filled in.
  - [ ] c                keep the current position during repeated matching
 ```
 
@@ -54,37 +54,37 @@ The listings are taken from [perl regex docs](https://perldoc.perl.org/perlre). 
 
 ### Character Classes and other Special Escapes __(Complete)__
 ```
- - [x] [...]     [1]  Match a character according to the rules of the
+ - [x] [...]        Match a character according to the rules of the
                     bracketed character class defined by the "...".
                     Example: [a-z] matches "a" or "b" or "c" ... or "z"
- - [x] [[:...:]] [2]  Match a character according to the rules of the POSIX
+ - [x] [[:...:]]    Match a character according to the rules of the POSIX
                     character class "..." within the outer bracketed
                     character class.  Example: [[:upper:]] matches any
                     uppercase character.
- - [x] \g1       [5]  Backreference to a specific or previous group,
- - [x] \g{-1}    [5]  The number may be negative indicating a relative
-                  previous group and may optionally be wrapped in
-                  curly brackets for safer parsing.
- - [x] \g{name}  [5]  Named backreference
- - [x] \k<name>  [5]  Named backreference
- - [x] \k'name'  [5]  Named backreference
- - [x] \k{name}  [5]  Named backreference
- - [x] \w        [3]  Match a "word" character (alphanumeric plus "_", plus
+ - [x] \g1          Backreference to a specific or previous group,
+ - [x] \g{-1}       The number may be negative indicating a relative
+                    previous group and may optionally be wrapped in
+                    curly brackets for safer parsing.
+ - [x] \g{name}     Named backreference
+ - [x] \k<name>     Named backreference
+ - [x] \k'name'     Named backreference
+ - [x] \k{name}     Named backreference
+ - [x] \w           Match a "word" character (alphanumeric plus "_", plus
                     other connector punctuation chars plus Unicode
                     marks)
- - [x] \W        [3]  Match a non-"word" character
- - [x] \s        [3]  Match a whitespace character
- - [x] \S        [3]  Match a non-whitespace character
- - [x] \d        [3]  Match a decimal digit character
- - [x] \D        [3]  Match a non-digit character
- - [x] \v        [3]  Vertical whitespace
- - [x] \V        [3]  Not vertical whitespace
- - [x] \h        [3]  Horizontal whitespace
- - [x] \H        [3]  Not horizontal whitespace
- - [x] \1        [5]  Backreference to a specific capture group or buffer.
+ - [x] \W           Match a non-"word" character
+ - [x] \s           Match a whitespace character
+ - [x] \S           Match a non-whitespace character
+ - [x] \d           Match a decimal digit character
+ - [x] \D           Match a non-digit character
+ - [x] \v           Vertical whitespace
+ - [x] \V           Not vertical whitespace
+ - [x] \h           Horizontal whitespace
+ - [x] \H           Not horizontal whitespace
+ - [x] \1           Backreference to a specific capture group or buffer.
                     '1' may actually be any positive integer.
- - [x] \N        [7]  Any character but \n.  Not affected by /s modifier
- - [x] \K        [6]  Keep the stuff left of the \K, don't include it in $&
+ - [x] \N           Any character but \n.  Not affected by /s modifier
+ - [x] \K           Keep the stuff left of the \K, don't include it in $&
 ```
 
 ### Assertions
@@ -95,7 +95,7 @@ The listings are taken from [perl regex docs](https://perldoc.perl.org/perlre). 
  - [x] \Z     Match only at end of string, or before newline at the end
  - [x] \z     Match only at end of string
  - [ ] \G     Match only at pos() (e.g. at the end-of-match position
-          of prior m//g)
+              of prior m//g)
 ```
 
 ### Capture groups __(Complete)__
@@ -157,7 +157,7 @@ The listings are taken from [perl regex docs](https://perldoc.perl.org/perlre). 
 ### Modifiers
 ```
  - [ ] p                Preserve the string matched such that ${^PREMATCH}, ${^MATCH}, and ${^POSTMATCH} are available for use after matching.
- - [ ] a, d, l, and u   These modifiers, all new in 5.14, affect which character-set rules (Unicode, etc.) are used, as described below in "Character set modifiers".
+ - [ ] a, d, l, and u   These modifiers affect which character-set rules (Unicode, etc.) are used, as described below in "Character set modifiers".
  - [ ] g                globally match the pattern repeatedly in the string
  - [ ] e                evaluate the right-hand side as an expression
  - [ ] ee               evaluate the right side as a string then eval the result
@@ -180,11 +180,11 @@ The listings are taken from [perl regex docs](https://perldoc.perl.org/perlre). 
 
 ### Character Classes and other Special Escapes
 ```
- - [ ]  (?[...])  [8]  Extended bracketed character class
- - [ ] \pP       [3]  Match P, named property.  Use \p{Prop} for longer names
- - [ ] \PP       [3]  Match non-P
- - [ ] \X        [4]  Match Unicode "eXtended grapheme cluster"
- - [ ] \R        [4]  Linebreak
+ - [ ]  (?[...])  Extended bracketed character class
+ - [ ] \pP        Match P, named property.  Use \p{Prop} for longer names
+ - [ ] \PP        Match non-P
+ - [ ] \X         Match Unicode "eXtended grapheme cluster"
+ - [ ] \R         Linebreak
 ```
 
 ### Assertions

@@ -2166,22 +2166,22 @@ auto print(cpp2::impl::in<meta::type_declaration> t) -> void
 auto regex_gen(meta::type_declaration& t) -> void
 {
     auto has_default {false}; 
-    auto prefix {"regex"}; 
-    std::string postfix {"_mod"};           // TODO: remove mod syntax when 'm.initializer()' can be '("pat", "mod")'
+    auto exact_name {"regex"}; 
+    auto prefix {"regex_"}; 
     std::map<std::string,std::string> expressions {}; 
 
     for ( auto& m : CPP2_UFCS(get_member_objects)(t) ) 
     {
         std::string name {CPP2_UFCS(name)(m)}; 
 
-        if (CPP2_UFCS(starts_with)(name, prefix)) 
+        if (CPP2_UFCS(starts_with)(name, prefix) || name == exact_name) 
         {
             if (!(CPP2_UFCS(has_initializer)(m))) {
                 CPP2_UFCS(error)(t, "Regular expression must have an initializer.");
             }
             CPP2_UFCS(mark_for_removal_from_enclosing_type)(m);
 
-            if (name == prefix) {
+            if (name == exact_name) {
                 if (has_default) {
                     CPP2_UFCS(error)(t, "Type can only contain one default named regular expression.");
                 }

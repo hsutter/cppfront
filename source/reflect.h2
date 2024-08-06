@@ -1520,22 +1520,22 @@ print: (t: meta::type_declaration) =
 regex_gen: (inout t: meta::type_declaration) =
 {
     has_default := false;
-    prefix      := "regex";
-    postfix     : std::string = "_mod";     // TODO: remove mod syntax when 'm.initializer()' can be '("pat", "mod")'
+    exact_name  := "regex";
+    prefix      := "regex_";
     expressions : std::map<std::string, std::string> = ();
 
     for t.get_member_objects() do (inout m)
     {
         name: std::string = m.name();
 
-        if name.starts_with(prefix)
+        if name.starts_with(prefix) || name == exact_name
         {
             if !m.has_initializer() {
                 t.error("Regular expression must have an initializer.");
             }
             m.mark_for_removal_from_enclosing_type();
 
-            if name == prefix {
+            if name == exact_name {
                 if has_default {
                     t.error("Type can only contain one default named regular expression.");
                 }
