@@ -371,7 +371,7 @@ A `regex` type has data members that are regular expression objects. This metafu
 name_matcher: @regex type
 = {
     regex         := R"((\w+) (\w+))";  // for example: Margaret Hamilton
-    regex_no_case := R"(/(ab)+/i)";     // case insensitive match of `ab`
+    regex_no_case := R"(/(ab)+/i)";     // case insensitive match of "ab"+
 }
 
 main: (args) = {
