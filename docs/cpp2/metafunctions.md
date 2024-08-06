@@ -360,6 +360,88 @@ main: () = {
 ```
 
 
+### For computational and functional types
+
+
+#### `regex`
+
+A `regex` type has data members that are regular expression objects. This metafunction replaces all of the type's data members named `regex` or `regex_*` with regular expression objects of the same type. For example:
+
+``` cpp title="Regular expression example"  hl_lines="1 3 4 16 17 19 27 30 31"
+name_matcher: @regex type
+= {
+    regex         := R"((\w+) (\w+))";  // for example: Margaret Hamilton
+    regex_no_case := R"(/(ab)+/i)";     // case insensitive match of "ab"+
+}
+
+main: (args) = {
+    m: name_matcher = ();
+
+    data: std::string = "Donald Duck";
+    if args.ssize() >= 2 {
+        data = args[1];
+    }
+
+    //  regex.match requires matches to match the entire string, from start to end
+    result := m.regex.match(data);
+    if result.matched {
+        //  We found a match; reverse the order of the substrings
+        std::cout << "Hello (result.group(2))$, (result.group(1))$!\n";
+    }
+    else {
+        std::cout << "I only know names of the form: <name> <family name>.\n";
+    }
+
+    //  regex.search finds a match anywhere within the target string
+    std::cout << "Case insensitive match: "
+                 "(m.regex_no_case.search(\"blubabABblah\").group(0))$\n";
+}
+//  Prints:
+//      Hello Duck, Donald!
+//      Case insensitive match: abAB
+```
+
+The `@regex` metafunction currently supports most of [Perl regex syntax](https://perldoc.perl.org/perlre), except for Unicode characters and the syntax tokens associated with them. See [Supported regular expression features](../notes/regex_status.md) for a list of regex options.
+
+Each regex object has the type `cpp2::regex::regular_expression`, which is defined in `include/cpp2regex.h2`. The member functions are:
+
+``` cpp title="Member functions for regular expressions"
+//  .match() requires matches to match the entire string, from start to end
+//  .search() finds a match anywhere within the target string
+
+match :        (this, str: std::string_view)                -> search_return;
+search:        (this, str: std::string_view)                -> search_return;
+
+match :        (this, str: std::string_view, start)         -> search_return;
+search:        (this, str: std::string_view, start)         -> search_return;
+
+match :        (this, str: std::string_view, start, length) -> search_return;
+search:        (this, str: std::string_view, start, length) -> search_return;
+
+match : <Iter> (this, start: Iter, end: Iter)               -> search_return;
+search: <Iter> (this, start: Iter, end: Iter)               -> search_return;
+```
+
+The return type `search_return` is defined in `cpp2::regex::regular_expression`. It has these members:
+
+``` cpp title="Members of a regular expression result"
+matched: bool;
+pos:     int;
+
+//  Functions to access groups by number
+group_number: (this) -> size_t;;
+group:        (this, g: int) -> std::string;
+group_start:  (this, g: int) -> int;
+group_end:    (this, g: int) -> int;
+
+//  Functions to access groups by name
+group:        (this, g: bstring<CharT>) -> std::string;
+group_start:  (this, g: bstring<CharT>) -> int;
+group_end:    (this, g: bstring<CharT>) -> int;
+```
+
+
+
 ### Helpers and utilities
 
 
