@@ -1,0 +1,72 @@
+set v to std::monostate
+v is empty = true
+v is std::monostate = true
+v is X< 0> = false
+v is X<10> = false
+v is X<29> = false
+v is X<30> = false
+v is ThrowingConstruction = false
+
+set v to X<19>
+v is empty = false
+v is std::monostate = false
+v is X< 0> = false
+v is X<10> = false
+v is X<29> = false
+v is X<30> = false
+v is ThrowingConstruction = false
+
+set v to X<29>
+v is empty = false
+v is std::monostate = false
+v is X< 0> = false
+v is X<10> = false
+v is X<29> = true
+v is X<30> = false
+v is ThrowingConstruction = false
+
+set v to X<0> in std::variant<std::monostate, PotentiallyThrowingVariant, X<0>, X<1>, X<2>>
+v is empty = false
+v is std::monostate = false
+v is X< 0> = true
+v is X<10> = false
+v is X<29> = false
+v is X<30> = false
+v is ThrowingConstruction = false
+
+set v to std::monostate in std::variant<std::monostate, PotentiallyThrowingVariant, X<0>, X<1>, X<2>>
+v is empty = true
+v is std::monostate = true
+v is X< 0> = false
+v is X<10> = false
+v is X<29> = false
+v is X<30> = false
+v is ThrowingConstruction = false
+
+set v to ThrowingConstruction
+v is empty = false
+v is std::monostate = false
+v is X< 0> = false
+v is X<10> = false
+v is X<29> = false
+v is X<30> = false
+v is ThrowingConstruction = true
+
+set v to valueless by exception state
+v is empty = true
+v is std::monostate = false
+v is X< 0> = false
+v is X<10> = false
+v is X<29> = false
+v is X<30> = false
+v is ThrowingConstruction = false
+
+set v element to valueless by exception state
+v is empty = true
+v is std::monostate = false
+v is X< 0> = false
+v is X<10> = false
+v is X<29> = false
+v is X<30> = false
+v is ThrowingConstruction = false
+
