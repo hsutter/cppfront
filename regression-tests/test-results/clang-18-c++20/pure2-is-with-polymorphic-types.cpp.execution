@@ -1,0 +1,8 @@
+vc is VC VA<0> VA<1>
+p0* is VC VA<0> VA<1>
+p1* is VC VA<0> VA<1>
+vc& is *VC *VA<0> *VA<1>
+p0 is *VC *VA<0> *VA<1>
+p1 is *VC *VA<0> *VA<1>
+nullptr is empty
+A is A
