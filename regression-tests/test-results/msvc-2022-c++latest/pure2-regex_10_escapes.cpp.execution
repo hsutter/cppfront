@@ -31,10 +31,8 @@ bar result_expr: $1-$2 expected_results
 15_y: OK regex: (\V)(\v) parsed_regex: (\V)(\v) str: foobar result_expr: $1-$2 expected_results o-
 16_y: OK regex: (\v)(\V) parsed_regex: (\v)(\V) str: foobar result_expr: $1-$2 expected_results -b
 17_y: OK regex: foo\t\n\r\f\a\ebar parsed_regex: foo\t\n\r\f\a\ebar str: foo	
-
-bar result_expr: $& expected_results foo	
-
-bar
+bar result_expr: $& expected_results foo	
+bar
 18_y: OK regex: foo\Kbar parsed_regex: foo\Kbar str: foobar result_expr: $& expected_results bar
 19_y: OK regex: \x41\x42 parsed_regex: \x41\x42 str: AB result_expr: $& expected_results AB
 20_y: OK regex: \101\o{102} parsed_regex: \101\o{102} str: AB result_expr: $& expected_results AB
