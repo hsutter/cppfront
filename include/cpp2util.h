@@ -302,6 +302,12 @@
     #include <vector>
 #endif
 
+//  cpp2util.h uses signed integer types for indices and container sizes
+//  so disable clang signed-to-unsigned conversion warnings in this header.
+#ifdef __clang__
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wsign-conversion"
+#endif
 
 //-----------------------------------------------------------------------
 //
@@ -2833,4 +2839,9 @@ using cpp2::cpp2_new;
     #define CPP2_REQUIRES_(...) requires (__VA_ARGS__)
 #endif
 
+//  Restore clang signed-to-unsigned conversion warnings
+#ifdef __clang__
+    #pragma clang diagnostic pop
 #endif
+
+#endif // CPP2_CPP2UTIL_H

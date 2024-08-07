@@ -20,6 +20,17 @@
     #pragma GCC diagnostic ignored "-Wdangling-reference"
 #endif
 
+//  Disable some clang conversion warnings:
+//      cppfront uses signed integer types for indices and container sizes.
+//      Allow implicit conversion of string literal to bool for assert(!"message").
+//  Note: We don't pop the diagnostic because we want them disabled in the
+//  entire cppfront translation unit.
+#ifdef __clang__
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wsign-conversion"
+    #pragma clang diagnostic ignored "-Wstring-conversion"
+#endif
+
 #include "cpp2util.h"
 
 
