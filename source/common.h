@@ -22,13 +22,11 @@
 
 //  Disable some clang conversion warnings:
 //      cppfront uses signed integer types for indices and container sizes.
-//      Allow implicit conversion of string literal to bool for assert(!"message").
 //  Note: We don't pop the diagnostic because we want them disabled in the
 //  entire cppfront translation unit.
 #ifdef __clang__
     #pragma clang diagnostic push
     #pragma clang diagnostic ignored "-Wsign-conversion"
-    #pragma clang diagnostic ignored "-Wstring-conversion"
 #endif
 
 #include "cpp2util.h"
@@ -108,7 +106,7 @@ struct source_line
         break;case category::cpp1:          return "/* 1 */ ";
         break;case category::cpp2:          return "/* 2 */ ";
         break;case category::rawstring:     return "/* R */ ";
-        break;default: assert(!"illegal category"); abort();
+        break;default: assert(false && "ICE: illegal category"); abort();
         }
     }
 };

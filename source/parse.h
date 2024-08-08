@@ -1414,7 +1414,7 @@ struct type_id_node
         break;case keyword:
             return std::get<keyword>(id)->to_string() + suffix;
         break;default:
-            assert(!"ICE: invalid type_id state");
+            assert(false && "ICE: invalid type_id state");
         }
         // else
         return {};
@@ -1435,7 +1435,7 @@ struct type_id_node
         break;case keyword:
             return get<keyword>(id);
         break;default:
-            assert(!"ICE: invalid type_id state");
+            assert(false && "ICE: invalid type_id state");
         }
         // else
         return {};
@@ -1501,7 +1501,7 @@ auto template_argument::to_string() const
     break;case type_id:
         return std::get<type_id>(arg)->to_string();
     break;default:
-        assert(!"ICE: invalid template_argument state");
+        assert(false && "ICE: invalid template_argument state");
     }
     // else
     return {};
@@ -4353,7 +4353,7 @@ auto primary_expression_node::position() const
     }
 
     break;default:
-        assert (!"illegal primary_expression_node state");
+        assert (false && "ICE: illegal primary_expression_node state");
         return { 0, 0 };
     }
 }
@@ -4476,7 +4476,7 @@ auto statement_node::position() const
     }
 
     break;default:
-        assert (!"illegal statement_node state");
+        assert (false && "ICE: illegal statement_node state");
         return { 0, 0 };
     }
 }
@@ -6300,7 +6300,7 @@ private:
 
                 //  And it shouldn't be anything else
                 else {
-                    assert (!"ICE: validate_op should take one token and return bool, or two tokens and return token const* ");
+                    assert (false && "ICE: validate_op should take one token and return bool, or two tokens and return token const* ");
                 }
 
                 //  At this point we may have a valid t.op, so try to parse the next term...
@@ -7480,7 +7480,7 @@ private:
             return n;
         }
 
-        assert(!"compiler bug: unexpected case");
+        assert(false && "ICE: unexpected case");
         return {};
     }
 
@@ -8102,7 +8102,7 @@ private:
             break;case passing_style::forward:
                 error( "a 'forward' parameter shouldn't be const, because it passes along the argument's actual const-ness (and actual value category)", false );
             break;default:
-                assert (!"ICE: missing case");
+                assert (false && "ICE: missing case");
             }
             return {};
         }
@@ -9254,7 +9254,7 @@ private:
 
         //  Anything else shouldn't be possible
         else {
-            assert(!"ICE: should be unreachable - invalid alias declaration");
+            assert(false && "ICE: should be unreachable - invalid alias declaration");
             return {};
         }
 
