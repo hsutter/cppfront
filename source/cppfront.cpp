@@ -113,10 +113,10 @@ auto main(
                     auto total = count.cpp1_lines + count.cpp2_lines;
                     auto total_lines = print_with_thousands(total);
                     out << "   Cpp1  "
-                        << std::right << std::setw(total_lines.size())
+                        << std::right << std::setw(unsafe_narrow<int>(total_lines.size()))
                         << print_with_thousands(count.cpp1_lines) << " line" << (count.cpp1_lines != 1 ? "s" : "");
                     out << "\n   Cpp2  "
-                        << std::right << std::setw(total_lines.size())
+                        << std::right << std::setw(unsafe_narrow<int>(total_lines.size()))
                         << print_with_thousands(count.cpp2_lines) << " line" << (count.cpp2_lines != 1 ? "s" : "");
                     if (total > 0) {
                         out << " (";
@@ -145,7 +145,7 @@ auto main(
                     for (auto [elapsed, name] : sorted_timers) {
                         std::cout
                             << "\n         "
-                            << std::right << std::setw(total_time.size())
+                            << std::right << std::setw(unsafe_narrow<int>(total_time.size()))
                             << print_with_thousands(elapsed) << " ms" << " in " << name;
                     }
                 }
