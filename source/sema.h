@@ -253,7 +253,7 @@ struct symbol {
         }
 
         break;default:
-            assert (!"illegal symbol state");
+            assert (false && "ICE: illegal symbol state");
             return { 0, 0 };
         }
     }
@@ -284,7 +284,7 @@ struct symbol {
         }
 
         break;default:
-            assert (!"illegal symbol state");
+            assert (false && "ICE: illegal symbol state");
             return nullptr;
         }
     }
@@ -1443,7 +1443,7 @@ private:
             }
 
             break;default:
-                assert (!"illegal symbol");
+                assert (false && "ICE: illegal symbol");
             }
 
         }

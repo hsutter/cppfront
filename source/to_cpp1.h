@@ -257,7 +257,7 @@ private:
         switch (phase) {
         break;case phase0_type_decls          : phase = phase1_type_defs_func_decls;
         break;case phase1_type_defs_func_decls: phase = phase2_func_defs;
-        break;default                         : assert(!"ICE: invalid lowering phase");
+        break;default                         : assert(false && "ICE: invalid lowering phase");
         }
         curr_pos     = {};
         next_comment = 0;   // start over with the comments
@@ -2349,7 +2349,7 @@ public:
         }
 
         else {
-            assert(!"ICE: unexpected case");
+            assert(false && "ICE: unexpected case");
         }
 
         assert (iteration_statements.back().stmt);
@@ -5833,7 +5833,7 @@ public:
                 }
 
                 else {
-                    assert(!"ICE: should be unreachable - invalid alias");
+                    assert(false && "ICE: should be unreachable - invalid alias");
                 }
 
                 return;
