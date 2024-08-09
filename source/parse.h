@@ -2857,8 +2857,9 @@ struct declaration_node
     bool member_function_generation = true;
 
     //  Cache some context
-    bool is_a_template_parameter = false;
-    bool is_a_parameter          = false;
+    bool is_a_template_parameter  = false;
+    bool is_a_parameter           = false;
+    bool is_a_statement_parameter = false;
 
     //  Constructor
     //
@@ -2883,6 +2884,12 @@ struct declaration_node
         -> bool
     {
         return is_a_parameter;
+    }
+
+    auto is_statement_parameter() const
+        -> bool
+    {
+        return is_a_statement_parameter;
     }
 
     auto type_member_mark_for_removal()
@@ -8041,6 +8048,7 @@ private:
             pos = start_pos;    // backtrack
             return {};
         }
+        n->declaration->is_a_statement_parameter = is_statement;
 
         //  And some error checks
         //
@@ -8107,15 +8115,6 @@ private:
             return {};
         }
 
-        if (
-            !is_returns
-            && !is_statement
-            && n->declaration->initializer
-            )
-        {
-            error("Cpp2 is currently exploring the path of not allowing default arguments - use overloading instead", false);
-            return {};
-        }
         if (is_named && is_returns) {
             auto tok = n->name();
             assert(tok);

@@ -3291,14 +3291,18 @@ public:
                     ufcs_string += "_TEMPLATE";
                 }
 
-                //  If we're in an object declaration (i.e., initializer)
-                //  at namespace scope, use the _NONLOCAL version
+                //  If we're in a namespace-scope object declaration (i.e., initializer)
+                //  or in a default function argument, use the _NONLOCAL version
                 //
                 //  Note: If there are other cases where code could execute
                 //  in a non-local scope where a capture-default for the UFCS
                 //  lambda would not be allowed, then add them here
                 if (
                     current_declarations.back()->is_namespace()
+                    || (
+                        current_declarations.back()->is_parameter()
+                        && !current_declarations.back()->is_statement_parameter()
+                        )
                     || (
                         current_declarations.back()->is_object()
                         && current_declarations.back()->parent_is_namespace()
@@ -4680,6 +4684,10 @@ public:
         if (
             !is_returns
             && n.declaration->initializer
+            && (
+                is_statement 
+                || printer.get_phase() != printer.phase2_func_defs
+                )
             )
         {
             auto guard = stack_element(current_declarations, &*n.declaration);
@@ -4689,7 +4697,7 @@ public:
             else {
                 printer.print_cpp2( " = ", n.declaration->initializer->position() );
             }
-            emit(*n.declaration->initializer, !is_statement);
+            emit(*n.declaration->initializer, false);
             if (is_statement) {
                 printer.print_cpp2( "};", n.declaration->initializer->position() );
             }

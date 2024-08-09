@@ -1,0 +1,66 @@
+In file included from pure2-default-arguments.cpp:7:
+../../../include/cpp2util.h:2086:28: error: local variable ‘obj’ may not appear in this context
+ 2086 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<17>(x)), T >) { if (x.index() == 17) return operator_as<17>(x); }
+      |                            ^~~
+../../../include/cpp2util.h:2047:34: note: in definition of macro ‘CPP2_UFCS_IDENTITY’
+ 2047 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 3>(x)), T >) { if (x.index() ==  3) return operator_as<3>(x); }
+      |                                  ^~~~~~~~~~~
+../../../include/cpp2util.h:2086:15: note: in expansion of macro ‘CPP2_FORWARD’
+ 2086 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<17>(x)), T >) { if (x.index() == 17) return operator_as<17>(x); }
+      |               ^~~~~~~~~~~~
+../../../include/cpp2util.h:2107:22: note: in expansion of macro ‘CPP2_UFCS_CONSTRAINT_ARG’
+ 2107 |     { return !x.has_value(); }
+      |                      ^~~~~~~~~               
+../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
+ 2137 |     { return std::any_cast<T>( x ); }
+      |                                                           ^         
+pure2-default-arguments.cpp2:6:22: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
+../../../include/cpp2util.h:2086:92: error: local variable ‘params’ may not appear in this context
+ 2086 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<17>(x)), T >) { if (x.index() == 17) return operator_as<17>(x); }
+      |                                                                                            ^~~~~~
+../../../include/cpp2util.h:2047:34: note: in definition of macro ‘CPP2_UFCS_IDENTITY’
+ 2047 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 3>(x)), T >) { if (x.index() ==  3) return operator_as<3>(x); }
+      |                                  ^~~~~~~~~~~
+../../../include/cpp2util.h:2086:79: note: in expansion of macro ‘CPP2_FORWARD’
+ 2086 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<17>(x)), T >) { if (x.index() == 17) return operator_as<17>(x); }
+      |                                                                               ^~~~~~~~~~~~
+../../../include/cpp2util.h:2107:22: note: in expansion of macro ‘CPP2_UFCS_CONSTRAINT_ARG’
+ 2107 |     { return !x.has_value(); }
+      |                      ^~~~~~~~~               
+../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
+ 2137 |     { return std::any_cast<T>( x ); }
+      |                                                           ^         
+pure2-default-arguments.cpp2:6:22: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
+../../../include/cpp2util.h:2087:74: error: local variable ‘obj’ may not appear in this context
+ 2087 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<18>(x)), T >) { if (x.index() == 18) return operator_as<18>(x); }
+      |                                                                          ^~~
+../../../include/cpp2util.h:2047:34: note: in definition of macro ‘CPP2_UFCS_IDENTITY’
+ 2047 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 3>(x)), T >) { if (x.index() ==  3) return operator_as<3>(x); }
+      |                                  ^~~~~~~~~~~
+../../../include/cpp2util.h:2087:61: note: in expansion of macro ‘CPP2_FORWARD’
+ 2087 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<18>(x)), T >) { if (x.index() == 18) return operator_as<18>(x); }
+      |                                                             ^~~~~~~~~~~~
+../../../include/cpp2util.h:2107:22: note: in expansion of macro ‘CPP2_UFCS_CONSTRAINT_ARG’
+ 2107 |     { return !x.has_value(); }
+      |                      ^~~~~~~~~               
+../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
+ 2137 |     { return std::any_cast<T>( x ); }
+      |                                                           ^         
+pure2-default-arguments.cpp2:6:22: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
+../../../include/cpp2util.h:2087:93: error: local variable ‘params’ may not appear in this context
+ 2087 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<18>(x)), T >) { if (x.index() == 18) return operator_as<18>(x); }
+      |                                                                                             ^~~~~~
+../../../include/cpp2util.h:2047:34: note: in definition of macro ‘CPP2_UFCS_IDENTITY’
+ 2047 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 3>(x)), T >) { if (x.index() ==  3) return operator_as<3>(x); }
+      |                                  ^~~~~~~~~~~
+../../../include/cpp2util.h:2087:80: note: in expansion of macro ‘CPP2_FORWARD’
+ 2087 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<18>(x)), T >) { if (x.index() == 18) return operator_as<18>(x); }
+      |                                                                                ^~~~~~~~~~~~
+../../../include/cpp2util.h:2107:22: note: in expansion of macro ‘CPP2_UFCS_CONSTRAINT_ARG’
+ 2107 |     { return !x.has_value(); }
+      |                      ^~~~~~~~~               
+../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
+ 2137 |     { return std::any_cast<T>( x ); }
+      |                                                           ^         
+pure2-default-arguments.cpp2:6:22: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
+pure2-default-arguments.cpp2:6:61: error: ‘std::source_location’ has not been declared

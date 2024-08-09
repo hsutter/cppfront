@@ -1,0 +1,19 @@
+
+//  Note: Using source_location requires GCC 11 or higher,
+//        Clang 16 or higher, MSVC 2019 16.10 or higher.
+//        Older compilers will emit failures for this test case.
+my_function_name: (
+    fn: *const char = std::source_location::current().function_name()
+    )
+= {
+    std::cout << "calling: (fn)$\n";
+}
+
+f: (x: i32 = 0) = { std::cout << x; }
+
+main: (args) = {
+    my_function_name();
+    f();
+    f(1);
+    f(2);
+}
