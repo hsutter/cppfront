@@ -17,6 +17,7 @@
 
 #include "parse.h"
 #include "cpp2regex.h"
+#include "regex.h"
 
 cpp2: namespace = {
 
