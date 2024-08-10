@@ -1644,8 +1644,7 @@ auto is( X const& x ) -> bool {
         return true;
     }
     else if constexpr (
-        std::is_base_of_v<X, C>
-        || (
+           (
             std::is_polymorphic_v<C>
             && std::is_polymorphic_v<X>
             )
