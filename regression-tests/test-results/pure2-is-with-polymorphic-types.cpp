@@ -7,19 +7,28 @@
 #include "cpp2util.h"
 
 #line 1 "pure2-is-with-polymorphic-types.cpp2"
-template<int I> class VA;
+class A;
 #line 2 "pure2-is-with-polymorphic-types.cpp2"
+
+template<int I> class VA;
 
 class VC;
     
 
-#line 8 "pure2-is-with-polymorphic-types.cpp2"
+#line 10 "pure2-is-with-polymorphic-types.cpp2"
 class VD;
     
 
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "pure2-is-with-polymorphic-types.cpp2"
+class A {
+      public: A() = default;
+      public: A(A const&) = delete; /* No 'that' constructor, suppress copy */
+      public: auto operator=(A const&) -> void = delete;
+};
+#line 2 "pure2-is-with-polymorphic-types.cpp2"
+
 template<int I> class VA {
 public: virtual ~VA() noexcept;
 
@@ -27,7 +36,7 @@ public: virtual ~VA() noexcept;
       public: VA(VA const&) = delete; /* No 'that' constructor, suppress copy */
       public: auto operator=(VA const&) -> void = delete;
 };
-#line 2 "pure2-is-with-polymorphic-types.cpp2"
+#line 4 "pure2-is-with-polymorphic-types.cpp2"
 
 class VC: public VA<0>, public VA<1> {
     public: VC() = default;
@@ -35,7 +44,7 @@ class VC: public VA<0>, public VA<1> {
     public: auto operator=(VC const&) -> void = delete;
 
 
-#line 6 "pure2-is-with-polymorphic-types.cpp2"
+#line 8 "pure2-is-with-polymorphic-types.cpp2"
 };
 
 class VD: public VA<0> {
@@ -44,12 +53,12 @@ class VD: public VA<0> {
     public: auto operator=(VD const&) -> void = delete;
 
 
-#line 10 "pure2-is-with-polymorphic-types.cpp2"
+#line 12 "pure2-is-with-polymorphic-types.cpp2"
 };
 
 auto fun(auto const& v, auto const& name) -> void;
 
-#line 26 "pure2-is-with-polymorphic-types.cpp2"
+#line 29 "pure2-is-with-polymorphic-types.cpp2"
 auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -58,7 +67,7 @@ auto main() -> int;
 
 
 template <int I> VA<I>::~VA() noexcept{}
-#line 12 "pure2-is-with-polymorphic-types.cpp2"
+#line 14 "pure2-is-with-polymorphic-types.cpp2"
 auto fun(auto const& v, auto const& name) -> void{
     std::cout << "" + cpp2::to_string(name) + " is";
     if (cpp2::impl::is<VC>(v)) {std::cout << " VC";}
@@ -70,10 +79,11 @@ auto fun(auto const& v, auto const& name) -> void{
     if (cpp2::impl::is<VA<1>*>(v)) {std::cout << " *VA<1>";}
     if (cpp2::impl::is<VD*>(v)) {std::cout << " *VD";}
     if (cpp2::impl::is<void>(v)) {std::cout << " empty";}
+    if (cpp2::impl::is<A>(v)) {std::cout << " A";}
     std::cout << std::endl;
 }
 
-#line 26 "pure2-is-with-polymorphic-types.cpp2"
+#line 29 "pure2-is-with-polymorphic-types.cpp2"
 auto main() -> int{
 
     VC vc {}; 
@@ -89,5 +99,6 @@ auto main() -> int{
     fun(cpp2::move(p1), "p1");
 
     fun(nullptr, "nullptr");
+    fun(A(), "A");
 }
 

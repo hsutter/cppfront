@@ -1,3 +1,5 @@
+A: type = {}
+
 VA: @polymorphic_base <I:int> type = {}
 
 VC: type = {
@@ -20,6 +22,7 @@ fun: (v, name) = {
     if v is *VA<1> { std::cout <<  " *VA<1>"; }
     if v is *VD    { std::cout <<  " *VD"; }
     if v is void  { std::cout <<  " empty"; }
+    if v is A  { std::cout <<  " A"; }
     std::cout << std::endl;
 }
 
@@ -38,4 +41,5 @@ main: () = {
     fun(p1, "p1");
 
     fun(nullptr, "nullptr");
+    fun(A(), "A");
 }
