@@ -19,6 +19,7 @@ fun: (v, name) = {
     if v is *VA<0> { std::cout <<  " *VA<0>"; }
     if v is *VA<1> { std::cout <<  " *VA<1>"; }
     if v is *VD    { std::cout <<  " *VD"; }
+    if v is void  { std::cout <<  " empty"; }
     std::cout << std::endl;
 }
 
@@ -36,4 +37,5 @@ main: () = {
     fun(p0, "p0");
     fun(p1, "p1");
 
+    fun(nullptr, "nullptr");
 }
