@@ -1,0 +1,4 @@
+pure2-default-arguments.cpp2:6:61: error: no member named 'source_location' in namespace 'std'
+    char const* fn = CPP2_UFCS_NONLOCAL(function_name)(std::source_location::current())
+                                                       ~~~~~^
+1 error generated.
