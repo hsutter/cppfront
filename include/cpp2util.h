@@ -1635,38 +1635,43 @@ constexpr auto is( X&& ) {
 //  Types
 //
 template< typename C, typename X >
-auto is( X const& x ) -> bool {
+constexpr auto is( X const& x ) -> auto {
     if constexpr (
         std::is_same_v<C, X>
         || std::is_base_of_v<C, X>
     )
     {
-        return true;
+        return std::true_type{};
     }
     else if constexpr (
-        std::is_base_of_v<X, C>
-        || (
-            std::is_polymorphic_v<C>
-            && std::is_polymorphic_v<X>
-            )
+        std::is_polymorphic_v<C>
+        && std::is_polymorphic_v<X>
     )
     {
-        if constexpr (std::is_pointer_v<X>) {
-            return Dynamic_cast<C const*>(x) != nullptr;
-        }
-        else {
-            return Dynamic_cast<C const*>(&x) != nullptr;
-        }
+        return Dynamic_cast<C const*>(&x) != nullptr;
     }
     else if constexpr (
-        requires { *x; X(); }
+        (
+            std::is_same_v<X, std::nullptr_t>
+            || requires { *x; X(); }
+        )
         && std::is_same_v<C, empty>
     )
     {
         return x == X();
     }
-    else {
+    else if constexpr (
+        std::is_pointer_v<C>
+        && std::is_pointer_v<X>
+    )
+    {
+        if (x != nullptr) {
+            return bool{is<std::remove_pointer_t<C>>(*x)};
+        }
         return false;
+    }
+    else {
+        return std::false_type{};
     }
 }
 
