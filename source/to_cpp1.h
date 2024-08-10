@@ -1014,6 +1014,7 @@ class cppfront
 {
     std::string              sourcefile;
     std::vector<error_entry> errors;
+    std::set<std::string>    includes;
 
     //  For building
     //
@@ -1166,7 +1167,7 @@ public:
         : sourcefile{ filename }
         , source    { errors }
         , tokens    { errors }
-        , parser    { errors }
+        , parser    { errors, includes }
         , sema      { errors }
     {
         //  "Constraints enable creativity in the right directions"
@@ -1322,6 +1323,10 @@ public:
 
             if (flag_no_rtti) {
                 printer.print_extra( "#define CPP2_NO_RTTI             Yes\n" );
+            }
+
+            for (auto& h: includes) {
+                printer.print_extra( "#include \"" + h + "\"\n" );
             }
         }
 

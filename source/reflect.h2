@@ -16,7 +16,8 @@
 //===========================================================================
 
 #include "parse.h"
-#include "cpp2regex.h2"
+#include "cpp2regex.h"
+using namespace cpp2::regex;
 
 cpp2: namespace = {
 
@@ -35,6 +36,7 @@ compiler_services: @polymorphic_base @copyable type =
     //  Common data members
     //
     errors               : *std::vector<error_entry>;
+    includes             : *std::set<std::string>;
     errors_original_size : int;
     generated_tokens     : *stable_vector<token>;
     parser               : cpp2::parser;
@@ -47,13 +49,15 @@ compiler_services: @polymorphic_base @copyable type =
     operator=: (
         out this,
         errors_          : *std::vector<error_entry>,
+        includes_        : *std::set<std::string>,
         generated_tokens_: *stable_vector<token>
     )
     = {
-        errors = errors_;
+        errors               = errors_;
+        includes             = includes_;
         errors_original_size = cpp2::unsafe_narrow<int>(std::ssize(errors*));
-        generated_tokens = generated_tokens_;
-        parser = errors*;
+        generated_tokens     = generated_tokens_;
+        parser               = (errors*, includes*);
     }
 
     //  Common API
@@ -133,6 +137,8 @@ compiler_services: @polymorphic_base @copyable type =
             error( "parse failed - the source string is not a valid statement:\n(original_source)$");
         }
     }
+
+    add_runtime_support_include: (inout this, s: std::string_view) = _=includes*.emplace( s );
 
     position: (virtual this)
         -> source_position
@@ -1517,7 +1523,6 @@ print: (t: meta::type_declaration) =
 //    regex := ::cpp2::regex::regular_expression<...>;
 //  ```
 //
-using namespace cpp2::regex;
 error_func: type == std::function< (x: std::string) -> void >;
 
 //  Possible modifiers for a regular expression.
@@ -3618,6 +3623,8 @@ regex_gen: (inout t: meta::type_declaration) =
             t.add_member("public (expr.first)$: cpp2::regex::regular_expression<char, (expr.first)$_matcher> = ();");
         }
     }
+
+    t.add_runtime_support_include( "cpp2regex.h" );
 }
 
 
