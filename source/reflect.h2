@@ -1502,8 +1502,6 @@ print: (t: meta::type_declaration) =
     std::cout << t.print() << "\n";
 }
 
-} // end meta subnamespace
-
 
 //-----------------------------------------------------------------------
 //
@@ -1519,8 +1517,7 @@ print: (t: meta::type_declaration) =
 //    regex := ::cpp2::regex::regular_expression<...>;
 //  ```
 //
-regex: namespace = {
-
+using namespace cpp2::regex;
 error_func: type == std::function< (x: std::string) -> void >;
 
 //  Possible modifiers for a regular expression.
@@ -3569,10 +3566,7 @@ generate_regex: <Err> (regex: std::string_view, err: Err) -> std::string =
     return r;
 }
 
-} // end regex subnamespace
 
-
-meta: namespace = {
 
 regex_gen: (inout t: meta::type_declaration) =
 {
@@ -3617,7 +3611,7 @@ regex_gen: (inout t: meta::type_declaration) =
     t.remove_marked_members();
 
     for expressions do (expr) {
-        regular_expression := ::cpp2::regex::generate_regex(expr.second, :(message) = t$.error(message););
+        regular_expression := generate_regex(expr.second, :(message) = t$.error(message););
 
         if !regular_expression..empty() {
             t.add_member("public (expr.first)$_matcher: type = (regular_expression)$");
