@@ -1651,7 +1651,10 @@ auto is( X const& x ) -> bool {
         return Dynamic_cast<C const*>(&x) != nullptr;
     }
     else if constexpr (
-        requires { *x; X(); }
+        (
+            std::is_same_v<X, std::nullptr_t>
+            || requires { *x; X(); }
+        )
         && std::is_same_v<C, empty>
     )
     {
