@@ -1657,6 +1657,16 @@ auto is( X const& x ) -> bool {
     {
         return x == X();
     }
+    else if constexpr (
+        std::is_pointer_v<C>
+        && std::is_pointer_v<X>
+    )
+    {
+        if (x != nullptr) {
+            return is<std::remove_pointer_t<C>>(*x);
+        }
+        return false;
+    }
     else {
         return false;
     }
