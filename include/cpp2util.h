@@ -1644,10 +1644,8 @@ auto is( X const& x ) -> bool {
         return true;
     }
     else if constexpr (
-           (
             std::is_polymorphic_v<C>
             && std::is_polymorphic_v<X>
-            )
     )
     {
             return Dynamic_cast<C const*>(&x) != nullptr;
