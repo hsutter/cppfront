@@ -1,0 +1,7 @@
+pure2-default-arguments.cpp2:6:56: error: cannot take address of consteval function 'current' outside of an immediate invocation
+    6 |     char const* fn = CPP2_UFCS_NONLOCAL(function_name)(std::source_location::current())
+      |                                                        ^
+/usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/source_location:60:5: note: declared here
+   60 |     current(__builtin_ret_type __p = __builtin_source_location()) noexcept
+      |     ^
+1 error generated.

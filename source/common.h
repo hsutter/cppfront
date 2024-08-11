@@ -47,20 +47,11 @@
 #ifndef CPP2_COMMON_H
 #define CPP2_COMMON_H
 
-#include <algorithm>
 #include <cassert>
 #include <cctype>
 #include <chrono>
-#include <compare>
-#include <cstdint>
 #include <iomanip>
-#include <iterator>
-#include <memory>
-#include <map>
-#include <string>
-#include <string_view>
 #include <unordered_map>
-#include <vector>
 
 namespace cpp2 {
 

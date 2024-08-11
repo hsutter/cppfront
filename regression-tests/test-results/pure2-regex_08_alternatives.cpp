@@ -1,5 +1,6 @@
 
 #define CPP2_IMPORT_STD          Yes
+#include "cpp2regex.h"
 
 //=== Cpp2 type declarations ====================================================
 

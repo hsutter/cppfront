@@ -5539,6 +5539,7 @@ auto pretty_print_visualize(translation_unit_node const& n)
 class parser
 {
     std::vector<error_entry>& errors;
+    std::set<std::string>&    includes;
 
     std::unique_ptr<translation_unit_node> parse_tree = {};
 
@@ -5584,10 +5585,10 @@ class parser
         }
     };
 
-    std::vector<token> const* tokens = {};
+    std::vector<token> const* tokens           = {};
     stable_vector<token>*     generated_tokens = {};
-    int pos = 0;
-    std::string parse_kind = {};
+    int                       pos              = 0;
+    std::string               parse_kind       = {};
 
     //  Keep track of the function bodies' locations - used to emit comments
     //  in the right pass (decide whether it's a comment that belongs with
@@ -5663,13 +5664,18 @@ public:
     //
     //  errors      error list
     //
-    parser( std::vector<error_entry>& errors_ )
+    parser( 
+        std::vector<error_entry>& errors_,
+        std::set<std::string>&    includes_
+    )
         : errors{ errors_ }
+        , includes{ includes_ }
         , parse_tree{std::make_unique<translation_unit_node>()}
     { }
 
     parser( parser const& that )
         : errors{ that.errors }
+        , includes{ that.includes }
         , parse_tree{std::make_unique<translation_unit_node>()}
     { }
 
