@@ -109,6 +109,18 @@ create_result: (resultExpr: std::string, r) -> std::string = {
   return result;
 }
 
+sanitize: (copy str: std::string) -> std::string =
+{
+  str = cpp2::string_util::replace_all(str, "\a", "\\a");
+  str = cpp2::string_util::replace_all(str, "\f", "\\f");
+  str = cpp2::string_util::replace_all(str, "\x1b", "\\e");
+  str = cpp2::string_util::replace_all(str, "\n", "\\n");
+  str = cpp2::string_util::replace_all(str, "\r", "\\r");
+  str = cpp2::string_util::replace_all(str, "\t", "\\t");
+
+  return str;
+}
+
 test: <M> (regex: M, id: std::string, regex_str: std::string, str: std::string, kind: std::string, resultExpr: std::string,
            resultExpected: std::string) = {
   
@@ -131,7 +143,7 @@ test: <M> (regex: M, id: std::string, regex_str: std::string, str: std::string, 
       result := create_result(resultExpr, r);
 
       if result != resultExpected {
-        status = "Failure: Result is wrong. (is: (result)$)";
+        status = "Failure: Result is wrong. (is: (sanitize(result))$)";
       }
     }
   }
@@ -146,7 +158,7 @@ test: <M> (regex: M, id: std::string, regex_str: std::string, str: std::string, 
   if !warning.empty() {
     warning += " ";
   }
-  std::cout << "(id)$_(kind)$: (status)$ (warning)$regex: (regex_str)$ parsed_regex: (regex.to_string())$ str: (str)$ result_expr: (resultExpr)$ expected_results (resultExpected)$" << std::endl;
+  std::cout << "(id)$_(kind)$: (status)$ (warning)$regex: (regex_str)$ parsed_regex: (regex.to_string())$ str: (sanitize(str))$ result_expr: (resultExpr)$ expected_results (sanitize(resultExpected))$" << std::endl;
 }
 
 
