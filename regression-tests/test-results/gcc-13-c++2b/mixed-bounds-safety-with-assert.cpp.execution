@@ -1,1 +1,1 @@
-mixed-bounds-safety-with-assert.cpp2(11) void print_subrange(const auto:243&, cpp2::impl::in<int>, cpp2::impl::in<int>) [with auto:243 = std::vector<int>; cpp2::impl::in<int> = const int]: Bounds safety violation
+mixed-bounds-safety-with-assert.cpp2(11) void print_subrange(const auto:97&, cpp2::impl::in<int>, cpp2::impl::in<int>) [with auto:97 = std::vector<int>; cpp2::impl::in<int> = const int]: Bounds safety violation

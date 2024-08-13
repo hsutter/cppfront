@@ -3,36 +3,19 @@ Running tests_10_escapes:
 02_y: OK regex: a\(*b parsed_regex: a\(*b str: ab result_expr: $& expected_results ab
 03_y: OK regex: a\(*b parsed_regex: a\(*b str: a((b result_expr: $& expected_results a((b
 04_y: OK regex: a\\b parsed_regex: a\\b str: a\b result_expr: $& expected_results a\b
-05_y: OK regex: foo(\h+)bar parsed_regex: foo(\h+)bar str: foo	bar result_expr: $1 expected_results 	
-06_y: OK regex: (\H+)(\h) parsed_regex: (\H+)(\h) str: foo	bar result_expr: $1-$2 expected_results foo-	
-07_y: OK regex: (\h+)(\H) parsed_regex: (\h+)(\H) str: foo	bar result_expr: $1-$2 expected_results 	-b
-08_y: OK regex: foo(\h)bar parsed_regex: foo(\h)bar str: foo	bar result_expr: $1 expected_results 	
-09_y: OK regex: (\H)(\h) parsed_regex: (\H)(\h) str: foo	bar result_expr: $1-$2 expected_results o-	
-10_y: OK regex: (\h)(\H) parsed_regex: (\h)(\H) str: foo	bar result_expr: $1-$2 expected_results 	-b
-11_y: OK regex: foo(\v+)bar parsed_regex: foo(\v+)bar str: foo
-
-
-bar result_expr: $1 expected_results 
-
-
-
-12_y: OK regex: (\V+)(\v) parsed_regex: (\V+)(\v) str: foo
-
-
-bar result_expr: $1-$2 expected_results foo-
-13_y: OK regex: (\v+)(\V) parsed_regex: (\v+)(\V) str: foo
-
-
-bar result_expr: $1-$2 expected_results 
-
-
--b
-14_y: OK regex: foo(\v)bar parsed_regex: foo(\v)bar str: foobar result_expr: $1 expected_results 
-15_y: OK regex: (\V)(\v) parsed_regex: (\V)(\v) str: foobar result_expr: $1-$2 expected_results o-
-16_y: OK regex: (\v)(\V) parsed_regex: (\v)(\V) str: foobar result_expr: $1-$2 expected_results -b
-17_y: OK regex: foo\t\n\r\f\a\ebar parsed_regex: foo\t\n\r\f\a\ebar str: foo	
-bar result_expr: $& expected_results foo	
-bar
+05_y: OK regex: foo(\h+)bar parsed_regex: foo(\h+)bar str: foo\tbar result_expr: $1 expected_results \t
+06_y: OK regex: (\H+)(\h) parsed_regex: (\H+)(\h) str: foo\tbar result_expr: $1-$2 expected_results foo-\t
+07_y: OK regex: (\h+)(\H) parsed_regex: (\h+)(\H) str: foo\tbar result_expr: $1-$2 expected_results \t-b
+08_y: OK regex: foo(\h)bar parsed_regex: foo(\h)bar str: foo\tbar result_expr: $1 expected_results \t
+09_y: OK regex: (\H)(\h) parsed_regex: (\H)(\h) str: foo\tbar result_expr: $1-$2 expected_results o-\t
+10_y: OK regex: (\h)(\H) parsed_regex: (\h)(\H) str: foo\tbar result_expr: $1-$2 expected_results \t-b
+11_y: OK regex: foo(\v+)bar parsed_regex: foo(\v+)bar str: foo\r\n\r\n\nbar result_expr: $1 expected_results \r\n\r\n\n
+12_y: OK regex: (\V+)(\v) parsed_regex: (\V+)(\v) str: foo\r\n\r\n\nbar result_expr: $1-$2 expected_results foo-\r
+13_y: OK regex: (\v+)(\V) parsed_regex: (\v+)(\V) str: foo\r\n\r\n\nbar result_expr: $1-$2 expected_results \r\n\r\n\n-b
+14_y: OK regex: foo(\v)bar parsed_regex: foo(\v)bar str: foo\rbar result_expr: $1 expected_results \r
+15_y: OK regex: (\V)(\v) parsed_regex: (\V)(\v) str: foo\rbar result_expr: $1-$2 expected_results o-\r
+16_y: OK regex: (\v)(\V) parsed_regex: (\v)(\V) str: foo\rbar result_expr: $1-$2 expected_results \r-b
+17_y: OK regex: foo\t\n\r\f\a\ebar parsed_regex: foo\t\n\r\f\a\ebar str: foo\t\n\r\f\a\ebar result_expr: $& expected_results foo\t\n\r\f\a\ebar
 18_y: OK regex: foo\Kbar parsed_regex: foo\Kbar str: foobar result_expr: $& expected_results bar
 19_y: OK regex: \x41\x42 parsed_regex: \x41\x42 str: AB result_expr: $& expected_results AB
 20_y: OK regex: \101\o{102} parsed_regex: \101\o{102} str: AB result_expr: $& expected_results AB

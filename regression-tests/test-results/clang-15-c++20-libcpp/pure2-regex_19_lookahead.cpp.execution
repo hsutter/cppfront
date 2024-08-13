@@ -29,9 +29,7 @@ Running tests_19_lookahead:
 28_y: OK regex: a(?!b(?=a))(..) parsed_regex: a(?!b(?=a))(..) str: abababc result_expr: $1 expected_results bc
 37_y: OK regex: X(\w+)(?=\s)|X(\w+) parsed_regex: X(\w+)(?=\s)|X(\w+) str: Xab result_expr: [$1-$2] expected_results [-ab]
 38_y: OK regex: ^a*(?=b)b parsed_regex: ^a*(?=b)b str: ab result_expr: $& expected_results ab
-39_y: OK regex: '(?!\A)x'm parsed_regex: '(?!\A)x'm str: a
-xb
- result_expr: - expected_results -
+39_y: OK regex: '(?!\A)x'm parsed_regex: '(?!\A)x'm str: a\nxb\n result_expr: - expected_results -
 40_n: OK regex: '^(o)(?!.*\1)'i parsed_regex: '^(o)(?!.*\1)'i str: Oo result_expr: - expected_results -
 41_n: OK regex: .*a(?!(b|cd)*e).*f parsed_regex: .*a(?!(b|cd)*e).*f str: ......abef result_expr: - expected_results -
 42_y: OK regex: ^(a*?)(?!(aa|aaaa)*$) parsed_regex: ^(a*?)(?!(aa|aaaa)*$) str: aaaaaaaaaaaaaaaaaaaa result_expr: $1 expected_results a
@@ -39,39 +37,11 @@ xb
 44_y: OK regex: ^(a*?)(?!(a{6}|a{5})*$) parsed_regex: ^(a*?)(?!(a{6}|a{5})*$) str: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa result_expr: $+[1] expected_results 12
 45_y: OK regex: a(?!b(?!c(?!d(?!e))))...(.) parsed_regex: a(?!b(?!c(?!d(?!e))))...(.) str: abxabcdxabcde result_expr: $1 expected_results e
 46_y: OK regex: X(?!b+(?!(c+)*(?!(c+)*d))).*X parsed_regex: X(?!b+(?!(c+)*(?!(c+)*d))).*X str: aXbbbbbbbcccccccccccccaaaX result_expr: - expected_results -
-47_y: OK regex: ((?s).)c(?!.) parsed_regex: ((?s).)c(?!.) str: a
-b
-c
- result_expr: $1 expected_results 
-
-48_y: OK regex: ((?s).)c(?!.) parsed_regex: ((?s).)c(?!.) str: a
-b
-c
- result_expr: $1:$& expected_results 
-:
-c
-49_y: OK regex: ((?s)b.)c(?!.) parsed_regex: ((?s)b.)c(?!.) str: a
-b
-c
- result_expr: $1 expected_results b
-
-50_y: OK regex: ((?s)b.)c(?!.) parsed_regex: ((?s)b.)c(?!.) str: a
-b
-c
- result_expr: $1:$& expected_results b
-:b
-c
-51_y: OK regex: ((?s)b.)c(?!\N) parsed_regex: ((?s)b.)c(?!\N) str: a
-b
-c
- result_expr: $1:$& expected_results b
-:b
-c
-52_y: OK regex: '(b.)c(?!\N)'s parsed_regex: '(b.)c(?!\N)'s str: a
-b
-c
- result_expr: $1:$& expected_results b
-:b
-c
+47_y: OK regex: ((?s).)c(?!.) parsed_regex: ((?s).)c(?!.) str: a\nb\nc\n result_expr: $1 expected_results \n
+48_y: OK regex: ((?s).)c(?!.) parsed_regex: ((?s).)c(?!.) str: a\nb\nc\n result_expr: $1:$& expected_results \n:\nc
+49_y: OK regex: ((?s)b.)c(?!.) parsed_regex: ((?s)b.)c(?!.) str: a\nb\nc\n result_expr: $1 expected_results b\n
+50_y: OK regex: ((?s)b.)c(?!.) parsed_regex: ((?s)b.)c(?!.) str: a\nb\nc\n result_expr: $1:$& expected_results b\n:b\nc
+51_y: OK regex: ((?s)b.)c(?!\N) parsed_regex: ((?s)b.)c(?!\N) str: a\nb\nc\n result_expr: $1:$& expected_results b\n:b\nc
+52_y: OK regex: '(b.)c(?!\N)'s parsed_regex: '(b.)c(?!\N)'s str: a\nb\nc\n result_expr: $1:$& expected_results b\n:b\nc
 53_n: OK regex: a*(?!) parsed_regex: a*(?!) str: aaaab result_expr: - expected_results -
 
