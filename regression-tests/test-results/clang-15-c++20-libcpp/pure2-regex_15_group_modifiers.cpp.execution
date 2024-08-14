@@ -31,56 +31,24 @@ Running tests_15_group_modifiers:
 30_y: OK regex: '((?-i:a))b'i parsed_regex: '((?-i:a))b'i str: aB result_expr: $1 expected_results a
 31_n: OK regex: '(?-i:a)b'i parsed_regex: '(?-i:a)b'i str: AB result_expr: - expected_results -
 32_n: OK regex: '((?-i:a))b'i parsed_regex: '((?-i:a))b'i str: AB result_expr: - expected_results -
-33_n: OK regex: '((?-i:a.))b'i parsed_regex: '((?-i:a.))b'i str: a
-B result_expr: - expected_results -
-34_n: OK regex: '((?-i:a\N))b'i parsed_regex: '((?-i:a\N))b'i str: a
-B result_expr: - expected_results -
-35_y: OK regex: '((?s-i:a.))b'i parsed_regex: '((?s-i:a.))b'i str: a
-B result_expr: $1 expected_results a
-
-36_n: OK regex: '((?s-i:a\N))b'i parsed_regex: '((?s-i:a\N))b'i str: a
-B result_expr: - expected_results -
-37_n: OK regex: '((?s-i:a.))b'i parsed_regex: '((?s-i:a.))b'i str: B
-B result_expr: - expected_results -
-38_n: OK regex: '((?s-i:a\N))b'i parsed_regex: '((?s-i:a\N))b'i str: B
-B result_expr: - expected_results -
+33_n: OK regex: '((?-i:a.))b'i parsed_regex: '((?-i:a.))b'i str: a\nB result_expr: - expected_results -
+34_n: OK regex: '((?-i:a\N))b'i parsed_regex: '((?-i:a\N))b'i str: a\nB result_expr: - expected_results -
+35_y: OK regex: '((?s-i:a.))b'i parsed_regex: '((?s-i:a.))b'i str: a\nB result_expr: $1 expected_results a\n
+36_n: OK regex: '((?s-i:a\N))b'i parsed_regex: '((?s-i:a\N))b'i str: a\nB result_expr: - expected_results -
+37_n: OK regex: '((?s-i:a.))b'i parsed_regex: '((?s-i:a.))b'i str: B\nB result_expr: - expected_results -
+38_n: OK regex: '((?s-i:a\N))b'i parsed_regex: '((?s-i:a\N))b'i str: B\nB result_expr: - expected_results -
 39_y: OK regex: (?i:.[b].) parsed_regex: (?i:.[b].) str: abd result_expr: $& expected_results abd
 40_y: OK regex: (?i:\N[b]\N) parsed_regex: (?i:\N[b]\N) str: abd result_expr: $& expected_results abd
 41_n: OK regex: ^(?:a?b?)*$ parsed_regex: ^(?:a?b?)*$ str: a-- result_expr: - expected_results -
-42_y: OK regex: ((?s)^a(.))((?m)^b$) parsed_regex: ((?s)^a(.))((?m)^b$) str: a
-b
-c
- result_expr: $1;$2;$3 expected_results a
-;
-;b
-43_y: OK regex: ((?m)^b$) parsed_regex: ((?m)^b$) str: a
-b
-c
- result_expr: $1 expected_results b
-44_y: OK regex: (?m)^b parsed_regex: (?m)^b str: a
-b
- result_expr: $& expected_results b
-45_y: OK regex: (?m)^(b) parsed_regex: (?m)^(b) str: a
-b
- result_expr: $1 expected_results b
-46_y: OK regex: ((?m)^b) parsed_regex: ((?m)^b) str: a
-b
- result_expr: $1 expected_results b
-47_y: OK regex: \n((?m)^b) parsed_regex: \n((?m)^b) str: a
-b
- result_expr: $1 expected_results b
-48_n: OK regex: ^b parsed_regex: ^b str: a
-b
-c
- result_expr: - expected_results -
-49_n: OK regex: ()^b parsed_regex: ()^b str: a
-b
-c
- result_expr: - expected_results -
-50_y: OK regex: ((?m)^b) parsed_regex: ((?m)^b) str: a
-b
-c
- result_expr: $1 expected_results b
+42_y: OK regex: ((?s)^a(.))((?m)^b$) parsed_regex: ((?s)^a(.))((?m)^b$) str: a\nb\nc\n result_expr: $1;$2;$3 expected_results a\n;\n;b
+43_y: OK regex: ((?m)^b$) parsed_regex: ((?m)^b$) str: a\nb\nc\n result_expr: $1 expected_results b
+44_y: OK regex: (?m)^b parsed_regex: (?m)^b str: a\nb\n result_expr: $& expected_results b
+45_y: OK regex: (?m)^(b) parsed_regex: (?m)^(b) str: a\nb\n result_expr: $1 expected_results b
+46_y: OK regex: ((?m)^b) parsed_regex: ((?m)^b) str: a\nb\n result_expr: $1 expected_results b
+47_y: OK regex: \n((?m)^b) parsed_regex: \n((?m)^b) str: a\nb\n result_expr: $1 expected_results b
+48_n: OK regex: ^b parsed_regex: ^b str: a\nb\nc\n result_expr: - expected_results -
+49_n: OK regex: ()^b parsed_regex: ()^b str: a\nb\nc\n result_expr: - expected_results -
+50_y: OK regex: ((?m)^b) parsed_regex: ((?m)^b) str: a\nb\nc\n result_expr: $1 expected_results b
 51_y: OK Warning: Parsed regex does not match. regex: '(foo)'n parsed_regex: '(?:foo)'n str: foobar result_expr: $&-$1 expected_results foo-
 52_y: OK Warning: Parsed regex does not match. regex: '(?-n)(foo)(?n)(bar)'n parsed_regex: '(?-n)(foo)(?n)(?:bar)'n str: foobar result_expr: $&-$1-$2 expected_results foobar-foo-
 53_y: OK Warning: Parsed regex does not match. regex: '(?-n:(foo)(?n:(bar)))'n parsed_regex: '(?-n:(foo)(?n:(?:bar)))'n str: foobar result_expr: $&-$1-$2 expected_results foobar-foo-

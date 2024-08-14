@@ -1,0 +1,25 @@
+pure2-type-safety-1.cpp2:26:5: error: call to 'print' is ambiguous
+   26 |     print(cpp2::move(msgx) + " is int? ", cpp2::impl::is<int>(x));
+      |     ^~~~~
+pure2-type-safety-1.cpp2:8:5: note: in instantiation of function template specialization 'test_generic<double, char[7]>' requested here
+    8 |     test_generic(3.14, "double");
+      |     ^
+pure2-type-safety-1.cpp2:29:6: note: candidate function
+   29 | auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void;
+      |      ^
+/usr/lib/llvm-18/bin/../include/c++/v1/print:340:28: note: candidate function [with _Args = <std::integral_constant<bool, false>>]
+  340 | _LIBCPP_HIDE_FROM_ABI void print(format_string<_Args...> __fmt, _Args&&... __args) {
+      |                            ^
+pure2-type-safety-1.cpp2:26:5: error: call to 'print' is ambiguous
+   26 |     print(cpp2::move(msgx) + " is int? ", cpp2::impl::is<int>(x));
+      |     ^~~~~
+pure2-type-safety-1.cpp2:18:5: note: in instantiation of function template specialization 'test_generic<int, char[4]>' requested here
+   18 |     test_generic(42,   "int");
+      |     ^
+pure2-type-safety-1.cpp2:29:6: note: candidate function
+   29 | auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void;
+      |      ^
+/usr/lib/llvm-18/bin/../include/c++/v1/print:340:28: note: candidate function [with _Args = <std::integral_constant<bool, true>>]
+  340 | _LIBCPP_HIDE_FROM_ABI void print(format_string<_Args...> __fmt, _Args&&... __args) {
+      |                            ^
+2 errors generated.

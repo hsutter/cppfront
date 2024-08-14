@@ -1,533 +1,201 @@
 Running tests_14_multiline_modifier:
-01_y: OK regex: \Z parsed_regex: \Z str: a
-b
- result_expr: $-[0] expected_results 3
-02_y: OK regex: \z parsed_regex: \z str: a
-b
- result_expr: $-[0] expected_results 4
-03_y: OK regex: $ parsed_regex: $ str: a
-b
- result_expr: $-[0] expected_results 3
-04_y: OK regex: \Z parsed_regex: \Z str: b
-a
- result_expr: $-[0] expected_results 3
-05_y: OK regex: \z parsed_regex: \z str: b
-a
- result_expr: $-[0] expected_results 4
-06_y: OK regex: $ parsed_regex: $ str: b
-a
- result_expr: $-[0] expected_results 3
-07_y: OK regex: \Z parsed_regex: \Z str: b
-a result_expr: $-[0] expected_results 3
-08_y: OK regex: \z parsed_regex: \z str: b
-a result_expr: $-[0] expected_results 3
-09_y: OK regex: $ parsed_regex: $ str: b
-a result_expr: $-[0] expected_results 3
-10_y: OK regex: '\Z'm parsed_regex: '\Z'm str: a
-b
- result_expr: $-[0] expected_results 3
-11_y: OK regex: '\z'm parsed_regex: '\z'm str: a
-b
- result_expr: $-[0] expected_results 4
-12_y: OK regex: '$'m parsed_regex: '$'m str: a
-b
- result_expr: $-[0] expected_results 1
-13_y: OK regex: '\Z'm parsed_regex: '\Z'm str: b
-a
- result_expr: $-[0] expected_results 3
-14_y: OK regex: '\z'm parsed_regex: '\z'm str: b
-a
- result_expr: $-[0] expected_results 4
-15_y: OK regex: '$'m parsed_regex: '$'m str: b
-a
- result_expr: $-[0] expected_results 1
-16_y: OK regex: '\Z'm parsed_regex: '\Z'm str: b
-a result_expr: $-[0] expected_results 3
-17_y: OK regex: '\z'm parsed_regex: '\z'm str: b
-a result_expr: $-[0] expected_results 3
-18_y: OK regex: '$'m parsed_regex: '$'m str: b
-a result_expr: $-[0] expected_results 1
-19_n: OK regex: a\Z parsed_regex: a\Z str: a
-b
- result_expr: - expected_results -
-20_n: OK regex: a\z parsed_regex: a\z str: a
-b
- result_expr: - expected_results -
-21_n: OK regex: a$ parsed_regex: a$ str: a
-b
- result_expr: - expected_results -
-22_y: OK regex: a\Z parsed_regex: a\Z str: b
-a
- result_expr: $-[0] expected_results 2
-23_n: OK regex: a\z parsed_regex: a\z str: b
-a
- result_expr: - expected_results -
-24_y: OK regex: a$ parsed_regex: a$ str: b
-a
- result_expr: $-[0] expected_results 2
-25_y: OK regex: a\Z parsed_regex: a\Z str: b
-a result_expr: $-[0] expected_results 2
-26_y: OK regex: a\z parsed_regex: a\z str: b
-a result_expr: $-[0] expected_results 2
-27_y: OK regex: a$ parsed_regex: a$ str: b
-a result_expr: $-[0] expected_results 2
-28_n: OK regex: 'a\Z'm parsed_regex: 'a\Z'm str: a
-b
- result_expr: - expected_results -
-29_n: OK regex: 'a\z'm parsed_regex: 'a\z'm str: a
-b
- result_expr: - expected_results -
-30_y: OK regex: 'a$'m parsed_regex: 'a$'m str: a
-b
- result_expr: $-[0] expected_results 0
-31_y: OK regex: 'a\Z'm parsed_regex: 'a\Z'm str: b
-a
- result_expr: $-[0] expected_results 2
-32_n: OK regex: 'a\z'm parsed_regex: 'a\z'm str: b
-a
- result_expr: - expected_results -
-33_y: OK regex: 'a$'m parsed_regex: 'a$'m str: b
-a
- result_expr: $-[0] expected_results 2
-34_y: OK regex: 'a\Z'm parsed_regex: 'a\Z'm str: b
-a result_expr: $-[0] expected_results 2
-35_y: OK regex: 'a\z'm parsed_regex: 'a\z'm str: b
-a result_expr: $-[0] expected_results 2
-36_y: OK regex: 'a$'m parsed_regex: 'a$'m str: b
-a result_expr: $-[0] expected_results 2
-37_n: OK regex: aa\Z parsed_regex: aa\Z str: aa
-b
- result_expr: - expected_results -
-38_n: OK regex: aa\z parsed_regex: aa\z str: aa
-b
- result_expr: - expected_results -
-39_n: OK regex: aa$ parsed_regex: aa$ str: aa
-b
- result_expr: - expected_results -
-40_y: OK regex: aa\Z parsed_regex: aa\Z str: b
-aa
- result_expr: $-[0] expected_results 2
-41_n: OK regex: aa\z parsed_regex: aa\z str: b
-aa
- result_expr: - expected_results -
-42_y: OK regex: aa$ parsed_regex: aa$ str: b
-aa
- result_expr: $-[0] expected_results 2
-43_y: OK regex: aa\Z parsed_regex: aa\Z str: b
-aa result_expr: $-[0] expected_results 2
-44_y: OK regex: aa\z parsed_regex: aa\z str: b
-aa result_expr: $-[0] expected_results 2
-45_y: OK regex: aa$ parsed_regex: aa$ str: b
-aa result_expr: $-[0] expected_results 2
-46_n: OK regex: 'aa\Z'm parsed_regex: 'aa\Z'm str: aa
-b
- result_expr: - expected_results -
-47_n: OK regex: 'aa\z'm parsed_regex: 'aa\z'm str: aa
-b
- result_expr: - expected_results -
-48_y: OK regex: 'aa$'m parsed_regex: 'aa$'m str: aa
-b
- result_expr: $-[0] expected_results 0
-49_y: OK regex: 'aa\Z'm parsed_regex: 'aa\Z'm str: b
-aa
- result_expr: $-[0] expected_results 2
-50_n: OK regex: 'aa\z'm parsed_regex: 'aa\z'm str: b
-aa
- result_expr: - expected_results -
-51_y: OK regex: 'aa$'m parsed_regex: 'aa$'m str: b
-aa
- result_expr: $-[0] expected_results 2
-52_y: OK regex: 'aa\Z'm parsed_regex: 'aa\Z'm str: b
-aa result_expr: $-[0] expected_results 2
-53_y: OK regex: 'aa\z'm parsed_regex: 'aa\z'm str: b
-aa result_expr: $-[0] expected_results 2
-54_y: OK regex: 'aa$'m parsed_regex: 'aa$'m str: b
-aa result_expr: $-[0] expected_results 2
-55_n: OK regex: aa\Z parsed_regex: aa\Z str: ac
-b
- result_expr: - expected_results -
-56_n: OK regex: aa\z parsed_regex: aa\z str: ac
-b
- result_expr: - expected_results -
-57_n: OK regex: aa$ parsed_regex: aa$ str: ac
-b
- result_expr: - expected_results -
-58_n: OK regex: aa\Z parsed_regex: aa\Z str: b
-ac
- result_expr: - expected_results -
-59_n: OK regex: aa\z parsed_regex: aa\z str: b
-ac
- result_expr: - expected_results -
-60_n: OK regex: aa$ parsed_regex: aa$ str: b
-ac
- result_expr: - expected_results -
-61_n: OK regex: aa\Z parsed_regex: aa\Z str: b
-ac result_expr: - expected_results -
-62_n: OK regex: aa\z parsed_regex: aa\z str: b
-ac result_expr: - expected_results -
-63_n: OK regex: aa$ parsed_regex: aa$ str: b
-ac result_expr: - expected_results -
-64_n: OK regex: 'aa\Z'm parsed_regex: 'aa\Z'm str: ac
-b
- result_expr: - expected_results -
-65_n: OK regex: 'aa\z'm parsed_regex: 'aa\z'm str: ac
-b
- result_expr: - expected_results -
-66_n: OK regex: 'aa$'m parsed_regex: 'aa$'m str: ac
-b
- result_expr: - expected_results -
-67_n: OK regex: 'aa\Z'm parsed_regex: 'aa\Z'm str: b
-ac
- result_expr: - expected_results -
-68_n: OK regex: 'aa\z'm parsed_regex: 'aa\z'm str: b
-ac
- result_expr: - expected_results -
-69_n: OK regex: 'aa$'m parsed_regex: 'aa$'m str: b
-ac
- result_expr: - expected_results -
-70_n: OK regex: 'aa\Z'm parsed_regex: 'aa\Z'm str: b
-ac result_expr: - expected_results -
-71_n: OK regex: 'aa\z'm parsed_regex: 'aa\z'm str: b
-ac result_expr: - expected_results -
-72_n: OK regex: 'aa$'m parsed_regex: 'aa$'m str: b
-ac result_expr: - expected_results -
-73_n: OK regex: aa\Z parsed_regex: aa\Z str: ca
-b
- result_expr: - expected_results -
-74_n: OK regex: aa\z parsed_regex: aa\z str: ca
-b
- result_expr: - expected_results -
-75_n: OK regex: aa$ parsed_regex: aa$ str: ca
-b
- result_expr: - expected_results -
-76_n: OK regex: aa\Z parsed_regex: aa\Z str: b
-ca
- result_expr: - expected_results -
-77_n: OK regex: aa\z parsed_regex: aa\z str: b
-ca
- result_expr: - expected_results -
-78_n: OK regex: aa$ parsed_regex: aa$ str: b
-ca
- result_expr: - expected_results -
-79_n: OK regex: aa\Z parsed_regex: aa\Z str: b
-ca result_expr: - expected_results -
-80_n: OK regex: aa\z parsed_regex: aa\z str: b
-ca result_expr: - expected_results -
-81_n: OK regex: aa$ parsed_regex: aa$ str: b
-ca result_expr: - expected_results -
-82_n: OK regex: 'aa\Z'm parsed_regex: 'aa\Z'm str: ca
-b
- result_expr: - expected_results -
-83_n: OK regex: 'aa\z'm parsed_regex: 'aa\z'm str: ca
-b
- result_expr: - expected_results -
-84_n: OK regex: 'aa$'m parsed_regex: 'aa$'m str: ca
-b
- result_expr: - expected_results -
-85_n: OK regex: 'aa\Z'm parsed_regex: 'aa\Z'm str: b
-ca
- result_expr: - expected_results -
-86_n: OK regex: 'aa\z'm parsed_regex: 'aa\z'm str: b
-ca
- result_expr: - expected_results -
-87_n: OK regex: 'aa$'m parsed_regex: 'aa$'m str: b
-ca
- result_expr: - expected_results -
-88_n: OK regex: 'aa\Z'm parsed_regex: 'aa\Z'm str: b
-ca result_expr: - expected_results -
-89_n: OK regex: 'aa\z'm parsed_regex: 'aa\z'm str: b
-ca result_expr: - expected_results -
-90_n: OK regex: 'aa$'m parsed_regex: 'aa$'m str: b
-ca result_expr: - expected_results -
-91_n: OK regex: ab\Z parsed_regex: ab\Z str: ab
-b
- result_expr: - expected_results -
-92_n: OK regex: ab\z parsed_regex: ab\z str: ab
-b
- result_expr: - expected_results -
-93_n: OK regex: ab$ parsed_regex: ab$ str: ab
-b
- result_expr: - expected_results -
-94_y: OK regex: ab\Z parsed_regex: ab\Z str: b
-ab
- result_expr: $-[0] expected_results 2
-95_n: OK regex: ab\z parsed_regex: ab\z str: b
-ab
- result_expr: - expected_results -
-96_y: OK regex: ab$ parsed_regex: ab$ str: b
-ab
- result_expr: $-[0] expected_results 2
-97_y: OK regex: ab\Z parsed_regex: ab\Z str: b
-ab result_expr: $-[0] expected_results 2
-98_y: OK regex: ab\z parsed_regex: ab\z str: b
-ab result_expr: $-[0] expected_results 2
-99_y: OK regex: ab$ parsed_regex: ab$ str: b
-ab result_expr: $-[0] expected_results 2
-100_n: OK regex: 'ab\Z'm parsed_regex: 'ab\Z'm str: ab
-b
- result_expr: - expected_results -
-101_n: OK regex: 'ab\z'm parsed_regex: 'ab\z'm str: ab
-b
- result_expr: - expected_results -
-102_y: OK regex: 'ab$'m parsed_regex: 'ab$'m str: ab
-b
- result_expr: $-[0] expected_results 0
-103_y: OK regex: 'ab\Z'm parsed_regex: 'ab\Z'm str: b
-ab
- result_expr: $-[0] expected_results 2
-104_n: OK regex: 'ab\z'm parsed_regex: 'ab\z'm str: b
-ab
- result_expr: - expected_results -
-105_y: OK regex: 'ab$'m parsed_regex: 'ab$'m str: b
-ab
- result_expr: $-[0] expected_results 2
-106_y: OK regex: 'ab\Z'm parsed_regex: 'ab\Z'm str: b
-ab result_expr: $-[0] expected_results 2
-107_y: OK regex: 'ab\z'm parsed_regex: 'ab\z'm str: b
-ab result_expr: $-[0] expected_results 2
-108_y: OK regex: 'ab$'m parsed_regex: 'ab$'m str: b
-ab result_expr: $-[0] expected_results 2
-109_n: OK regex: ab\Z parsed_regex: ab\Z str: ac
-b
- result_expr: - expected_results -
-110_n: OK regex: ab\z parsed_regex: ab\z str: ac
-b
- result_expr: - expected_results -
-111_n: OK regex: ab$ parsed_regex: ab$ str: ac
-b
- result_expr: - expected_results -
-112_n: OK regex: ab\Z parsed_regex: ab\Z str: b
-ac
- result_expr: - expected_results -
-113_n: OK regex: ab\z parsed_regex: ab\z str: b
-ac
- result_expr: - expected_results -
-114_n: OK regex: ab$ parsed_regex: ab$ str: b
-ac
- result_expr: - expected_results -
-115_n: OK regex: ab\Z parsed_regex: ab\Z str: b
-ac result_expr: - expected_results -
-116_n: OK regex: ab\z parsed_regex: ab\z str: b
-ac result_expr: - expected_results -
-117_n: OK regex: ab$ parsed_regex: ab$ str: b
-ac result_expr: - expected_results -
-118_n: OK regex: 'ab\Z'm parsed_regex: 'ab\Z'm str: ac
-b
- result_expr: - expected_results -
-119_n: OK regex: 'ab\z'm parsed_regex: 'ab\z'm str: ac
-b
- result_expr: - expected_results -
-120_n: OK regex: 'ab$'m parsed_regex: 'ab$'m str: ac
-b
- result_expr: - expected_results -
-121_n: OK regex: 'ab\Z'm parsed_regex: 'ab\Z'm str: b
-ac
- result_expr: - expected_results -
-122_n: OK regex: 'ab\z'm parsed_regex: 'ab\z'm str: b
-ac
- result_expr: - expected_results -
-123_n: OK regex: 'ab$'m parsed_regex: 'ab$'m str: b
-ac
- result_expr: - expected_results -
-124_n: OK regex: 'ab\Z'm parsed_regex: 'ab\Z'm str: b
-ac result_expr: - expected_results -
-125_n: OK regex: 'ab\z'm parsed_regex: 'ab\z'm str: b
-ac result_expr: - expected_results -
-126_n: OK regex: 'ab$'m parsed_regex: 'ab$'m str: b
-ac result_expr: - expected_results -
-127_n: OK regex: ab\Z parsed_regex: ab\Z str: ca
-b
- result_expr: - expected_results -
-128_n: OK regex: ab\z parsed_regex: ab\z str: ca
-b
- result_expr: - expected_results -
-129_n: OK regex: ab$ parsed_regex: ab$ str: ca
-b
- result_expr: - expected_results -
-130_n: OK regex: ab\Z parsed_regex: ab\Z str: b
-ca
- result_expr: - expected_results -
-131_n: OK regex: ab\z parsed_regex: ab\z str: b
-ca
- result_expr: - expected_results -
-132_n: OK regex: ab$ parsed_regex: ab$ str: b
-ca
- result_expr: - expected_results -
-133_n: OK regex: ab\Z parsed_regex: ab\Z str: b
-ca result_expr: - expected_results -
-134_n: OK regex: ab\z parsed_regex: ab\z str: b
-ca result_expr: - expected_results -
-135_n: OK regex: ab$ parsed_regex: ab$ str: b
-ca result_expr: - expected_results -
-136_n: OK regex: 'ab\Z'm parsed_regex: 'ab\Z'm str: ca
-b
- result_expr: - expected_results -
-137_n: OK regex: 'ab\z'm parsed_regex: 'ab\z'm str: ca
-b
- result_expr: - expected_results -
-138_n: OK regex: 'ab$'m parsed_regex: 'ab$'m str: ca
-b
- result_expr: - expected_results -
-139_n: OK regex: 'ab\Z'm parsed_regex: 'ab\Z'm str: b
-ca
- result_expr: - expected_results -
-140_n: OK regex: 'ab\z'm parsed_regex: 'ab\z'm str: b
-ca
- result_expr: - expected_results -
-141_n: OK regex: 'ab$'m parsed_regex: 'ab$'m str: b
-ca
- result_expr: - expected_results -
-142_n: OK regex: 'ab\Z'm parsed_regex: 'ab\Z'm str: b
-ca result_expr: - expected_results -
-143_n: OK regex: 'ab\z'm parsed_regex: 'ab\z'm str: b
-ca result_expr: - expected_results -
-144_n: OK regex: 'ab$'m parsed_regex: 'ab$'m str: b
-ca result_expr: - expected_results -
-145_n: OK regex: abb\Z parsed_regex: abb\Z str: abb
-b
- result_expr: - expected_results -
-146_n: OK regex: abb\z parsed_regex: abb\z str: abb
-b
- result_expr: - expected_results -
-147_n: OK regex: abb$ parsed_regex: abb$ str: abb
-b
- result_expr: - expected_results -
-148_y: OK regex: abb\Z parsed_regex: abb\Z str: b
-abb
- result_expr: $-[0] expected_results 2
-149_n: OK regex: abb\z parsed_regex: abb\z str: b
-abb
- result_expr: - expected_results -
-150_y: OK regex: abb$ parsed_regex: abb$ str: b
-abb
- result_expr: $-[0] expected_results 2
-151_y: OK regex: abb\Z parsed_regex: abb\Z str: b
-abb result_expr: $-[0] expected_results 2
-152_y: OK regex: abb\z parsed_regex: abb\z str: b
-abb result_expr: $-[0] expected_results 2
-153_y: OK regex: abb$ parsed_regex: abb$ str: b
-abb result_expr: $-[0] expected_results 2
-154_n: OK regex: 'abb\Z'm parsed_regex: 'abb\Z'm str: abb
-b
- result_expr: - expected_results -
-155_n: OK regex: 'abb\z'm parsed_regex: 'abb\z'm str: abb
-b
- result_expr: - expected_results -
-156_y: OK regex: 'abb$'m parsed_regex: 'abb$'m str: abb
-b
- result_expr: $-[0] expected_results 0
-157_y: OK regex: 'abb\Z'm parsed_regex: 'abb\Z'm str: b
-abb
- result_expr: $-[0] expected_results 2
-158_n: OK regex: 'abb\z'm parsed_regex: 'abb\z'm str: b
-abb
- result_expr: - expected_results -
-159_y: OK regex: 'abb$'m parsed_regex: 'abb$'m str: b
-abb
- result_expr: $-[0] expected_results 2
-160_y: OK regex: 'abb\Z'm parsed_regex: 'abb\Z'm str: b
-abb result_expr: $-[0] expected_results 2
-161_y: OK regex: 'abb\z'm parsed_regex: 'abb\z'm str: b
-abb result_expr: $-[0] expected_results 2
-162_y: OK regex: 'abb$'m parsed_regex: 'abb$'m str: b
-abb result_expr: $-[0] expected_results 2
-163_n: OK regex: abb\Z parsed_regex: abb\Z str: ac
-b
- result_expr: - expected_results -
-164_n: OK regex: abb\z parsed_regex: abb\z str: ac
-b
- result_expr: - expected_results -
-165_n: OK regex: abb$ parsed_regex: abb$ str: ac
-b
- result_expr: - expected_results -
-166_n: OK regex: abb\Z parsed_regex: abb\Z str: b
-ac
- result_expr: - expected_results -
-167_n: OK regex: abb\z parsed_regex: abb\z str: b
-ac
- result_expr: - expected_results -
-168_n: OK regex: abb$ parsed_regex: abb$ str: b
-ac
- result_expr: - expected_results -
-169_n: OK regex: abb\Z parsed_regex: abb\Z str: b
-ac result_expr: - expected_results -
-170_n: OK regex: abb\z parsed_regex: abb\z str: b
-ac result_expr: - expected_results -
-171_n: OK regex: abb$ parsed_regex: abb$ str: b
-ac result_expr: - expected_results -
-172_n: OK regex: 'abb\Z'm parsed_regex: 'abb\Z'm str: ac
-b
- result_expr: - expected_results -
-173_n: OK regex: 'abb\z'm parsed_regex: 'abb\z'm str: ac
-b
- result_expr: - expected_results -
-174_n: OK regex: 'abb$'m parsed_regex: 'abb$'m str: ac
-b
- result_expr: - expected_results -
-175_n: OK regex: 'abb\Z'm parsed_regex: 'abb\Z'm str: b
-ac
- result_expr: - expected_results -
-176_n: OK regex: 'abb\z'm parsed_regex: 'abb\z'm str: b
-ac
- result_expr: - expected_results -
-177_n: OK regex: 'abb$'m parsed_regex: 'abb$'m str: b
-ac
- result_expr: - expected_results -
-178_n: OK regex: 'abb\Z'm parsed_regex: 'abb\Z'm str: b
-ac result_expr: - expected_results -
-179_n: OK regex: 'abb\z'm parsed_regex: 'abb\z'm str: b
-ac result_expr: - expected_results -
-180_n: OK regex: 'abb$'m parsed_regex: 'abb$'m str: b
-ac result_expr: - expected_results -
-181_n: OK regex: abb\Z parsed_regex: abb\Z str: ca
-b
- result_expr: - expected_results -
-182_n: OK regex: abb\z parsed_regex: abb\z str: ca
-b
- result_expr: - expected_results -
-183_n: OK regex: abb$ parsed_regex: abb$ str: ca
-b
- result_expr: - expected_results -
-184_n: OK regex: abb\Z parsed_regex: abb\Z str: b
-ca
- result_expr: - expected_results -
-185_n: OK regex: abb\z parsed_regex: abb\z str: b
-ca
- result_expr: - expected_results -
-186_n: OK regex: abb$ parsed_regex: abb$ str: b
-ca
- result_expr: - expected_results -
-187_n: OK regex: abb\Z parsed_regex: abb\Z str: b
-ca result_expr: - expected_results -
-188_n: OK regex: abb\z parsed_regex: abb\z str: b
-ca result_expr: - expected_results -
-189_n: OK regex: abb$ parsed_regex: abb$ str: b
-ca result_expr: - expected_results -
-190_n: OK regex: 'abb\Z'm parsed_regex: 'abb\Z'm str: ca
-b
- result_expr: - expected_results -
-191_n: OK regex: 'abb\z'm parsed_regex: 'abb\z'm str: ca
-b
- result_expr: - expected_results -
-192_n: OK regex: 'abb$'m parsed_regex: 'abb$'m str: ca
-b
- result_expr: - expected_results -
-193_n: OK regex: 'abb\Z'm parsed_regex: 'abb\Z'm str: b
-ca
- result_expr: - expected_results -
-194_n: OK regex: 'abb\z'm parsed_regex: 'abb\z'm str: b
-ca
- result_expr: - expected_results -
-195_n: OK regex: 'abb$'m parsed_regex: 'abb$'m str: b
-ca
- result_expr: - expected_results -
-196_n: OK regex: 'abb\Z'm parsed_regex: 'abb\Z'm str: b
-ca result_expr: - expected_results -
-197_n: OK regex: 'abb\z'm parsed_regex: 'abb\z'm str: b
-ca result_expr: - expected_results -
-198_n: OK regex: 'abb$'m parsed_regex: 'abb$'m str: b
-ca result_expr: - expected_results -
-199_y: OK regex: '\Aa$'m parsed_regex: '\Aa$'m str: a
-
- result_expr: $& expected_results a
+01_y: OK regex: \Z parsed_regex: \Z str: a\nb\n result_expr: $-[0] expected_results 3
+02_y: OK regex: \z parsed_regex: \z str: a\nb\n result_expr: $-[0] expected_results 4
+03_y: OK regex: $ parsed_regex: $ str: a\nb\n result_expr: $-[0] expected_results 3
+04_y: OK regex: \Z parsed_regex: \Z str: b\na\n result_expr: $-[0] expected_results 3
+05_y: OK regex: \z parsed_regex: \z str: b\na\n result_expr: $-[0] expected_results 4
+06_y: OK regex: $ parsed_regex: $ str: b\na\n result_expr: $-[0] expected_results 3
+07_y: OK regex: \Z parsed_regex: \Z str: b\na result_expr: $-[0] expected_results 3
+08_y: OK regex: \z parsed_regex: \z str: b\na result_expr: $-[0] expected_results 3
+09_y: OK regex: $ parsed_regex: $ str: b\na result_expr: $-[0] expected_results 3
+10_y: OK regex: '\Z'm parsed_regex: '\Z'm str: a\nb\n result_expr: $-[0] expected_results 3
+11_y: OK regex: '\z'm parsed_regex: '\z'm str: a\nb\n result_expr: $-[0] expected_results 4
+12_y: OK regex: '$'m parsed_regex: '$'m str: a\nb\n result_expr: $-[0] expected_results 1
+13_y: OK regex: '\Z'm parsed_regex: '\Z'm str: b\na\n result_expr: $-[0] expected_results 3
+14_y: OK regex: '\z'm parsed_regex: '\z'm str: b\na\n result_expr: $-[0] expected_results 4
+15_y: OK regex: '$'m parsed_regex: '$'m str: b\na\n result_expr: $-[0] expected_results 1
+16_y: OK regex: '\Z'm parsed_regex: '\Z'm str: b\na result_expr: $-[0] expected_results 3
+17_y: OK regex: '\z'm parsed_regex: '\z'm str: b\na result_expr: $-[0] expected_results 3
+18_y: OK regex: '$'m parsed_regex: '$'m str: b\na result_expr: $-[0] expected_results 1
+19_n: OK regex: a\Z parsed_regex: a\Z str: a\nb\n result_expr: - expected_results -
+20_n: OK regex: a\z parsed_regex: a\z str: a\nb\n result_expr: - expected_results -
+21_n: OK regex: a$ parsed_regex: a$ str: a\nb\n result_expr: - expected_results -
+22_y: OK regex: a\Z parsed_regex: a\Z str: b\na\n result_expr: $-[0] expected_results 2
+23_n: OK regex: a\z parsed_regex: a\z str: b\na\n result_expr: - expected_results -
+24_y: OK regex: a$ parsed_regex: a$ str: b\na\n result_expr: $-[0] expected_results 2
+25_y: OK regex: a\Z parsed_regex: a\Z str: b\na result_expr: $-[0] expected_results 2
+26_y: OK regex: a\z parsed_regex: a\z str: b\na result_expr: $-[0] expected_results 2
+27_y: OK regex: a$ parsed_regex: a$ str: b\na result_expr: $-[0] expected_results 2
+28_n: OK regex: 'a\Z'm parsed_regex: 'a\Z'm str: a\nb\n result_expr: - expected_results -
+29_n: OK regex: 'a\z'm parsed_regex: 'a\z'm str: a\nb\n result_expr: - expected_results -
+30_y: OK regex: 'a$'m parsed_regex: 'a$'m str: a\nb\n result_expr: $-[0] expected_results 0
+31_y: OK regex: 'a\Z'm parsed_regex: 'a\Z'm str: b\na\n result_expr: $-[0] expected_results 2
+32_n: OK regex: 'a\z'm parsed_regex: 'a\z'm str: b\na\n result_expr: - expected_results -
+33_y: OK regex: 'a$'m parsed_regex: 'a$'m str: b\na\n result_expr: $-[0] expected_results 2
+34_y: OK regex: 'a\Z'm parsed_regex: 'a\Z'm str: b\na result_expr: $-[0] expected_results 2
+35_y: OK regex: 'a\z'm parsed_regex: 'a\z'm str: b\na result_expr: $-[0] expected_results 2
+36_y: OK regex: 'a$'m parsed_regex: 'a$'m str: b\na result_expr: $-[0] expected_results 2
+37_n: OK regex: aa\Z parsed_regex: aa\Z str: aa\nb\n result_expr: - expected_results -
+38_n: OK regex: aa\z parsed_regex: aa\z str: aa\nb\n result_expr: - expected_results -
+39_n: OK regex: aa$ parsed_regex: aa$ str: aa\nb\n result_expr: - expected_results -
+40_y: OK regex: aa\Z parsed_regex: aa\Z str: b\naa\n result_expr: $-[0] expected_results 2
+41_n: OK regex: aa\z parsed_regex: aa\z str: b\naa\n result_expr: - expected_results -
+42_y: OK regex: aa$ parsed_regex: aa$ str: b\naa\n result_expr: $-[0] expected_results 2
+43_y: OK regex: aa\Z parsed_regex: aa\Z str: b\naa result_expr: $-[0] expected_results 2
+44_y: OK regex: aa\z parsed_regex: aa\z str: b\naa result_expr: $-[0] expected_results 2
+45_y: OK regex: aa$ parsed_regex: aa$ str: b\naa result_expr: $-[0] expected_results 2
+46_n: OK regex: 'aa\Z'm parsed_regex: 'aa\Z'm str: aa\nb\n result_expr: - expected_results -
+47_n: OK regex: 'aa\z'm parsed_regex: 'aa\z'm str: aa\nb\n result_expr: - expected_results -
+48_y: OK regex: 'aa$'m parsed_regex: 'aa$'m str: aa\nb\n result_expr: $-[0] expected_results 0
+49_y: OK regex: 'aa\Z'm parsed_regex: 'aa\Z'm str: b\naa\n result_expr: $-[0] expected_results 2
+50_n: OK regex: 'aa\z'm parsed_regex: 'aa\z'm str: b\naa\n result_expr: - expected_results -
+51_y: OK regex: 'aa$'m parsed_regex: 'aa$'m str: b\naa\n result_expr: $-[0] expected_results 2
+52_y: OK regex: 'aa\Z'm parsed_regex: 'aa\Z'm str: b\naa result_expr: $-[0] expected_results 2
+53_y: OK regex: 'aa\z'm parsed_regex: 'aa\z'm str: b\naa result_expr: $-[0] expected_results 2
+54_y: OK regex: 'aa$'m parsed_regex: 'aa$'m str: b\naa result_expr: $-[0] expected_results 2
+55_n: OK regex: aa\Z parsed_regex: aa\Z str: ac\nb\n result_expr: - expected_results -
+56_n: OK regex: aa\z parsed_regex: aa\z str: ac\nb\n result_expr: - expected_results -
+57_n: OK regex: aa$ parsed_regex: aa$ str: ac\nb\n result_expr: - expected_results -
+58_n: OK regex: aa\Z parsed_regex: aa\Z str: b\nac\n result_expr: - expected_results -
+59_n: OK regex: aa\z parsed_regex: aa\z str: b\nac\n result_expr: - expected_results -
+60_n: OK regex: aa$ parsed_regex: aa$ str: b\nac\n result_expr: - expected_results -
+61_n: OK regex: aa\Z parsed_regex: aa\Z str: b\nac result_expr: - expected_results -
+62_n: OK regex: aa\z parsed_regex: aa\z str: b\nac result_expr: - expected_results -
+63_n: OK regex: aa$ parsed_regex: aa$ str: b\nac result_expr: - expected_results -
+64_n: OK regex: 'aa\Z'm parsed_regex: 'aa\Z'm str: ac\nb\n result_expr: - expected_results -
+65_n: OK regex: 'aa\z'm parsed_regex: 'aa\z'm str: ac\nb\n result_expr: - expected_results -
+66_n: OK regex: 'aa$'m parsed_regex: 'aa$'m str: ac\nb\n result_expr: - expected_results -
+67_n: OK regex: 'aa\Z'm parsed_regex: 'aa\Z'm str: b\nac\n result_expr: - expected_results -
+68_n: OK regex: 'aa\z'm parsed_regex: 'aa\z'm str: b\nac\n result_expr: - expected_results -
+69_n: OK regex: 'aa$'m parsed_regex: 'aa$'m str: b\nac\n result_expr: - expected_results -
+70_n: OK regex: 'aa\Z'm parsed_regex: 'aa\Z'm str: b\nac result_expr: - expected_results -
+71_n: OK regex: 'aa\z'm parsed_regex: 'aa\z'm str: b\nac result_expr: - expected_results -
+72_n: OK regex: 'aa$'m parsed_regex: 'aa$'m str: b\nac result_expr: - expected_results -
+73_n: OK regex: aa\Z parsed_regex: aa\Z str: ca\nb\n result_expr: - expected_results -
+74_n: OK regex: aa\z parsed_regex: aa\z str: ca\nb\n result_expr: - expected_results -
+75_n: OK regex: aa$ parsed_regex: aa$ str: ca\nb\n result_expr: - expected_results -
+76_n: OK regex: aa\Z parsed_regex: aa\Z str: b\nca\n result_expr: - expected_results -
+77_n: OK regex: aa\z parsed_regex: aa\z str: b\nca\n result_expr: - expected_results -
+78_n: OK regex: aa$ parsed_regex: aa$ str: b\nca\n result_expr: - expected_results -
+79_n: OK regex: aa\Z parsed_regex: aa\Z str: b\nca result_expr: - expected_results -
+80_n: OK regex: aa\z parsed_regex: aa\z str: b\nca result_expr: - expected_results -
+81_n: OK regex: aa$ parsed_regex: aa$ str: b\nca result_expr: - expected_results -
+82_n: OK regex: 'aa\Z'm parsed_regex: 'aa\Z'm str: ca\nb\n result_expr: - expected_results -
+83_n: OK regex: 'aa\z'm parsed_regex: 'aa\z'm str: ca\nb\n result_expr: - expected_results -
+84_n: OK regex: 'aa$'m parsed_regex: 'aa$'m str: ca\nb\n result_expr: - expected_results -
+85_n: OK regex: 'aa\Z'm parsed_regex: 'aa\Z'm str: b\nca\n result_expr: - expected_results -
+86_n: OK regex: 'aa\z'm parsed_regex: 'aa\z'm str: b\nca\n result_expr: - expected_results -
+87_n: OK regex: 'aa$'m parsed_regex: 'aa$'m str: b\nca\n result_expr: - expected_results -
+88_n: OK regex: 'aa\Z'm parsed_regex: 'aa\Z'm str: b\nca result_expr: - expected_results -
+89_n: OK regex: 'aa\z'm parsed_regex: 'aa\z'm str: b\nca result_expr: - expected_results -
+90_n: OK regex: 'aa$'m parsed_regex: 'aa$'m str: b\nca result_expr: - expected_results -
+91_n: OK regex: ab\Z parsed_regex: ab\Z str: ab\nb\n result_expr: - expected_results -
+92_n: OK regex: ab\z parsed_regex: ab\z str: ab\nb\n result_expr: - expected_results -
+93_n: OK regex: ab$ parsed_regex: ab$ str: ab\nb\n result_expr: - expected_results -
+94_y: OK regex: ab\Z parsed_regex: ab\Z str: b\nab\n result_expr: $-[0] expected_results 2
+95_n: OK regex: ab\z parsed_regex: ab\z str: b\nab\n result_expr: - expected_results -
+96_y: OK regex: ab$ parsed_regex: ab$ str: b\nab\n result_expr: $-[0] expected_results 2
+97_y: OK regex: ab\Z parsed_regex: ab\Z str: b\nab result_expr: $-[0] expected_results 2
+98_y: OK regex: ab\z parsed_regex: ab\z str: b\nab result_expr: $-[0] expected_results 2
+99_y: OK regex: ab$ parsed_regex: ab$ str: b\nab result_expr: $-[0] expected_results 2
+100_n: OK regex: 'ab\Z'm parsed_regex: 'ab\Z'm str: ab\nb\n result_expr: - expected_results -
+101_n: OK regex: 'ab\z'm parsed_regex: 'ab\z'm str: ab\nb\n result_expr: - expected_results -
+102_y: OK regex: 'ab$'m parsed_regex: 'ab$'m str: ab\nb\n result_expr: $-[0] expected_results 0
+103_y: OK regex: 'ab\Z'm parsed_regex: 'ab\Z'm str: b\nab\n result_expr: $-[0] expected_results 2
+104_n: OK regex: 'ab\z'm parsed_regex: 'ab\z'm str: b\nab\n result_expr: - expected_results -
+105_y: OK regex: 'ab$'m parsed_regex: 'ab$'m str: b\nab\n result_expr: $-[0] expected_results 2
+106_y: OK regex: 'ab\Z'm parsed_regex: 'ab\Z'm str: b\nab result_expr: $-[0] expected_results 2
+107_y: OK regex: 'ab\z'm parsed_regex: 'ab\z'm str: b\nab result_expr: $-[0] expected_results 2
+108_y: OK regex: 'ab$'m parsed_regex: 'ab$'m str: b\nab result_expr: $-[0] expected_results 2
+109_n: OK regex: ab\Z parsed_regex: ab\Z str: ac\nb\n result_expr: - expected_results -
+110_n: OK regex: ab\z parsed_regex: ab\z str: ac\nb\n result_expr: - expected_results -
+111_n: OK regex: ab$ parsed_regex: ab$ str: ac\nb\n result_expr: - expected_results -
+112_n: OK regex: ab\Z parsed_regex: ab\Z str: b\nac\n result_expr: - expected_results -
+113_n: OK regex: ab\z parsed_regex: ab\z str: b\nac\n result_expr: - expected_results -
+114_n: OK regex: ab$ parsed_regex: ab$ str: b\nac\n result_expr: - expected_results -
+115_n: OK regex: ab\Z parsed_regex: ab\Z str: b\nac result_expr: - expected_results -
+116_n: OK regex: ab\z parsed_regex: ab\z str: b\nac result_expr: - expected_results -
+117_n: OK regex: ab$ parsed_regex: ab$ str: b\nac result_expr: - expected_results -
+118_n: OK regex: 'ab\Z'm parsed_regex: 'ab\Z'm str: ac\nb\n result_expr: - expected_results -
+119_n: OK regex: 'ab\z'm parsed_regex: 'ab\z'm str: ac\nb\n result_expr: - expected_results -
+120_n: OK regex: 'ab$'m parsed_regex: 'ab$'m str: ac\nb\n result_expr: - expected_results -
+121_n: OK regex: 'ab\Z'm parsed_regex: 'ab\Z'm str: b\nac\n result_expr: - expected_results -
+122_n: OK regex: 'ab\z'm parsed_regex: 'ab\z'm str: b\nac\n result_expr: - expected_results -
+123_n: OK regex: 'ab$'m parsed_regex: 'ab$'m str: b\nac\n result_expr: - expected_results -
+124_n: OK regex: 'ab\Z'm parsed_regex: 'ab\Z'm str: b\nac result_expr: - expected_results -
+125_n: OK regex: 'ab\z'm parsed_regex: 'ab\z'm str: b\nac result_expr: - expected_results -
+126_n: OK regex: 'ab$'m parsed_regex: 'ab$'m str: b\nac result_expr: - expected_results -
+127_n: OK regex: ab\Z parsed_regex: ab\Z str: ca\nb\n result_expr: - expected_results -
+128_n: OK regex: ab\z parsed_regex: ab\z str: ca\nb\n result_expr: - expected_results -
+129_n: OK regex: ab$ parsed_regex: ab$ str: ca\nb\n result_expr: - expected_results -
+130_n: OK regex: ab\Z parsed_regex: ab\Z str: b\nca\n result_expr: - expected_results -
+131_n: OK regex: ab\z parsed_regex: ab\z str: b\nca\n result_expr: - expected_results -
+132_n: OK regex: ab$ parsed_regex: ab$ str: b\nca\n result_expr: - expected_results -
+133_n: OK regex: ab\Z parsed_regex: ab\Z str: b\nca result_expr: - expected_results -
+134_n: OK regex: ab\z parsed_regex: ab\z str: b\nca result_expr: - expected_results -
+135_n: OK regex: ab$ parsed_regex: ab$ str: b\nca result_expr: - expected_results -
+136_n: OK regex: 'ab\Z'm parsed_regex: 'ab\Z'm str: ca\nb\n result_expr: - expected_results -
+137_n: OK regex: 'ab\z'm parsed_regex: 'ab\z'm str: ca\nb\n result_expr: - expected_results -
+138_n: OK regex: 'ab$'m parsed_regex: 'ab$'m str: ca\nb\n result_expr: - expected_results -
+139_n: OK regex: 'ab\Z'm parsed_regex: 'ab\Z'm str: b\nca\n result_expr: - expected_results -
+140_n: OK regex: 'ab\z'm parsed_regex: 'ab\z'm str: b\nca\n result_expr: - expected_results -
+141_n: OK regex: 'ab$'m parsed_regex: 'ab$'m str: b\nca\n result_expr: - expected_results -
+142_n: OK regex: 'ab\Z'm parsed_regex: 'ab\Z'm str: b\nca result_expr: - expected_results -
+143_n: OK regex: 'ab\z'm parsed_regex: 'ab\z'm str: b\nca result_expr: - expected_results -
+144_n: OK regex: 'ab$'m parsed_regex: 'ab$'m str: b\nca result_expr: - expected_results -
+145_n: OK regex: abb\Z parsed_regex: abb\Z str: abb\nb\n result_expr: - expected_results -
+146_n: OK regex: abb\z parsed_regex: abb\z str: abb\nb\n result_expr: - expected_results -
+147_n: OK regex: abb$ parsed_regex: abb$ str: abb\nb\n result_expr: - expected_results -
+148_y: OK regex: abb\Z parsed_regex: abb\Z str: b\nabb\n result_expr: $-[0] expected_results 2
+149_n: OK regex: abb\z parsed_regex: abb\z str: b\nabb\n result_expr: - expected_results -
+150_y: OK regex: abb$ parsed_regex: abb$ str: b\nabb\n result_expr: $-[0] expected_results 2
+151_y: OK regex: abb\Z parsed_regex: abb\Z str: b\nabb result_expr: $-[0] expected_results 2
+152_y: OK regex: abb\z parsed_regex: abb\z str: b\nabb result_expr: $-[0] expected_results 2
+153_y: OK regex: abb$ parsed_regex: abb$ str: b\nabb result_expr: $-[0] expected_results 2
+154_n: OK regex: 'abb\Z'm parsed_regex: 'abb\Z'm str: abb\nb\n result_expr: - expected_results -
+155_n: OK regex: 'abb\z'm parsed_regex: 'abb\z'm str: abb\nb\n result_expr: - expected_results -
+156_y: OK regex: 'abb$'m parsed_regex: 'abb$'m str: abb\nb\n result_expr: $-[0] expected_results 0
+157_y: OK regex: 'abb\Z'm parsed_regex: 'abb\Z'm str: b\nabb\n result_expr: $-[0] expected_results 2
+158_n: OK regex: 'abb\z'm parsed_regex: 'abb\z'm str: b\nabb\n result_expr: - expected_results -
+159_y: OK regex: 'abb$'m parsed_regex: 'abb$'m str: b\nabb\n result_expr: $-[0] expected_results 2
+160_y: OK regex: 'abb\Z'm parsed_regex: 'abb\Z'm str: b\nabb result_expr: $-[0] expected_results 2
+161_y: OK regex: 'abb\z'm parsed_regex: 'abb\z'm str: b\nabb result_expr: $-[0] expected_results 2
+162_y: OK regex: 'abb$'m parsed_regex: 'abb$'m str: b\nabb result_expr: $-[0] expected_results 2
+163_n: OK regex: abb\Z parsed_regex: abb\Z str: ac\nb\n result_expr: - expected_results -
+164_n: OK regex: abb\z parsed_regex: abb\z str: ac\nb\n result_expr: - expected_results -
+165_n: OK regex: abb$ parsed_regex: abb$ str: ac\nb\n result_expr: - expected_results -
+166_n: OK regex: abb\Z parsed_regex: abb\Z str: b\nac\n result_expr: - expected_results -
+167_n: OK regex: abb\z parsed_regex: abb\z str: b\nac\n result_expr: - expected_results -
+168_n: OK regex: abb$ parsed_regex: abb$ str: b\nac\n result_expr: - expected_results -
+169_n: OK regex: abb\Z parsed_regex: abb\Z str: b\nac result_expr: - expected_results -
+170_n: OK regex: abb\z parsed_regex: abb\z str: b\nac result_expr: - expected_results -
+171_n: OK regex: abb$ parsed_regex: abb$ str: b\nac result_expr: - expected_results -
+172_n: OK regex: 'abb\Z'm parsed_regex: 'abb\Z'm str: ac\nb\n result_expr: - expected_results -
+173_n: OK regex: 'abb\z'm parsed_regex: 'abb\z'm str: ac\nb\n result_expr: - expected_results -
+174_n: OK regex: 'abb$'m parsed_regex: 'abb$'m str: ac\nb\n result_expr: - expected_results -
+175_n: OK regex: 'abb\Z'm parsed_regex: 'abb\Z'm str: b\nac\n result_expr: - expected_results -
+176_n: OK regex: 'abb\z'm parsed_regex: 'abb\z'm str: b\nac\n result_expr: - expected_results -
+177_n: OK regex: 'abb$'m parsed_regex: 'abb$'m str: b\nac\n result_expr: - expected_results -
+178_n: OK regex: 'abb\Z'm parsed_regex: 'abb\Z'm str: b\nac result_expr: - expected_results -
+179_n: OK regex: 'abb\z'm parsed_regex: 'abb\z'm str: b\nac result_expr: - expected_results -
+180_n: OK regex: 'abb$'m parsed_regex: 'abb$'m str: b\nac result_expr: - expected_results -
+181_n: OK regex: abb\Z parsed_regex: abb\Z str: ca\nb\n result_expr: - expected_results -
+182_n: OK regex: abb\z parsed_regex: abb\z str: ca\nb\n result_expr: - expected_results -
+183_n: OK regex: abb$ parsed_regex: abb$ str: ca\nb\n result_expr: - expected_results -
+184_n: OK regex: abb\Z parsed_regex: abb\Z str: b\nca\n result_expr: - expected_results -
+185_n: OK regex: abb\z parsed_regex: abb\z str: b\nca\n result_expr: - expected_results -
+186_n: OK regex: abb$ parsed_regex: abb$ str: b\nca\n result_expr: - expected_results -
+187_n: OK regex: abb\Z parsed_regex: abb\Z str: b\nca result_expr: - expected_results -
+188_n: OK regex: abb\z parsed_regex: abb\z str: b\nca result_expr: - expected_results -
+189_n: OK regex: abb$ parsed_regex: abb$ str: b\nca result_expr: - expected_results -
+190_n: OK regex: 'abb\Z'm parsed_regex: 'abb\Z'm str: ca\nb\n result_expr: - expected_results -
+191_n: OK regex: 'abb\z'm parsed_regex: 'abb\z'm str: ca\nb\n result_expr: - expected_results -
+192_n: OK regex: 'abb$'m parsed_regex: 'abb$'m str: ca\nb\n result_expr: - expected_results -
+193_n: OK regex: 'abb\Z'm parsed_regex: 'abb\Z'm str: b\nca\n result_expr: - expected_results -
+194_n: OK regex: 'abb\z'm parsed_regex: 'abb\z'm str: b\nca\n result_expr: - expected_results -
+195_n: OK regex: 'abb$'m parsed_regex: 'abb$'m str: b\nca\n result_expr: - expected_results -
+196_n: OK regex: 'abb\Z'm parsed_regex: 'abb\Z'm str: b\nca result_expr: - expected_results -
+197_n: OK regex: 'abb\z'm parsed_regex: 'abb\z'm str: b\nca result_expr: - expected_results -
+198_n: OK regex: 'abb$'m parsed_regex: 'abb$'m str: b\nca result_expr: - expected_results -
+199_y: OK regex: '\Aa$'m parsed_regex: '\Aa$'m str: a\n\n result_expr: $& expected_results a
 

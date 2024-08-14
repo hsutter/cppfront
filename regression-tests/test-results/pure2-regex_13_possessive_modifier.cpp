@@ -9,7 +9,7 @@
 
 #line 1 "pure2-regex_13_possessive_modifier.cpp2"
 
-#line 153 "pure2-regex_13_possessive_modifier.cpp2"
+#line 165 "pure2-regex_13_possessive_modifier.cpp2"
 class test_tests_13_possessive_modifier;
   
 
@@ -19,13 +19,16 @@ class test_tests_13_possessive_modifier;
 [[nodiscard]] auto create_result(cpp2::impl::in<std::string> resultExpr, auto const& r) -> std::string;
 
 #line 112 "pure2-regex_13_possessive_modifier.cpp2"
+[[nodiscard]] auto sanitize(std::string str) -> std::string;
+
+#line 124 "pure2-regex_13_possessive_modifier.cpp2"
 template<typename M> auto test(M const& regex, cpp2::impl::in<std::string> id, cpp2::impl::in<std::string> regex_str, cpp2::impl::in<std::string> str, cpp2::impl::in<std::string> kind, cpp2::impl::in<std::string> resultExpr, 
            cpp2::impl::in<std::string> resultExpected) -> void;
 
-#line 153 "pure2-regex_13_possessive_modifier.cpp2"
+#line 165 "pure2-regex_13_possessive_modifier.cpp2"
 class test_tests_13_possessive_modifier {
 
-#line 202 "pure2-regex_13_possessive_modifier.cpp2"
+#line 214 "pure2-regex_13_possessive_modifier.cpp2"
   public: auto run() const& -> void;
   public: class regex_01_matcher {
   public: template<typename Iter, typename CharT> class wrap {
@@ -2281,7 +2284,7 @@ public: class func_2 {
   public: auto operator=(test_tests_13_possessive_modifier const&) -> void = delete;
 
 
-#line 254 "pure2-regex_13_possessive_modifier.cpp2"
+#line 266 "pure2-regex_13_possessive_modifier.cpp2"
 };
 auto main() -> int;
 
@@ -2401,6 +2404,19 @@ auto main() -> int;
 }
 
 #line 112 "pure2-regex_13_possessive_modifier.cpp2"
+[[nodiscard]] auto sanitize(std::string str) -> std::string
+{
+  str = cpp2::string_util::replace_all(str, "\a", "\\a");
+  str = cpp2::string_util::replace_all(str, "\f", "\\f");
+  str = cpp2::string_util::replace_all(str, "\x1b", "\\e");
+  str = cpp2::string_util::replace_all(str, "\n", "\\n");
+  str = cpp2::string_util::replace_all(str, "\r", "\\r");
+  str = cpp2::string_util::replace_all(str, "\t", "\\t");
+
+  return cpp2::move(str); 
+}
+
+#line 124 "pure2-regex_13_possessive_modifier.cpp2"
 template<typename M> auto test(M const& regex, cpp2::impl::in<std::string> id, cpp2::impl::in<std::string> regex_str, cpp2::impl::in<std::string> str, cpp2::impl::in<std::string> kind, cpp2::impl::in<std::string> resultExpr, 
            cpp2::impl::in<std::string> resultExpected) -> void{
 
@@ -2423,7 +2439,7 @@ template<typename M> auto test(M const& regex, cpp2::impl::in<std::string> id, c
       auto result {create_result(resultExpr, cpp2::move(r))}; 
 
       if (result != resultExpected) {
-        status = "Failure: Result is wrong. (is: " + cpp2::to_string(cpp2::move(result)) + ")";
+        status = "Failure: Result is wrong. (is: " + cpp2::to_string(sanitize(cpp2::move(result))) + ")";
       }
     }
   }
@@ -2438,10 +2454,10 @@ template<typename M> auto test(M const& regex, cpp2::impl::in<std::string> id, c
   if (!(CPP2_UFCS(empty)(warning))) {
     warning += " ";
   }
-  std::cout << "" + cpp2::to_string(id) + "_" + cpp2::to_string(kind) + ": " + cpp2::to_string(cpp2::move(status)) + " " + cpp2::to_string(cpp2::move(warning)) + "regex: " + cpp2::to_string(regex_str) + " parsed_regex: " + cpp2::to_string(CPP2_UFCS(to_string)(regex)) + " str: " + cpp2::to_string(str) + " result_expr: " + cpp2::to_string(resultExpr) + " expected_results " + cpp2::to_string(resultExpected) + "" << std::endl;
+  std::cout << "" + cpp2::to_string(id) + "_" + cpp2::to_string(kind) + ": " + cpp2::to_string(cpp2::move(status)) + " " + cpp2::to_string(cpp2::move(warning)) + "regex: " + cpp2::to_string(regex_str) + " parsed_regex: " + cpp2::to_string(CPP2_UFCS(to_string)(regex)) + " str: " + cpp2::to_string(sanitize(str)) + " result_expr: " + cpp2::to_string(resultExpr) + " expected_results " + cpp2::to_string(sanitize(resultExpected)) + "" << std::endl;
 }
 
-#line 202 "pure2-regex_13_possessive_modifier.cpp2"
+#line 214 "pure2-regex_13_possessive_modifier.cpp2"
   auto test_tests_13_possessive_modifier::run() const& -> void{
     std::cout << "Running tests_13_possessive_modifier:" << std::endl;
     test(regex_01, "01", R"(a++a)", "aaaaa", "n", R"(-)", "-");
@@ -10095,7 +10111,7 @@ int i{0};
   [[nodiscard]] auto test_tests_13_possessive_modifier::regex_48_matcher::to_string() -> std::string{return R"(foo(aA|bB)?+b)"; }
 
 
-#line 255 "pure2-regex_13_possessive_modifier.cpp2"
+#line 267 "pure2-regex_13_possessive_modifier.cpp2"
 auto main() -> int{
     CPP2_UFCS(run)(test_tests_13_possessive_modifier());
 }
