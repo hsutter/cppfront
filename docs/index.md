@@ -59,6 +59,8 @@ clang++ cppfront.cpp -std=c++20 -o cppfront
 
 That's it!
 
+> Note: On Windows (including MinGW), if you get a "too many sections" message, specify the switch `/bigobj` (MSVC) or `/Wa,-mbig-obj` (GCC).
+
 
 ### &#10148; Next: [Hello, world!](welcome/hello-world.md)
 
