@@ -213,6 +213,8 @@ main: ()
 >
 > - A function call written in Cpp2 `x.f()` member call syntax always treats a non-`#!cpp void` return type as not discardable, even if the function was written in Cpp1 syntax that did not write `[[nodiscard]]`.
 
+For details and rationale, see [Design note: Explicit discard](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Explicit-discard).
+
 
 ### <a id = "function-types"></a> Using function types
 
