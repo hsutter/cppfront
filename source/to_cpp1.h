@@ -4613,9 +4613,11 @@ public:
                 auto name = n.declaration->identifier->get_token();
                 assert(name);
                 auto req = print_to_string(*type_id.constraint);
-                req += "<CPP2_TYPEOF(";
-                req += *name;
-                req += ")>";
+                if (auto pos = req.find('<'); pos != req.npos) {
+                    req.insert(pos+1, "CPP2_TYPEOF(" + name->to_string() + "), ");
+                } else {
+                    req.append("<CPP2_TYPEOF("+ name->to_string() +")>");
+                }
                 function_requires_conditions.push_back(req);
             }
         }
