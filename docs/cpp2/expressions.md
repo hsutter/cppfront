@@ -320,12 +320,13 @@ main: () = {
 
 Another example:
 
-``` cpp title="Capture in a named function expression (aka lambda)" hl_lines="2 4 7 12 13"
+``` cpp title="Capture in a named function expression (aka lambda)" hl_lines="2 4 9 14 15"
 main: () = {
     price := 100;
-    func := :() = {
-        std::cout << "Price = " << price$ << "\n";
-    };
+    func := // Note: 'func' is a named variable of deduced type initialized to ...
+        :() = { std::cout << "Price = " << price$ << "\n"; }  // ... this lambda
+        ;   // This is a way to declare 'local functions', which can also capture
+            // (In the future, Cpp2 may directly support local functions)
     func();
     price = 200;
     func();
