@@ -1,0 +1,1 @@
+Checks: 'misc-*, -misc-definitions-in-headers, -misc-non-private-member-variables-in-classes, -misc-no-recursion'
