@@ -64,9 +64,9 @@ shape: type = {
 
 Additionally, at function local scope an object `obj` can be initialized separately from its declaration. This can be useful when the object must be declared before a program-meaningful initial value is known (to avoid a dead write of a wrong 'dummy' value), and/or when the object may be initialized in more than one way depending on other logic (e.g., by using different constructors on different paths). The way to do this is:
 
-- Declare `obj` without an initializer, such as `obj: some_type;`. This allocates stack space for the object, but does not construct it.
+- Declare `obj` without an `= initializer` value, for example: `obj: some_type;`. This allocates stack space for the object, but does not construct it.
 
-- `obj` must have a definite first use on every `#!cpp if`/`#!cpp else` branch path, and
+- `obj` must have a definite first use on every `#!cpp if`/`#!cpp else` branch path (and that first use must not be inside any loop), and
 
 - that definite first use must be of the form `obj = value;` which is a constructor call, or else pass `obj` as an `out` argument to an `out` parameter (which is also effectively a constructor call, and performs the construction in the callee).
 
