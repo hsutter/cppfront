@@ -675,6 +675,82 @@ add_virtual_destructor: (inout t: meta::type_declaration) =
     t.add_member( "operator=: (virtual move this) = { }");
 }
 
+//-----------------------------------------------------------------------
+//
+//  foreign_interface_pseudovalue
+//
+//  Internal metafunction to help with public reflection API declaration.
+//
+//    * "foreign interface" because the interface its declaring will be
+//      defined somewhere else outside the metaprogram.
+//
+//    * "pseudovalue" because the resulting type behaves like a value,
+//      you can copy, move it, etc. But its not an actual value type,
+//      as all of its "guts" are behind pointers to the implementation.
+//
+//  The verbose name is on purpose, lets try to give it a better name if it
+//  can be generalized into something useful for all developers.
+foreign_interface_pseudovalue: (inout t : meta::type_declaration) =
+{
+    interface_funcs: std::vector<std::string> = ();
+    parent: std::string = ();
+
+    for t.get_members() do (inout m)
+    {
+        if m.is_object() {
+            mo := m.as_object();
+            mo.require(mo.name() == "this",
+                       "only member object that foreing value can have is a parent");
+            mo.require(parent.empty(),
+                       "foreign value can only have 1 parent (which must also be a @foreing_value)");
+            parent = mo.type();
+        }
+        if m.is_function() {
+            mf := m.as_function();
+            if mf.has_initializer() {
+                // foreign value functions will be provided a dummy implementation,
+                // unless they already have one (used for templated functions)
+                continue;
+            }
+            mf.require( mf.make_public(),
+                        "foreign value functions must be public");
+            mf.require( mf.is_function_with_this(),
+                        "foreign value functions must have 'this'");
+            _ = interface_funcs.emplace_back(mf.print());
+            name := mf.name();
+            params_as_string: std::string = ();
+            // imf := interface_funcs.emplace_back();
+            // imf.append("(name)$ : (");
+            for mf.get_parameters() do (p)
+            {
+                // imf.append("(p.name())$ : ()$,");
+                if p.name() == "this" { continue; }
+                _ = params_as_string.append("(p.name())$,");
+            }
+            // imf.append(");");
+            mf.add_initializer("_pimpl*.(name)$((params_as_string)$);");
+            _ = mf;
+        }
+    }
+
+    interface_to_add : std::string = ("public interface: @interface type = {\n");
+    for interface_funcs do (iff) { _ = interface_to_add.append(iff); }
+    _ = interface_to_add.append("}\n");
+
+    t.add_member(interface_to_add);
+    t.add_member("private _pimpl: std::unique_ptr<interface>;\n");
+    if parent.empty() {
+        t.add_member("operator=: (out this, copy pimpl: std::unique_ptr<interface>) = _pimpl = (move pimpl);\n");
+    } else {
+        t.add_member(
+            "operator=: (out this, copy pimpl: std::unique_ptr<interface>, forward parent_pimpls...) = "
+            "{ (parent)$ = parent_pimpls...; _pimpl = pimpl; }\n"
+        );
+    }
+    t.add_member("operator=: (out this, move that) = { _pimpl = (move that._pimpl); }\n");
+    t.add_member("operator=: (move this) = { }\n");
+}
+
 
 //-----------------------------------------------------------------------
 //
@@ -3787,6 +3863,9 @@ apply_metafunctions: (
         }
         else if name == "regex" {
             regex_gen( rtype );
+        }
+        else if name == "_internal_foreign_interface_pseudovalue" {
+            foreign_interface_pseudovalue( rtype );
         }
         else {
             error( "unrecognized metafunction name: '" + name + "' for type declaration" );
