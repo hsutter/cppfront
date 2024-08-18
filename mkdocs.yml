@@ -51,7 +51,7 @@ extra_css:
 
 nav:
   - 'Welcome & getting started':
-    - 'Overview: What are Cpp2 and cppfront? How do I get and build cppfront?': index.md
+    - 'Overview: What are Cpp2 and cppfront? How do I get and build cppfront?': welcome/overview.md
     - 'Hello, world!': welcome/hello-world.md
     - 'Adding cppfront to your existing C++ project': welcome/integration.md
   - 'Cpp2 reference':
