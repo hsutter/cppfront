@@ -1977,7 +1977,7 @@ parse_context: type =
 
     private grab_until_impl: (inout this, in e: std::string, out r: std::string, any: bool) -> bool = 
     {
-        end:= pos;
+        end:= pos; // NOLINT(clang-analyzer-deadcode.DeadStores)
         if any {
             end = regex..find_first_of(e, pos);
         }

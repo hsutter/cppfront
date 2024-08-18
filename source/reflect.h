@@ -3642,7 +3642,7 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
 #line 1978 "reflect.h2"
     [[nodiscard]] auto parse_context::grab_until_impl(cpp2::impl::in<std::string> e, cpp2::impl::out<std::string> r, cpp2::impl::in<bool> any) & -> bool
     {
-        auto end {pos}; 
+        auto end {pos}; // NOLINT(clang-analyzer-deadcode.DeadStores)
         if (any) {
             end = regex.find_first_of(e, pos);
         }
