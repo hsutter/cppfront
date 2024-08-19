@@ -79,7 +79,7 @@ f: () = {
     //  ...  no uses of buf here  ...
     buf = some_calculated_value;        // constructs (not assigns) buf
     //  ...
-    std::cout buf[0];                   // ok, a has been initialized
+    std::cout << buf[0];                   // ok, a has been initialized
 }
 
 g: () = {

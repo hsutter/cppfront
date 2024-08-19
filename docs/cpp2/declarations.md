@@ -48,7 +48,7 @@ We can illustrate this in two directions. First, let's start with a full functio
 f:(x: int = init) = { /*...*/ }     // x is a parameter to the function
 f:(x: int = init) = statement;      // same, { } is implicit
 
-// Omit name => anonymous function (aka 'lamba')
+// Omit name => anonymous function (aka 'lambda')
  :(x: int = init) = { /*...*/ }     // x is a parameter to the function
  :(x: int = init) = statement;      // same, { } is implicit
 
