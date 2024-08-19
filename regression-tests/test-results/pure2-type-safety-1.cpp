@@ -55,7 +55,7 @@ auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void;
 #line 24 "pure2-type-safety-1.cpp2"
 auto test_generic(auto const& x, auto const& msg) -> void{
     std::string msgx {msg}; 
-    print(cpp2::move(msgx) + " is int? ", cpp2::impl::is<int>(x));
+    ::print(cpp2::move(msgx) + " is int? ", cpp2::impl::is<int>(x));
 }
 
 #line 29 "pure2-type-safety-1.cpp2"

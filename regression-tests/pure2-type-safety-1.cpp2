@@ -23,7 +23,7 @@ main: () -> int =
 
 test_generic: ( x, msg ) = {
     msgx: std::string = msg;
-    print( msgx + " is int? ", x is int );
+    ::print( msgx + " is int? ", x is int );
 }
 
 print: ( msg: std::string, b: bool ) = {
