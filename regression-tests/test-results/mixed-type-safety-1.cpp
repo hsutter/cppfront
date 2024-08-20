@@ -47,3 +47,4 @@ template<typename T> auto print(cpp2::impl::in<std::string> msg, T const& x) -> 
     ::print(  "s* is Circle?", cpp2::impl::is<Circle>(*cpp2::impl::assert_not_null(s)));
     ::print(  "s* is Square?", cpp2::impl::is<Square>(*cpp2::impl::assert_not_null(cpp2::move(s))));
 }
+
