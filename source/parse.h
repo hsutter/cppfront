@@ -3421,7 +3421,7 @@ public:
     {
         //  Convert the gather_ results to const*
         auto tmp = gather_type_scope_declarations(w);
-        return std::vector<declaration_node const*>(tmp.begin(), tmp.end());
+        return {tmp.begin(), tmp.end()};
     }
 
 

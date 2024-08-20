@@ -841,7 +841,7 @@ class source
     static const int max_line_len = 90'000;
         //  do not reduce this - I encountered an 80,556-char
         //  line in real world code during testing
-    char buf[max_line_len];
+    char buf[max_line_len] {0};
 
 public:
     //-----------------------------------------------------------------------
@@ -854,7 +854,6 @@ public:
     )
         : errors{ errors_ }
         , lines( 1 )        // extra blank to avoid off-by-one everywhere
-        , buf{0}
     {
     }
 
