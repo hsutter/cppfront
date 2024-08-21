@@ -1,5 +1,5 @@
 
-# Documentation index
+# Cpp2 and cppfront: An experimental 'C++ syntax 2' and its first compiler
 
 ## Welcome & getting started
 

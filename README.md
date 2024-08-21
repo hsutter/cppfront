@@ -33,6 +33,7 @@ To learn more, please see:
 - [**👀 The documentation 👀**](https://hsutter.github.io/cppfront/)
 - [My CppCon 2022 talk, "Can C++ be 10x simpler and safer ...?"](https://www.youtube.com/watch?v=ELeZAKCN4tY)
 - [My CppCon 2023 talk, "Cooperative C++ Evolution: Toward a TypeScript for C++"](https://www.youtube.com/watch?v=8U3hl8XMm8c)
+- [Update on cppfront at ACCU 2024](https://www.youtube.com/watch?v=EB7yR-1317k&t=3866s)
 - [This repo's wiki](https://github.com/hsutter/cppfront/wiki)
 - The list of papers and talks below
 
