@@ -20,11 +20,11 @@ main: () = {
 
 ## <a id="using"></a> `using`
 
-A `#!cpp using` statement brings names declared in another namespace into the current scope as if they had been declared in the current scope. It has two forms:
+A `#!cpp using` statement brings names declared in another namespace into the current scope as if they had been declared in the current scope.
 
-- `#!cpp using a_namespace::a_name;` brings the single name `a_name` into scope.
+`#!cpp using a_namespace::a_name ;` brings the single name `a_name` into scope.
 
-- `#!cpp using namespace a_namespace;` brings all the namespace's names into scope.
+`#!cpp using a_namespace::_ ;` brings all the namespace's names into scope using the `#!cpp _` wildcard.
 
 For example:
 
@@ -40,15 +40,15 @@ main: () = {
     w: widgetlib::widget = /*...*/;
 
     {
-        //  Using the name, no qualification needed
+        //  Using the specific name, no widgetlib:: qualification needed
         using widgetlib::widget;
         w2: widget = /*...*/;
         // ...
     }
 
     {
-        //  Using the whole namespace, no qualification needed
-        using namespace widgetlib;
+        //  Using the whole namespace, no widgetlib:: qualification needed
+        using widgetlib::_;
         w3: widget = /*...*/;
         // ...
     }

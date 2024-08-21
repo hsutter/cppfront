@@ -2713,7 +2713,7 @@ public:
     auto start(using_statement_node const& n, int) -> void
     {
         if (auto id = get_if<id_expression_node::qualified>(&n.id->id);
-            !n.for_namespace
+            !n.for_namespace()
             && id
             )
         {

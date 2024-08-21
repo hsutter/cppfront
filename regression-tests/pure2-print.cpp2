@@ -12,7 +12,7 @@ outer: @print type = {
         protected f: () -> int = 42;
 
         g: (virtual this, i:int) -> int = {
-            using namespace ::std;
+            using ::std::_ ;
 
             s := "string literal";
             ret: int = i;

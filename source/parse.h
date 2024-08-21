@@ -2107,8 +2107,14 @@ struct jump_statement_node
 struct using_statement_node
 {
     token const*                        keyword = {};
-    bool                                for_namespace = false;
     std::unique_ptr<id_expression_node> id;
+
+    auto for_namespace() const
+        -> bool
+    {
+        assert(id);
+        return id->to_string().ends_with("::_");
+    }
 
     auto position() const
         -> source_position
@@ -5183,11 +5189,16 @@ auto pretty_print_visualize(using_statement_node const& n, int indent)
 
     auto ret = std::string{"\n"} + pre(indent) + n.keyword->as_string_view() + " ";
 
-    if (n.for_namespace) {
+    if (n.for_namespace()) {
         ret += "namespace ";
     }
 
     ret += pretty_print_visualize(*n.id, indent);
+    if (n.for_namespace()) {
+        assert(ret.ends_with("::_"));
+        ret.resize( ret.size() - 3 );   // maybe someday: ret.remove_suffix(3)
+    }
+
     if (ret.back() != ';') {
         ret += ";";
     }
@@ -7705,7 +7716,7 @@ private:
 
     //G using-statement:
     //G     'using' qualified-id ';'
-    //G     'using' 'namespace' id-expression ';'
+    //G     'using' id-expression '::' '_' ';'
     //G
     auto using_statement()
         -> std::unique_ptr<using_statement_node>
@@ -7715,25 +7726,30 @@ private:
         if (curr() != "using") {
             return {};
         }
+
+        if (
+            peek(1) 
+            && *peek(1) == "namespace"
+            )
+        {
+            error("in Cpp2, write 'using the_namespace_name::_' to bring all names in the namespace into scope using the '_' wildcard");
+            return {};
+        }
+
         n->keyword = &curr();
         next();
 
-        if (curr() == "namespace") {
-            n->for_namespace = true;
-            next();
-        }
-
         auto id = id_expression();
         if (!id) {
-            error(std::string{"expected valid id-expression after 'using"} + (n->for_namespace ? " namespace" : "") + "'");
+            error(std::string{"expected valid id-expression after 'using"} + (n->for_namespace() ? " namespace" : "") + "'");
             return {};
         }
-        if (!n->for_namespace && !id->is_qualified()) {
-            error("'using' for a specific name (not 'using namespace') must specify a qualified name", false);
-            return {};
-        }
-
         n->id = std::move(id);
+
+        if (!n->for_namespace() && !n->id->is_qualified()) {
+            error("'using' must specify a qualified name", false);
+            return {};
+        }
 
         if (curr().type() != lexeme::Semicolon) {
             error("expected ; at end of using-statement");
@@ -9647,7 +9663,7 @@ public:
 
     auto start(using_statement_node const& n, int indent) -> void
     {
-        o << pre(indent) << "using" << (n.for_namespace? " namespace" : "") << "\n";
+        o << pre(indent) << "using" << (n.for_namespace()? " namespace" : "") << "\n";
     }
 
     auto start(inspect_expression_node const& n, int indent) -> void

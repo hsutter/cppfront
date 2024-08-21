@@ -2591,13 +2591,19 @@ public:
         assert(n.keyword);
         emit(*n.keyword);
 
-        if (n.for_namespace) {
+        if (n.for_namespace()) {
             printer.print_cpp2(" namespace", n.position());
         } else {
             current_names.push_back(active_using_declaration{n});
         }
 
-        printer.print_cpp2(" " + print_to_string(*n.id) + ";", n.position());
+        auto id = print_to_string(*n.id);
+        if (n.for_namespace()) {
+            assert(id.ends_with("::_"));
+            id.resize( id.size() - 3 );     // maybe someday: id.remove_suffix(3)
+        }
+
+        printer.print_cpp2(" " + id + ";", n.position());
     }
 
 

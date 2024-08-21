@@ -1,4 +1,4 @@
-/usr/bin/ld: /tmp/ccSlwpC6.o: in function `main':
+/usr/bin/ld: /tmp/ccoR2zYT.o: in function `main':
 mixed-type-safety-1.cpp:(.text+0x327): undefined reference to `void print<std::integral_constant<bool, false> >(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::integral_constant<bool, false> const&)'
 /usr/bin/ld: mixed-type-safety-1.cpp:(.text+0x388): undefined reference to `void print<std::integral_constant<bool, true> >(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::integral_constant<bool, true> const&)'
 /usr/bin/ld: mixed-type-safety-1.cpp:(.text+0x422): undefined reference to `void print<std::integral_constant<bool, true> >(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::integral_constant<bool, true> const&)'

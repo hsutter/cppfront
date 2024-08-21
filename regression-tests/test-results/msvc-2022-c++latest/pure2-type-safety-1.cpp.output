@@ -1,7 +1,7 @@
 pure2-type-safety-1.cpp
 pure2-type-safety-1.cpp2(26): error C2666: 'print': overloaded functions have similar conversions
 pure2-type-safety-1.cpp2(29): note: could be 'void print(const std::string &,const bool)'
-C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.40.33807\include\print(125): note: or       'void std::print<std::false_type>(const std::basic_format_string<char,std::integral_constant<bool,false>>,std::false_type &&)' [found using argument-dependent lookup]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.40.33807\include\print(125): note: or       'void std::print<std::false_type>(const std::basic_format_string<char,std::integral_constant<bool,false>>,std::false_type &&)' [found using argument-dependent lookup]
 pure2-type-safety-1.cpp2(26): note: while trying to match the argument list '(std::basic_string<char,std::char_traits<char>,std::allocator<char>>, std::false_type)'
 pure2-type-safety-1.cpp2(26): note: the template instantiation context (the oldest one first) is
 pure2-type-safety-1.cpp2(8): note: see reference to function template instantiation 'void test_generic<double,char[7]>(const _T0 &,const _T1 (&))' being compiled

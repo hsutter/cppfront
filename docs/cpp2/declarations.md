@@ -208,7 +208,7 @@ chr    : namespace == std::chrono;
 chrlit : namespace == std::chrono_literals;
 
 main: () = {
-    using namespace chrlit;
+    using chrlit::_ ;
 
     //  The next two lines are equivalent
     std::cout << "1s is (std::chrono::nanoseconds(1s).count())$ns\n";
