@@ -23,6 +23,8 @@ main: () -> int =
 
 test_generic: ( x, msg ) = {
     msgx: std::string = msg;
+    // Full qualification is necessary to avoid ambiguity in C++23
+    // C++23 defines std::print, which would be picked up here by ADL
     ::print( msgx + " is int? ", x is int );
 }
 

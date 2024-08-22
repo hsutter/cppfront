@@ -14,6 +14,8 @@ print: <T : type> ( msg: std::string, x: T ) =
 
 main: () -> int = 
 {
+    // Full qualification is necessary to avoid ambiguity in C++23
+    // C++23 defines std::print, which would be picked up here by ADL
     ::print( "1.1 is int?", 1.1 is int );
     ::print( "1   is int?", 1   is int );
 
