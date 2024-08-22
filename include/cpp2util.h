@@ -1309,7 +1309,7 @@ public:
 
 //-----------------------------------------------------------------------
 //
-//  CPP2_UFCS: Variadic macro generating a variadic lamba, oh my...
+//  CPP2_UFCS: Variadic macro generating a variadic lambda, oh my...
 //
 //-----------------------------------------------------------------------
 //

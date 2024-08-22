@@ -180,7 +180,7 @@ All other `#!cpp operator=` functions are explicitly written, either by hand or 
 
 ### <a id="memberwise-default"></a> Memberwise by default
 
-All copy/move/comparison `#!cpp operator=` functions are memberwise by default in Cpp2. That includes when you write memberwise construction and assignment yourself.
+All copy/move/conversion `#!cpp operator=` functions are memberwise by default in Cpp2. That includes when you write memberwise construction and assignment yourself.
 
 In a hand-written `#!cpp operator=`:
 

@@ -451,7 +451,7 @@ Next, `#!cpp -> _ =` (deduced return type) is the default for single-expression 
 equals: (a, b) a == b;
 ```
 
-Finally, at expression scope (aka "lamba/temporary") functions/objects aren't named, and the trailing `;` is optional:
+Finally, at expression scope (aka "lambda/temporary") functions/objects aren't named, and the trailing `;` is optional:
 
 ``` cpp title="(not) 'equals': Identical meaning, but without a name as an unnamed function at expression scope"
 :(a, b) a == b
