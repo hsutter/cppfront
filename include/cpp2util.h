@@ -741,6 +741,9 @@ concept valid_custom_is_operator = predicate_member_fun<X, F, &F::op_is>
                         || brace_initializable_to<X, argument_of_op_is_t<F>> 
                       );
 
+template <typename T>
+concept arithmetic = std::is_arithmetic_v<std::remove_cvref_t<T>>;
+
 //-----------------------------------------------------------------------
 //
 //  General helpers
@@ -1759,20 +1762,7 @@ inline constexpr auto is( X const& x, bool (*value)(X const&) ) -> bool {
 //  If it's confusing, we can switch this to <From, To>
 
 template< typename To, typename From >
-inline constexpr auto is_narrowing_v =
-    // [dcl.init.list] 7.1
-    (std::is_floating_point_v<From> && std::is_integral_v<To>) ||
-    // [dcl.init.list] 7.2
-    (std::is_floating_point_v<From> && std::is_floating_point_v<To> && sizeof(From) > sizeof(To)) ||
-    // [dcl.init.list] 7.3
-    (std::is_integral_v<From> && std::is_floating_point_v<To>) ||
-    (std::is_enum_v<From> && std::is_floating_point_v<To>) ||
-    // [dcl.init.list] 7.4
-    (std::is_integral_v<From> && std::is_integral_v<To> && sizeof(From) > sizeof(To)) ||
-    (std::is_enum_v<From> && std::is_integral_v<To> && sizeof(From) > sizeof(To)) ||
-    // [dcl.init.list] 7.5
-    (std::is_pointer_v<From> && std::is_same_v<To, bool>)
-    ;
+concept is_narrowing_v = arithmetic<To> && arithmetic<From> && !brace_initializable_to<From,To>;
 
 template< typename To, typename From >
 inline constexpr auto is_unsafe_pointer_conversion_v =
