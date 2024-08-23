@@ -46,7 +46,7 @@ auto expect_no_throw(auto&& l) -> std::string try {
 } catch (std::exception const& e) {
     return e.what();
 } catch (...) {
-    return "unknow exception!";
+    return "unknown exception!";
 }
 
 auto expect_no_throw(auto&& v, auto&& l) -> std::string try {
@@ -59,7 +59,7 @@ auto expect_no_throw(auto&& v, auto&& l) -> std::string try {
 } catch (std::exception const& e) {
     return e.what();
 } catch (...) {
-    return "unknow exception!";
+    return "unknown exception!";
 }
 
 

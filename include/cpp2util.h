@@ -784,9 +784,9 @@ auto pointer_eq(T const* a, T const* b) {
 //
 //  A type_find_if for iterating over types in parameter packs
 //
-//  Note: the current implementation is a workaround for clang-12 internal error.
-//  Original implementation does not need type_it and is implemented
-//  using lambda with explicit parameter type list in the following way:
+//  Note: This implementation works around limitations in gcc <12.1,
+//  Clang <13, and MSVC <19.29. Otherwise we could avoid type_it and use
+//  a lambda with an explicit parameter type list like this:
 //
 //    template <typename... Ts, typename F>
 //    constexpr auto type_find_if(F&& fun)
@@ -800,10 +800,8 @@ auto pointer_eq(T const* a, T const* b) {
 //        return found;
 //    }
 //
-//  The workaround is not needed in gcc-12.1+, clang-13+, msvc 19.29+
-//
-//  Note2: the internal if constexpr could have else with static_assert.
-//  Unfortunatelly I cannot make it work on MSVC.
+//  Note: The internal if constexpr could have else with static_assert.
+//  Unfortunately there doesn't seem to be a way to make it work on MSVC.
 //
 //-----------------------------------------------------------------------
 //
