@@ -1,0 +1,264 @@
+
+//  Copyright (c) Herb Sutter
+//  SPDX-License-Identifier: CC-BY-NC-ND-4.0
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+//===========================================================================
+//  Cpp2 reflection (meta and generation) public interface declaration file:
+//      This file contains only declarations (not definitions) usable by
+//      authors of metafunctions. See documentation for more details.
+//
+
+namespace cpp2::meta {
+
+//-----------------------------------------------------------------------
+//
+//  Metafunction registration support. Definitions are provided by the
+//  implementation (cppfront).
+//
+
+using mf_sign_type_in = void(cpp2::impl::in<type_declaration>);
+using mf_sign_type_inout = void(type_declaration&);
+using mf_sign_func_in = void(cpp2::impl::in<function_declaration>);
+using mf_sign_func_inout = void(function_declaration&);
+
+struct register_metafunction {
+    register_metafunction(const char* name, mf_sign_type_in* f);
+    register_metafunction(const char* name, mf_sign_type_inout* f);
+    register_metafunction(const char* name, mf_sign_func_in* f);
+    register_metafunction(const char* name, mf_sign_func_inout* f);
+};
+
+} // cpp2::meta
+
+//-----------------------------------------------------------------------
+//
+//  Metafunction objects. Expanded to complete definitions that use a
+//  interface, which is provided by the implementation (cppfront).
+//
+
+cpp2: namespace = {
+
+// TODO(DyXel): put passing_style here, maybe?
+
+meta: namespace = {
+
+compiler_services: @_internal_foreign_interface_pseudovalue type =
+{
+    //  Common API
+    //
+    get_metafunction_name: (this) -> std::string_view;
+
+    get_argument : (inout this, index: int) -> std::string;
+    get_arguments: (inout this) -> std::vector<std::string>;
+
+    add_runtime_support_include: (inout this, s: std::string_view);
+
+    append_declaration_to_translation_unit: (inout this, source: std::string_view);
+
+    //  Error diagnosis and handling, integrated with compiler output
+    //  Unlike a contract violation, .require continues further processing
+    //
+    require         : (this, b: bool, msg: std::string_view);
+    error           : (this, msg: std::string_view);
+    //  Enable custom contracts on this object, integrated with compiler output
+    //  Unlike .require, a contract violation stops further processing
+    //
+    report_violation: (this, msg: std::string_view);
+}
+
+declaration: @_internal_foreign_interface_pseudovalue type =
+{
+    this: compiler_services;
+
+    print: (this) -> std::string;
+
+    is_public        : (this) -> bool;
+    is_protected     : (this) -> bool;
+    is_private       : (this) -> bool;
+    is_default_access: (this) -> bool;
+
+    default_to_public   : (inout this);
+    default_to_protected: (inout this);
+    default_to_private  : (inout this);
+
+    make_public   : (inout this) -> bool;
+    make_protected: (inout this) -> bool;
+    make_private  : (inout this) -> bool;
+
+    has_name: (this) -> bool;
+    has_name: (this, s: std::string_view) -> bool;
+
+    name                : (this) -> std::string_view;
+    fully_qualified_name: (this) -> std::string;
+
+    has_initializer: (this) -> bool;
+
+    is_global             : (this) -> bool;
+    is_function           : (this) -> bool;
+    is_object             : (this) -> bool;
+    is_base_object        : (this) -> bool;
+    is_member_object      : (this) -> bool;
+    is_type               : (this) -> bool;
+    is_namespace          : (this) -> bool;
+    is_alias              : (this) -> bool;
+
+    is_type_alias         : (this) -> bool;
+    is_namespace_alias    : (this) -> bool;
+    is_object_alias       : (this) -> bool;
+
+    is_function_expression: (this) -> bool;
+
+    as_function: (this) -> function_declaration;
+    as_object  : (this) -> object_declaration;
+    as_type    : (this) -> type_declaration;
+    as_alias   : (this) -> alias_declaration;
+
+    get_parent: (this) -> declaration;
+
+    parent_is_function : (this) -> bool;
+    parent_is_object   : (this) -> bool;
+    parent_is_type     : (this) -> bool;
+    parent_is_namespace: (this) -> bool;
+    parent_is_alias    : (this) -> bool;
+
+    parent_is_type_alias     : (this) -> bool;
+    parent_is_namespace_alias: (this) -> bool;
+    parent_is_object_alias   : (this) -> bool;
+
+    parent_is_polymorphic: (this) -> bool;
+
+    mark_for_removal_from_enclosing_type: (inout this);
+}
+
+
+function_declaration: @_internal_foreign_interface_pseudovalue type =
+{
+    this: declaration;
+
+    index_of_parameter_named   : (this, s: std::string_view) -> int;
+    has_parameter_named        : (this, s: std::string_view) -> bool;
+    has_in_parameter_named     : (this, s: std::string_view) -> bool;
+    has_copy_parameter_named   : (this, s: std::string_view) -> bool;
+    has_inout_parameter_named  : (this, s: std::string_view) -> bool;
+    has_out_parameter_named    : (this, s: std::string_view) -> bool;
+    has_move_parameter_named   : (this, s: std::string_view) -> bool;
+    has_forward_parameter_named: (this, s: std::string_view) -> bool;
+    first_parameter_name       : (this) -> std::string;
+
+    // has_parameter_with_name_and_pass: (this, s: std::string_view, pass: passing_style) -> bool; // TODO
+
+    is_function_with_this        : (this) -> bool;
+    is_virtual                   : (this) -> bool;
+    is_defaultable               : (this) -> bool;
+    is_constructor               : (this) -> bool;
+    is_default_constructor       : (this) -> bool;
+    is_move                      : (this) -> bool;
+    is_swap                      : (this) -> bool;
+    is_constructor_with_that     : (this) -> bool;
+    is_constructor_with_in_that  : (this) -> bool;
+    is_constructor_with_move_that: (this) -> bool;
+    is_assignment                : (this) -> bool;
+    is_assignment_with_that      : (this) -> bool;
+    is_assignment_with_in_that   : (this) -> bool;
+    is_assignment_with_move_that : (this) -> bool;
+    is_destructor                : (this) -> bool;
+
+    is_copy_or_move              : (this) -> bool;
+
+    has_declared_return_type: (this) -> bool;
+    has_deduced_return_type : (this) -> bool;
+    has_bool_return_type    : (this) -> bool;
+    has_non_void_return_type: (this) -> bool;
+
+    unnamed_return_type: (this) -> std::string;
+
+    get_parameters: (this) -> std::vector<object_declaration>;
+
+    is_binary_comparison_function: (this) -> bool;
+
+    default_to_virtual: (inout this);
+
+    make_virtual: (inout this) -> bool;
+
+    add_initializer: (inout this, source: std::string_view);
+}
+
+
+object_declaration: @_internal_foreign_interface_pseudovalue type =
+{
+    this: declaration;
+
+    is_const         : (this) -> bool;
+    has_wildcard_type: (this) -> bool;
+
+    type: (this) -> std::string;
+
+    initializer: (this) -> std::string;
+}
+
+// Workaround due to https://github.com/hsutter/cppfront/issues/1109
+_query_declared_value_set_functions_ret: @value type = {
+    public out_this_in_that: bool = false;
+    public out_this_move_that: bool = false;
+    public inout_this_in_that: bool = false;
+    public inout_this_move_that: bool = false;
+}
+
+type_declaration: @_internal_foreign_interface_pseudovalue type =
+{
+    this: declaration;
+
+    is_polymorphic: (this)       -> bool;
+    is_final      : (this)       -> bool;
+    make_final    : (inout this) -> bool;
+
+    get_member_functions                    : (this) -> std::vector<function_declaration>;
+    get_member_functions_needing_initializer: (this) -> std::vector<function_declaration>;
+    get_member_objects                      : (this) -> std::vector<object_declaration>;
+    get_member_types                        : (this) -> std::vector<type_declaration>;
+    get_member_aliases                      : (this) -> std::vector<alias_declaration>;
+    get_members                             : (this) -> std::vector<declaration>;
+
+    query_declared_value_set_functions: (this) -> _query_declared_value_set_functions_ret;
+
+    add_member          : (inout this, source: std::string_view);
+
+    remove_marked_members: (inout this);
+    remove_all_members   : (inout this);
+
+    disable_member_function_generation: (inout this);
+}
+
+
+alias_declaration: @_internal_foreign_interface_pseudovalue type =
+{
+    this: declaration;
+}
+
+
+reserve_names: (inout t: type_declaration, name: std::string_view, forward etc...) =
+{                           // etc is not declared ':string_view' for compatibility with GCC 10.x
+    for t.get_members()
+    do  (m) {
+        n := t.get_metafunction_name();
+        m.require( !m.has_name( name ),
+                    "in a '(n)$' type, the name '(name)$' "
+                    "is reserved for use by the '(n)$' implementation"
+        );
+    }
+    if constexpr !CPP2_PACK_EMPTY(etc) {
+        t.reserve_names( etc... );
+    }
+}
+
+} // meta
+
+} // cpp2
