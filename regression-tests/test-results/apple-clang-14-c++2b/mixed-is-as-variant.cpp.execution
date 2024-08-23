@@ -94,7 +94,7 @@ v is std::monostate = false
 v is X< 0> = false,	(v as X< 1>) = bad_variant_access
 v is X< 1> = false,	(v as X< 1>).to_string() = bad_variant_access
 v is X<19> = false,	(v as X<19>).to_string() = bad_variant_access
-v is X<20> = false,	(v as X<20>) = bad_variant_access
+v is X<20> = true,	(v as X<20>) = works!
 
 ## v as const lvalue reference
 
@@ -103,7 +103,7 @@ v is std::monostate = false
 v is X< 0> = false,	(v as X< 1>) = bad_variant_access
 v is X< 1> = false,	(v as X< 1>).to_string() = bad_variant_access
 v is X<19> = false,	(v as X<19>).to_string() = bad_variant_access
-v is X<20> = false,	(v as X<20>) = bad_variant_access
+v is X<20> = true,	(v as X<20>) = works!
 
 ## v as rvalue reference
 
@@ -112,7 +112,7 @@ v is std::monostate = false
 v is X< 0> = false,	(v as X< 1>) = bad_variant_access
 v is X< 1> = false,	(v as X< 1>).to_string() = bad_variant_access
 v is X<19> = false,	(v as X<19>).to_string() = bad_variant_access
-v is X<20> = false,	(v as X<20>) = bad_variant_access
+v is X<20> = true,	(v as X<20>) = works!
 
 # X<10>(std::exception)
 
