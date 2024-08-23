@@ -16,6 +16,7 @@
 //===========================================================================
 
 #include "parse.h"
+#include "cpp2reflect_api.h"
 #include "cpp2regex.h"
 using namespace cpp2::regex;
 
@@ -31,19 +32,19 @@ meta: namespace = {
 //-----------------------------------------------------------------------
 //
 
-compiler_services: @polymorphic_base @copyable type =
+compiler_services_base: @polymorphic_base @copyable type =
 {
     //  Common data members
     //
-    errors                : *std::vector<error_entry>;
-    includes              : *std::set<std::string>;
-    errors_original_size  : int;
-    generated_tokens      : *stable_vector<token>;
-    generated_declarations: *std::vector<std::unique_ptr<declaration_node>>;
-    parser                : cpp2::parser;
-    metafunction_name     : std::string = ();
-    metafunction_args     : std::vector<std::string> = ();
-    metafunctions_used    : bool = false;
+    protected errors                : *std::vector<error_entry>;
+    protected includes              : *std::set<std::string>;
+    protected errors_original_size  : int;
+    protected generated_tokens      : *stable_vector<token>;
+    protected generated_declarations: *std::vector<std::unique_ptr<declaration_node>>;
+    protected parser                : cpp2::parser;
+    protected metafunction_name     : std::string = ();
+    protected metafunction_args     : std::vector<std::string> = ();
+    protected metafunctions_used    : bool = false;
 
     //  Constructor
     //
@@ -63,8 +64,6 @@ compiler_services: @polymorphic_base @copyable type =
         parser                 = (errors*, includes*);
     }
 
-    //  Common API
-    //
     set_metafunction_name: (inout this, name: std::string_view, args: std::vector<std::string>) = {
         metafunction_name  = name;
         metafunction_args  = args;
@@ -72,19 +71,6 @@ compiler_services: @polymorphic_base @copyable type =
     }
 
     get_metafunction_name: (this) -> std::string_view = metafunction_name;
-
-    get_argument: (inout this, index: int) -> std::string = {
-        metafunctions_used = true;
-        if (0 <= index < metafunction_args.ssize()) {
-            return metafunction_args[index];
-        }
-        return "";
-    }
-
-    get_arguments: (inout this) -> std::vector<std::string> = {
-        metafunctions_used = true;
-        return metafunction_args;
-    }
 
     arguments_were_used: (this) -> bool = metafunctions_used;
 
@@ -149,8 +135,6 @@ compiler_services: @polymorphic_base @copyable type =
         }
     }
 
-    add_runtime_support_include: (inout this, s: std::string_view) = _=includes*.emplace( s );
-
     protected parse_and_add_declaration: (
         inout this,
         copy source: std::string_view
@@ -179,9 +163,6 @@ compiler_services: @polymorphic_base @copyable type =
         return ();
     }
 
-    //  Error diagnosis and handling, integrated with compiler output
-    //  Unlike a contract violation, .requires continues further processing
-    //
     require:(
         this,
         b   : bool,
@@ -202,24 +183,53 @@ compiler_services: @polymorphic_base @copyable type =
         _ = errors*.emplace_back( position(), message);
     }
 
-    //  Enable custom contracts on this object, integrated with compiler output
-    //  Unlike .requires, a contract violation stops further processing
-    //
-    report_violation: (this, msg) = {
+    is_active: (this) -> bool = true;
+}
+
+compiler_services_impl: @polymorphic_base type =
+{
+    this: compiler_services_base;
+
+    this: compiler_services::interface = ();
+
+    operator=: (out this, csb: compiler_services_base) = {
+        compiler_services_base = csb;
+    }
+
+    get_metafunction_name: (override this) -> std::string_view = metafunction_name;
+
+    get_argument: (override inout this, index: int) -> std::string = {
+        metafunctions_used = true;
+        if (0 <= index < metafunction_args.ssize()) {
+            return metafunction_args[index];
+        }
+        return "";
+    }
+
+    get_arguments: (override inout this) -> std::vector<std::string> = {
+        metafunctions_used = true;
+        return metafunction_args;
+    }
+
+    add_runtime_support_include: (override inout this, s: std::string_view) = _=includes*.emplace( s );
+
+    append_declaration_to_translation_unit: (override inout this, source: std::string_view)
+    = {
+        if !parse_and_add_declaration(source) {
+            error( "error attempting to add declaration:\n\t(source)$" );
+        }
+    }
+
+    require: (override this, b: bool, msg: std::string_view) = compiler_services_base::require(b, msg);
+
+    error: (override this, msg: std::string_view) = compiler_services_base::error(msg);
+
+    report_violation: (override this, msg: std::string_view) = {
         error(msg);
         throw( std::runtime_error(
             "  ==> programming bug found in metafunction @(metafunction_name)$ "
             "- contract violation - see previous errors"
         ) );
-    }
-
-    is_active:(this) true;
-
-    append_declaration_to_translation_unit: (inout this, source: std::string_view)
-    = {
-        if !parse_and_add_declaration(source) {
-            error( "error attempting to add declaration:\n\t(source)$" );
-        }
     }
 }
 
@@ -270,190 +280,228 @@ type_id: @polymorphic_base @copyable type =
 
 //  All declarations are wrappers around a pointer to node
 //
-declaration_base: @polymorphic_base @copyable type =
+declaration_base: @polymorphic_base type =
 {
-    this: compiler_services = ();
+    this: compiler_services_base;
 
     protected n: *declaration_node;
 
     protected operator=: (
         out this,
-        n_: *declaration_node,
-        s : compiler_services
+        csb: compiler_services_base,
+        n_ : *declaration_node,
     )
     = {
-        compiler_services = s;
+        compiler_services_base = csb;
         n = n_;
         assert( n, "a meta::declaration must point to a valid declaration_node, not null" );
     }
 
-    position: (override this) -> source_position = n*.position();
-
-    print: (this) -> std::string = n*.pretty_print_visualize(0);
+    private position: (override this) -> source_position = n*.position();
 }
 
+//-----------------------------------------------------------------------
+//  Declaration factories
+//
+make_declaration: (csb: compiler_services_base, n: *declaration_node) -> _ =
+    : declaration = (
+        new<declaration_impl>(csb, n),
+        new<compiler_services_impl>(csb),
+    );
+
+make_function_declaration: (csb: compiler_services_base, n: *declaration_node) -> _ =
+    : function_declaration = (
+        new<function_declaration_impl>(csb, n),
+        new<declaration_impl>(csb, n),
+        new<compiler_services_impl>(csb),
+    );
+
+make_object_declaration: (csb: compiler_services_base, n: *declaration_node) -> _ =
+    : object_declaration = (
+        new<object_declaration_impl>(csb, n),
+        new<declaration_impl>(csb, n),
+        new<compiler_services_impl>(csb),
+    );
+
+make_type_declaration: (csb: compiler_services_base, n: *declaration_node) -> _ =
+    : type_declaration = (
+        new<type_declaration_impl>(csb, n),
+        new<declaration_impl>(csb, n),
+        new<compiler_services_impl>(csb),
+    );
+
+make_alias_declaration: (csb: compiler_services_base, n: *declaration_node) -> _ =
+    : alias_declaration = (
+        new<alias_declaration_impl>(csb, n),
+        new<declaration_impl>(csb, n),
+        new<compiler_services_impl>(csb),
+    );
 
 //-----------------------------------------------------------------------
 //  All declarations
 //
-declaration: @polymorphic_base @copyable type =
+declaration_impl: @polymorphic_base type =
 {
-    this: declaration_base = ();
+    this: declaration_base;
+
+    this: declaration::interface = ();
 
     operator=: (
         out this,
+        csb: compiler_services_base,
         n_: *declaration_node,
-        s : compiler_services
     )
     = {
-        declaration_base = (n_, s);
+        declaration_base = (csb, n_);
     }
 
-    is_public        : (this) -> bool = n*.is_public();
-    is_protected     : (this) -> bool = n*.is_protected();
-    is_private       : (this) -> bool = n*.is_private();
-    is_default_access: (this) -> bool = n*.is_default_access();
+    is_public        : (override this) -> bool = n*.is_public();
+    is_protected     : (override this) -> bool = n*.is_protected();
+    is_private       : (override this) -> bool = n*.is_private();
+    is_default_access: (override this) -> bool = n*.is_default_access();
 
-    default_to_public   : (inout this) = _ = n*.make_public();
-    default_to_protected: (inout this) = _ = n*.make_protected();
-    default_to_private  : (inout this) = _ = n*.make_private();
+    default_to_public   : (override inout this) = _ = n*.make_public();
+    default_to_protected: (override inout this) = _ = n*.make_protected();
+    default_to_private  : (override inout this) = _ = n*.make_private();
 
-    make_public      : (inout this) -> bool = n*.make_public();
-    make_protected   : (inout this) -> bool = n*.make_protected();
-    make_private     : (inout this) -> bool = n*.make_private();
+    make_public      : (override inout this) -> bool = n*.make_public();
+    make_protected   : (override inout this) -> bool = n*.make_protected();
+    make_private     : (override inout this) -> bool = n*.make_private();
 
-    has_name         : (this)                      -> bool = n*.has_name();
-    has_name         : (this, s: std::string_view) -> bool = n*.has_name(s);
+    has_name         : (override this)                      -> bool = n*.has_name();
+    has_name         : (override this, s: std::string_view) -> bool = n*.has_name(s);
 
-    name: (this) -> std::string_view = {
+    name: (override this) -> std::string_view = {
         if has_name() { return n*.name()*.as_string_view(); }
         else          { return ""; }
     }
-    fully_qualified_name: (this) -> std::string = n*.fully_qualified_name();
+    fully_qualified_name: (override this) -> std::string = n*.fully_qualified_name();
 
-    has_initializer: (this) -> bool = n*.has_initializer();
+    has_initializer: (override this) -> bool = n*.has_initializer();
 
-    is_global        : (this) -> bool = n*.is_global();
-    is_function      : (this) -> bool = n*.is_function();
-    is_object        : (this) -> bool = n*.is_object();
-    is_base_object   : (this) -> bool = n*.is_base_object();
-    is_member_object : (this) -> bool = n*.is_member_object();
-    is_type          : (this) -> bool = n*.is_type();
-    is_namespace     : (this) -> bool = n*.is_namespace();
-    is_alias         : (this) -> bool = n*.is_alias();
+    is_global        : (override this) -> bool = n*.is_global();
+    is_function      : (override this) -> bool = n*.is_function();
+    is_object        : (override this) -> bool = n*.is_object();
+    is_base_object   : (override this) -> bool = n*.is_base_object();
+    is_member_object : (override this) -> bool = n*.is_member_object();
+    is_type          : (override this) -> bool = n*.is_type();
+    is_namespace     : (override this) -> bool = n*.is_namespace();
+    is_alias         : (override this) -> bool = n*.is_alias();
 
-    is_type_alias      : (this) -> bool = n*.is_type_alias();
-    is_namespace_alias : (this) -> bool = n*.is_namespace_alias();
-    is_object_alias    : (this) -> bool = n*.is_object_alias();
+    is_type_alias      : (override this) -> bool = n*.is_type_alias();
+    is_namespace_alias : (override this) -> bool = n*.is_namespace_alias();
+    is_object_alias    : (override this) -> bool = n*.is_object_alias();
 
-    is_function_expression : (this) -> bool = n*.is_function_expression();
+    is_function_expression : (override this) -> bool = n*.is_function_expression();
 
-    as_function : (this) -> function_declaration = function_declaration(n, this);
-    as_object   : (this) -> object_declaration   = object_declaration(n, this);
-    as_type     : (this) -> type_declaration     = type_declaration(n, this);
-    as_alias    : (this) -> alias_declaration    = alias_declaration(n, this);
+    as_function: (override this) -> function_declaration = make_function_declaration(this, n);
+    as_object: (override this) -> object_declaration = make_object_declaration(this, n);
+    as_type: (override this) -> type_declaration = make_type_declaration(this, n);
+    as_alias: (override this) -> alias_declaration = make_alias_declaration(this, n);
 
-    get_parent  : (this) -> declaration          = declaration(n*.parent_declaration, this);
+    get_parent: (override this) -> declaration = make_declaration(this, n);
 
-    parent_is_function   : (this) -> bool = n*.parent_is_function();
-    parent_is_object     : (this) -> bool = n*.parent_is_object();
-    parent_is_type       : (this) -> bool = n*.parent_is_type();
-    parent_is_namespace  : (this) -> bool = n*.parent_is_namespace();
-    parent_is_alias      : (this) -> bool = n*.parent_is_alias();
+    parent_is_function   : (override this) -> bool = n*.parent_is_function();
+    parent_is_object     : (override this) -> bool = n*.parent_is_object();
+    parent_is_type       : (override this) -> bool = n*.parent_is_type();
+    parent_is_namespace  : (override this) -> bool = n*.parent_is_namespace();
+    parent_is_alias      : (override this) -> bool = n*.parent_is_alias();
 
-    parent_is_type_alias      : (this) -> bool = n*.parent_is_type_alias();
-    parent_is_namespace_alias : (this) -> bool = n*.parent_is_namespace_alias();
-    parent_is_object_alias    : (this) -> bool = n*.parent_is_object_alias();
+    parent_is_type_alias      : (override this) -> bool = n*.parent_is_type_alias();
+    parent_is_namespace_alias : (override this) -> bool = n*.parent_is_namespace_alias();
+    parent_is_object_alias    : (override this) -> bool = n*.parent_is_object_alias();
 
-    parent_is_polymorphic: (this) -> bool = n*.parent_is_polymorphic();
+    parent_is_polymorphic: (override this) -> bool = n*.parent_is_polymorphic();
 
-    mark_for_removal_from_enclosing_type: (inout this)
+    mark_for_removal_from_enclosing_type: (override inout this)
         pre<type_safety>( parent_is_type() )        // this precondition should be sufficient ...
     = {
         test := n*.type_member_mark_for_removal();
         assert( test );                             // ... to ensure this assert is true
     }
+
+    print: (override this) -> std::string = n*.pretty_print_visualize(0);
 }
 
 
 //-----------------------------------------------------------------------
 //  Function declarations
 //
-function_declaration: @copyable type =
+function_declaration_impl: @polymorphic_base type =
 {
-    this: declaration = ();
+    this: declaration_base;
+
+    this: function_declaration::interface = ();
 
     operator=: (
         out this,
+        csb: compiler_services_base,
         n_: *declaration_node,
-        s : compiler_services
     ) =
     {
-        declaration = (n_, s);
+        declaration_base = (csb, n_);
         assert( n*.is_function() );
     }
 
-    index_of_parameter_named     : (this, s: std::string_view) -> int  = n*.index_of_parameter_named(s);
-    has_parameter_named          : (this, s: std::string_view) -> bool = n*.has_parameter_named(s);
-    has_in_parameter_named       : (this, s: std::string_view) -> bool = n*.has_in_parameter_named(s);
-    has_copy_parameter_named     : (this, s: std::string_view) -> bool = n*.has_copy_parameter_named(s);
-    has_inout_parameter_named    : (this, s: std::string_view) -> bool = n*.has_inout_parameter_named(s);
-    has_out_parameter_named      : (this, s: std::string_view) -> bool = n*.has_out_parameter_named(s);
-    has_move_parameter_named     : (this, s: std::string_view) -> bool = n*.has_move_parameter_named(s);
-    has_forward_parameter_named  : (this, s: std::string_view) -> bool = n*.has_forward_parameter_named(s);
-    first_parameter_name         : (this) -> std::string               = n*.first_parameter_name();
+    index_of_parameter_named     : (override this, s: std::string_view) -> int  = n*.index_of_parameter_named(s);
+    has_parameter_named          : (override this, s: std::string_view) -> bool = n*.has_parameter_named(s);
+    has_in_parameter_named       : (override this, s: std::string_view) -> bool = n*.has_in_parameter_named(s);
+    has_copy_parameter_named     : (override this, s: std::string_view) -> bool = n*.has_copy_parameter_named(s);
+    has_inout_parameter_named    : (override this, s: std::string_view) -> bool = n*.has_inout_parameter_named(s);
+    has_out_parameter_named      : (override this, s: std::string_view) -> bool = n*.has_out_parameter_named(s);
+    has_move_parameter_named     : (override this, s: std::string_view) -> bool = n*.has_move_parameter_named(s);
+    has_forward_parameter_named  : (override this, s: std::string_view) -> bool = n*.has_forward_parameter_named(s);
+    first_parameter_name         : (override this) -> std::string               = n*.first_parameter_name();
 
-    has_parameter_with_name_and_pass: (this, s: std::string_view, pass: passing_style) -> bool
-                                                  = n*.has_parameter_with_name_and_pass(s, pass);
-    is_function_with_this        : (this) -> bool = n*.is_function_with_this();
-    is_virtual                   : (this) -> bool = n*.is_virtual_function();
-    is_defaultable               : (this) -> bool = n*.is_defaultable_function();
-    is_constructor               : (this) -> bool = n*.is_constructor();
-    is_default_constructor       : (this) -> bool = n*.is_default_constructor();
-    is_move                      : (this) -> bool = n*.is_move();
-    is_swap                      : (this) -> bool = n*.is_swap();
-    is_constructor_with_that     : (this) -> bool = n*.is_constructor_with_that();
-    is_constructor_with_in_that  : (this) -> bool = n*.is_constructor_with_in_that();
-    is_constructor_with_move_that: (this) -> bool = n*.is_constructor_with_move_that();
-    is_assignment                : (this) -> bool = n*.is_assignment();
-    is_assignment_with_that      : (this) -> bool = n*.is_assignment_with_that();
-    is_assignment_with_in_that   : (this) -> bool = n*.is_assignment_with_in_that();
-    is_assignment_with_move_that : (this) -> bool = n*.is_assignment_with_move_that();
-    is_destructor                : (this) -> bool = n*.is_destructor();
+    // has_parameter_with_name_and_pass: (override this, s: std::string_view, pass: passing_style) -> bool // TODO(DyXel)
+    //                                                        = n*.has_parameter_with_name_and_pass(s, pass);
+    is_function_with_this        : (override this) -> bool = n*.is_function_with_this();
+    is_virtual                   : (override this) -> bool = n*.is_virtual_function();
+    is_defaultable               : (override this) -> bool = n*.is_defaultable_function();
+    is_constructor               : (override this) -> bool = n*.is_constructor();
+    is_default_constructor       : (override this) -> bool = n*.is_default_constructor();
+    is_move                      : (override this) -> bool = n*.is_move();
+    is_swap                      : (override this) -> bool = n*.is_swap();
+    is_constructor_with_that     : (override this) -> bool = n*.is_constructor_with_that();
+    is_constructor_with_in_that  : (override this) -> bool = n*.is_constructor_with_in_that();
+    is_constructor_with_move_that: (override this) -> bool = n*.is_constructor_with_move_that();
+    is_assignment                : (override this) -> bool = n*.is_assignment();
+    is_assignment_with_that      : (override this) -> bool = n*.is_assignment_with_that();
+    is_assignment_with_in_that   : (override this) -> bool = n*.is_assignment_with_in_that();
+    is_assignment_with_move_that : (override this) -> bool = n*.is_assignment_with_move_that();
+    is_destructor                : (override this) -> bool = n*.is_destructor();
 
-    is_copy_or_move              : (this) -> bool = is_constructor_with_that() || is_assignment_with_that();
+    is_copy_or_move              : (override this) -> bool = is_constructor_with_that() || is_assignment_with_that();
 
-    has_declared_return_type     : (this) -> bool = n*.has_declared_return_type();
-    has_deduced_return_type      : (this) -> bool = n*.has_deduced_return_type();
-    has_bool_return_type         : (this) -> bool = n*.has_bool_return_type();
-    has_non_void_return_type     : (this) -> bool = n*.has_non_void_return_type();
+    has_declared_return_type     : (override this) -> bool = n*.has_declared_return_type();
+    has_deduced_return_type      : (override this) -> bool = n*.has_deduced_return_type();
+    has_bool_return_type         : (override this) -> bool = n*.has_bool_return_type();
+    has_non_void_return_type     : (override this) -> bool = n*.has_non_void_return_type();
 
-    unnamed_return_type          : (this) -> std::string = n*.unnamed_return_type_to_string();
+    unnamed_return_type          : (override this) -> std::string = n*.unnamed_return_type_to_string();
 
-    get_parameters: (this)
+    get_parameters: (override this)
         -> std::vector<object_declaration>
     = {
         ret: std::vector<object_declaration> = ();
         for n*.get_function_parameters() do (param) {
-            _ = ret.emplace_back( param*.declaration*&, this );
+            _ = ret.emplace_back(make_object_declaration(this, param*.declaration*&));
         }
         return ret;
     }
 
-    is_binary_comparison_function: (this) -> bool = n*.is_binary_comparison_function();
+    is_binary_comparison_function: (override this) -> bool = n*.is_binary_comparison_function();
 
-    default_to_virtual           : (inout this) = _ = n*.make_function_virtual();
+    default_to_virtual           : (override inout this) = _ = n*.make_function_virtual();
 
-    make_virtual                 : (inout this) -> bool = n*.make_function_virtual();
+    make_virtual                 : (override inout this) -> bool = n*.make_function_virtual();
 
-    add_initializer: (inout this, source: std::string_view)
-        pre<this> (!has_initializer(), "cannot add an initializer to a function that already has one")
-        pre<this> (parent_is_type(),   "cannot add an initializer to a function that isn't in a type scope")
+    add_initializer: (override inout this, source: std::string_view)
     = {
-        //require( !has_initializer(),
-        //         "cannot add an initializer to a function that already has one");
-        //require( parent_is_type(),
-        //         "cannot add an initializer to a function that isn't in a type scope");
+        require( !n*.has_initializer(),
+                "cannot add an initializer to a function that already has one");
+        require( n*.parent_is_type(),
+                "cannot add an initializer to a function that isn't in a type scope");
 
         stmt := parse_statement(source);
         if !(stmt as bool) {
@@ -469,31 +517,33 @@ function_declaration: @copyable type =
 //-----------------------------------------------------------------------
 //  Object declarations
 //
-object_declaration: @copyable type =
+object_declaration_impl: @polymorphic_base type =
 {
-    this: declaration = ();
+    this: declaration_base;
+
+    this: object_declaration::interface = ();
 
     operator=: (
         out this,
+        csb: compiler_services_base,
         n_: *declaration_node,
-        s : compiler_services
     ) =
     {
-        declaration = (n_, s);
+        declaration_base = (csb, n_);
         assert( n*.is_object() );
     }
 
-    is_const         : (this) -> bool = n*.is_const();
-    has_wildcard_type: (this) -> bool = n*.has_wildcard_type();
+    is_const         : (override this) -> bool = n*.is_const();
+    has_wildcard_type: (override this) -> bool = n*.has_wildcard_type();
 
-    type: (this) -> std::string = {
+    type: (override this) -> std::string = {
         ret := n*.object_type();
         require( !contains(ret, "(*ERROR*)"),
                  "cannot to_string this type: " + ret);
         return ret;
     }
 
-    initializer: (this) -> std::string = {
+    initializer: (override this) -> std::string = {
         ret := n*.object_initializer();
         require( !contains(ret, "(*ERROR*)"),
                  "cannot to_string this initializer: " + ret);
@@ -505,50 +555,44 @@ object_declaration: @copyable type =
 //-----------------------------------------------------------------------
 //  Type declarations
 //
-type_declaration: @copyable type =
+type_declaration_impl: @polymorphic_base type =
 {
-    this: declaration = ();
+    this: declaration_base;
+
+    this: type_declaration::interface = ();
 
     operator=: (
         out this,
+        csb: compiler_services_base,
         n_: *declaration_node,
-        s : compiler_services
     ) =
     {
-        declaration = (n_, s);
+        declaration_base = (csb, n_);
         assert( n*.is_type() );
     }
 
-    reserve_names: (this, name: std::string_view, forward etc...) =
-    {                           // etc is not declared ':string_view' for compatibility with GCC 10.x
-        for get_members()
-        do  (m) {
-            m.require( !m.has_name( name ),
-                       "in a '(get_metafunction_name())$' type, the name '(name)$' "
-                       "is reserved for use by the '(get_metafunction_name())$' implementation"
-            );
-        }
-        if constexpr !CPP2_PACK_EMPTY(etc) {
-            reserve_names( etc... );
-        }
-    }
+    is_polymorphic: (override this)       -> bool = n*.is_polymorphic();
+    is_final      : (override this)       -> bool = n*.is_type_final();
+    make_final    : (override inout this) -> bool = n*.make_type_final();
 
-    is_polymorphic: (this)       -> bool = n*.is_polymorphic();
-    is_final      : (this)       -> bool = n*.is_type_final();
-    make_final    : (inout this) -> bool = n*.make_type_final();
-
-    get_member_functions: (this)
+    get_member_functions: (override this)
         -> std::vector<function_declaration>
     = {
         ret: std::vector<function_declaration> = ();
         for n*.get_type_scope_declarations(declaration_node::functions)
         do  (d) {
-            _ = ret.emplace_back( d, this );
+            _ = ret.emplace_back(
+                : function_declaration = (
+                    new<function_declaration_impl>(this, d),
+                    new<declaration_impl>(this, d),
+                    new<compiler_services_impl>(this),
+                )
+            );
         }
         return ret;
     }
 
-    get_member_functions_needing_initializer: (this)
+    get_member_functions_needing_initializer: (override this)
         -> std::vector<function_declaration>
     = {
         ret: std::vector<function_declaration> = ();
@@ -558,67 +602,64 @@ type_declaration: @copyable type =
             && !d*.is_virtual_function()
             && !d*.is_defaultable_function()
         {
-            _ = ret.emplace_back( d, this );
+            _ = ret.emplace_back(make_function_declaration(this, d));
         }
         return ret;
     }
 
-    get_member_objects: (this)
+    get_member_objects: (override this)
         -> std::vector<object_declaration>
     = {
         ret: std::vector<object_declaration> = ();
         for n*.get_type_scope_declarations(declaration_node::objects) do (d) {
-            _ = ret.emplace_back( d, this );
+            _ = ret.emplace_back(make_object_declaration(this, d));
         }
         return ret;
     }
 
-    get_member_types: (this)
+    get_member_types: (override this)
         -> std::vector<type_declaration>
     = {
         ret: std::vector<type_declaration> = ();
         for n*.get_type_scope_declarations(declaration_node::types) do (d) {
-            _ = ret.emplace_back( d, this );
+            _ = ret.emplace_back(make_type_declaration(this, d));
         }
         return ret;
     }
 
-    get_member_aliases: (this)
+    get_member_aliases: (override this)
         -> std::vector<alias_declaration>
     = {
         ret: std::vector<alias_declaration> = ();
         for n*.get_type_scope_declarations(declaration_node::aliases) do (d) {
-            _ = ret.emplace_back( d, this );
+            _ = ret.emplace_back(make_alias_declaration(this, d));
         }
         return ret;
     }
 
-    get_members: (this)
+    get_members: (override this)
         -> std::vector<declaration>
     = {
         ret: std::vector<declaration> = ();
         for n*.get_type_scope_declarations(declaration_node::all) do (d) {
-            _ = ret.emplace_back( d, this );
+            _ = ret.emplace_back(make_declaration(this, d));
         }
         return ret;
     }
 
-    query_declared_value_set_functions: (this)
-        -> (
-            out_this_in_that     : bool,
-            out_this_move_that   : bool,
-            inout_this_in_that   : bool,
-            inout_this_move_that : bool
-            )
+    query_declared_value_set_functions: (override this)
+        -> _query_declared_value_set_functions_ret
     = {
+        ret: _query_declared_value_set_functions_ret = ();
         declared := n*.find_declared_value_set_functions();
-        out_this_in_that     = declared.out_this_in_that     != nullptr;
-        out_this_move_that   = declared.out_this_move_that   != nullptr;
-        inout_this_in_that   = declared.inout_this_in_that   != nullptr;
-        inout_this_move_that = declared.inout_this_move_that != nullptr;
+        ret.out_this_in_that     = declared.out_this_in_that     != nullptr;
+        ret.out_this_move_that   = declared.out_this_move_that   != nullptr;
+        ret.inout_this_in_that   = declared.inout_this_in_that   != nullptr;
+        ret.inout_this_move_that = declared.inout_this_move_that != nullptr;
+        return ret;
     }
 
-    add_member: (inout this, source: std::string_view)
+    add_member: (override inout this, source: std::string_view)
     = {
         decl := parse_statement(source);
         if !(decl as bool) {
@@ -632,34 +673,36 @@ type_declaration: @copyable type =
                  std::string("unexpected error while attempting to add member:\n") + source );
     }
 
-    remove_marked_members: (inout this) = n*.type_remove_marked_members();
-    remove_all_members   : (inout this) = n*.type_remove_all_members();
+    remove_marked_members: (override inout this) = n*.type_remove_marked_members();
+    remove_all_members   : (override inout this) = n*.type_remove_all_members();
 
-    disable_member_function_generation: (inout this) = n*.type_disable_member_function_generation();
+    disable_member_function_generation: (override inout this) = n*.type_disable_member_function_generation();
 }
 
 
 //-----------------------------------------------------------------------
 //  Alias declarations
 //
-alias_declaration: @copyable type =
+alias_declaration_impl: @polymorphic_base type =
 {
-    this: declaration = ();
+    this: declaration_base;
+
+    this: alias_declaration::interface = ();
 
     operator=: (
         out this,
+        csb: compiler_services_base,
         n_: *declaration_node,
-        s : compiler_services
     ) =
     {
-        declaration = (n_, s);
+        declaration_base = (csb, n_);
         assert( n*.is_alias() );
     }
 }
 
 
 //-----------------------------------------------------------------------
-//
+//  TODO(DyXel): Update this with something more apt?
 //  Metafunctions - these are hardwired for now until we get to the
 //  step of writing a Cpp2 interpreter to run inside the compiler
 //
@@ -3758,7 +3801,7 @@ regex_gen: (inout t: meta::type_declaration) =
     t.remove_marked_members();
 
     for expressions do (expr) {
-        regular_expression := generate_regex(expr.second, :(message) = t$.error(message););
+        regular_expression := generate_regex(expr.second, :(message) = t&$*.error(message););
 
         if !regular_expression..empty() {
             t.add_member("public (expr.first)$_matcher: type = (regular_expression)$");
@@ -3775,8 +3818,8 @@ regex_gen: (inout t: meta::type_declaration) =
 //  apply_metafunctions - for types
 //
 apply_metafunctions: (
-    inout n     : declaration_node,
-    inout rtype : type_declaration,
+    inout n         : declaration_node,
+    inout rtypeimpl : type_declaration_impl,
     error
     )
     -> bool
@@ -3784,7 +3827,7 @@ apply_metafunctions: (
     assert( n.is_type() );
 
     //  Check for _names reserved for the metafunction implementation
-    for  rtype.get_members()
+    for  rtypeimpl.get_members()
     do   (m)
     {
         m.require( 
@@ -3800,7 +3843,7 @@ apply_metafunctions: (
     do  (metafunc)
     {
         //  Convert the name and any template arguments to strings
-        //  and record that in rtype
+        //  and record that in rtypeimpl
         name := metafunc*.to_string();
         name = name.substr(0, name.find('<'));
 
@@ -3809,7 +3852,9 @@ apply_metafunctions: (
         do  (arg)
             args.push_back( arg.to_string() );
 
-        rtype.set_metafunction_name( name, args );
+        rtypeimpl.set_metafunction_name( name, args );
+
+        rtype := make_type_declaration(rtypeimpl, n&);
 
         //  Dispatch
         //
@@ -3878,14 +3923,16 @@ apply_metafunctions: (
             return false;
         }
 
-        if (
-            !args.empty()
-            && !rtype.arguments_were_used()
-            )
-        {
-            error( name + " did not use its template arguments - did you mean to write '" + name + " <" + args[0] + "> type' (with the spaces)?");
-            return false;
-        }
+        _ = rtype;
+
+        // if ( // TODO(DyXel)
+        //     !args.empty()
+        //     && !rtypeimpl.arguments_were_used()
+        //     )
+        // {
+        //     error( name + " did not use its template arguments - did you mean to write '" + name + " <" + args[0] + "> type' (with the spaces)?");
+        //     return false;
+        // }
     }
 
     return true;
@@ -3897,8 +3944,8 @@ apply_metafunctions: (
 //  apply_metafunctions - for functions
 //
 apply_metafunctions: (
-    inout n     : declaration_node,
-    inout rfunc : function_declaration,
+    inout n         : declaration_node,
+    inout rfuncimpl : function_declaration_impl,
     error
     )
     -> bool
@@ -3910,7 +3957,7 @@ apply_metafunctions: (
     do  (metafunc)
     {
         //  Convert the name and any template arguments to strings
-        //  and record that in rfunc
+        //  and record that in rfuncimpl
         name := metafunc*.to_string();
         name = name.substr(0, name.find('<'));
 
@@ -3919,7 +3966,9 @@ apply_metafunctions: (
         do  (arg)
             args.push_back( arg.to_string() );
 
-        rfunc.set_metafunction_name( name, args );
+        rfuncimpl.set_metafunction_name( name, args );
+
+        rfunc := make_function_declaration(rfuncimpl, n&);
 
         //  Dispatch
         //
@@ -3935,14 +3984,16 @@ apply_metafunctions: (
             return false;
         }
 
-        if (
-            !args.empty()
-            && !rfunc.arguments_were_used()
-            )
-        {
-            error( name + " did not use its template arguments - did you mean to write '" + name + " <" + args[0] + "> ()' (with the spaces)?");
-            return false;
-        }
+        _ = rfunc;
+
+        // if ( // TODO(DyXel)
+        //     !args.empty()
+        //     && !rfuncimpl.arguments_were_used()
+        //     )
+        // {
+        //     error( name + " did not use its template arguments - did you mean to write '" + name + " <" + args[0] + "> ()' (with the spaces)?");
+        //     return false;
+        // }
     }
 
     return true;

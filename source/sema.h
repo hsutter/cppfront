@@ -29,12 +29,12 @@ auto parser::apply_type_metafunctions( declaration_node& n )
     assert(n.is_type());
 
     //  Get the reflection state ready to pass to the function
-    auto cs = meta::compiler_services{ &errors, &includes, generated_tokens, &generated_declarations };
-    auto rtype = meta::type_declaration{ &n, cs };
+    auto csb = meta::compiler_services_base{ &errors, &includes, generated_tokens, &generated_declarations };
+    auto rtypeimpl = meta::type_declaration_impl{ csb, &n };
 
     return apply_metafunctions(
         n,
-        rtype,
+        rtypeimpl,
         [&](std::string const& msg) { error( msg, false ); }
     );
 }
@@ -45,12 +45,12 @@ auto parser::apply_function_metafunctions( declaration_node& n )
     assert(n.is_function());
 
     //  Get the reflection state ready to pass to the function
-    auto cs = meta::compiler_services{ &errors, &includes, generated_tokens, &generated_declarations };
-    auto rfunc = meta::function_declaration{ &n, cs };
+    auto csb = meta::compiler_services_base{ &errors, &includes, generated_tokens, &generated_declarations };
+    auto rfuncimpl = meta::function_declaration_impl{ csb, &n };
 
     return apply_metafunctions(
         n,
-        rfunc,
+        rfuncimpl,
         [&](std::string const& msg) { error( msg, false ); }
     );
 }
