@@ -1785,26 +1785,6 @@ constexpr auto is( X const& x ) -> auto {
         return Dynamic_cast<C const*>(&x) != nullptr;
     }
     else if constexpr (
-        specialization_of_template<X, std::variant>
-    )
-    {
-        if (x.valueless_by_exception()) {
-            return std::is_same_v<C, empty>;
-        }
-        if constexpr (
-            std::is_same_v<C, empty>
-        )
-        {
-            if constexpr (requires { {variant_contains_type<std::monostate>(std::declval<X>())} -> std::same_as<std::true_type>; }) {
-                return std::get_if<std::monostate>(&x) != nullptr;
-            }
-        }
-        return type_find_if(x, [&]<typename It>(It const&) -> bool {
-            if (x.index() == It::index) { return std::is_same_v<C, std::variant_alternative_t<It::index, X>>;}
-            return false;
-        }) != std::variant_npos;
-    }
-    else if constexpr (
         (
             std::is_same_v<X, std::nullptr_t>
             || requires { *x; X(); }
@@ -1853,18 +1833,6 @@ inline constexpr auto is( auto const& x, auto&& value ) -> bool
     }
     else if constexpr (requires{ bool{x == value}; }) {
         return x == value;
-    }
-    else if constexpr (specialization_of_template<decltype(x), std::variant> ) {        
-        return type_find_if(x, [&]<typename It>(It const&) -> bool {
-            if (x.index() == It::index) {
-                if constexpr (valid_predicate<decltype(value), decltype(std::get<It::index>(x))>) {
-                    return value(std::get<It::index>(x));
-                } else if constexpr ( requires { bool{std::get<It::index>(x) == value}; }  ) {
-                    return std::get<It::index>(x) == value;
-                }
-            }
-            return false;
-        }) != std::variant_npos;
     }
     return false;
 }
@@ -1970,7 +1938,6 @@ auto as(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT_AS) -> decltype(auto)
             ||  std::is_base_of_v<C, CPP2_TYPEOF(x)>
             ||  std::is_base_of_v<CPP2_TYPEOF(x), C>
             ||  requires { C{CPP2_FORWARD(x)}; }
-            ||  specialization_of_template<CPP2_TYPEOF(x), std::variant>
             )
 {
     if constexpr (
@@ -2043,15 +2010,6 @@ auto as(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT_AS) -> decltype(auto)
         }
         return C{CPP2_FORWARD(x)};
     }
-    else if constexpr (specialization_of_template<decltype(x), std::variant>) {
-        constness_like_t<C, decltype(x)>* ptr = nullptr;
-        type_find_if(CPP2_FORWARD(x), [&]<typename It>(It const&) -> bool {
-            if constexpr (std::is_same_v< typename It::type, C >) { if (CPP2_FORWARD(x).index() ==  It::index) { ptr = &std::get<It::index>(x); return true; } }; 
-            return false;
-        });
-        if (!ptr) { Throw( std::bad_variant_access(), "'as' cast failed for 'variant'"); }
-        return cpp2::forward_like<decltype(x)>(*ptr);
-    }
     else {
         return nonesuch;
     }
@@ -2062,9 +2020,61 @@ auto as(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT_AS) -> decltype(auto)
 //  std::variant is and as
 //
 
-//  Common internal helper
-//
+template< typename C, specialization_of_template<std::variant> X >
+constexpr auto is( X const& x ) -> auto
+{
+    if constexpr (
+        std::is_same_v<C, X>
+        || std::is_base_of_v<C, X>
+    )
+    {
+        return std::true_type{};
+    }
+    else {
+        if (x.valueless_by_exception()) {
+            return std::is_same_v<C, empty>;
+        }
+        if constexpr (
+            std::is_same_v<C, empty>
+        )
+        {
+            if constexpr (requires { {variant_contains_type<std::monostate>(std::declval<X>())} -> std::same_as<std::true_type>; }) {
+                return std::get_if<std::monostate>(&x) != nullptr;
+            }
+        }
+        return type_find_if(x, [&]<typename It>(It const&) -> bool {
+            if (x.index() == It::index) { return std::is_same_v<C, std::variant_alternative_t<It::index, X>>;}
+            return false;
+        }) != std::variant_npos;
+    }
+}
 
+
+inline constexpr auto is( specialization_of_template<std::variant> auto const& x, auto&& value ) -> bool
+{
+    return type_find_if(x, [&]<typename It>(It const&) -> bool {
+        if (x.index() == It::index) {
+            if constexpr (valid_predicate<decltype(value), decltype(std::get<It::index>(x))>) {
+                return value(std::get<It::index>(x));
+            } else if constexpr ( requires { bool{std::get<It::index>(x) == value}; }  ) {
+                return std::get<It::index>(x) == value;
+            }
+        }
+        return false;
+    }) != std::variant_npos;
+}
+
+template< typename C >
+auto as(specialization_of_template<std::variant> auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT_AS) -> decltype(auto)
+{
+    constness_like_t<C, decltype(x)>* ptr = nullptr;
+    type_find_if(CPP2_FORWARD(x), [&]<typename It>(It const&) -> bool {
+        if constexpr (std::is_same_v< typename It::type, C >) { if (CPP2_FORWARD(x).index() ==  It::index) { ptr = &std::get<It::index>(x); return true; } }; 
+        return false;
+    });
+    if (!ptr) { Throw( std::bad_variant_access(), "'as' cast failed for 'variant'"); }
+    return cpp2::forward_like<decltype(x)>(*ptr);
+}
 
 //-------------------------------------------------------------------------------------------------------------
 //  std::any is and as
