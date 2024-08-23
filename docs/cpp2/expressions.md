@@ -251,7 +251,7 @@ For more examples, see also the examples in the previous two sections on `is` an
 
 For example:
 
-``` cpp title="Using ..< and ..= for ranges" hl_lines="5 11"
+``` cpp title="Using ..< and ..= for ranges" hl_lines="5 11 16-18"
 test: (v: std::vector<std::string>) =
 {
     //  Print strings from "Nonesuch" (if present) onward
@@ -266,6 +266,10 @@ test: (v: std::vector<std::string>) =
             std::cout << "  (e)$  (v[e])$\n";
         }
     }
+
+    std::cout << "  ((1 ..= 100).sum())$ \n";
+    std::cout << "  ((1 ..< 100).contains(99))$ \n";
+    std::cout << "  ((1 ..< 100).contains(100))$ \n";
 }
 
 main: () = {
@@ -277,6 +281,9 @@ main: () = {
 //    Wumpus
 //    1  Grue
 //    2  Nonesuch
+//    5050
+//    true
+//    false
 ```
 
 
