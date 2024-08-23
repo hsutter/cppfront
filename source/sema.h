@@ -2290,7 +2290,11 @@ public:
     auto start(parameter_declaration_list_node const& n, int) -> void
     {
         inside_parameter_list = true;
-        if (!n.in_function_typeid) {
+        if (
+            !n.in_function_typeid 
+            && !n.in_template_param_list
+            ) 
+        {
             push_lifetime_scope();
         }
     }

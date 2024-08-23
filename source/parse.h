@@ -2308,6 +2308,9 @@ struct parameter_declaration_node
     auto is_in_function_typeid() const
         -> bool;
 
+    auto is_in_template_param_list() const
+        -> bool;
+
     auto is_implicit() const
         -> bool
     {
@@ -2363,13 +2366,14 @@ struct parameter_declaration_node
 
 struct parameter_declaration_list_node
 {
-    token const* open_paren         = {};
-    token const* close_paren        = {};
-    bool         in_function_typeid = false;
+    token const* open_paren             = {};
+    token const* close_paren            = {};
+    bool         in_function_typeid     = false;
+    bool         in_template_param_list = false;
 
     std::vector<std::unique_ptr<parameter_declaration_node>> parameters;
 
-    parameter_declaration_list_node(bool f = false) : in_function_typeid{f} { }
+    parameter_declaration_list_node(bool f = false, bool t = false) : in_function_typeid{f}, in_template_param_list{t} { }
 
     //  API
     //
@@ -3880,6 +3884,10 @@ public:
         }
         v.end(declaration_identifier_tag{}, depth);
 
+        if (template_parameters) {
+            template_parameters->visit(v, depth+1);
+        }
+
         try_visit<a_function >(type, v, depth+1);
         try_visit<an_object  >(type, v, depth+1);
         try_visit<a_type     >(type, v, depth+1);
@@ -3940,6 +3948,13 @@ auto parameter_declaration_node::is_in_function_typeid() const
     -> bool
 {
     return my_list && my_list->in_function_typeid;
+}
+
+
+auto parameter_declaration_node::is_in_template_param_list() const
+    -> bool
+{
+    return my_list && my_list->in_template_param_list;
 }
 
 
@@ -7151,7 +7166,8 @@ private:
     //G     expression
     //G
     auto expression_statement(
-        bool semicolon_required
+        bool semicolon_required,
+        bool allow_angle_operators = true
     )
         -> std::unique_ptr<expression_statement_node>
     {
@@ -7163,7 +7179,7 @@ private:
         //  Remember current position, in case this isn't a valid expression-statement
         auto start_pos = pos;
 
-        if (!(n->expr = expression(true, true))) {
+        if (!(n->expr = expression(allow_angle_operators, true))) {
             return {};
         }
 
@@ -7779,10 +7795,11 @@ private:
     //GTODO     try-block
     //G
     auto statement(
-        bool                     semicolon_required = true,
-        source_position          equal_sign         = source_position{},
-        bool                     parameters_allowed = false,
-        compound_statement_node* compound_parent    = nullptr
+        bool                     semicolon_required    = true,
+        source_position          equal_sign            = source_position{},
+        bool                     parameters_allowed    = false,
+        compound_statement_node* compound_parent       = nullptr,
+        bool                     allow_angle_operators = true
     )
         -> std::unique_ptr<statement_node>
     {
@@ -7870,13 +7887,13 @@ private:
             return n;
         }
 
-        else if (auto s = declaration(true, false, false, n.get())) {
+        else if (auto s = declaration(semicolon_required, false, false, n.get())) {
             n->statement = std::move(s);
             assert (n->is_declaration());
             return n;
         }
 
-        else if (auto s = expression_statement(semicolon_required)) {
+        else if (auto s = expression_statement(semicolon_required, allow_angle_operators)) {
             n->statement = std::move(s);
             assert (n->is_expression());
             return n;
@@ -8188,7 +8205,7 @@ private:
             return {};
         }
 
-        auto n = std::make_unique<parameter_declaration_list_node>(is_function_typeid);
+        auto n = std::make_unique<parameter_declaration_list_node>(is_function_typeid, is_template);
         n->open_paren = &curr();
         next();
 
@@ -8959,7 +8976,14 @@ private:
                     }
                 }
 
-                if (!(n->initializer = statement(semicolon_required, n->equal_sign))) {
+                if (!(n->initializer = statement(
+                    semicolon_required,
+                    n->equal_sign,
+                    false,
+                    nullptr,
+                    !is_template_parameter
+                )))
+                {
                     error(
                         "ill-formed initializer",
                         true, {}, true
@@ -9811,6 +9835,7 @@ public:
     {
         o << pre(indent) << "parameter-declaration-list\n";
         o << pre(indent+1) << "in_function_type " << std::boolalpha << n.in_function_typeid << "\n";
+        o << pre(indent+1) << "in_template_param_list " << std::boolalpha << n.in_template_param_list << "\n";
     }
 
     auto start(translation_unit_node const&, int indent) -> void

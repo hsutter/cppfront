@@ -4396,6 +4396,35 @@ public:
 
         current_names.push_back(&*n.declaration);
 
+
+        //  Common initialization
+        //
+        auto emit_initializer = [&]
+        {
+            if (
+                !is_returns
+                && n.declaration->initializer
+                && (
+                    is_statement 
+                    || printer.get_phase() != printer.phase2_func_defs
+                    )
+                )
+            {
+                auto guard = stack_element(current_declarations, &*n.declaration);
+                if (is_statement) {
+                    printer.print_cpp2( "{", n.declaration->initializer->position() );
+                }
+                else {
+                    printer.print_cpp2( " = ", n.declaration->initializer->position() );
+                }
+                emit(*n.declaration->initializer, false);
+                if (is_statement) {
+                    printer.print_cpp2( "};", n.declaration->initializer->position() );
+                }
+            }
+        };
+
+
         //-----------------------------------------------------------------------
         //  Skip 'this' parameters
 
@@ -4451,7 +4480,7 @@ public:
         //-----------------------------------------------------------------------
         //  Handle type parameters
 
-        // Common template naming
+        //  Common template naming
         auto emit_template_name = [&]() {
             if (n.declaration->is_variadic) {
                 printer.print_cpp2(
@@ -4487,6 +4516,7 @@ public:
             printer.print_cpp2(" ", type_id.position());
 
             emit_template_name();
+            emit_initializer();
             return;
         }
 
@@ -4694,27 +4724,7 @@ public:
             printer.print_cpp2( identifier, identifier_pos );
         }
 
-        if (
-            !is_returns
-            && n.declaration->initializer
-            && (
-                is_statement 
-                || printer.get_phase() != printer.phase2_func_defs
-                )
-            )
-        {
-            auto guard = stack_element(current_declarations, &*n.declaration);
-            if (is_statement) {
-                printer.print_cpp2( "{", n.declaration->initializer->position() );
-            }
-            else {
-                printer.print_cpp2( " = ", n.declaration->initializer->position() );
-            }
-            emit(*n.declaration->initializer, false);
-            if (is_statement) {
-                printer.print_cpp2( "};", n.declaration->initializer->position() );
-            }
-        }
+        emit_initializer();
     }
 
 

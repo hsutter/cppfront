@@ -18,3 +18,19 @@ And from indexes 1..=5 they are:
 Make sure non-random-access iterators work:
   Hokey
   Pokey
+
+Make sure .sum works:
+210
+190
+
+Make sure .contains works:
+false
+true
+true
+true
+false
+false
+true
+true
+false
+false

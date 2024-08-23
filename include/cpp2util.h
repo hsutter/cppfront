@@ -280,12 +280,14 @@
     #include <limits>
     #include <map>
     #include <memory>
+    #include <numeric>
     #include <new>
     #include <random>
     #include <optional>
     #if defined(CPP2_USE_SOURCE_LOCATION)
         #include <source_location>
     #endif
+    #include <ranges>
     #include <set>
     #include <span>
     #include <sstream>
@@ -330,6 +332,19 @@
 #define CPP2_CONTINUE_BREAK(NAME)   goto CONTINUE_##NAME; CONTINUE_##NAME: continue; goto BREAK_##NAME; BREAK_##NAME: break;
                                     // these redundant goto's to avoid 'unused label' warnings
 
+#if defined(__clang_major__)
+    constexpr auto CPP2_CLANG_VER = __clang_major__ * 100 + __clang_minor__;
+    constexpr auto CPP2_MSVC_VER  = 0;
+    constexpr auto CPP2_GCC_VER   = 0;
+#elif defined(_MSC_VER)
+    constexpr auto CPP2_CLANG_VER = 0;
+    constexpr auto CPP2_MSVC_VER  = _MSC_VER;
+    constexpr auto CPP2_GCC_VER   = 0;
+#elif defined(__GNUC__)
+    constexpr auto CPP2_CLANG_VER = 0;
+    constexpr auto CPP2_MSVC_VER  = 0;
+    constexpr auto CPP2_GCC_VER   = __GNUC__ * 100 + __GNUC_MINOR__;
+#endif
 
 #if defined(_MSC_VER)
    // MSVC can't handle 'inline constexpr' yet in all cases
@@ -2439,8 +2454,8 @@ public:
             if constexpr (std::integral<TT>) {
                 if (last == std::numeric_limits<TT>::max()) {
                     throw std::runtime_error(
-                        "range with last == numeric_limits<T>::max() will "
-                        "overflow");
+                        "range with last == numeric_limits<T>::max() will overflow"
+                    );
                 }
             }
             ++last; 
@@ -2475,6 +2490,8 @@ public:
         iterator(TT const& f, TT const& l, TT start) : first{ f }, last{ l }, curr{ start } {}
 
         auto operator<=>(iterator const&) const = default;
+
+        operator typename range<const T>::iterator() const { return {first, last, curr}; }
 
         //  In this section, we don't use relational comparisons so that
         //  this works when T is a less-powerful-than-random-access iterator
@@ -2530,12 +2547,39 @@ public:
         auto operator- (iterator        that) const -> difference_type { return that.curr - curr; }
     };
 
-    auto begin()  const -> iterator       { return iterator{ first, last, first }; }
-    auto end()    const -> iterator       { return iterator{ first, last, last }; }
-    auto cbegin() const -> iterator       { return begin(); }
-    auto cend()   const -> iterator       { return end(); }
+    using const_iterator = typename range<const T>::iterator;
+
+    auto cbegin() const -> const_iterator { return begin(); }
+    auto cend()   const -> const_iterator { return end(); }
+    auto begin()  const -> const_iterator { return iterator{ first, last, first }; }
+    auto end()    const -> const_iterator { return iterator{ first, last, last }; }
+    auto begin()        -> iterator       { return iterator{ first, last, first }; }
+    auto end()          -> iterator       { return iterator{ first, last, last }; }
     auto size()   const -> std::size_t    { return unsafe_narrow<std::size_t>(ssize()); }
     auto ssize()  const -> std::ptrdiff_t { return last - first; }
+    auto empty()  const -> bool           { return first == last; }
+
+    auto front() const -> T { 
+        type_safety.enforce(!empty()); 
+        if constexpr (std::is_same_v<T, TT>) { 
+            return first;
+        }
+        else {
+            return unsafe_narrow<T>(first);
+        }
+    }
+
+    auto back() const -> T { 
+        type_safety.enforce(!empty()); 
+        if constexpr (std::is_same_v<T, TT>) { 
+            auto ret = last; 
+            return --ret;
+        }
+        else {
+            auto ret = unsafe_narrow<T>(last);
+            return --ret;
+        }
+    }
 
     auto operator[](difference_type i) const -> T
     {
@@ -2552,6 +2596,23 @@ public:
         }
     }
 };
+
+template<typename T>
+auto contains(range<T> const& r, T const& t)
+    -> bool
+{
+    if (r.empty()) {
+        return false;
+    }
+    return r.front() <= t && t <= r.back();
+}
+
+template<typename T>
+auto sum(range<T> const& r)
+    -> T 
+{ 
+    return std::accumulate(r.begin(), r.end(), T{});
+}
 
 
 //-----------------------------------------------------------------------

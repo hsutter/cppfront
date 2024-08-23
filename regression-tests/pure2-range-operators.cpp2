@@ -1,5 +1,5 @@
-main: () = {
 
+main: () = {
     v: std::vector = 
         ( "Aardvark", "Baboon", "Cat", "Dolphin", "Elephant", "Flicker", "Grue", "Wumpus" );
 
@@ -21,4 +21,36 @@ main: () = {
         std::cout << "  (e*)$\n";
     }
 
+    std::cout << "\nMake sure .sum works:\n";
+    std::cout << "((1 ..= 20).sum())$\n";           // prints 210
+    std::cout << "((1 ..< 20).sum())$\n";           // prints 190
+
+    std::cout << "\nMake sure .contains works:\n";
+    std::cout << "((1 ..= 20).contains( 0))$\n";    // prints false
+    std::cout << "((1 ..= 20).contains( 1))$\n";    // prints true
+    std::cout << "((1 ..= 20).contains(19))$\n";    // prints true
+    std::cout << "((1 ..= 20).contains(20))$\n";    // prints true
+    std::cout << "((1 ..= 20).contains(21))$\n";    // prints false
+    std::cout << "((1 ..< 20).contains( 0))$\n";    // prints false
+    std::cout << "((1 ..< 20).contains( 1))$\n";    // prints true
+    std::cout << "((1 ..< 20).contains(19))$\n";    // prints true
+    std::cout << "((1 ..< 20).contains(20))$\n";    // prints false
+    std::cout << "((1 ..< 20).contains(21))$\n";    // prints false
+
+    //  Only run these parts on implementations that support views::take
+    // : <V: bool = (CPP2_GCC_VER > 1400 || CPP2_CLANG_VER > 1600 || CPP2_MSVC_VER > 1920)> () = {
+    //     if constexpr V
+    //     {
+    //         using std::views::_ ;
+    
+    //         std::cout << "\nMake sure views::take works:\n";
+    //         for (1 ..= 100).take(5) do (e) {
+    //             std::cout << e << " ";
+    //         }   // prints: 1 2 3 4 5
+
+    //         for (2 ..< 5).take(5) do (e) {
+    //             std::cout << e << " ";
+    //         }   // prints: 2 3 4
+    //     }
+    // } ();
 }
