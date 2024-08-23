@@ -1802,9 +1802,7 @@ constexpr auto is( X const& x ) -> auto {
             }
         }
         return type_find_if(x, [&]<typename It>(It const&) -> bool {
-            if constexpr (It::index < 20) {
-                if (x.index() == It::index) { return std::is_same_v<C, std::variant_alternative_t<It::index, X>>;}
-            }
+            if (x.index() == It::index) { return std::is_same_v<C, std::variant_alternative_t<It::index, X>>;}
             return false;
         }) != std::variant_npos;
     }
@@ -1860,13 +1858,11 @@ inline constexpr auto is( auto const& x, auto&& value ) -> bool
     }
     else if constexpr (specialization_of_template<decltype(x), std::variant> ) {        
         return type_find_if(x, [&]<typename It>(It const&) -> bool {
-            if constexpr (It::index < 20) { // TODO: remove after refactor
-                if (x.index() == It::index) {
-                    if constexpr (valid_predicate<decltype(value), decltype(std::get<It::index>(x))>) {
-                        return value(std::get<It::index>(x));
-                    } else if constexpr ( requires { bool{std::get<It::index>(x) == value}; }  ) {
-                        return std::get<It::index>(x) == value;
-                    }
+            if (x.index() == It::index) {
+                if constexpr (valid_predicate<decltype(value), decltype(std::get<It::index>(x))>) {
+                    return value(std::get<It::index>(x));
+                } else if constexpr ( requires { bool{std::get<It::index>(x) == value}; }  ) {
+                    return std::get<It::index>(x) == value;
                 }
             }
             return false;
@@ -2052,9 +2048,7 @@ auto as(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT_AS) -> decltype(auto)
     else if constexpr (specialization_of_template<decltype(x), std::variant>) {
         constness_like_t<C, decltype(x)>* ptr = nullptr;
         type_find_if(CPP2_FORWARD(x), [&]<typename It>(It const&) -> bool {
-            if constexpr (It::index < 20) {
-                if constexpr (std::is_same_v< typename It::type, C >) { if (CPP2_FORWARD(x).index() ==  It::index) { ptr = &std::get<It::index>(x); return true; } }; 
-            }
+            if constexpr (std::is_same_v< typename It::type, C >) { if (CPP2_FORWARD(x).index() ==  It::index) { ptr = &std::get<It::index>(x); return true; } }; 
             return false;
         });
         if (!ptr) { Throw( std::bad_variant_access(), "'as' cast failed for 'variant'"); }
