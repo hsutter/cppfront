@@ -19,8 +19,8 @@ In file included from /usr/lib/llvm-18/bin/../include/c++/v1/format:202:
 /usr/lib/llvm-18/bin/../include/c++/v1/__format/format_functions.h:372:54: note: in instantiation of static data member 'std::basic_format_string<char, std::integral_constant<bool, false>>::__handles_' requested here
   372 |                            _Context{__types_.data(), __handles_.data(), sizeof...(_Args)});
       |                                                      ^
-mixed-type-safety-1.cpp2:29:11: note: in instantiation of function template specialization 'std::basic_format_string<char, std::integral_constant<bool, false>>::basic_format_string<char[13]>' requested here
-   29 |     print("1.1 is int? ", cpp2::impl::is<int>(1.1));
+mixed-type-safety-1.cpp2:17:11: note: in instantiation of function template specialization 'std::basic_format_string<char, std::integral_constant<bool, false>>::basic_format_string<char[12]>' requested here
+   17 |     print("1.1 is int?", cpp2::impl::is<int>(1.1));
       |           ^
 /usr/lib/llvm-18/bin/../include/c++/v1/__format/formatter.h:36:3: note: 'formatter' has been explicitly marked deleted here
    36 |   formatter()                            = delete;
@@ -49,8 +49,8 @@ In file included from /usr/lib/llvm-18/bin/../include/c++/v1/format:202:
 /usr/lib/llvm-18/bin/../include/c++/v1/__format/format_functions.h:372:54: note: in instantiation of static data member 'std::basic_format_string<char, std::integral_constant<bool, true>>::__handles_' requested here
   372 |                            _Context{__types_.data(), __handles_.data(), sizeof...(_Args)});
       |                                                      ^
-mixed-type-safety-1.cpp2:30:12: note: in instantiation of function template specialization 'std::basic_format_string<char, std::integral_constant<bool, true>>::basic_format_string<char[13]>' requested here
-   30 |     print( "1   is int? ", cpp2::impl::is<int>(1));
+mixed-type-safety-1.cpp2:18:12: note: in instantiation of function template specialization 'std::basic_format_string<char, std::integral_constant<bool, true>>::basic_format_string<char[12]>' requested here
+   18 |     print( "1   is int?", cpp2::impl::is<int>(1));
       |            ^
 /usr/lib/llvm-18/bin/../include/c++/v1/__format/formatter.h:36:3: note: 'formatter' has been explicitly marked deleted here
    36 |   formatter()                            = delete;
@@ -95,8 +95,8 @@ In file included from /usr/lib/llvm-18/bin/../include/c++/v1/__format/format_con
 /usr/lib/llvm-18/bin/../include/c++/v1/print:341:8: note: in instantiation of function template specialization 'std::print<std::integral_constant<bool, false>>' requested here
   341 |   std::print(stdout, __fmt, std::forward<_Args>(__args)...);
       |        ^
-mixed-type-safety-1.cpp2:29:5: note: in instantiation of function template specialization 'std::print<std::integral_constant<bool, false>>' requested here
-   29 |     print("1.1 is int? ", cpp2::impl::is<int>(1.1));
+mixed-type-safety-1.cpp2:17:5: note: in instantiation of function template specialization 'std::print<std::integral_constant<bool, false>>' requested here
+   17 |     print("1.1 is int?", cpp2::impl::is<int>(1.1));
       |     ^
 /usr/lib/llvm-18/bin/../include/c++/v1/__format/format_arg_store.h:167:23: note: expression evaluates to '0 != 0'
   167 |   static_assert(__arg != __arg_t::__none, "the supplied type is not formattable");
@@ -181,8 +181,8 @@ In file included from /usr/lib/llvm-18/bin/../include/c++/v1/__format/format_con
 /usr/lib/llvm-18/bin/../include/c++/v1/print:341:8: note: in instantiation of function template specialization 'std::print<std::integral_constant<bool, true>>' requested here
   341 |   std::print(stdout, __fmt, std::forward<_Args>(__args)...);
       |        ^
-mixed-type-safety-1.cpp2:30:5: note: in instantiation of function template specialization 'std::print<std::integral_constant<bool, true>>' requested here
-   30 |     print( "1   is int? ", cpp2::impl::is<int>(1));
+mixed-type-safety-1.cpp2:18:5: note: in instantiation of function template specialization 'std::print<std::integral_constant<bool, true>>' requested here
+   18 |     print( "1   is int?", cpp2::impl::is<int>(1));
       |     ^
 /usr/lib/llvm-18/bin/../include/c++/v1/__format/format_arg_store.h:167:23: note: expression evaluates to '0 != 0'
   167 |   static_assert(__arg != __arg_t::__none, "the supplied type is not formattable");
