@@ -85,19 +85,19 @@ auto test(auto&& v) -> void{
                     }; 
 
     header(1, "std::monostate");
-    CPP2_UFCS_TEMPLATE(emplace<0>)(v);
+    v.emplace<0>();
     run_tests(v);
 
     header(1, "X<1>");
-    CPP2_UFCS_TEMPLATE(emplace<1>)(v);
+    v.emplace<1>();
     run_tests(v);
 
     header(1, "X<19>");
-    CPP2_UFCS_TEMPLATE(emplace<19>)(v);
+    v.emplace<19>();
     run_tests(v);
 
     header(1, "X<20>");
-    CPP2_UFCS_TEMPLATE(emplace<20>)(v);
+    v.emplace<20>();
     run_tests(v);
 
     header(1, "X<10>(std::exception)");
