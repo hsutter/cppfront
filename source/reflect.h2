@@ -562,6 +562,15 @@ type_declaration: @copyable type =
         return ret;
     }
 
+    has_default_ctor: (this) -> bool = {
+        for this.get_member_functions() 
+        do (mf)
+        if mf.is_default_constructor() {
+            return true;
+        }
+        return false;
+    }
+
     query_declared_value_set_functions: (this)
         -> (
             out_this_in_that     : bool,
@@ -843,16 +852,21 @@ basic_value: (inout t: meta::type_declaration) =
 {
     t.copyable();
 
-    has_default_ctor := false;
     for t.get_member_functions() do (inout mf) {
-        has_default_ctor |= mf.is_default_constructor();
         mf.require( !mf.is_protected() && !mf.is_virtual(),
-                    "a value type may not have a protected or virtual function");
+                    "a value type may not have a protected or virtual function" );
         mf.require( !mf.is_destructor() || mf.is_public() || mf.is_default_access(),
-                    "a value type may not have a non-public destructor");
+                    "a value type may not have a non-public destructor" );
     }
 
-    if !has_default_ctor {
+    if !t.has_default_ctor() {
+        for t.get_member_objects() do (in mo) {
+            mo.require( 
+                mo.has_initializer() || /* if cpp2 type: */ mo./* get the type declaration */.has_default_ctor()
+                                        /* else: defer check to cpp1 compiler using std::is_default_constructible */, 
+                "a value type must be default constructible" 
+            );
+        }
         t.add_member( "operator=: (out this) = { }");
     }
 }
