@@ -19,9 +19,107 @@
 #define CPP2_SEMA_H
 
 #include "reflect.h"
+#include "dll.h"
 
 
 namespace cpp2 {
+
+static reflect_libraries* active_instance = nullptr;
+
+class reflect_libraries
+{
+    std::vector<error_entry>& errors;
+    std::string               in_progress = {};
+    std::vector<dll>          loaded      = {};
+
+    struct function_entry
+    {
+        std::variant<
+            std::monostate,
+            meta::mf_sign_type_in*,
+            meta::mf_sign_type_inout*
+        > type = {};
+        std::variant<
+            std::monostate,
+            meta::mf_sign_func_in*,
+            meta::mf_sign_func_inout*
+        > func = {};
+    };
+
+    std::map<std::string, function_entry> functions = {};
+
+public:
+    reflect_libraries(std::vector<error_entry>& errors_)
+        : errors{ errors_ }
+    { }
+
+    void load(std::string_view lib) {
+        active_instance = this;
+        in_progress = lib;
+        finally _{ [&](){ active_instance = nullptr; in_progress = ""; } };
+        auto& dl = loaded.emplace_back(in_progress);
+        if(!dl.is_open()) {
+            errors.emplace_back(
+                source_position(-1, -1),
+                "unable to load library '" + in_progress + "': " + dll::get_last_error()
+            );
+        }
+    }
+
+    bool try_apply(
+        [[maybe_unused]] std::string_view caller,
+        std::string const& name,
+        auto& decl
+    ) const {
+        // TODO(DyXel): Do full/better name look-up.
+        auto search = functions.find(name);
+        if(search == functions.end()) return false;
+        auto& entry = search->second;
+        auto visitor = [&](auto&& v) -> bool {
+            if constexpr(requires { v(decl); }) {
+                v(decl);
+                return true;
+            }
+            return false;
+        };
+        if constexpr(std::is_same_v<meta::type_declaration, CPP2_TYPEOF(decl)>)
+            return std::visit(visitor, entry.type);
+        else
+            return std::visit(visitor, entry.func);
+    }
+
+private:
+    friend meta::register_metafunction;
+
+    void register_one(std::string name, auto* func) {
+        // TODO(DyXel): Check if already registered
+        auto& entry = functions[name];
+        if constexpr(requires { entry.type = func; })
+            entry.type = func;
+        else
+            entry.func = func;
+    }
+};
+
+namespace meta {
+
+register_metafunction::register_metafunction(const char* name, mf_sign_type_in* f) {
+    active_instance->register_one(name, f);
+}
+
+register_metafunction::register_metafunction(const char* name, mf_sign_type_inout* f) {
+    active_instance->register_one(name, f);
+}
+
+register_metafunction::register_metafunction(const char* name, mf_sign_func_in* f) {
+    active_instance->register_one(name, f);
+}
+
+register_metafunction::register_metafunction(const char* name, mf_sign_func_inout* f) {
+    active_instance->register_one(name, f);
+}
+
+} // namespace meta
 
 auto parser::apply_type_metafunctions( declaration_node& n )
     -> bool
@@ -29,13 +127,18 @@ auto parser::apply_type_metafunctions( declaration_node& n )
     assert(n.is_type());
 
     //  Get the reflection state ready to pass to the function
-    auto csb = meta::compiler_services_base{ &errors, &includes, generated_tokens, &generated_declarations };
+    auto csb = meta::compiler_services_base{ &libraries, &errors, &includes, generated_tokens, &generated_declarations };
     auto rtypeimpl = meta::type_declaration_impl{ csb, &n };
 
     return apply_metafunctions(
         n,
         rtypeimpl,
-        [&](std::string const& msg) { error( msg, false ); }
+        [&](std::string const& msg) { error( msg, false ); },
+        [&](
+            std::string_view caller,
+            std::string const& name,
+            meta::type_declaration& decl
+        ) -> bool { return libraries.try_apply(caller, name, decl); }
     );
 }
 
@@ -45,13 +148,18 @@ auto parser::apply_function_metafunctions( declaration_node& n )
     assert(n.is_function());
 
     //  Get the reflection state ready to pass to the function
-    auto csb = meta::compiler_services_base{ &errors, &includes, generated_tokens, &generated_declarations };
+    auto csb = meta::compiler_services_base{ &libraries, &errors, &includes, generated_tokens, &generated_declarations };
     auto rfuncimpl = meta::function_declaration_impl{ csb, &n };
 
     return apply_metafunctions(
         n,
         rfuncimpl,
-        [&](std::string const& msg) { error( msg, false ); }
+        [&](std::string const& msg) { error( msg, false ); },
+        [&](
+            std::string_view caller,
+            std::string const& name,
+            meta::function_declaration& decl
+        ) -> bool { return libraries.try_apply(caller, name, decl); }
     );
 }
 

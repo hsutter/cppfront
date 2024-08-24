@@ -1012,8 +1012,9 @@ struct function_prolog {
 
 class cppfront
 {
-    std::string              sourcefile;
     std::vector<error_entry> errors;
+    reflect_libraries        libraries;
+    std::string              sourcefile;
     std::set<std::string>    includes;
 
     //  For building
@@ -1164,16 +1165,38 @@ public:
     //  filename    the source file to be processed
     //
     cppfront(std::string const& filename)
-        : sourcefile{ filename }
+        : libraries { errors }
+        , sourcefile{ filename }
         , source    { errors }
         , tokens    { errors }
-        , parser    { errors, includes }
+        , parser    { libraries, errors, includes }
         , sema      { errors }
     {
+        //  Load metafunction libraries, if any.
+        //
+        if(auto* envvar = std::getenv("CPPFRONT_METAFUNCTION_LIBRARIES"); envvar) {
+            auto lib_paths = std::string_view{envvar};
+            while(!lib_paths.empty()) {
+                auto colon = lib_paths.find(':');
+                auto lp = lib_paths.substr(0, colon);
+                lib_paths.remove_prefix(lp.size() + size_t{colon != lp.npos});
+
+                libraries.load(lp);
+            }
+        }
+
+        if (!errors.empty())
+        {
+            errors.emplace_back(
+                source_position(-1, -1),
+                "could not load one or more libraries"
+            );
+        }
+
         //  "Constraints enable creativity in the right directions"
         //  sort of applies here
         //
-        if (
+        else if (
             !sourcefile.ends_with(".cpp2")
             && !sourcefile.ends_with(".h2")
             )

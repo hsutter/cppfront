@@ -50,6 +50,7 @@ compiler_services_base: @polymorphic_base @copyable type =
     //
     operator=: (
         out this,
+        libraries               : *reflect_libraries,
         errors_                 : *std::vector<error_entry>,
         includes_               : *std::set<std::string>,
         generated_tokens_       : *stable_vector<token>,
@@ -61,7 +62,7 @@ compiler_services_base: @polymorphic_base @copyable type =
         errors_original_size   = cpp2::unsafe_narrow<int>(std::ssize(errors*));
         generated_tokens       = generated_tokens_;
         generated_declarations = generated_declarations_;
-        parser                 = (errors*, includes*);
+        parser                 = (libraries*, errors*, includes*);
     }
 
     set_metafunction_name: (inout this, name: std::string_view, args: std::vector<std::string>) = {
@@ -3820,7 +3821,8 @@ regex_gen: (inout t: meta::type_declaration) =
 apply_metafunctions: (
     inout n         : declaration_node,
     inout rtypeimpl : type_declaration_impl,
-    error
+    error,
+    libraries_try_apply,
     )
     -> bool
 = {
@@ -3912,6 +3914,7 @@ apply_metafunctions: (
         else if name == "_internal_foreign_interface_pseudovalue" {
             foreign_interface_pseudovalue( rtype );
         }
+        else if libraries_try_apply(n.fully_qualified_name(), name, rtype) {}
         else {
             error( "unrecognized metafunction name: '" + name + "' for type declaration" );
             error( 
@@ -3946,7 +3949,8 @@ apply_metafunctions: (
 apply_metafunctions: (
     inout n         : declaration_node,
     inout rfuncimpl : function_declaration_impl,
-    error
+    error,
+    libraries_try_apply,
     )
     -> bool
 = {
@@ -3978,6 +3982,7 @@ apply_metafunctions: (
         else if name == "print" {
             print( rfunc );
         }
+        else if libraries_try_apply(n.fully_qualified_name(), name, rfunc) {}
         else {
             error( "unrecognized metafunction name '" + name + "' for function declaration" );
             error( "(temporary alpha limitation) currently the supported names are: meta, print" );

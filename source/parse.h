@@ -5574,6 +5574,7 @@ auto pretty_print_visualize(translation_unit_node const& n)
     return ret;
 }
 
+class reflect_libraries;
 
 //-----------------------------------------------------------------------
 //
@@ -5583,6 +5584,7 @@ auto pretty_print_visualize(translation_unit_node const& n)
 //
 class parser
 {
+    reflect_libraries& libraries;
     std::vector<error_entry>& errors;
     std::set<std::string>&    includes;
 
@@ -5714,17 +5716,20 @@ public:
     //
     //  errors      error list
     //
-    parser( 
+    parser(
+        reflect_libraries& libraries_,
         std::vector<error_entry>& errors_,
         std::set<std::string>&    includes_
     )
-        : errors{ errors_ }
+        : libraries{ libraries_ }
+        , errors{ errors_ }
         , includes{ includes_ }
         , parse_tree{std::make_unique<translation_unit_node>()}
     { }
 
     parser( parser const& that )
-        : errors{ that.errors }
+        : libraries{ that.libraries }
+        , errors{ that.errors }
         , includes{ that.includes }
         , parse_tree{std::make_unique<translation_unit_node>()}
     { }
