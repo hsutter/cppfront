@@ -2311,6 +2311,9 @@ struct parameter_declaration_node
     auto is_in_template_param_list() const
         -> bool;
 
+    auto is_in_function_scope() const
+        -> bool;
+
     auto is_implicit() const
         -> bool
     {
@@ -2366,14 +2369,19 @@ struct parameter_declaration_node
 
 struct parameter_declaration_list_node
 {
-    token const* open_paren             = {};
-    token const* close_paren            = {};
-    bool         in_function_typeid     = false;
-    bool         in_template_param_list = false;
+    token const* open_paren              = {};
+    token const* close_paren             = {};
+    bool         in_function_typeid      = false;
+    bool         in_template_param_list  = false;
+    bool         in_statement_param_list = false;
 
     std::vector<std::unique_ptr<parameter_declaration_node>> parameters;
 
-    parameter_declaration_list_node(bool f = false, bool t = false) : in_function_typeid{f}, in_template_param_list{t} { }
+    parameter_declaration_list_node(bool f = false, bool t = false, bool s = false) 
+        : in_function_typeid{f}
+        , in_template_param_list{t}
+        , in_statement_param_list{s}
+    { }
 
     //  API
     //
@@ -2883,7 +2891,6 @@ struct declaration_node
 
     //  API
     //
-
     auto is_template_parameter() const
         -> bool
     {
@@ -3958,6 +3965,20 @@ auto parameter_declaration_node::is_in_template_param_list() const
 }
 
 
+auto parameter_declaration_node::is_in_function_scope() const
+    -> bool
+{
+    return
+        my_list->in_statement_param_list
+        || (
+            declaration->parent_is_function()
+            && !declaration->parent_declaration->parent_is_type()
+            && !declaration->parent_declaration->parent_is_namespace()
+            )
+        ;
+}
+
+
 auto function_type_node::first_parameter_name() const
     -> std::string
 {
@@ -3969,6 +3990,7 @@ auto function_type_node::first_parameter_name() const
     //  Else
     return "";
 }
+
 
 auto function_type_node::nth_parameter_type_name(int n) const
     -> std::string
@@ -8205,7 +8227,7 @@ private:
             return {};
         }
 
-        auto n = std::make_unique<parameter_declaration_list_node>(is_function_typeid, is_template);
+        auto n = std::make_unique<parameter_declaration_list_node>(is_function_typeid, is_template, is_statement);
         n->open_paren = &curr();
         next();
 
@@ -8699,6 +8721,14 @@ private:
             n->metafunctions.push_back( std::move(idx) );
         }
 
+        auto guard =
+            captures_allowed
+            ? std::make_unique<capture_groups_stack_guard>(this, &n->captures)
+            : std::unique_ptr<capture_groups_stack_guard>()
+            ;
+
+        auto guard2 = current_declarations_stack_guard(this, n.get());
+
         //  Next is an optional template parameter list
         if (curr().type() == lexeme::Less) {
             auto template_parameters = parameter_declaration_list(false, false, true);
@@ -8708,14 +8738,6 @@ private:
             }
             n->template_parameters = std::move(template_parameters);
         }
-
-        auto guard =
-            captures_allowed
-            ? std::make_unique<capture_groups_stack_guard>(this, &n->captures)
-            : std::unique_ptr<capture_groups_stack_guard>()
-            ;
-
-        auto guard2 = current_declarations_stack_guard(this, n.get());
 
         //  Next is an an optional type
 

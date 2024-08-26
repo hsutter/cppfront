@@ -332,19 +332,41 @@
 #define CPP2_CONTINUE_BREAK(NAME)   goto CONTINUE_##NAME; CONTINUE_##NAME: continue; goto BREAK_##NAME; BREAK_##NAME: break;
                                     // these redundant goto's to avoid 'unused label' warnings
 
+//  Compiler version identification.
+// 
+//  This can use useful with 'if constexpr' to disable code known not to
+//  work on some otherwise-supported compilers (without macros), for example:
+// 
+//    //  Disable tests on lower-level compilers that have blocking bugs
+//    []<auto V = gcc_clang_msvc_min_versions(1400, 1600, 1920)> () { if constexpr (V) {
+//        // ... tests that would fail due to older compilers' bugs ...
+//    }}();
+//
+//  Note: Test Clang first because it pretends to be other compilers.
+//
 #if defined(__clang_major__)
-    constexpr auto CPP2_CLANG_VER = __clang_major__ * 100 + __clang_minor__;
-    constexpr auto CPP2_MSVC_VER  = 0;
-    constexpr auto CPP2_GCC_VER   = 0;
+    constexpr auto gcc_ver   = 0;
+    constexpr auto clang_ver = __clang_major__ * 100 + __clang_minor__;
+    constexpr auto msvc_ver  = 0;
 #elif defined(_MSC_VER)
-    constexpr auto CPP2_CLANG_VER = 0;
-    constexpr auto CPP2_MSVC_VER  = _MSC_VER;
-    constexpr auto CPP2_GCC_VER   = 0;
+    constexpr auto gcc_ver   = 0;
+    constexpr auto clang_ver = 0;
+    constexpr auto msvc_ver  = _MSC_VER;
 #elif defined(__GNUC__)
-    constexpr auto CPP2_CLANG_VER = 0;
-    constexpr auto CPP2_MSVC_VER  = 0;
-    constexpr auto CPP2_GCC_VER   = __GNUC__ * 100 + __GNUC_MINOR__;
+    constexpr auto gcc_ver   = __GNUC__ * 100 + __GNUC_MINOR__;
+    constexpr auto clang_ver = 0;
+    constexpr auto msvc_ver  = 0;
 #endif
+
+constexpr auto gcc_clang_msvc_min_versions(
+    auto gcc,
+    auto clang,
+    auto msvc
+)
+{
+    return gcc_ver > gcc || clang_ver > clang || msvc_ver > msvc;
+}
+
 
 #if defined(_MSC_VER)
    // MSVC can't handle 'inline constexpr' yet in all cases
@@ -1492,8 +1514,9 @@ inline auto to_string(auto const& x) -> std::string
         return x;
     }
 
-    //  Else customize bool (prefer this over << to avoid std::boolalpha)
-    if constexpr( std::is_same_v<CPP2_TYPEOF(x), bool> ) {
+    //  Else customize convertible-to-bool - use { } to avoid narrowing
+    if constexpr( requires{ bool{x}; } ) 
+    {
         return x ? "true" : "false";
     }
 

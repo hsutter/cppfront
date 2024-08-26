@@ -4401,12 +4401,24 @@ public:
         //
         auto emit_initializer = [&]
         {
+            auto is_param_to_namespace_scope_type =
+                n.declaration->parent_is_type() 
+                && n.declaration->parent_declaration->parent_is_namespace() 
+                ;
+
             if (
                 !is_returns
                 && n.declaration->initializer
                 && (
-                    is_statement 
-                    || printer.get_phase() != printer.phase2_func_defs
+                    n.is_in_function_scope()    // implies we're in phase 2
+                    || (
+                        is_param_to_namespace_scope_type
+                        && printer.get_phase() == printer.phase0_type_decls
+                        )
+                    || (
+                        !is_param_to_namespace_scope_type
+                        && printer.get_phase() == printer.phase1_type_defs_func_decls
+                        )
                     )
                 )
             {

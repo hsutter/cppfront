@@ -8,30 +8,18 @@ class Shape { public: virtual ~Shape() { } };
 class Circle : public Shape { };
 class Square : public Shape { };
 
-//--- printing helpers -----------------
 
-print: <T : type> ( msg: std::string, x: T ) 
-       requires !std::convertible_to<T, bool> =
-    std::cout << msg << x << "\n";
-
-print: ( msg: std::string, b: bool ) =
-{
-    bmsg: * const char;
-    if b { bmsg = "true";  }
-    else { bmsg = "false"; }
-    std::cout << msg << bmsg << "\n";
-}
-
-//--- examples -------------------------
+print: <T : type> ( msg: std::string, x: T ) =
+    std::cout << "(msg)$ (x)$\n";
 
 main: () -> int = 
 {
-    print( "1.1 is int? ", 1.1 is int );
-    print( "1   is int? ", 1   is int );
+    print( "1.1 is int?", 1.1 is int );
+    print( "1   is int?", 1   is int );
 
     c := new<Circle>();     // safe by construction
     s : * Shape = c.get();  // safe by Lifetime
-    print("\ns* is Shape?  ", s* is Shape  );
-    print(  "s* is Circle? ", s* is Circle );
-    print(  "s* is Square? ", s* is Square );
+    print("\ns* is Shape? ", s* is Shape  );
+    print(  "s* is Circle?", s* is Circle );
+    print(  "s* is Square?", s* is Square );
 }

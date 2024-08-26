@@ -49,5 +49,15 @@ auto main(int const argc_, char** argv_) -> int{
     f();
     f(1);
     f(2);
+
+    []<bool V = gcc_clang_msvc_min_versions(1400, 1600, 1920)>() mutable -> void{
+        if constexpr (V) {
+            std::cout << "a newer compiler\n";
+        }
+        else {
+            std::cout << "an older compiler\n";
+        }
+    }();
+
 }
 

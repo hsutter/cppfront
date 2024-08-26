@@ -60,20 +60,20 @@ auto main() -> int{
     std::cout << "" + cpp2::to_string(CPP2_UFCS(contains)((cpp2::range(1,20)), 21)) + "\n";// prints false
 
     //  Only run these parts on implementations that support views::take
-    // : <V: bool = (CPP2_GCC_VER > 1400 || CPP2_CLANG_VER > 1600 || CPP2_MSVC_VER > 1920)> () = {
-    //     if constexpr V
-    //     {
-    //         using std::views::_ ;
+    []<bool V = gcc_clang_msvc_min_versions(1400, 1600, 1920)>() mutable -> void{
+        if constexpr (V) 
+        {
+            using namespace std::views;
 
-    //         std::cout << "\nMake sure views::take works:\n";
-    //         for (1 ..= 100).take(5) do (e) {
-    //             std::cout << e << " ";
-    //         }   // prints: 1 2 3 4 5
+            std::cout << "\nMake sure views::take works:\n";
+            for ( auto const& e : CPP2_UFCS(take)((cpp2::range(1,100,true)), 5) ) {
+                std::cout << e << " ";
+            }   // prints: 1 2 3 4 5
 
-    //         for (2 ..< 5).take(5) do (e) {
-    //             std::cout << e << " ";
-    //         }   // prints: 2 3 4
-    //     }
-    // } ();
+            for ( auto const& e : CPP2_UFCS(take)((cpp2::range(2,5)), 5) ) {
+                std::cout << e << " ";
+            }   // prints: 2 3 4
+        }
+    }();
 }
 
