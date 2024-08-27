@@ -14,12 +14,14 @@ print: <T : type> ( msg: std::string, x: T ) =
 
 main: () -> int = 
 {
-    print( "1.1 is int?", 1.1 is int );
-    print( "1   is int?", 1   is int );
+    // Full qualification is necessary to avoid ambiguity in C++23
+    // C++23 defines std::print, which would be picked up here by ADL
+    ::print( "1.1 is int?", 1.1 is int );
+    ::print( "1   is int?", 1   is int );
 
     c := new<Circle>();     // safe by construction
     s : * Shape = c.get();  // safe by Lifetime
-    print("\ns* is Shape? ", s* is Shape  );
-    print(  "s* is Circle?", s* is Circle );
-    print(  "s* is Square?", s* is Square );
+    ::print("\ns* is Shape? ", s* is Shape  );
+    ::print(  "s* is Circle?", s* is Circle );
+    ::print(  "s* is Square?", s* is Square );
 }

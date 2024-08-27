@@ -38,13 +38,15 @@ template<typename T> auto print(cpp2::impl::in<std::string> msg, T const& x) -> 
 #line 15 "mixed-type-safety-1.cpp2"
 [[nodiscard]] auto main() -> int
 {
-    print("1.1 is int?", cpp2::impl::is<int>(1.1));
-    print( "1   is int?", cpp2::impl::is<int>(1));
+    // Full qualification is necessary to avoid ambiguity in C++23
+    // C++23 defines std::print, which would be picked up here by ADL
+    ::print("1.1 is int?", cpp2::impl::is<int>(1.1));
+    ::print( "1   is int?", cpp2::impl::is<int>(1));
 
     auto c {cpp2_new<Circle>()}; // safe by construction
     Shape* s {CPP2_UFCS(get)(cpp2::move(c))}; // safe by Lifetime
-    print("\ns* is Shape? ", cpp2::impl::is<Shape>(*cpp2::impl::assert_not_null(s)));
-    print(  "s* is Circle?", cpp2::impl::is<Circle>(*cpp2::impl::assert_not_null(s)));
-    print(  "s* is Square?", cpp2::impl::is<Square>(*cpp2::impl::assert_not_null(cpp2::move(s))));
+    ::print("\ns* is Shape? ", cpp2::impl::is<Shape>(*cpp2::impl::assert_not_null(s)));
+    ::print(  "s* is Circle?", cpp2::impl::is<Circle>(*cpp2::impl::assert_not_null(s)));
+    ::print(  "s* is Square?", cpp2::impl::is<Square>(*cpp2::impl::assert_not_null(cpp2::move(s))));
 }
 
