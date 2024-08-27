@@ -70,10 +70,10 @@ auto test(auto&& v) -> void{
 #line 2 "mixed-is-as-variant.cpp2"
     std::cout << "v is empty = " + cpp2::to_string(cpp2::impl::is<void>(v)) + "" << std::endl;
     std::cout << "v is std::monostate = " + cpp2::to_string(cpp2::impl::is<std::monostate>(v)) + "" << std::endl;
-    std::cout << "v is X< 0> = " + cpp2::to_string(cpp2::impl::is<X<0>>(v)) + ",\t(v as X< 1>) = " << expect_no_throw(CPP2_FORWARD(v), [](auto&& v) mutable -> auto { return cpp2::impl::as_<X<0>>(CPP2_FORWARD(v));  }) << std::endl;
-    std::cout << "v is X< 1> = " + cpp2::to_string(cpp2::impl::is<X<1>>(v)) + ",\t(v as X< 1>).to_string() = " + cpp2::to_string(expect_no_throw(CPP2_FORWARD(v), [](auto&& v) mutable -> std::string{return CPP2_UFCS(to_string)((cpp2::impl::as_<X<1>>(CPP2_FORWARD(v)))); })) + "" << std::endl;
-    std::cout << "v is X<19> = " + cpp2::to_string(cpp2::impl::is<X<19>>(v)) + ",\t(v as X<19>).to_string() = " + cpp2::to_string(expect_no_throw(CPP2_FORWARD(v), [](auto&& v) mutable -> std::string{return CPP2_UFCS(to_string)((cpp2::impl::as_<X<19>>(CPP2_FORWARD(v)))); })) + "" << std::endl;
-    std::cout << "v is X<20> = " + cpp2::to_string(cpp2::impl::is<X<20>>(v)) + ",\t(v as X<20>) = " << expect_no_throw(CPP2_FORWARD(v), [](auto&& v) mutable -> auto { return cpp2::impl::as_<X<20>>(CPP2_FORWARD(v));  }) << std::endl;
+    std::cout << "v is X< 0> = " + cpp2::to_string(cpp2::impl::is<X<0>>(v)) + ",\t(v as X< 1>) = " << expect_no_throw(CPP2_FORWARD(v), [](auto&& v) -> auto { return cpp2::impl::as_<X<0>>(CPP2_FORWARD(v));  }) << std::endl;
+    std::cout << "v is X< 1> = " + cpp2::to_string(cpp2::impl::is<X<1>>(v)) + ",\t(v as X< 1>).to_string() = " + cpp2::to_string(expect_no_throw(CPP2_FORWARD(v), [](auto&& v) -> std::string{return CPP2_UFCS(to_string)((cpp2::impl::as_<X<1>>(CPP2_FORWARD(v)))); })) + "" << std::endl;
+    std::cout << "v is X<19> = " + cpp2::to_string(cpp2::impl::is<X<19>>(v)) + ",\t(v as X<19>).to_string() = " + cpp2::to_string(expect_no_throw(CPP2_FORWARD(v), [](auto&& v) -> std::string{return CPP2_UFCS(to_string)((cpp2::impl::as_<X<19>>(CPP2_FORWARD(v)))); })) + "" << std::endl;
+    std::cout << "v is X<20> = " + cpp2::to_string(cpp2::impl::is<X<20>>(v)) + ",\t(v as X<20>) = " << expect_no_throw(CPP2_FORWARD(v), [](auto&& v) -> auto { return cpp2::impl::as_<X<20>>(CPP2_FORWARD(v));  }) << std::endl;
     std::cout << std::endl;
 }
 
