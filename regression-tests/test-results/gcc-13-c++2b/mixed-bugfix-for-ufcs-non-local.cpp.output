@@ -1,41 +1,41 @@
 In file included from mixed-bugfix-for-ufcs-non-local.cpp:6:
 ../../../include/cpp2util.h:2100:1: error: lambda-expression in template parameter type
- 2100 | //
+ 2100 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<13>(x)), T >) { if (x.index() == 13) return operator_as<13>(x); }
       | ^
 ../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 | //  as
+ 2137 | //  std::any is and as
       |                                                           ^         
 mixed-bugfix-for-ufcs-non-local.cpp2:13:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 mixed-bugfix-for-ufcs-non-local.cpp2:13:36: error: template argument 1 is invalid
 ../../../include/cpp2util.h:2100:1: error: lambda-expression in template parameter type
- 2100 | //
+ 2100 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<13>(x)), T >) { if (x.index() == 13) return operator_as<13>(x); }
       | ^
 ../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 | //  as
+ 2137 | //  std::any is and as
       |                                                           ^         
 mixed-bugfix-for-ufcs-non-local.cpp2:21:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 mixed-bugfix-for-ufcs-non-local.cpp2:21:36: error: template argument 1 is invalid
 ../../../include/cpp2util.h:2100:1: error: lambda-expression in template parameter type
- 2100 | //
+ 2100 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<13>(x)), T >) { if (x.index() == 13) return operator_as<13>(x); }
       | ^
 ../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 | //  as
+ 2137 | //  std::any is and as
       |                                                           ^         
 mixed-bugfix-for-ufcs-non-local.cpp2:31:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 mixed-bugfix-for-ufcs-non-local.cpp2:31:36: error: template argument 1 is invalid
 ../../../include/cpp2util.h:2100:1: error: lambda-expression in template parameter type
- 2100 | //
+ 2100 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<13>(x)), T >) { if (x.index() == 13) return operator_as<13>(x); }
       | ^
 ../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 | //  as
+ 2137 | //  std::any is and as
       |                                                           ^         
 mixed-bugfix-for-ufcs-non-local.cpp2:33:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 mixed-bugfix-for-ufcs-non-local.cpp2:33:36: error: template argument 1 is invalid
 ../../../include/cpp2util.h:2100:1: error: lambda-expression in template parameter type
- 2100 | //
+ 2100 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<13>(x)), T >) { if (x.index() == 13) return operator_as<13>(x); }
       | ^
 ../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 | //  as
+ 2137 | //  std::any is and as
       |                                                           ^         
 mixed-bugfix-for-ufcs-non-local.cpp2:21:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 mixed-bugfix-for-ufcs-non-local.cpp2:21:36: error: template argument 1 is invalid
