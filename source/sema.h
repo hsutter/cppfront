@@ -2316,8 +2316,12 @@ public:
 
     auto start(parameter_declaration_node const& n, int) -> void
     {
-        //  Ignore parameters in function type-ids
-        if (n.is_in_function_typeid()) {
+        //  Ignore parameters in function type-ids and local templates
+        if (
+            n.is_in_function_typeid()
+            || n.is_in_template_param_list()
+            )
+        {
             return;
         }
 

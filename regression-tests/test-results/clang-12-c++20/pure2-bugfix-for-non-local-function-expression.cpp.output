@@ -1,10 +1,10 @@
 pure2-bugfix-for-non-local-function-expression.cpp2:5:34: error: lambda expression in an unevaluated operand
-template<typename T> concept v = []() mutable -> bool { return true;  }(); 
+template<typename T> concept v = []() -> bool { return true;  }(); 
                                  ^
 pure2-bugfix-for-non-local-function-expression.cpp2:7:41: error: lambda expression in an unevaluated operand
-using u = std::type_identity_t<decltype([]() mutable -> void{})>;
+using u = std::type_identity_t<decltype([]() -> void{})>;
                                         ^
 pure2-bugfix-for-non-local-function-expression.cpp2:9:47: error: lambda expression in an unevaluated operand
-class t: public std::type_identity_t<decltype([]() mutable -> void{})> {
+class t: public std::type_identity_t<decltype([]() -> void{})> {
                                               ^
 3 errors generated.

@@ -32,11 +32,11 @@
     //  Passing a function expression
     std::ranges::for_each(
         vec, 
-        [](auto& x) mutable -> void { x += "-ish";  }
+        [](auto& x) -> void { x += "-ish";  }
     );
 
     //  Initializing from a function expression
-    auto callback {[](auto& x) mutable -> void { x += " maybe";  }}; 
+    auto callback {[](auto& x) -> void { x += " maybe";  }}; 
     std::ranges::for_each(
         vec, 
         cpp2::move(callback)

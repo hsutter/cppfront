@@ -601,6 +601,9 @@ struct expression_node
         return {};
     }
 
+    auto is_empty_expression_list() const
+        -> bool;
+
     auto is_literal() const
         -> bool
     {
@@ -715,6 +718,12 @@ struct expression_list_node
 
     //  API
     //
+    auto is_empty() const
+        -> bool
+    {
+        return expressions.empty();
+    }
+
     auto is_fold_expression() const
         -> bool
     {
@@ -822,6 +831,13 @@ struct expression_statement_node
 
     //  API
     //
+    auto is_empty_expression_list() const
+        -> bool
+    {
+        assert(expr);
+        return expr->is_empty_expression_list();
+    }
+
     auto subexpression_count() const
         -> int
     {
@@ -862,6 +878,17 @@ auto expression_node::is_standalone_expression() const
     return
         my_statement
         && my_statement->subexpression_count() == subexpression_count()
+        ;
+}
+
+
+auto expression_node::is_empty_expression_list() const
+    -> bool
+{
+    auto expr_list = get_expression_list();
+    return
+        expr_list
+        && expr_list->is_empty()
         ;
 }
 

@@ -31,9 +31,9 @@
             "hello", "2022"}; 
 
     std::ranges::for_each
-        (vec, [](auto const& x) mutable -> void { std::cout << x << "\n";  });
+        (vec, [](auto const& x) -> void { std::cout << x << "\n";  });
 
-    auto callback {[](auto& x) mutable -> void { x += "-ish";  }}; 
+    auto callback {[](auto& x) -> void { x += "-ish";  }}; 
     std::ranges::for_each(vec, cpp2::move(callback));
 
     for ( auto const& str : cpp2::move(vec) ) 

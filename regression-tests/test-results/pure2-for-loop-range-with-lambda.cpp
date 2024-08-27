@@ -38,19 +38,19 @@ auto main(int const argc_, char** argv_) -> int{
    }
 
    // Used to cause Error
-   for (                      auto const& i : CPP2_UFCS(first)(ints, [](auto const& x) mutable -> auto { return x; }) ) {
+   for (                      auto const& i : CPP2_UFCS(first)(ints, [](auto const& x) -> auto { return x; }) ) {
       std::cout << i;
    }
 
    // OK
-   auto temp {CPP2_UFCS(first)(cpp2::move(ints), [](auto const& x) mutable -> auto { return x;  })}; 
+   auto temp {CPP2_UFCS(first)(cpp2::move(ints), [](auto const& x) -> auto { return x;  })}; 
    for ( auto const& i : cpp2::move(temp) ) {
       std::cout << i;
    }
 
    for ( auto const& i : [_0 = args]() mutable -> auto { return _0;  }() ) static_cast<void>(i); 
-   for ( auto const& j : [](auto const& x) mutable -> auto { return x;  }(args) ) static_cast<void>(j); 
-   for ( auto const& k : [](auto const& x) mutable -> auto { return x;  }(args) )  { do static_cast<void>(k);  while (false); static_cast<void>([_0 = args]() mutable -> auto { return _0;  }()); }
-   for ( auto const& l : [](auto const& x) mutable -> auto { return x;  }(args) )  { do static_cast<void>(l);  while (false); static_cast<void>([](auto const& x) mutable -> auto { return x;  }(args)); }
+   for ( auto const& j : [](auto const& x) -> auto { return x;  }(args) ) static_cast<void>(j); 
+   for ( auto const& k : [](auto const& x) -> auto { return x;  }(args) )  { do static_cast<void>(k);  while (false); static_cast<void>([_0 = args]() mutable -> auto { return _0;  }()); }
+   for ( auto const& l : [](auto const& x) -> auto { return x;  }(args) )  { do static_cast<void>(l);  while (false); static_cast<void>([](auto const& x) -> auto { return x;  }(args)); }
 }
 

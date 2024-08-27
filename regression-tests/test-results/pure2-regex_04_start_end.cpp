@@ -294,14 +294,14 @@ auto main() -> int;
    return CPP2_UFCS(cend)((*cpp2::impl::assert_not_null(_0))); 
   }
   }}; 
-  auto extract_group_and_advance {[](auto& iter) mutable -> auto{
+  auto extract_group_and_advance {[](auto& iter) -> auto{
     auto start {iter}; 
 
     for( ; std::isdigit(*cpp2::impl::assert_not_null(iter)); ++iter ) {}
 
     return std::stoi(std::string(cpp2::move(start), iter)); 
   }}; 
-  auto extract_until {[](auto& iter, cpp2::impl::in<char> to) mutable -> auto{
+  auto extract_until {[](auto& iter, cpp2::impl::in<char> to) -> auto{
     auto start {iter}; 
 
     for( ; (to != *cpp2::impl::assert_not_null(iter)); ++iter ) {}// TODO: Without bracket: error: postfix unary * (dereference) cannot be immediately followed by a (, identifier, or literal - add whitespace before * here if you meant binary * (multiplication)

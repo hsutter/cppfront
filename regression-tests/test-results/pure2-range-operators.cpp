@@ -60,7 +60,7 @@ auto main() -> int{
     std::cout << "" + cpp2::to_string(CPP2_UFCS(contains)((cpp2::range(1,20)), 21)) + "\n";// prints false
 
     //  Only run these parts on implementations that support views::take
-    []<bool V = gcc_clang_msvc_min_versions(1400, 1600, 1920)>() mutable -> void{
+    []<bool V = gcc_clang_msvc_min_versions(1400, 1600, 1920)>() -> void{
         if constexpr (V) 
         {
             using namespace std::views;

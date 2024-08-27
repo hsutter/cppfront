@@ -151,7 +151,7 @@ auto main() -> int{
   static_cast<void>(CPP2_UFCS_TEMPLATE(f<t,t>)(n, 0, 0));
   static_cast<void>(CPP2_UFCS_TEMPLATE(f<t,t>)(a<t,t>, 0, 0));
 
-  static_cast<void>([](auto const& a, auto const& f) mutable -> void{static_cast<void>(CPP2_UFCS(f)(CPP2_UFCS(f)(a, a))); });
+  static_cast<void>([](auto const& a, auto const& f) -> void{static_cast<void>(CPP2_UFCS(f)(CPP2_UFCS(f)(a, a))); });
   // _ = 0.std::min<int>(0);
   static_cast<void>(CPP2_UFCS_QUALIFIED_TEMPLATE((ns::t<0,0>::),f<0>)(0));
 }
