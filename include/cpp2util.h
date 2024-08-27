@@ -2050,7 +2050,8 @@ constexpr auto is( X const& x ) -> auto
 }
 
 
-inline constexpr auto is( specialization_of_template<std::variant> auto const& x, auto&& value ) -> bool
+template <specialization_of_template<std::variant> X>
+inline constexpr auto is( X const& x, auto&& value ) -> bool
 {
     return type_find_if(x, [&]<typename It>(It const&) -> bool {
         if (x.index() == It::index) {
@@ -2064,8 +2065,8 @@ inline constexpr auto is( specialization_of_template<std::variant> auto const& x
     }) != std::variant_npos;
 }
 
-template< typename C >
-auto as(specialization_of_template<std::variant> auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT_AS) -> decltype(auto)
+template< typename C, specialization_of_template<std::variant> X >
+auto as(X&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT_AS) -> decltype(auto)
 {
     constness_like_t<C, decltype(x)>* ptr = nullptr;
     type_find_if(CPP2_FORWARD(x), [&]<typename It>(It const&) -> bool {
