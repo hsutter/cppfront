@@ -1,66 +1,66 @@
 In file included from pure2-default-arguments.cpp:7:
 ../../../include/cpp2util.h:2086:28: error: local variable ‘obj’ may not appear in this context
- 2086 | auto as( std::variant<Ts...> & x ) -> decltype(auto) {
+ 2086 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 9>(x)), T >) { if (x.index() ==  9) return operator_as<9>(x); }
       |                            ^~~
 ../../../include/cpp2util.h:2047:34: note: in definition of macro ‘CPP2_UFCS_IDENTITY’
- 2047 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<15>(x)), T >) { if (x.index() == 15) return true; }
-      |                                  ^~~~~~~~~~~
+ 2047 |     return false;
+      |                                  ^          
 ../../../include/cpp2util.h:2086:15: note: in expansion of macro ‘CPP2_FORWARD’
- 2086 | auto as( std::variant<Ts...> & x ) -> decltype(auto) {
+ 2086 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 9>(x)), T >) { if (x.index() ==  9) return operator_as<9>(x); }
       |               ^~~~~~~~~~~~
 ../../../include/cpp2util.h:2107:22: note: in expansion of macro ‘CPP2_UFCS_CONSTRAINT_ARG’
- 2107 |     Throw( std::bad_variant_access(), "'as' cast failed for 'variant'");
+ 2107 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 5>(x)), T >) { if (x.index() ==  5) return operator_as<5>(x); }
       |                      ^~~~~~~~~~~~~~~~~~~~~~~~
 ../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 | //  std::any is and as
+ 2137 | template<typename T, typename X>
       |                                                           ^         
 pure2-default-arguments.cpp2:6:22: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 ../../../include/cpp2util.h:2086:92: error: local variable ‘params’ may not appear in this context
- 2086 | auto as( std::variant<Ts...> & x ) -> decltype(auto) {
-      |                                                                                            ^     
+ 2086 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 9>(x)), T >) { if (x.index() ==  9) return operator_as<9>(x); }
+      |                                                                                            ^~~~~~
 ../../../include/cpp2util.h:2047:34: note: in definition of macro ‘CPP2_UFCS_IDENTITY’
- 2047 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<15>(x)), T >) { if (x.index() == 15) return true; }
-      |                                  ^~~~~~~~~~~
+ 2047 |     return false;
+      |                                  ^          
 ../../../include/cpp2util.h:2086:79: note: in expansion of macro ‘CPP2_FORWARD’
- 2086 | auto as( std::variant<Ts...> & x ) -> decltype(auto) {
-      |                                                                               ^           
+ 2086 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 9>(x)), T >) { if (x.index() ==  9) return operator_as<9>(x); }
+      |                                                                               ^~~~~~~~~~~~
 ../../../include/cpp2util.h:2107:22: note: in expansion of macro ‘CPP2_UFCS_CONSTRAINT_ARG’
- 2107 |     Throw( std::bad_variant_access(), "'as' cast failed for 'variant'");
+ 2107 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 5>(x)), T >) { if (x.index() ==  5) return operator_as<5>(x); }
       |                      ^~~~~~~~~~~~~~~~~~~~~~~~
 ../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 | //  std::any is and as
+ 2137 | template<typename T, typename X>
       |                                                           ^         
 pure2-default-arguments.cpp2:6:22: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 ../../../include/cpp2util.h:2087:74: error: local variable ‘obj’ may not appear in this context
- 2087 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 0>(x)), T >) { if (x.index() ==  0) return operator_as<0>(x); }
+ 2087 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<10>(x)), T >) { if (x.index() == 10) return operator_as<10>(x); }
       |                                                                          ^~~
 ../../../include/cpp2util.h:2047:34: note: in definition of macro ‘CPP2_UFCS_IDENTITY’
- 2047 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<15>(x)), T >) { if (x.index() == 15) return true; }
-      |                                  ^~~~~~~~~~~
+ 2047 |     return false;
+      |                                  ^          
 ../../../include/cpp2util.h:2087:61: note: in expansion of macro ‘CPP2_FORWARD’
- 2087 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 0>(x)), T >) { if (x.index() ==  0) return operator_as<0>(x); }
+ 2087 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<10>(x)), T >) { if (x.index() == 10) return operator_as<10>(x); }
       |                                                             ^~~~~~~~~~~~
 ../../../include/cpp2util.h:2107:22: note: in expansion of macro ‘CPP2_UFCS_CONSTRAINT_ARG’
- 2107 |     Throw( std::bad_variant_access(), "'as' cast failed for 'variant'");
+ 2107 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 5>(x)), T >) { if (x.index() ==  5) return operator_as<5>(x); }
       |                      ^~~~~~~~~~~~~~~~~~~~~~~~
 ../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 | //  std::any is and as
+ 2137 | template<typename T, typename X>
       |                                                           ^         
 pure2-default-arguments.cpp2:6:22: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 ../../../include/cpp2util.h:2087:93: error: local variable ‘params’ may not appear in this context
- 2087 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 0>(x)), T >) { if (x.index() ==  0) return operator_as<0>(x); }
+ 2087 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<10>(x)), T >) { if (x.index() == 10) return operator_as<10>(x); }
       |                                                                                             ^~~~~~
 ../../../include/cpp2util.h:2047:34: note: in definition of macro ‘CPP2_UFCS_IDENTITY’
- 2047 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<15>(x)), T >) { if (x.index() == 15) return true; }
-      |                                  ^~~~~~~~~~~
+ 2047 |     return false;
+      |                                  ^          
 ../../../include/cpp2util.h:2087:80: note: in expansion of macro ‘CPP2_FORWARD’
- 2087 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 0>(x)), T >) { if (x.index() ==  0) return operator_as<0>(x); }
+ 2087 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<10>(x)), T >) { if (x.index() == 10) return operator_as<10>(x); }
       |                                                                                ^~~~~~~~~~~~
 ../../../include/cpp2util.h:2107:22: note: in expansion of macro ‘CPP2_UFCS_CONSTRAINT_ARG’
- 2107 |     Throw( std::bad_variant_access(), "'as' cast failed for 'variant'");
+ 2107 |     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 5>(x)), T >) { if (x.index() ==  5) return operator_as<5>(x); }
       |                      ^~~~~~~~~~~~~~~~~~~~~~~~
 ../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 | //  std::any is and as
+ 2137 | template<typename T, typename X>
       |                                                           ^         
 pure2-default-arguments.cpp2:6:22: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 pure2-default-arguments.cpp2:6:61: error: ‘std::source_location’ has not been declared
