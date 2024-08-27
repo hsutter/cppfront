@@ -19,9 +19,9 @@
 #line 24 "pure2-type-safety-1.cpp2"
 auto test_generic(auto const& x, auto const& msg) -> void;
 
-#line 29 "pure2-type-safety-1.cpp2"
+#line 31 "pure2-type-safety-1.cpp2"
 auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void;
-#line 35 "pure2-type-safety-1.cpp2"
+#line 37 "pure2-type-safety-1.cpp2"
 
 #line 1 "pure2-type-safety-1.cpp2"
 
@@ -55,10 +55,12 @@ auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void;
 #line 24 "pure2-type-safety-1.cpp2"
 auto test_generic(auto const& x, auto const& msg) -> void{
     std::string msgx {msg}; 
-    print(cpp2::move(msgx) + " is int? ", cpp2::impl::is<int>(x));
+    // Full qualification is necessary to avoid ambiguity in C++23
+    // C++23 defines std::print, which would be picked up here by ADL
+    ::print(cpp2::move(msgx) + " is int? ", cpp2::impl::is<int>(x));
 }
 
-#line 29 "pure2-type-safety-1.cpp2"
+#line 31 "pure2-type-safety-1.cpp2"
 auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void{
     cpp2::impl::deferred_init<char const*> bmsg; 
     if (b) { bmsg.construct("true");}
