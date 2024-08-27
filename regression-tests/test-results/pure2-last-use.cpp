@@ -576,7 +576,7 @@ auto issue_313() -> void{
 //     a := new<int>(0);
 //     return (a&**, identity_copy(a)*);
 //   };
-  static_cast<void>([]() mutable -> int{
+  static_cast<void>([]() -> int{
     auto a {cpp2_new<int>(0)}; 
     return *cpp2::impl::assert_not_null(identity(a)) + *cpp2::impl::assert_not_null(identity(a)); 
 
@@ -639,7 +639,7 @@ auto issue_313_1(std::unique_ptr<int> x) -> void{
 auto issue_350() -> void{
     auto x {21}; 
 
-    auto l1 {[](auto&& x) mutable -> void{
+    auto l1 {[](auto&& x) -> void{
         f_inout(CPP2_FORWARD(x));
     }}; 
 
@@ -660,9 +660,9 @@ auto issue_683(auto const& args) -> void{
 
 #line 114 "pure2-last-use.cpp2"
 auto issue_825() -> void{
-  static_cast<void>([](std::unique_ptr<int> b) mutable -> auto { return f_copy(std::move(cpp2::move(b)));  });
-  static_cast<void>([](std::unique_ptr<int>&& c) mutable -> auto { return f_copy(std::move(cpp2::move(c)));  });
-  static_cast<void>([](auto&& d) mutable -> auto { return f_copy(CPP2_FORWARD(d));  }(cpp2_new<int>(0)));
+  static_cast<void>([](std::unique_ptr<int> b) -> auto { return f_copy(std::move(cpp2::move(b)));  });
+  static_cast<void>([](std::unique_ptr<int>&& c) -> auto { return f_copy(std::move(cpp2::move(c)));  });
+  static_cast<void>([](auto&& d) -> auto { return f_copy(CPP2_FORWARD(d));  }(cpp2_new<int>(0)));
 }
 
 #line 120 "pure2-last-use.cpp2"
@@ -868,7 +868,7 @@ issue_869_1::issue_869_1(issue_869_1 const& that)
 return res; }
 #line 380 "pure2-last-use.cpp2"
 auto issue_884() -> void{
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     if (true) {}
     {
@@ -877,7 +877,7 @@ auto issue_884() -> void{
     }
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     if (true) {
       f_copy(std::move(cpp2::move(x)));
@@ -888,7 +888,7 @@ auto issue_884() -> void{
     }
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     if (true) {
       f_inout(x);
@@ -900,7 +900,7 @@ auto issue_884() -> void{
     f_copy(std::move(cpp2::move(x)));
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     f_copy(std::move(cpp2::move(x)));
     if (true) {
@@ -913,7 +913,7 @@ auto issue_884() -> void{
     static_cast<void>(0);
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     f_inout(x);
     if (true) {
@@ -926,7 +926,7 @@ auto issue_884() -> void{
     static_cast<void>(0);
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     f_inout(x);
     if (true) {
@@ -939,7 +939,7 @@ auto issue_884() -> void{
     static_cast<void>(0);
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     f_inout(x);
     if (true) {
@@ -952,7 +952,7 @@ auto issue_884() -> void{
     static_cast<void>(0);
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     f_inout(x);
     if (true) {
@@ -965,7 +965,7 @@ auto issue_884() -> void{
     f_copy(std::move(cpp2::move(x)));
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     f_inout(x);
     if (true) {
@@ -978,7 +978,7 @@ auto issue_884() -> void{
     static_cast<void>(0);
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     f_inout(x);
     if (true) {
@@ -991,7 +991,7 @@ auto issue_884() -> void{
     static_cast<void>(0);
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     f_inout(x);
     if (true) {
@@ -1007,7 +1007,7 @@ auto issue_884() -> void{
     }
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     f_inout(x);
     if (true) {
@@ -1023,7 +1023,7 @@ auto issue_884() -> void{
     f_copy(std::move(cpp2::move(x)));
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     f_inout(x);
     if (true) {
@@ -1039,7 +1039,7 @@ auto issue_884() -> void{
     static_cast<void>(0);
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     if (true) {
       if (true) {
@@ -1052,7 +1052,7 @@ auto issue_884() -> void{
     }
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     if (true) {
       if (true) {
@@ -1066,7 +1066,7 @@ auto issue_884() -> void{
     }
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     if (true) {
     }
@@ -1079,7 +1079,7 @@ auto issue_884() -> void{
     }
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     if (true) {
       f_copy(std::move(cpp2::move(x)));
@@ -1093,7 +1093,7 @@ auto issue_884() -> void{
     }
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     if (true) {
       auto y {cpp2_new<int>(0)}; 
@@ -1110,7 +1110,7 @@ auto issue_884() -> void{
     }
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     if (true) {
       auto y {cpp2_new<int>(0)}; 
@@ -1132,7 +1132,7 @@ auto issue_884() -> void{
     }
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     if (true) {
       auto y {cpp2_new<int>(0)}; 
@@ -1156,7 +1156,7 @@ auto issue_884() -> void{
     }
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     if (true) {
       f_copy(std::move(cpp2::move(x)));
@@ -1175,7 +1175,7 @@ auto issue_884() -> void{
     }
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     if (true) {
       if (true) {
@@ -1194,7 +1194,7 @@ auto issue_884() -> void{
     }
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
 
     if (true) {
@@ -1208,7 +1208,7 @@ auto issue_884() -> void{
     }
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     if (true) {
       if (true) {
@@ -1385,14 +1385,14 @@ return std::move(p.value()); }
 
 #line 876 "pure2-last-use.cpp2"
 auto loops() -> void{
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     for ( 
     [[maybe_unused]] auto const& unnamed_param_1 : { 0 } ) 
     f_inout(x);
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     for ( 
 
@@ -1400,14 +1400,14 @@ auto loops() -> void{
     {} while (false); f_inout(x); }
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     for ( 
     [[maybe_unused]] auto const& unnamed_param_1 : { 0 } ) 
     if (cpp2::cpp2_default.is_active() && !(CPP2_UFCS(get)(x)) ) { cpp2::cpp2_default.report_violation(""); }
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     if (true) {
       f_copy(std::move(cpp2::move(x)));
@@ -1426,7 +1426,7 @@ namespace captures {
 auto f() -> void{
   auto x {cpp2_new<int>(0)}; 
   f_copy(std::move(cpp2::move(x)));
-  auto id {[](auto const& x) mutable -> auto&& { return x;  }}; 
+  auto id {[](auto const& x) -> auto&& { return x;  }}; 
   auto y {cpp2_new<int>(0)}; 
   if (cpp2::cpp2_default.is_active() && !(&cpp2::move(id)(y) == &y) ) { cpp2::cpp2_default.report_violation(""); }
 }
@@ -1434,7 +1434,7 @@ auto f() -> void{
 #line 928 "pure2-last-use.cpp2"
   auto t::operator()() && -> void{
     f_copy(std::move(cpp2::move(*this).x));
-    static_cast<void>([&]() mutable -> void{
+    static_cast<void>([&]() -> void{
       // Should this move?
       // I.e., don't skip non-captured names, just rely on skipping hiding names.
       // An odr-use still requires capturing at Cpp1-time, and capturing would move.
@@ -1452,13 +1452,13 @@ auto t::operator=(auto const& x_) -> t& {
                                              return *this;}
 #line 941 "pure2-last-use.cpp2"
 auto g() -> void{
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     f_copy(std::move(cpp2::move(x)));
-    static_cast<void>([_0 = std::array<int,[](auto const& x) mutable -> auto { return identity(x); }(0)>()]() mutable -> auto { return _0;  });// Fails on Clang 12 (lambda in unevaluated context).
+    static_cast<void>([_0 = std::array<int,[](auto const& x) -> auto { return identity(x); }(0)>()]() mutable -> auto { return _0;  });// Fails on Clang 12 (lambda in unevaluated context).
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     f_inout(x);
     static_cast<void>([_0 = ([_0 = cpp2::move(x)]() mutable -> auto { return *cpp2::impl::assert_not_null(_0); })]() mutable -> int { return _0();  });
@@ -1469,21 +1469,21 @@ auto g() -> void{
 
 #line 957 "pure2-last-use.cpp2"
 auto loops_and_captures() -> void{
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     f_copy(std::move(cpp2::move(x)));
     for ( 
-    [[maybe_unused]] auto const& unnamed_param_1 : { [](auto const& x) mutable -> auto { return x; } } ) 
+    [[maybe_unused]] auto const& unnamed_param_1 : { [](auto const& x) -> auto { return x; } } ) 
     {}
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     f_copy(std::move(cpp2::move(x)));
     for ( 
 
 #line 973 "pure2-last-use.cpp2"
-    [[maybe_unused]] auto const& unnamed_param_1 : { []() mutable -> auto{using captures::x;return x; } } ) 
+    [[maybe_unused]] auto const& unnamed_param_1 : { []() -> auto{using captures::x;return x; } } ) 
     {}
   });
 
@@ -1503,7 +1503,7 @@ auto types::operator=(auto const& x_) -> types& {
                                              return *this;}
 #line 995 "pure2-last-use.cpp2"
 auto skip_hidden_names() -> void{
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     f_copy(std::move(cpp2::move(x)));
 {
@@ -1526,7 +1526,7 @@ auto x{cpp2_new<int>(0)};
 //     };
 //   };
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
 {
 auto x{cpp2_new<int>(0)};
     // x := new<int>(0);
@@ -1541,7 +1541,7 @@ auto x{cpp2_new<int>(0)};
 #line 1022 "pure2-last-use.cpp2"
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     f_inout(x);
     {
@@ -1551,10 +1551,10 @@ auto x{cpp2_new<int>(0)};
     }
   });
 
-  static_cast<void>([]() mutable -> void{
+  static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     f_copy(std::move(cpp2::move(x)));
-    static_cast<void>([]() mutable -> void{
+    static_cast<void>([]() -> void{
       static_assert(std::is_same_v<decltype(x),std::unique_ptr<int>>);
       using captures::x;
       f_inout(x);

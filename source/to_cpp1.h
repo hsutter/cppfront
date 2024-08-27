@@ -4401,27 +4401,36 @@ public:
         //
         auto emit_initializer = [&]
         {
+            assert(n.declaration);
             auto is_param_to_namespace_scope_type =
                 n.declaration->parent_is_type() 
                 && n.declaration->parent_declaration->parent_is_namespace() 
+                ;
+
+            auto emit_in_phase_0 =
+                is_param_to_namespace_scope_type
+                && printer.get_phase() == printer.phase0_type_decls
+                ;
+
+            auto emit_in_phase_1 =
+                !is_param_to_namespace_scope_type
+                && printer.get_phase() == printer.phase1_type_defs_func_decls
                 ;
 
             if (
                 !is_returns
                 && n.declaration->initializer
                 && (
-                    n.is_in_function_scope()    // implies we're in phase 2
-                    || (
-                        is_param_to_namespace_scope_type
-                        && printer.get_phase() == printer.phase0_type_decls
-                        )
-                    || (
-                        !is_param_to_namespace_scope_type
-                        && printer.get_phase() == printer.phase1_type_defs_func_decls
-                        )
+                    n.is_in_function_scope()    // implies we're in phase 1 or 2
+                    || emit_in_phase_0
+                    || emit_in_phase_1
                     )
                 )
             {
+                auto expr  = n.declaration->initializer->get_if<expression_statement_node>();
+                assert(expr->expr);
+                auto empty = expr && expr->is_empty_expression_list();
+
                 auto guard = stack_element(current_declarations, &*n.declaration);
                 if (is_statement) {
                     printer.print_cpp2( "{", n.declaration->initializer->position() );
@@ -4429,7 +4438,14 @@ public:
                 else {
                     printer.print_cpp2( " = ", n.declaration->initializer->position() );
                 }
-                emit(*n.declaration->initializer, false);
+
+                if (empty && !is_statement) {
+                    printer.print_cpp2( "{}", n.declaration->initializer->position() );
+                }
+                else {
+                    emit(*n.declaration->initializer, false);
+                }
+
                 if (is_statement) {
                     printer.print_cpp2( "};", n.declaration->initializer->position() );
                 }
@@ -4514,6 +4530,7 @@ public:
             printer.print_cpp2("typename ", identifier_pos);
 
             emit_template_name();
+            emit_initializer();
             return;
         }
 
@@ -5008,7 +5025,7 @@ public:
                 //  printer.print_cpp2( " constexpr", n.position() );
                 //      // consider enabling when P2242, P2280, and similar papers are widely implemented
             }
-            else {
+            else if (!n.my_decl->captures.members.empty()) {
                 printer.print_cpp2( " mutable", n.position() );
             }
         }

@@ -22,15 +22,15 @@ auto fun(auto const& v) -> void;
 #line 1 "pure2-is-with-unnamed-predicates.cpp2"
 auto fun(auto const& v) -> void{
 #line 2 "pure2-is-with-unnamed-predicates.cpp2"
-    if (cpp2::impl::is(v, ([](cpp2::impl::in<int> x) mutable -> auto { return cpp2::impl::cmp_greater(x,3); }))) {
+    if (cpp2::impl::is(v, ([](cpp2::impl::in<int> x) -> auto { return cpp2::impl::cmp_greater(x,3); }))) {
         std::cout << "" + cpp2::to_string(v) + " is integer bigger than 3" << std::endl;
     }
 
-    if (cpp2::impl::is(v, ([](cpp2::impl::in<double> x) mutable -> auto { return cpp2::impl::cmp_greater(x,3); }))) {
+    if (cpp2::impl::is(v, ([](cpp2::impl::in<double> x) -> auto { return cpp2::impl::cmp_greater(x,3); }))) {
         std::cout << "" + cpp2::to_string(v) + " is double bigger than 3" << std::endl;
     }
 
-    if (cpp2::impl::is(v, ([](auto const& x) mutable -> auto { return cpp2::impl::cmp_greater(x,3); }))) {
+    if (cpp2::impl::is(v, ([](auto const& x) -> auto { return cpp2::impl::cmp_greater(x,3); }))) {
         std::cout << "" + cpp2::to_string(v) + " is bigger than 3" << std::endl;
     }
 }

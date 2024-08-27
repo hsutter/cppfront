@@ -2866,7 +2866,7 @@ auto cpp2_enum(meta::type_declaration& t) -> void
 {
     //  Let basic_enum do its thing, with an incrementing value generator
     CPP2_UFCS(basic_enum)(t, 
-        [](std::string& value, cpp2::impl::in<std::string> specified_value) mutable -> void{
+        [](std::string& value, cpp2::impl::in<std::string> specified_value) -> void{
             if (!(CPP2_UFCS(empty)(specified_value))) {
                 value = specified_value;
             }else {
@@ -2894,7 +2894,7 @@ auto flag_enum(meta::type_declaration& t) -> void
 {
     //  Let basic_enum do its thing, with a power-of-two value generator
     CPP2_UFCS(basic_enum)(t, 
-        [](std::string& value, cpp2::impl::in<std::string> specified_value) mutable -> void{
+        [](std::string& value, cpp2::impl::in<std::string> specified_value) -> void{
             if (!(CPP2_UFCS(empty)(specified_value))) {
                 value = specified_value;
             }else {

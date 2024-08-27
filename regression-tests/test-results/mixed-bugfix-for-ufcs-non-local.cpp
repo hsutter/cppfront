@@ -95,7 +95,7 @@ auto g() -> void{
 
 #line 40 "mixed-bugfix-for-ufcs-non-local.cpp2"
   inline CPP2_CONSTEXPR bool u::b{ CPP2_UFCS_NONLOCAL(f)(o) };
-  inline CPP2_CONSTEXPR bool u::c{ [](cpp2::impl::in<std::type_identity_t<decltype(CPP2_UFCS_NONLOCAL(f)(o))>> x) mutable -> auto { return x; }(true) };// Fails on Clang 12 (lambda in unevaluated context).
+  inline CPP2_CONSTEXPR bool u::c{ [](cpp2::impl::in<std::type_identity_t<decltype(CPP2_UFCS_NONLOCAL(f)(o))>> x) -> auto { return x; }(true) };// Fails on Clang 12 (lambda in unevaluated context).
   auto u::g(auto const& s, auto const& sz) -> void{
                                   if (cpp2::cpp2_default.is_active() && !(CPP2_UFCS(sz)(s) != 0) ) { cpp2::cpp2_default.report_violation(""); }}
 

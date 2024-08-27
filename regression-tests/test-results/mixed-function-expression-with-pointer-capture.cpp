@@ -35,7 +35,7 @@
         std::cout << CPP2_UFCS(c_str)((*cpp2::impl::assert_not_null(_0))) << x << *cpp2::impl::assert_not_null(_0);  }
     );
 
-    auto callback {[](auto& x) mutable -> void { x += "-ish";  }}; 
+    auto callback {[](auto& x) -> void { x += "-ish";  }}; 
     std::ranges::for_each(vec, cpp2::move(callback));
 
     for ( auto const& str : cpp2::move(vec) ) 
