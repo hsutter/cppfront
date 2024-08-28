@@ -880,8 +880,8 @@ public:
         -> void
     {
         help_requested = true;
-        const std::string_view a = __DATE__;
-        const std::string_view b = __TIME__;
+        constexpr std::string_view a = __DATE__;
+        constexpr std::string_view b = __TIME__;
         std::unordered_map<std::string_view, char> m = { {"Jan",'1'}, {"Feb",'2'}, {"Mar",'3'}, {"Apr",'4'}, {"May",'5'}, {"Jun",'6'}, {"Jul",'7'}, {"Aug",'8'}, {"Sep",'9'}, {"Oct",'A'}, {"Nov",'B'}, {"Dec",'C'} };
 
         auto stamp = std::to_string(atoi(&a[9])-15);
