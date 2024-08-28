@@ -1,0 +1,145 @@
+# std::monostate
+
+## v as lvalue reference
+
+v is empty = true
+v is std::monostate = true
+v is X< 0> = false,	(v as X< 1>) = bad variant access
+v is X< 1> = false,	(v as X< 1>).to_string() = bad variant access
+v is X<19> = false,	(v as X<19>).to_string() = bad variant access
+v is X<20> = false,	(v as X<20>) = bad variant access
+
+## v as const lvalue reference
+
+v is empty = true
+v is std::monostate = true
+v is X< 0> = false,	(v as X< 1>) = bad variant access
+v is X< 1> = false,	(v as X< 1>).to_string() = bad variant access
+v is X<19> = false,	(v as X<19>).to_string() = bad variant access
+v is X<20> = false,	(v as X<20>) = bad variant access
+
+## v as rvalue reference
+
+v is empty = true
+v is std::monostate = true
+v is X< 0> = false,	(v as X< 1>) = bad variant access
+v is X< 1> = false,	(v as X< 1>).to_string() = bad variant access
+v is X<19> = false,	(v as X<19>).to_string() = bad variant access
+v is X<20> = false,	(v as X<20>) = bad variant access
+
+# X<1>
+
+## v as lvalue reference
+
+v is empty = false
+v is std::monostate = false
+v is X< 0> = false,	(v as X< 1>) = bad variant access
+v is X< 1> = true,	(v as X< 1>).to_string() = X<1>
+v is X<19> = false,	(v as X<19>).to_string() = bad variant access
+v is X<20> = false,	(v as X<20>) = bad variant access
+
+## v as const lvalue reference
+
+v is empty = false
+v is std::monostate = false
+v is X< 0> = false,	(v as X< 1>) = bad variant access
+v is X< 1> = true,	(v as X< 1>).to_string() = X<1>
+v is X<19> = false,	(v as X<19>).to_string() = bad variant access
+v is X<20> = false,	(v as X<20>) = bad variant access
+
+## v as rvalue reference
+
+v is empty = false
+v is std::monostate = false
+v is X< 0> = false,	(v as X< 1>) = bad variant access
+v is X< 1> = true,	(v as X< 1>).to_string() = X<1>
+v is X<19> = false,	(v as X<19>).to_string() = bad variant access
+v is X<20> = false,	(v as X<20>) = bad variant access
+
+# X<19>
+
+## v as lvalue reference
+
+v is empty = false
+v is std::monostate = false
+v is X< 0> = false,	(v as X< 1>) = bad variant access
+v is X< 1> = false,	(v as X< 1>).to_string() = bad variant access
+v is X<19> = true,	(v as X<19>).to_string() = X<19>
+v is X<20> = false,	(v as X<20>) = bad variant access
+
+## v as const lvalue reference
+
+v is empty = false
+v is std::monostate = false
+v is X< 0> = false,	(v as X< 1>) = bad variant access
+v is X< 1> = false,	(v as X< 1>).to_string() = bad variant access
+v is X<19> = true,	(v as X<19>).to_string() = X<19>
+v is X<20> = false,	(v as X<20>) = bad variant access
+
+## v as rvalue reference
+
+v is empty = false
+v is std::monostate = false
+v is X< 0> = false,	(v as X< 1>) = bad variant access
+v is X< 1> = false,	(v as X< 1>).to_string() = bad variant access
+v is X<19> = true,	(v as X<19>).to_string() = X<19>
+v is X<20> = false,	(v as X<20>) = bad variant access
+
+# X<20>
+
+## v as lvalue reference
+
+v is empty = false
+v is std::monostate = false
+v is X< 0> = false,	(v as X< 1>) = bad variant access
+v is X< 1> = false,	(v as X< 1>).to_string() = bad variant access
+v is X<19> = false,	(v as X<19>).to_string() = bad variant access
+v is X<20> = true,	(v as X<20>) = works!
+
+## v as const lvalue reference
+
+v is empty = false
+v is std::monostate = false
+v is X< 0> = false,	(v as X< 1>) = bad variant access
+v is X< 1> = false,	(v as X< 1>).to_string() = bad variant access
+v is X<19> = false,	(v as X<19>).to_string() = bad variant access
+v is X<20> = true,	(v as X<20>) = works!
+
+## v as rvalue reference
+
+v is empty = false
+v is std::monostate = false
+v is X< 0> = false,	(v as X< 1>) = bad variant access
+v is X< 1> = false,	(v as X< 1>).to_string() = bad variant access
+v is X<19> = false,	(v as X<19>).to_string() = bad variant access
+v is X<20> = true,	(v as X<20>) = works!
+
+# X<10>(std::exception)
+
+## v as lvalue reference
+
+v is empty = true
+v is std::monostate = false
+v is X< 0> = false,	(v as X< 1>) = bad variant access
+v is X< 1> = false,	(v as X< 1>).to_string() = bad variant access
+v is X<19> = false,	(v as X<19>).to_string() = bad variant access
+v is X<20> = false,	(v as X<20>) = bad variant access
+
+## v as const lvalue reference
+
+v is empty = true
+v is std::monostate = false
+v is X< 0> = false,	(v as X< 1>) = bad variant access
+v is X< 1> = false,	(v as X< 1>).to_string() = bad variant access
+v is X<19> = false,	(v as X<19>).to_string() = bad variant access
+v is X<20> = false,	(v as X<20>) = bad variant access
+
+## v as rvalue reference
+
+v is empty = true
+v is std::monostate = false
+v is X< 0> = false,	(v as X< 1>) = bad variant access
+v is X< 1> = false,	(v as X< 1>).to_string() = bad variant access
+v is X<19> = false,	(v as X<19>).to_string() = bad variant access
+v is X<20> = false,	(v as X<20>) = bad variant access
+

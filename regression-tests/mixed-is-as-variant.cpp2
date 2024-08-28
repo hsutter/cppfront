@@ -1,0 +1,91 @@
+test: (forward v) = {
+    std::cout << "v is empty = (v is  void)$" << std::endl;
+    std::cout << "v is std::monostate = (v is std::monostate)$" << std::endl;
+    std::cout << "v is X< 0> = (v is X< 0>)$,\t(v as X< 1>) = " << expect_no_throw(forward v, :(forward v) v as X<0>) << std::endl;
+    std::cout << "v is X< 1> = (v is X< 1>)$,\t(v as X< 1>).to_string() = (expect_no_throw(forward v, :(forward v) -> std::string = { return (v as X< 1>).to_string();}))$" << std::endl;
+    std::cout << "v is X<19> = (v is X<19>)$,\t(v as X<19>).to_string() = (expect_no_throw(forward v, :(forward v) -> std::string = { return (v as X<19>).to_string();}))$" << std::endl;
+    std::cout << "v is X<20> = (v is X<20>)$,\t(v as X<20>) = " << expect_no_throw(forward v, :(forward v) v as X<20>) << std::endl;
+    std::cout << std::endl;
+}
+
+main: () -> int = {
+
+    v: std::variant<std::monostate,
+                    X< 1>, X< 2>, X< 3>, X< 4>, X< 5>, X< 6>, X< 7>, X< 8>, X< 9>, X<10>,
+                    X<11>, X<12>, X<13>, X<14>, X<15>, X<16>, X<17>, X<18>, X<19>, X<20> > = ();
+
+    header(1, "std::monostate");
+    v..emplace<0>();
+    run_tests(v);
+
+    header(1, "X<1>");
+    v..emplace<1>();
+    run_tests(v);
+
+    header(1, "X<19>");
+    v..emplace<19>();
+    run_tests(v);
+
+    header(1, "X<20>");
+    v..emplace<20>();
+    run_tests(v);
+
+    header(1, "X<10>(std::exception)");
+    set_to_valueless_by_exception<10>(v);
+    run_tests(v);
+
+}
+
+run_tests: (forward v) = {
+    header(2, "v as lvalue reference");
+    test(v);
+
+    header(2, "v as const lvalue reference");
+    test(std::as_const(v));
+
+    header(2, "v as rvalue reference");
+    test(move v);
+}
+
+header: (lvl : int, msg: std::string) = {
+    std::cout << std::string(lvl, '#') << " " << msg << "\n" << std::endl;
+}
+
+template<int I>
+struct X { 
+    operator int() const { return I; } 
+    X() = default;
+    X(std::exception const& e) { throw e; }
+    auto to_string() const { return "X<" + std::to_string(I) + ">"; }
+};
+
+template <std::size_t I>
+void set_to_valueless_by_exception(auto& v) try {
+    v.template emplace<I>(std::runtime_error("make valueless"));
+} catch (...) {}
+
+auto expect_no_throw(auto&& l) -> std::string try {
+    if constexpr ( requires { { l() } -> std::convertible_to<std::string>; }) {
+        return l();
+    } else {
+        l();
+        return "works!";
+    }
+} catch (std::exception const& e) {
+    return e.what();
+} catch (...) {
+    return "unknown exception!";
+}
+
+auto expect_no_throw(auto&& v, auto&& l) -> std::string try {
+    if constexpr ( requires { { l(v) } -> std::convertible_to<std::string>; }) {
+        return l(v);
+    } else {
+        l(v);
+        return "works!";
+    }
+} catch (std::exception const& e) {
+    return e.what();
+} catch (...) {
+    return "unknown exception!";
+}

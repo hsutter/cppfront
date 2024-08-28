@@ -1,0 +1,112 @@
+auto in(int min, int max) {
+    return [=](int x){ return min <= x && x <= max; };
+}
+
+test: (forward v) = {
+    if v is (42) {
+        std::cout << " 42";
+    }
+    if v is (24) {
+        std::cout << " 24";
+    }
+    if v is (100) {
+        std::cout << " 100";
+    }
+    if v is (-100) {
+        std::cout << " -100";
+    }
+    if v is (314) {
+        std::cout << " 314";
+    }
+    if v is (std::optional<int>(100)) {
+        std::cout << " std::optional<int>(100)";
+    }
+    if v is (std::any(-100)) {
+        std::cout << " std::any(-100)";
+    }
+    if v is (new<int>(1000)) {
+        std::cout << " std::unique_ptr<int>(1000)";
+    }
+    i : int = 314;
+    if v is (i&) {
+        std::cout << " *int(314)";
+    }
+    if v is (in(0,100)) {
+        std::cout << " in(0,100)";
+    }
+    std::cout << "\n---" << std::endl;
+}
+
+my_variant: type == std::variant<std::monostate, int, int, std::optional<int>, std::any, *int, std::unique_ptr<int>>;
+
+main: () -> int = {
+
+    v: std::variant<std::monostate, int, int, std::optional<int>, std::any, *int, std::unique_ptr<int>, my_variant> = ();
+
+    header(1, "std::monostate");
+    v..emplace<0>();
+    test(v);
+
+    header(1, "int(42)");
+    v..emplace<1>(42);
+    test(v);
+
+    header(1, "int(24)");
+    v..emplace<2>(24);
+    test(v);
+
+    header(1, "std::optional<int>(100)");
+    v..emplace<3>(100);
+    test(v);
+
+    header(1, "std::any(-100)");
+    v..emplace<4>(-100);
+    test(v);
+
+    i : int = 314;
+    header(1, "*int(314)");
+    v..emplace<5>(i&);
+    test(v);
+
+    header(1, "std::unique_ptr<int>(1000)");
+    v..emplace<6>(new<int>(1000));
+    test(v);
+
+    header(1, "my_variant(std::monostate)");
+    v..emplace<7>();
+    test(v);
+
+    header(1, "my_variant(int(42))");
+    v..emplace<7>();
+    std::get<7>(v)..emplace<1>(42);
+    test(v);
+
+    header(1, "my_variant(int(24))");
+    v..emplace<7>();
+    std::get<7>(v)..emplace<2>(24);
+    test(v);
+
+    header(1, "my_variant(std::optional<int>(100))");
+    v..emplace<7>();
+    std::get<7>(v)..emplace<3>(100);
+    test(v);
+
+    header(1, "my_variant(std::any(-100))");
+    v..emplace<7>();
+    std::get<7>(v)..emplace<4>(-100);
+    test(v);
+
+    header(1, "my_variant(*int(314))");
+    v..emplace<7>();
+    std::get<7>(v)..emplace<5>(i&);
+    test(v);
+
+    header(1, "my_variant(std::unique_ptr<int>(1000))");
+    v..emplace<7>();
+    std::get<7>(v)..emplace<6>(new<int>(1000));
+    test(v);
+}
+
+header: (lvl : int, msg: std::string) = {
+    std::cout << std::string(lvl, '#') << " " << msg << std::endl;
+}
