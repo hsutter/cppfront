@@ -908,6 +908,7 @@ public:
 
     constexpr contract_group  (handler h = {}) : reporter{h} { }
     constexpr auto set_handler(handler h = {}) { reporter = h; }
+    constexpr auto get_handler() const -> handler { return reporter; }
     constexpr auto is_active  () const -> bool    { return reporter != handler{}; }
 
     constexpr auto enforce(bool b, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
@@ -2073,7 +2074,7 @@ auto as(X&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT_AS) -> decltype(auto)
         if constexpr (std::is_same_v< typename It::type, C >) { if (CPP2_FORWARD(x).index() ==  It::index) { ptr = &std::get<It::index>(x); return true; } }; 
         return false;
     });
-    if (!ptr) { Throw( std::bad_variant_access(), "'as' cast failed for 'variant'"); }
+    type_safety.enforce(ptr, "'as' cast failed for 'variant'");
     return cpp2::forward_like<decltype(x)>(*ptr);
 }
 
@@ -2115,7 +2116,7 @@ inline constexpr auto is( std::any const& x, auto&& value ) -> bool
 template<typename T, same_type_as<std::any> X>
 constexpr auto as( X && x ) -> decltype(auto) {
     constness_like_t<T, X>* ptr = std::any_cast<T>( &x );
-    if (!ptr) { Throw( std::bad_any_cast(), "'as' cast failed for 'std::any'"); }
+    type_safety.enforce(ptr, "'as' cast failed for 'std::any'");
     return cpp2::forward_like<X>(*ptr);
 }
 
@@ -2165,7 +2166,7 @@ constexpr auto as( X&& x ) -> decltype(auto) {
             ptr = &static_cast<constness_like_t<T, X>&>(*x);
         }
     }
-    if (!ptr) { Throw( std::bad_optional_access(), "'as' cast failed for 'std::optional'"); }
+    type_safety.enforce(ptr, "'as' cast failed for 'std::optional'");
     return cpp2::forward_like<X>(*ptr);
 }
 
