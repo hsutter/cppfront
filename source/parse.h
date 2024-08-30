@@ -4902,10 +4902,6 @@ auto pretty_print_visualize(primary_expression_node const& n, int indent)
     ret += try_pretty_print_visualize<primary_expression_node::inspect        >(n.expr, indent);
     ret += try_pretty_print_visualize<primary_expression_node::literal        >(n.expr, indent);
 
-    if (ret.ends_with(';')) {
-        ret.resize( ret.size()-1 );
-    }
-
     return ret;
 }
 
