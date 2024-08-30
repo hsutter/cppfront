@@ -966,7 +966,7 @@ struct: (inout t: meta::type_declaration) =
         else if m.is_object() {
             mo: = m.as_object();
             if mo.name() != "this" {
-                ctor_params += "(mo.name())$_, ";
+                ctor_params += "forward (mo.name())$_ : (mo.type())$, ";
                 ctor_inits  += "(mo.name())$ = (mo.name())$_; ";
             }
             else {

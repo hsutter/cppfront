@@ -2529,7 +2529,7 @@ auto cpp2_struct(meta::type_declaration& t) -> void
         else {if (CPP2_UFCS(is_object)(m)) {
             auto mo {CPP2_UFCS(as_object)(m)}; 
             if (CPP2_UFCS(name)(mo) != "this") {
-                ctor_params += "" + cpp2::to_string(CPP2_UFCS(name)(mo)) + "_, ";
+                ctor_params += "forward " + cpp2::to_string(CPP2_UFCS(name)(mo)) + "_ : " + cpp2::to_string(CPP2_UFCS(type)(mo)) + ", ";
                 ctor_inits  += "" + cpp2::to_string(CPP2_UFCS(name)(mo)) + " = " + cpp2::to_string(CPP2_UFCS(name)(mo)) + "_; ";
             }
             else {

@@ -1424,28 +1424,7 @@ struct type_id_node
     }
 
     auto to_string() const
-        -> std::string
-    {
-        auto suffix = std::string{};
-        if (constraint) {
-            suffix = "is " + constraint->to_string();
-        }
-
-        switch (id.index()) {
-        break;case empty:
-            return {};
-        break;case qualified:
-            return std::get<qualified>(id)->to_string() + suffix;
-        break;case unqualified:
-            return std::get<unqualified>(id)->to_string() + suffix;
-        break;case keyword:
-            return std::get<keyword>(id)->to_string() + suffix;
-        break;default:
-            assert(false && "ICE: invalid type_id state");
-        }
-        // else
-        return {};
-    }
+        -> std::string;
 
     auto get_token() const
         -> token const*
@@ -2317,6 +2296,9 @@ struct parameter_declaration_node
 
     //  API
     //
+    auto to_string() const
+        -> std::string;
+
     auto has_name() const
         -> bool;
 
@@ -2412,6 +2394,22 @@ struct parameter_declaration_list_node
 
     //  API
     //
+    auto to_string() const
+        -> std::string
+    {
+        assert(open_paren && close_paren);
+
+        auto ret = open_paren->to_string();
+
+        for (auto const& p: parameters) {
+            ret += p->to_string() + ", ";
+        }
+
+        ret += close_paren->as_string_view();
+
+        return ret;
+    }
+
     auto ssize() const -> auto {
         return std::ssize(parameters);
     }
@@ -2498,6 +2496,29 @@ struct function_type_node
 
     //  API
     //
+    auto to_string() const
+        -> std::string
+    {
+        assert (parameters);
+
+        auto ret = parameters->to_string();
+        
+        if (throws) {
+            ret += " throws";
+        }
+
+        if (auto t = std::get_if<id>(&returns)) {
+            ret += " -> ";
+            ret += to_string_view(t->pass);
+            ret += " " + t->type->to_string();
+        }
+        else if (auto t = std::get_if<list>(&returns)) {
+            ret += " -> " + (*t)->to_string();
+        }
+
+        return ret;
+    }
+
     auto has_postconditions() const
         -> bool;
 
@@ -2735,6 +2756,40 @@ struct function_type_node
 };
 
 
+auto type_id_node::to_string() const
+    -> std::string
+{
+    auto ret = std::string{};
+
+    for (auto& qual : pc_qualifiers) {
+        assert(qual);
+        ret += qual->as_string_view();
+        ret += " ";
+    }
+
+    switch (id.index()) {
+    break;case empty:
+        ret += "_";
+    break;case qualified:
+        ret += std::get<qualified>(id)->to_string();
+    break;case unqualified:
+        ret += std::get<unqualified>(id)->to_string();
+    break;case function:
+        ret += std::get<function>(id)->to_string();
+    break;case keyword:
+        ret += std::get<keyword>(id)->to_string();
+    break;default:
+        assert(false && "ICE: invalid type_id state");
+    }
+
+    if (constraint) {
+        ret += "is " + constraint->to_string();
+    }
+
+    return ret;
+}
+
+
 struct type_node
 {
     token const* type;
@@ -2918,6 +2973,9 @@ struct declaration_node
 
     //  API
     //
+    auto to_string() const
+        -> std::string;
+
     auto is_template_parameter() const
         -> bool
     {
@@ -3942,6 +4000,30 @@ public:
 };
 
 
+auto parameter_declaration_node::to_string() const
+    -> std::string
+{
+    auto ret = std::string{};
+
+    switch (mod) {
+    break;case modifier::implicit:
+        ret += "implicit ";
+    break;case modifier::virtual_:
+        ret += "virtual ";
+    break;case modifier::override_:
+        ret += "override ";
+    break;case modifier::final_:
+        ret += "final ";
+    break;default:
+        ;
+    }
+
+    ret += to_string_view(pass) + declaration->to_string();
+
+    return ret;
+}
+
+
 compound_statement_node::compound_statement_node(source_position o)
     : open_brace{o}
 { }
@@ -4705,6 +4787,14 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
     -> std::string;
 
 
+auto declaration_node::to_string() const
+    -> std::string
+{
+    //  These need to be unified someday... let's not duplicate this long function...
+    return pretty_print_visualize(*this, 0);
+}
+
+
 auto primary_expression_node::to_string() const
 -> std::string
 {
@@ -4734,7 +4824,11 @@ auto primary_expression_node::to_string() const
     break; case declaration: {
         auto const& s = std::get<declaration>(expr);
         assert(s);
-        return pretty_print_visualize(*s, 0);
+        auto ret = pretty_print_visualize(*s, 0);
+        if (ret.ends_with(';')) {
+            ret.resize( ret.size()-1 );
+        }
+        return ret;
     }
 
     break; case literal: {
@@ -4807,6 +4901,10 @@ auto pretty_print_visualize(primary_expression_node const& n, int indent)
     ret += try_pretty_print_visualize<primary_expression_node::declaration    >(n.expr, indent);
     ret += try_pretty_print_visualize<primary_expression_node::inspect        >(n.expr, indent);
     ret += try_pretty_print_visualize<primary_expression_node::literal        >(n.expr, indent);
+
+    if (ret.ends_with(';')) {
+        ret.resize( ret.size()-1 );
+    }
 
     return ret;
 }
@@ -5351,7 +5449,7 @@ auto pretty_print_visualize(parameter_declaration_list_node const& n, int indent
     if (std::ssize(n.parameters) > 1) {
         ret += std::string{"\n"} + pre(indent);
     }
-    ret += n.close_paren->to_string();
+    ret += n.close_paren->as_string_view();
 
     return ret;
 }

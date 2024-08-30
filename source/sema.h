@@ -2130,8 +2130,8 @@ public:
     bool                              started_prefix_operators                 = false;
     bool                              is_out_expression                        = false;
     bool                              inside_next_expression                   = false;
-    bool                              inside_parameter_list                    = false;
-    bool                              inside_parameter_identifier              = false;
+    std::vector<bool>                 inside_parameter_list                    = {};
+    std::vector<bool>                 inside_parameter_identifier              = {};
     bool                              inside_returns_list                      = false;
     bool                              just_entered_for                         = false;
     token const*                      prev_token                               = nullptr;
@@ -2289,7 +2289,7 @@ public:
 
     auto start(parameter_declaration_list_node const& n, int) -> void
     {
-        inside_parameter_list = true;
+        inside_parameter_list.push_back( true );
         if (
             !n.in_function_typeid 
             && !n.in_template_param_list
@@ -2301,17 +2301,19 @@ public:
 
     auto end(parameter_declaration_list_node const&, int) -> void
     {
-        inside_parameter_list = false;
+        assert (!inside_parameter_list.empty());
+        inside_parameter_list.pop_back();
     }
 
     auto start(declaration_identifier_tag const&, int) -> void
     {
-        inside_parameter_identifier = inside_parameter_list;
+        inside_parameter_identifier.push_back( !inside_parameter_list.empty() );
     }
 
     auto end(declaration_identifier_tag const&, int) -> void
     {
-        inside_parameter_identifier = false;
+        assert (!inside_parameter_identifier.empty());
+        inside_parameter_identifier.pop_back();
     }
 
     auto start(parameter_declaration_node const& n, int) -> void
@@ -2406,6 +2408,7 @@ public:
         }
 
         if (
+            //  Skip aliases
             !n.is_alias()
             //  Skip type scope (member) variables
             && !(n.parent_is_type() && n.is_object())
@@ -2416,9 +2419,11 @@ public:
                 )
             //  Skip non-out parameters
             && (
-                !inside_parameter_list
+                inside_parameter_list.empty()
                 || inside_out_parameter
                 )
+            //  Skip local variables that are pointers/etc. to functions
+            //&& !n.is_object_with_function_typeid()
             )
         {
             push_activation( declaration_sym( true, &n, n.name(), n.initializer.get(), inside_out_parameter, false, inside_returns_list ) );
@@ -2450,7 +2455,7 @@ public:
                 )
             //  Skip non-out parameters
             && (
-                !inside_parameter_list
+                inside_parameter_list.empty()
                 || inside_out_parameter
                 )
             //  Skip local variables that are pointers/etc. to functions
@@ -2673,7 +2678,7 @@ public:
             )
         {
             started_postfix_expression = false;
-            if (!inside_parameter_identifier)
+            if (inside_parameter_identifier.empty())
             {
                 //  Put this into the table if it's a use of an object in scope
                 //  or it's a 'copy' parameter (but to be a use it must be after

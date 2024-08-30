@@ -268,18 +268,11 @@ issue_857_6: @struct type = {
   i: std::add_lvalue_reference_t<int> = gi;
 }
 
-// TODO Alias `std::move_only_function`.
-move_only_function: <T> type = {
-  operator=: (out this) = { }
-  operator=: (out this, move that) = { }
-  operator(): (move this, _...) -> int = 0;
-}
-
 issue_857_4: @struct type = {
-   f: std::add_pointer_t<int()>;
-   g: std::add_pointer_t<int(int)>;
-  mf: move_only_function<int()>;
-  mg: move_only_function<int(int)>;
+   f: std::add_pointer_t<()->int>;
+   g: std::add_pointer_t<(_:int)->int>;
+  mf: std::move_only_function<()->int>;
+  mg: std::move_only_function<(_:int)->int>;
 //   h0: (move this) = _ = mf();
 //   h1: (move this) = _ = this.mf();
 //   h2: (move this, that) = _ = that.mf();
@@ -348,7 +341,7 @@ issue_857_7: @struct type = {
 
 issue_857_8: @struct type = {
   a: std::unique_ptr<int>;
-  b: move_only_function<int()>;
+  b: std::move_only_function<()->int>;
   c: std::add_lvalue_reference_t<int>;
   d: (move this) = { }
 }
@@ -777,7 +770,7 @@ issue_884: () = {
 issue_888_0: (copy r: std::string, copy size: int) = {
   _ = r.size();
 }
-issue_888_1: (copy _: std::string, copy size: move_only_function<int(int)>) = {
+issue_888_1: (copy _: std::string, copy size: std::move_only_function<(_:int)->int>) = {
   _ = 0.size();
 }
 
@@ -794,7 +787,7 @@ issue_962: (s: ::std::string) = {
 
 draw: () = {
   pos := 0;
-  vertex: move_only_function<int(int)> = ();
+  vertex: std::move_only_function<(_:int)->int> = ();
   _ = (pos).vertex();
 }
 

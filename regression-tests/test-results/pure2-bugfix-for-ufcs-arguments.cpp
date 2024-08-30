@@ -81,9 +81,11 @@ class A {
 class B {
   public: A m; 
   public: auto f() const& -> void;
-  public: B(auto const& m_);
+  public: B(auto&& m_)
+CPP2_REQUIRES_ (std::is_same_v<A, CPP2_TYPEOF(m_)>) ;
 
-public: auto operator=(auto const& m_) -> B& ;
+public: auto operator=(auto&& m_) -> B& 
+CPP2_REQUIRES_ (std::is_same_v<A, CPP2_TYPEOF(m_)>) ;
 
 #line 71 "pure2-bugfix-for-ufcs-arguments.cpp2"
 };
@@ -172,9 +174,11 @@ namespace ns {
 #line 70 "pure2-bugfix-for-ufcs-arguments.cpp2"
   auto B::f() const& -> void { CPP2_UFCS(f)(m);  }
 
-  B::B(auto const& m_)
-                                             : m{ m_ }{}
+  B::B(auto&& m_)
+requires (std::is_same_v<A, CPP2_TYPEOF(m_)>) 
+                                                         : m{ CPP2_FORWARD(m_) }{}
 
-auto B::operator=(auto const& m_) -> B& {
-                                             m = m_;
-                                             return *this;}
+auto B::operator=(auto&& m_) -> B& 
+requires (std::is_same_v<A, CPP2_TYPEOF(m_)>) {
+                                                         m = CPP2_FORWARD(m_);
+                                                         return *this;}
