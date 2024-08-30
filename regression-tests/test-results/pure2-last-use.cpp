@@ -245,10 +245,10 @@ class issue_857 {
 class issue_857_2 {
   public: std::unique_ptr<int> a; 
   public: issue_857_2(auto&& a_)
-CPP2_REQUIRES_ (std::is_same_v<std::unique_ptr<int>, CPP2_TYPEOF(a_)>) ;
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(a_), std::add_const_t<std::unique_ptr<int>>&>) ;
 
 public: auto operator=(auto&& a_) -> issue_857_2& 
-CPP2_REQUIRES_ (std::is_same_v<std::unique_ptr<int>, CPP2_TYPEOF(a_)>) ;
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(a_), std::add_const_t<std::unique_ptr<int>>&>) ;
 
 #line 258 "pure2-last-use.cpp2"
                            // OK: No error about 'a' being unused.
@@ -260,10 +260,10 @@ class issue_857_3 {
   public: std::add_lvalue_reference_t<int> i {gi}; 
   public: auto f() && -> void;
   public: issue_857_3(auto&& i_)
-CPP2_REQUIRES_ (std::is_same_v<std::add_lvalue_reference_t<int>, CPP2_TYPEOF(i_)>) ;
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(i_), std::add_const_t<std::add_lvalue_reference_t<int>>&>) ;
 
 public: auto operator=(auto&& i_) -> issue_857_3& 
-CPP2_REQUIRES_ (std::is_same_v<std::add_lvalue_reference_t<int>, CPP2_TYPEOF(i_)>) ;
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(i_), std::add_const_t<std::add_lvalue_reference_t<int>>&>) ;
 public: issue_857_3();
 
 #line 265 "pure2-last-use.cpp2"
@@ -272,10 +272,10 @@ class issue_857_6 {
   public: auto f() && -> void;
   public: std::add_lvalue_reference_t<int> i {gi}; 
   public: issue_857_6(auto&& i_)
-CPP2_REQUIRES_ (std::is_same_v<std::add_lvalue_reference_t<int>, CPP2_TYPEOF(i_)>) ;
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(i_), std::add_const_t<std::add_lvalue_reference_t<int>>&>) ;
 
 public: auto operator=(auto&& i_) -> issue_857_6& 
-CPP2_REQUIRES_ (std::is_same_v<std::add_lvalue_reference_t<int>, CPP2_TYPEOF(i_)>) ;
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(i_), std::add_const_t<std::add_lvalue_reference_t<int>>&>) ;
 public: issue_857_6();
 
 #line 269 "pure2-last-use.cpp2"
@@ -287,7 +287,7 @@ class issue_857_4 {
   public: std::move_only_function<int()> mf; 
   public: std::move_only_function<int([[maybe_unused]] cpp2::impl::in<int> unnamed_param_1)> mg; 
   public: issue_857_4(auto&& f_, auto&& g_, auto&& mf_, auto&& mg_)
-CPP2_REQUIRES_ (std::is_same_v<std::add_pointer_t<int()>, CPP2_TYPEOF(f_)> && std::is_same_v<std::add_pointer_t<int(cpp2::impl::in<int> in_)>, CPP2_TYPEOF(g_)> && std::is_same_v<std::move_only_function<int()>, CPP2_TYPEOF(mf_)> && std::is_same_v<std::move_only_function<int(cpp2::impl::in<int> in_)>, CPP2_TYPEOF(mg_)>) ;
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(f_), std::add_const_t<std::add_pointer_t<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(g_), std::add_const_t<std::add_pointer_t<int(cpp2::impl::in<int> in_)>>&> && std::is_convertible_v<CPP2_TYPEOF(mf_), std::add_const_t<std::move_only_function<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(mg_), std::add_const_t<std::move_only_function<int(cpp2::impl::in<int> in_)>>&>) ;
 
 //   h0: (move this) = _ = mf();
 //   h1: (move this) = _ = this.mf();
@@ -349,10 +349,10 @@ class issue_857_5 {
   public: auto f() && -> void;
   public: std::unique_ptr<int> a; 
   public: issue_857_5(auto&& a_)
-CPP2_REQUIRES_ (std::is_same_v<std::unique_ptr<int>, CPP2_TYPEOF(a_)>) ;
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(a_), std::add_const_t<std::unique_ptr<int>>&>) ;
 
 public: auto operator=(auto&& a_) -> issue_857_5& 
-CPP2_REQUIRES_ (std::is_same_v<std::unique_ptr<int>, CPP2_TYPEOF(a_)>) ;
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(a_), std::add_const_t<std::unique_ptr<int>>&>) ;
 
 #line 334 "pure2-last-use.cpp2"
 };
@@ -364,7 +364,7 @@ class issue_857_7: public issue_857_7_A_as_base, public std::monostate {
 #line 339 "pure2-last-use.cpp2"
   public: auto F() && -> void;
   public: issue_857_7(auto&& A_)
-CPP2_REQUIRES_ (std::is_same_v<std::add_lvalue_reference_t<int>, CPP2_TYPEOF(A_)>) ;
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(A_), std::add_const_t<std::add_lvalue_reference_t<int>>&>) ;
 
 #line 340 "pure2-last-use.cpp2"
 };
@@ -375,7 +375,7 @@ class issue_857_8 {
   public: std::add_lvalue_reference_t<int> c; 
   public: auto d() && -> void;
   public: issue_857_8(auto&& a_, auto&& b_, auto&& c_)
-CPP2_REQUIRES_ (std::is_same_v<std::unique_ptr<int>, CPP2_TYPEOF(a_)> && std::is_same_v<std::move_only_function<int()>, CPP2_TYPEOF(b_)> && std::is_same_v<std::add_lvalue_reference_t<int>, CPP2_TYPEOF(c_)>) ;
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(a_), std::add_const_t<std::unique_ptr<int>>&> && std::is_convertible_v<CPP2_TYPEOF(b_), std::add_const_t<std::move_only_function<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(c_), std::add_const_t<std::add_lvalue_reference_t<int>>&>) ;
 
 #line 347 "pure2-last-use.cpp2"
 };
@@ -474,7 +474,7 @@ class my_string {
   public: std::string string; 
   public: std::size_t size {CPP2_UFCS(size)(string)}; 
   public: my_string(auto&& string_, auto&& size_)
-CPP2_REQUIRES_ (std::is_same_v<std::string, CPP2_TYPEOF(string_)> && std::is_same_v<std::size_t, CPP2_TYPEOF(size_)>) ;
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(string_), std::add_const_t<std::string>&> && std::is_convertible_v<CPP2_TYPEOF(size_), std::add_const_t<std::size_t>&>) ;
 
 #line 849 "pure2-last-use.cpp2"
 };
@@ -510,10 +510,10 @@ class t {
   public: std::unique_ptr<int> x; 
   public: auto operator()() && -> void;
   public: t(auto&& x_)
-CPP2_REQUIRES_ (std::is_same_v<std::unique_ptr<int>, CPP2_TYPEOF(x_)>) ;
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(x_), std::add_const_t<std::unique_ptr<int>>&>) ;
 
 public: auto operator=(auto&& x_) -> t& 
-CPP2_REQUIRES_ (std::is_same_v<std::unique_ptr<int>, CPP2_TYPEOF(x_)>) ;
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(x_), std::add_const_t<std::unique_ptr<int>>&>) ;
 
 #line 932 "pure2-last-use.cpp2"
 };
@@ -529,10 +529,10 @@ auto loops_and_captures() -> void;
 class types {
   public: std::unique_ptr<int> x; 
   public: types(auto&& x_)
-CPP2_REQUIRES_ (std::is_same_v<std::unique_ptr<int>, CPP2_TYPEOF(x_)>) ;
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(x_), std::add_const_t<std::unique_ptr<int>>&>) ;
 
 public: auto operator=(auto&& x_) -> types& 
-CPP2_REQUIRES_ (std::is_same_v<std::unique_ptr<int>, CPP2_TYPEOF(x_)>) ;
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(x_), std::add_const_t<std::unique_ptr<int>>&>) ;
 
 #line 980 "pure2-last-use.cpp2"
 //   f: (move this) = _ = :() x$*;
@@ -734,11 +734,11 @@ auto issue_850() -> void{
   auto issue_857::h() & -> void { f_inout(a);  }
 
   issue_857_2::issue_857_2(auto&& a_)
-requires (std::is_same_v<std::unique_ptr<int>, CPP2_TYPEOF(a_)>) 
+requires (std::is_convertible_v<CPP2_TYPEOF(a_), std::add_const_t<std::unique_ptr<int>>&>) 
                                                                             : a{ CPP2_FORWARD(a_) }{}
 
 auto issue_857_2::operator=(auto&& a_) -> issue_857_2& 
-requires (std::is_same_v<std::unique_ptr<int>, CPP2_TYPEOF(a_)>) {
+requires (std::is_convertible_v<CPP2_TYPEOF(a_), std::add_const_t<std::unique_ptr<int>>&>) {
                                                                             a = CPP2_FORWARD(a_);
                                                                             return *this;}
 #line 261 "pure2-last-use.cpp2"
@@ -748,11 +748,11 @@ int gi {0};
   auto issue_857_3::f() && -> void { f_inout(cpp2::move(*this).i);  }
 
   issue_857_3::issue_857_3(auto&& i_)
-requires (std::is_same_v<std::add_lvalue_reference_t<int>, CPP2_TYPEOF(i_)>) 
+requires (std::is_convertible_v<CPP2_TYPEOF(i_), std::add_const_t<std::add_lvalue_reference_t<int>>&>) 
                                                                                         : i{ CPP2_FORWARD(i_) }{}
 
 auto issue_857_3::operator=(auto&& i_) -> issue_857_3& 
-requires (std::is_same_v<std::add_lvalue_reference_t<int>, CPP2_TYPEOF(i_)>) {
+requires (std::is_convertible_v<CPP2_TYPEOF(i_), std::add_const_t<std::add_lvalue_reference_t<int>>&>) {
                                                                                         i = CPP2_FORWARD(i_);
                                                                                         return *this;}
 issue_857_3::issue_857_3(){}
@@ -763,16 +763,16 @@ issue_857_3::issue_857_3(){}
   auto issue_857_6::f() && -> void { f_inout(cpp2::move(*this).i);  }
 
   issue_857_6::issue_857_6(auto&& i_)
-requires (std::is_same_v<std::add_lvalue_reference_t<int>, CPP2_TYPEOF(i_)>) 
+requires (std::is_convertible_v<CPP2_TYPEOF(i_), std::add_const_t<std::add_lvalue_reference_t<int>>&>) 
                                                                                         : i{ CPP2_FORWARD(i_) }{}
 
 auto issue_857_6::operator=(auto&& i_) -> issue_857_6& 
-requires (std::is_same_v<std::add_lvalue_reference_t<int>, CPP2_TYPEOF(i_)>) {
+requires (std::is_convertible_v<CPP2_TYPEOF(i_), std::add_const_t<std::add_lvalue_reference_t<int>>&>) {
                                                                                         i = CPP2_FORWARD(i_);
                                                                                         return *this;}
 issue_857_6::issue_857_6(){}
 issue_857_4::issue_857_4(auto&& f_, auto&& g_, auto&& mf_, auto&& mg_)
-requires (std::is_same_v<std::add_pointer_t<int()>, CPP2_TYPEOF(f_)> && std::is_same_v<std::add_pointer_t<int(cpp2::impl::in<int> in_)>, CPP2_TYPEOF(g_)> && std::is_same_v<std::move_only_function<int()>, CPP2_TYPEOF(mf_)> && std::is_same_v<std::move_only_function<int(cpp2::impl::in<int> in_)>, CPP2_TYPEOF(mg_)>) 
+requires (std::is_convertible_v<CPP2_TYPEOF(f_), std::add_const_t<std::add_pointer_t<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(g_), std::add_const_t<std::add_pointer_t<int(cpp2::impl::in<int> in_)>>&> && std::is_convertible_v<CPP2_TYPEOF(mf_), std::add_const_t<std::move_only_function<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(mg_), std::add_const_t<std::move_only_function<int(cpp2::impl::in<int> in_)>>&>) 
                                                                                                                                                                                                                                                                              : f{ CPP2_FORWARD(f_) }
                                                                                                                                                                                                                                                                              , g{ CPP2_FORWARD(g_) }
                                                                                                                                                                                                                                                                              , mf{ CPP2_FORWARD(mf_) }
@@ -784,18 +784,18 @@ requires (std::is_same_v<std::add_pointer_t<int()>, CPP2_TYPEOF(f_)> && std::is_
   auto issue_857_5::f() && -> void { f_copy(std::move(cpp2::move(*this).a));  }
 
   issue_857_5::issue_857_5(auto&& a_)
-requires (std::is_same_v<std::unique_ptr<int>, CPP2_TYPEOF(a_)>) 
+requires (std::is_convertible_v<CPP2_TYPEOF(a_), std::add_const_t<std::unique_ptr<int>>&>) 
                                                                             : a{ CPP2_FORWARD(a_) }{}
 
 auto issue_857_5::operator=(auto&& a_) -> issue_857_5& 
-requires (std::is_same_v<std::unique_ptr<int>, CPP2_TYPEOF(a_)>) {
+requires (std::is_convertible_v<CPP2_TYPEOF(a_), std::add_const_t<std::unique_ptr<int>>&>) {
                                                                             a = CPP2_FORWARD(a_);
                                                                             return *this;}
 #line 339 "pure2-last-use.cpp2"
   auto issue_857_7::F() && -> void { f_inout(cpp2::move(*this).A);  }
 
   issue_857_7::issue_857_7(auto&& A_)
-requires (std::is_same_v<std::add_lvalue_reference_t<int>, CPP2_TYPEOF(A_)>) 
+requires (std::is_convertible_v<CPP2_TYPEOF(A_), std::add_const_t<std::add_lvalue_reference_t<int>>&>) 
                                                                                         : issue_857_7_A_as_base{ CPP2_FORWARD(A_) }
                                                                                         , std::monostate{  }{}
 
@@ -803,7 +803,7 @@ requires (std::is_same_v<std::add_lvalue_reference_t<int>, CPP2_TYPEOF(A_)>)
   auto issue_857_8::d() && -> void{}
 
   issue_857_8::issue_857_8(auto&& a_, auto&& b_, auto&& c_)
-requires (std::is_same_v<std::unique_ptr<int>, CPP2_TYPEOF(a_)> && std::is_same_v<std::move_only_function<int()>, CPP2_TYPEOF(b_)> && std::is_same_v<std::add_lvalue_reference_t<int>, CPP2_TYPEOF(c_)>) 
+requires (std::is_convertible_v<CPP2_TYPEOF(a_), std::add_const_t<std::unique_ptr<int>>&> && std::is_convertible_v<CPP2_TYPEOF(b_), std::add_const_t<std::move_only_function<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(c_), std::add_const_t<std::add_lvalue_reference_t<int>>&>) 
                                                                                                                                                                                  : a{ CPP2_FORWARD(a_) }
                                                                                                                                                                                  , b{ CPP2_FORWARD(b_) }
                                                                                                                                                                                  , c{ CPP2_FORWARD(c_) }{}
@@ -1357,7 +1357,7 @@ auto enum_2() -> void{
   }
 
   my_string::my_string(auto&& string_, auto&& size_)
-requires (std::is_same_v<std::string, CPP2_TYPEOF(string_)> && std::is_same_v<std::size_t, CPP2_TYPEOF(size_)>) 
+requires (std::is_convertible_v<CPP2_TYPEOF(string_), std::add_const_t<std::string>&> && std::is_convertible_v<CPP2_TYPEOF(size_), std::add_const_t<std::size_t>&>) 
                                                                                                      : string{ CPP2_FORWARD(string_) }
                                                                                                      , size{ CPP2_FORWARD(size_) }{}
 
@@ -1449,11 +1449,11 @@ auto f() -> void{
   }
 
   t::t(auto&& x_)
-requires (std::is_same_v<std::unique_ptr<int>, CPP2_TYPEOF(x_)>) 
+requires (std::is_convertible_v<CPP2_TYPEOF(x_), std::add_const_t<std::unique_ptr<int>>&>) 
                                                                             : x{ CPP2_FORWARD(x_) }{}
 
 auto t::operator=(auto&& x_) -> t& 
-requires (std::is_same_v<std::unique_ptr<int>, CPP2_TYPEOF(x_)>) {
+requires (std::is_convertible_v<CPP2_TYPEOF(x_), std::add_const_t<std::unique_ptr<int>>&>) {
                                                                             x = CPP2_FORWARD(x_);
                                                                             return *this;}
 #line 934 "pure2-last-use.cpp2"
@@ -1502,11 +1502,11 @@ auto loops_and_captures() -> void{
 }
 
 types::types(auto&& x_)
-requires (std::is_same_v<std::unique_ptr<int>, CPP2_TYPEOF(x_)>) 
+requires (std::is_convertible_v<CPP2_TYPEOF(x_), std::add_const_t<std::unique_ptr<int>>&>) 
                                                                             : x{ CPP2_FORWARD(x_) }{}
 
 auto types::operator=(auto&& x_) -> types& 
-requires (std::is_same_v<std::unique_ptr<int>, CPP2_TYPEOF(x_)>) {
+requires (std::is_convertible_v<CPP2_TYPEOF(x_), std::add_const_t<std::unique_ptr<int>>&>) {
                                                                             x = CPP2_FORWARD(x_);
                                                                             return *this;}
 #line 988 "pure2-last-use.cpp2"

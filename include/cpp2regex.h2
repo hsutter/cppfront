@@ -40,7 +40,7 @@ bview  : <CharT> type == std::basic_string_view<CharT>;
 
 //  Structure for storing group information.
 //
-match_group: @struct <Iter> type = 
+match_group: @struct<noforward> <Iter> type = 
 {
     start: Iter = ();
     end: Iter = ();
@@ -50,7 +50,7 @@ match_group: @struct <Iter> type =
 
 //  Return value for every matcher.
 // 
-match_return: @struct <Iter> type = 
+match_return: @struct<noforward> <Iter> type = 
 {
     matched: bool = false;
     pos: Iter = ();
@@ -119,7 +119,7 @@ match_context: <CharT, Iter, max_groups: int> type =
 
 //  End function that returns a valid match.
 //
-true_end_func: @struct type = 
+true_end_func: @struct<noforward> type = 
 {
     operator(): (in this, cur, inout ctx) ctx..pass(cur);
 }
@@ -127,7 +127,7 @@ true_end_func: @struct type =
 
 //  Empty group reset function.
 //
-no_reset: @struct type = 
+no_reset: @struct<noforward> type = 
 {
     operator(): (this, inout _:) = {}
 }

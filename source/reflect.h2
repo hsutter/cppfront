@@ -944,6 +944,11 @@ cpp1_rule_of_zero: (inout t: meta::type_declaration) =
 //  a type with only public bases, objects, and functions,
 //  no virtual functions, and no user-defined constructors
 //  (i.e., no invariants) or assignment or destructors.
+// 
+//  For GCC 10 compatibility, optionally allow passing struct<noforward>
+//  that generates a memberwise constructor with a generic deduced
+//  parameters instead of concrete forwarding parameters (mainly used
+//  for cppfront internal use, so cppfront builds under GCC 10)
 //
 struct: (inout t: meta::type_declaration) =
 {
@@ -966,7 +971,12 @@ struct: (inout t: meta::type_declaration) =
         else if m.is_object() {
             mo: = m.as_object();
             if mo.name() != "this" {
-                ctor_params += "forward (mo.name())$_ : (mo.type())$, ";
+                if t.get_argument(0) == "noforward" {
+                    ctor_params += "(mo.name())$_, ";
+                }
+                else {
+                    ctor_params += "forward (mo.name())$_ : (mo.type())$, ";
+                }
                 ctor_inits  += "(mo.name())$ = (mo.name())$_; ";
             }
             else {
@@ -1009,7 +1019,7 @@ struct: (inout t: meta::type_declaration) =
 //
 //  a type together with named constants that are its possible values
 //
-value_member_info: @struct type = {
+value_member_info: @struct<noforward> type = {
     name  : std::string;
     type  : std::string;
     value : std::string;
@@ -1662,7 +1672,7 @@ regex_token_list: @polymorphic_base type =
 
 //  State of the current capturing group. See '(<pattern>)'
 //
-parse_context_group_state: @struct type = 
+parse_context_group_state: @struct<noforward> type = 
 {    
     cur_match_list:        token_vec = ();         // Current list of matchers.
     alternate_match_lists: token_vec = ();         // List of alternate matcher lists. E.g. ab|cd|xy.
@@ -1723,7 +1733,7 @@ parse_context_group_state: @struct type =
 
 //  State for the branch reset. Takes care of the group numbering. See '(|<pattern>)'.
 //
-parse_context_branch_reset_state: @struct type = 
+parse_context_branch_reset_state: @struct<noforward> type = 
 {
     is_active : bool = false; // If we have a branch reset group.
     cur_group : int  = 1;     // Next group identifier. 0 == global capture group.
@@ -2164,7 +2174,7 @@ parse_context: type =
 //  Context for one function generation. Generation of functions can be interleaved,
 //  therefore we buffer the code for one function here.
 //
-generation_function_context: @struct type = {
+generation_function_context: @struct<noforward> type = {
     code: std::string = "";
     tabs: std::string = "";
 
@@ -2222,7 +2232,7 @@ generation_context: type =
     {
         cur := new_context();
 
-        cur*.code += "(cur*.tabs)$(name)$: @struct type = {\n";
+        cur*.code += "(cur*.tabs)$(name)$: @struct<noforward> type = {\n";
         cur*.code += "(cur*.tabs)$  operator(): (this, cur: Iter, inout ctx: context, other) -> cpp2::regex::match_return<Iter> = {\n";
         cur*.code += "(cur*.tabs)$    r := ctx..pass(cur);\n";
         cur*.code += "(cur*.tabs)$    do {\n";
@@ -2275,7 +2285,7 @@ generation_context: type =
         name := gen_reset_func_name();
         cur := new_context();
 
-        cur*.code += "(cur*.tabs)$(name)$: @struct type = {\n";
+        cur*.code += "(cur*.tabs)$(name)$: @struct<noforward> type = {\n";
         cur*.code += "(cur*.tabs)$  operator(): (this, inout ctx) = {\n";
         for groups do (g) {
             cur*.code += "(cur*.tabs)$  ctx..set_group_invalid((g)$);\n";
@@ -3730,15 +3740,6 @@ apply_metafunctions: (
                 "copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, "
                 "struct, enum, flag_enum, union, cpp1_rule_of_zero, regex, print"
             );
-            return false;
-        }
-
-        if (
-            !args.empty()
-            && !rtype.arguments_were_used()
-            )
-        {
-            error( name + " did not use its template arguments - did you mean to write '" + name + " <" + args[0] + "> type' (with the spaces)?");
             return false;
         }
     }

@@ -4646,10 +4646,8 @@ public:
                 && !type_id.is_wildcard()
                 )
             {
-                auto name = n.declaration->identifier->get_token();
-                assert(name);
                 auto req = std::string{"(std::is_convertible_v<CPP2_TYPEOF("};
-                req += *name;
+                req += identifier;
                 req += "), ";
                 req += param_type;
                 req += "> && ...)";
@@ -4675,13 +4673,11 @@ public:
             }
 
             if (type_id.constraint) {
-                auto name = n.declaration->identifier->get_token();
-                assert(name);
                 auto req = print_to_string(*type_id.constraint);
                 if (auto pos = req.find('<'); pos != req.npos) {
-                    req.insert(pos+1, "CPP2_TYPEOF(" + name->to_string() + "), ");
+                    req.insert(pos+1, "CPP2_TYPEOF(" + identifier + "), ");
                 } else {
-                    req.append("<CPP2_TYPEOF("+ name->to_string() +")>");
+                    req.append("<CPP2_TYPEOF("+ identifier +")>");
                 }
                 function_requires_conditions.push_back(req);
             }
@@ -4689,13 +4685,11 @@ public:
         else if (n.pass == passing_style::forward) {
             printer.print_cpp2("auto", n.position());
 
-            auto name = n.declaration->identifier->get_token();
-            assert(name);
-            auto req = std::string{"std::is_same_v<"};
+            auto req = std::string{"std::is_convertible_v<CPP2_TYPEOF("};
+            req += identifier;
+            req += "), std::add_const_t<";
             req += param_type;
-            req += ", CPP2_TYPEOF(";
-            req += *name;
-            req += ")>";
+            req += ">&>";
             function_requires_conditions.push_back(req);
         }
         else {

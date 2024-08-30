@@ -28,10 +28,10 @@ using doubler_ret = int;
 #line 9 "pure2-trailing-commas.cpp2"
 class vals {public: int i; 
 public: vals(auto&& i_)
-CPP2_REQUIRES_ (std::is_same_v<int, CPP2_TYPEOF(i_)>) ;
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(i_), std::add_const_t<int>&>) ;
 
 public: auto operator=(auto&& i_) -> vals& 
-CPP2_REQUIRES_ (std::is_same_v<int, CPP2_TYPEOF(i_)>) ;
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(i_), std::add_const_t<int>&>) ;
 
 #line 9 "pure2-trailing-commas.cpp2"
 };
@@ -54,11 +54,11 @@ template<typename T, typename U> [[nodiscard]] auto g(T const& a, U const& b) ->
 return std::move(i.value()); }
 
 vals::vals(auto&& i_)
-requires (std::is_same_v<int, CPP2_TYPEOF(i_)>) 
+requires (std::is_convertible_v<CPP2_TYPEOF(i_), std::add_const_t<int>&>) 
                                                            : i{ CPP2_FORWARD(i_) }{}
 
 auto vals::operator=(auto&& i_) -> vals& 
-requires (std::is_same_v<int, CPP2_TYPEOF(i_)>) {
+requires (std::is_convertible_v<CPP2_TYPEOF(i_), std::add_const_t<int>&>) {
                                                            i = CPP2_FORWARD(i_);
                                                            return *this;}
 #line 11 "pure2-trailing-commas.cpp2"
