@@ -1,0 +1,32 @@
+void throw_error(CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM) {
+    throw std::runtime_error(std::string("Type safety exception: ") + msg);
+}
+
+make_throwable: (inout cg : cpp2::contract_group) -> _ = {
+    h := cg.get_handler();
+    sh := :(pcg : *cpp2::contract_group) = {
+        pcg*.set_handler(h$);
+    };
+    cg.set_handler(throw_error);
+    return std::unique_ptr<cpp2::contract_group, decltype(sh)>(cg&, sh);
+}
+
+void expect_no_throw(auto&& fun) try {
+    fun();
+} catch(std::exception const& e) {
+    std::cout << e.what() << std::endl;
+} catch(...) {
+    std::cout << "Unknown exception!" << std::endl;
+}
+
+main: () = {
+    o : std::optional<int> = ();
+
+    (_ := make_throwable(cpp2::type_safety)) {
+        expect_no_throw( :() = {
+            std::cout << (o$ as int) << std::endl; // that will throw
+        });
+    }
+
+    std::cout << (o as int) << std::endl; // that will terminate
+}
