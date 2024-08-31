@@ -4064,11 +4064,6 @@ public:
     )
         -> void
     {   STACKINSTR
-        if (n.default_initializer) {
-          printer.print_cpp2("{}", n.position());
-          return;
-        }
-
         auto add_parens =
             should_add_expression_list_parens()
             && !n.inside_initializer
@@ -4078,6 +4073,14 @@ public:
             n.is_fold_expression() &&
             !(n.inside_initializer && current_declarations.back()->initializer->position() != n.open_paren->position())
             ;
+
+        if (n.default_initializer) {
+            if (add_parens) {
+                printer.print_cpp2("{}", n.position());
+            }
+            return;
+        }
+
         if (add_parens) {
             printer.print_cpp2( *n.open_paren, n.position());
         }
