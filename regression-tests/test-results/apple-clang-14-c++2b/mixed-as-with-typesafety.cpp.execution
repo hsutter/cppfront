@@ -1,0 +1,3 @@
+Type safety exception: 'as' cast failed for 'std::optional'
+Type safety violation: 'as' cast failed for 'std::optional'
+libc++abi: terminating

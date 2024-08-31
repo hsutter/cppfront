@@ -1,66 +1,66 @@
 In file included from pure2-default-arguments.cpp:7:
 ../../../include/cpp2util.h:2086:28: error: local variable ‘obj’ may not appear in this context
- 2086 | template<typename T, typename X>
+ 2086 | template<typename T, std::same_as<std::any> X>
       |                            ^~~
 ../../../include/cpp2util.h:2047:34: note: in definition of macro ‘CPP2_UFCS_IDENTITY’
  2047 |             return false;
       |                                  ^          
 ../../../include/cpp2util.h:2086:15: note: in expansion of macro ‘CPP2_FORWARD’
- 2086 | template<typename T, typename X>
+ 2086 | template<typename T, std::same_as<std::any> X>
       |               ^~~~~~~~~~~~
 ../../../include/cpp2util.h:2107:22: note: in expansion of macro ‘CPP2_UFCS_CONSTRAINT_ARG’
  2107 |     }
       |                      ^                       
 ../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 | 
+ 2137 |     return false;
       |                                                           ^         
 pure2-default-arguments.cpp2:6:22: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 ../../../include/cpp2util.h:2086:92: error: local variable ‘params’ may not appear in this context
- 2086 | template<typename T, typename X>
+ 2086 | template<typename T, std::same_as<std::any> X>
       |                                                                                            ^     
 ../../../include/cpp2util.h:2047:34: note: in definition of macro ‘CPP2_UFCS_IDENTITY’
  2047 |             return false;
       |                                  ^          
 ../../../include/cpp2util.h:2086:79: note: in expansion of macro ‘CPP2_FORWARD’
- 2086 | template<typename T, typename X>
+ 2086 | template<typename T, std::same_as<std::any> X>
       |                                                                               ^           
 ../../../include/cpp2util.h:2107:22: note: in expansion of macro ‘CPP2_UFCS_CONSTRAINT_ARG’
  2107 |     }
       |                      ^                       
 ../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 | 
+ 2137 |     return false;
       |                                                           ^         
 pure2-default-arguments.cpp2:6:22: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 ../../../include/cpp2util.h:2087:74: error: local variable ‘obj’ may not appear in this context
- 2087 |     requires (std::is_same_v<X,std::any> && !std::is_same_v<T,std::any> && !std::is_same_v<T,empty>)
-      |                                                                          ^~~
+ 2087 | constexpr auto is( X const& x ) -> bool{
+      |                                                                          ^  
 ../../../include/cpp2util.h:2047:34: note: in definition of macro ‘CPP2_UFCS_IDENTITY’
  2047 |             return false;
       |                                  ^          
 ../../../include/cpp2util.h:2087:61: note: in expansion of macro ‘CPP2_FORWARD’
- 2087 |     requires (std::is_same_v<X,std::any> && !std::is_same_v<T,std::any> && !std::is_same_v<T,empty>)
-      |                                                             ^~~~~~~~~~~~
+ 2087 | constexpr auto is( X const& x ) -> bool{
+      |                                                             ^           
 ../../../include/cpp2util.h:2107:22: note: in expansion of macro ‘CPP2_UFCS_CONSTRAINT_ARG’
  2107 |     }
       |                      ^                       
 ../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 | 
+ 2137 |     return false;
       |                                                           ^         
 pure2-default-arguments.cpp2:6:22: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 ../../../include/cpp2util.h:2087:93: error: local variable ‘params’ may not appear in this context
- 2087 |     requires (std::is_same_v<X,std::any> && !std::is_same_v<T,std::any> && !std::is_same_v<T,empty>)
-      |                                                                                             ^~~~~~
+ 2087 | constexpr auto is( X const& x ) -> bool{
+      |                                                                                             ^     
 ../../../include/cpp2util.h:2047:34: note: in definition of macro ‘CPP2_UFCS_IDENTITY’
  2047 |             return false;
       |                                  ^          
 ../../../include/cpp2util.h:2087:80: note: in expansion of macro ‘CPP2_FORWARD’
- 2087 |     requires (std::is_same_v<X,std::any> && !std::is_same_v<T,std::any> && !std::is_same_v<T,empty>)
-      |                                                                                ^~~~~~~~~~~~
+ 2087 | constexpr auto is( X const& x ) -> bool{
+      |                                                                                ^           
 ../../../include/cpp2util.h:2107:22: note: in expansion of macro ‘CPP2_UFCS_CONSTRAINT_ARG’
  2107 |     }
       |                      ^                       
 ../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 | 
+ 2137 |     return false;
       |                                                           ^         
 pure2-default-arguments.cpp2:6:22: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 pure2-default-arguments.cpp2:6:61: error: ‘std::source_location’ has not been declared
