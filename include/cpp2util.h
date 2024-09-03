@@ -2083,27 +2083,21 @@ auto as(X&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT_AS) -> decltype(auto)
 
 //  is Type
 //
-template<typename T, typename X>
-    requires (std::is_same_v<X,std::any> && !std::is_same_v<T,std::any> && !std::is_same_v<T,empty>)
-constexpr auto is( X const& x ) -> bool
-    { return x.type() == Typeid<T>(); }
-
-template<typename T, typename X>
-    requires (std::is_same_v<X,std::any> && std::is_same_v<T,empty>)
-constexpr auto is( X const& x ) -> bool
-    { return !x.has_value(); }
-
+template<typename T, std::same_as<std::any> X>
+constexpr auto is( X const& x ) -> bool{
+    if (!x.has_value()) {
+        return std::is_same_v<T,empty>;
+    }
+    return x.type() == Typeid<T>(); 
+}
 
 //  is Value
 //
 inline constexpr auto is( std::any const& x, auto&& value ) -> bool
 {
     //  Predicate case
-    if constexpr (requires{ bool{ value(x) }; }) {
+    if constexpr (valid_predicate<decltype(value), decltype(x)>) {
         return value(x);
-    }
-    else if constexpr (std::is_function_v<decltype(value)> || requires{ &value.operator(); }) {
-        return false;
     }
 
     //  Value case
@@ -2118,10 +2112,12 @@ inline constexpr auto is( std::any const& x, auto&& value ) -> bool
 
 //  as
 //
-template<typename T, typename X>
-    requires (!std::is_reference_v<T> && std::is_same_v<X,std::any> && !std::is_same_v<T,std::any>)
-constexpr auto as( X const& x ) -> T
-    { return std::any_cast<T>( x ); }
+template<typename T, same_type_as<std::any> X>
+constexpr auto as( X && x ) -> decltype(auto) {
+    constness_like_t<T, X>* ptr = std::any_cast<T>( &x );
+    if (!ptr) { Throw( std::bad_any_cast(), "'as' cast failed for 'std::any'"); }
+    return cpp2::forward_like<X>(*ptr);
+}
 
 
 //-------------------------------------------------------------------------------------------------------------
@@ -2130,16 +2126,16 @@ constexpr auto as( X const& x ) -> T
 
 //  is Type
 //
-template<typename T, typename X>
-    requires std::is_same_v<X,std::optional<T>>
-constexpr auto is( X const& x ) -> bool
-    { return x.has_value(); }
-
-template<typename T, typename U>
-    requires std::is_same_v<T,empty>
-constexpr auto is( std::optional<U> const& x ) -> bool
-    { return !x.has_value(); }
-
+template<typename T, specialization_of_template<std::optional> X>
+constexpr auto is( X const& x ) -> bool { 
+    if (!x.has_value()) {
+        return std::same_as<T, empty>;
+    }
+    if constexpr (requires { static_cast<const T&>(*x);}) {
+        return true;
+    }
+    return false;
+}
 
 //  is Value
 //
@@ -2147,11 +2143,8 @@ template<typename T>
 constexpr auto is( std::optional<T> const& x, auto&& value ) -> bool
 {
     //  Predicate case
-    if constexpr (requires{ bool{ value(x) }; }) {
+    if constexpr (valid_predicate<decltype(value), decltype(x)>) {
         return value(x);
-    }
-    else if constexpr (std::is_function_v<decltype(value)> || requires{ &value.operator(); }) {
-        return false;
     }
 
     //  Value case
@@ -2164,10 +2157,17 @@ constexpr auto is( std::optional<T> const& x, auto&& value ) -> bool
 
 //  as
 //
-template<typename T, typename X>
-    requires std::is_same_v<X,std::optional<T>>
-constexpr auto as( X const& x ) -> decltype(auto)
-    { return x.value(); }
+template<typename T, specialization_of_template<std::optional> X>
+constexpr auto as( X&& x ) -> decltype(auto) { 
+    constness_like_t<T, X>* ptr = nullptr;
+    if constexpr (requires { static_cast<constness_like_t<T, X>&>(*x); }) {
+        if (x.has_value()) {
+            ptr = &static_cast<constness_like_t<T, X>&>(*x);
+        }
+    }
+    if (!ptr) { Throw( std::bad_optional_access(), "'as' cast failed for 'std::optional'"); }
+    return cpp2::forward_like<X>(*ptr);
+}
 
 
 } // impl
