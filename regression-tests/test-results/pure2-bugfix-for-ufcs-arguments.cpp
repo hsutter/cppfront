@@ -81,9 +81,11 @@ class A {
 class B {
   public: A m; 
   public: auto f() const& -> void;
-  public: B(auto const& m_);
+  public: B(auto&& m_)
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(m_), std::add_const_t<A>&>) ;
 
-public: auto operator=(auto const& m_) -> B& ;
+public: auto operator=(auto&& m_) -> B& 
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(m_), std::add_const_t<A>&>) ;
 
 #line 71 "pure2-bugfix-for-ufcs-arguments.cpp2"
 };
@@ -151,7 +153,7 @@ auto main() -> int{
   static_cast<void>(CPP2_UFCS_TEMPLATE(f<t,t>)(n, 0, 0));
   static_cast<void>(CPP2_UFCS_TEMPLATE(f<t,t>)(a<t,t>, 0, 0));
 
-  static_cast<void>([](auto const& a, auto const& f) mutable -> void{static_cast<void>(CPP2_UFCS(f)(CPP2_UFCS(f)(a, a))); });
+  static_cast<void>([](auto const& a, auto const& f) -> void{static_cast<void>(CPP2_UFCS(f)(CPP2_UFCS(f)(a, a))); });
   // _ = 0.std::min<int>(0);
   static_cast<void>(CPP2_UFCS_QUALIFIED_TEMPLATE((ns::t<0,0>::),f<0>)(0));
 }
@@ -172,9 +174,11 @@ namespace ns {
 #line 70 "pure2-bugfix-for-ufcs-arguments.cpp2"
   auto B::f() const& -> void { CPP2_UFCS(f)(m);  }
 
-  B::B(auto const& m_)
-                                             : m{ m_ }{}
+  B::B(auto&& m_)
+requires (std::is_convertible_v<CPP2_TYPEOF(m_), std::add_const_t<A>&>) 
+                                                         : m{ CPP2_FORWARD(m_) }{}
 
-auto B::operator=(auto const& m_) -> B& {
-                                             m = m_;
-                                             return *this;}
+auto B::operator=(auto&& m_) -> B& 
+requires (std::is_convertible_v<CPP2_TYPEOF(m_), std::add_const_t<A>&>) {
+                                                         m = CPP2_FORWARD(m_);
+                                                         return *this;}

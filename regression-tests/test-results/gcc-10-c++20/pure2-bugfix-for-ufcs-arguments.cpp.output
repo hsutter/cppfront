@@ -1,0 +1,19 @@
+pure2-bugfix-for-ufcs-arguments.cpp2:71:22: error: expected ‘;’ at end of member declaration
+In file included from pure2-bugfix-for-ufcs-arguments.cpp:7:
+../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
+pure2-bugfix-for-ufcs-arguments.cpp2:72:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-bugfix-for-ufcs-arguments.cpp2:74:39: error: expected ‘;’ at end of member declaration
+In file included from pure2-bugfix-for-ufcs-arguments.cpp:7:
+../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
+pure2-bugfix-for-ufcs-arguments.cpp2:75:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-bugfix-for-ufcs-arguments.cpp2:72:3: error: no declaration matches ‘B::B(auto:116&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(B::__ct ::m_)>::type>::type, const add_const_t<A>&>’
+pure2-bugfix-for-ufcs-arguments.cpp2:68:7: note: candidates are: ‘constexpr B::B(B&&)’
+pure2-bugfix-for-ufcs-arguments.cpp2:68:7: note:                 ‘constexpr B::B(const B&)’
+pure2-bugfix-for-ufcs-arguments.cpp2:71:11: note:                 ‘template<class auto:104> B::B(auto:104&&)’
+pure2-bugfix-for-ufcs-arguments.cpp2:68:7: note: ‘class B’ defined here
+pure2-bugfix-for-ufcs-arguments.cpp2:74:81: error: expected unqualified-id before ‘{’ token
+pure2-bugfix-for-ufcs-arguments.cpp2:76:6: error: no declaration matches ‘B& B::operator=(auto:117&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(B::operator=::m_)>::type>::type, const add_const_t<A>&>’
+pure2-bugfix-for-ufcs-arguments.cpp2:68:7: note: candidates are: ‘constexpr B& B::operator=(B&&)’
+pure2-bugfix-for-ufcs-arguments.cpp2:68:7: note:                 ‘constexpr B& B::operator=(const B&)’
+pure2-bugfix-for-ufcs-arguments.cpp2:74:14: note:                 ‘template<class auto:105> B& B::operator=(auto:105&&)’
+pure2-bugfix-for-ufcs-arguments.cpp2:68:7: note: ‘class B’ defined here

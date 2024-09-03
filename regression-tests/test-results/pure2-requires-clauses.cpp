@@ -33,7 +33,7 @@ template<typename T, typename U>
 
 template<typename T, typename U> [[nodiscard]] auto f
     (auto&& a, auto&& b) -> int
-CPP2_REQUIRES (std::is_same_v<T,int> && std::is_same_v<U,int> && std::is_same_v<int, CPP2_TYPEOF(a)> && std::is_same_v<int, CPP2_TYPEOF(b)>) 
+CPP2_REQUIRES (std::is_same_v<T,int> && std::is_same_v<U,int> && std::is_convertible_v<CPP2_TYPEOF(a), std::add_const_t<int>&> && std::is_convertible_v<CPP2_TYPEOF(b), std::add_const_t<int>&>) 
 #line 10 "pure2-requires-clauses.cpp2"
 ;
 
@@ -59,7 +59,7 @@ X<T,U>::X(){}
 #line 10 "pure2-requires-clauses.cpp2"
 template<typename T, typename U> [[nodiscard]] auto f
     (auto&& a, auto&& b) -> int
-requires (std::is_same_v<T,int> && std::is_same_v<U,int> && std::is_same_v<int, CPP2_TYPEOF(a)> && std::is_same_v<int, CPP2_TYPEOF(b)>) 
+requires (std::is_same_v<T,int> && std::is_same_v<U,int> && std::is_convertible_v<CPP2_TYPEOF(a), std::add_const_t<int>&> && std::is_convertible_v<CPP2_TYPEOF(b), std::add_const_t<int>&>) 
 
 #line 14 "pure2-requires-clauses.cpp2"
 {

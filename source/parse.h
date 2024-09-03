@@ -601,6 +601,9 @@ struct expression_node
         return {};
     }
 
+    auto is_empty_expression_list() const
+        -> bool;
+
     auto is_literal() const
         -> bool
     {
@@ -715,6 +718,12 @@ struct expression_list_node
 
     //  API
     //
+    auto is_empty() const
+        -> bool
+    {
+        return expressions.empty();
+    }
+
     auto is_fold_expression() const
         -> bool
     {
@@ -822,6 +831,13 @@ struct expression_statement_node
 
     //  API
     //
+    auto is_empty_expression_list() const
+        -> bool
+    {
+        assert(expr);
+        return expr->is_empty_expression_list();
+    }
+
     auto subexpression_count() const
         -> int
     {
@@ -862,6 +878,17 @@ auto expression_node::is_standalone_expression() const
     return
         my_statement
         && my_statement->subexpression_count() == subexpression_count()
+        ;
+}
+
+
+auto expression_node::is_empty_expression_list() const
+    -> bool
+{
+    auto expr_list = get_expression_list();
+    return
+        expr_list
+        && expr_list->is_empty()
         ;
 }
 
@@ -1397,28 +1424,7 @@ struct type_id_node
     }
 
     auto to_string() const
-        -> std::string
-    {
-        auto suffix = std::string{};
-        if (constraint) {
-            suffix = "is " + constraint->to_string();
-        }
-
-        switch (id.index()) {
-        break;case empty:
-            return {};
-        break;case qualified:
-            return std::get<qualified>(id)->to_string() + suffix;
-        break;case unqualified:
-            return std::get<unqualified>(id)->to_string() + suffix;
-        break;case keyword:
-            return std::get<keyword>(id)->to_string() + suffix;
-        break;default:
-            assert(false && "ICE: invalid type_id state");
-        }
-        // else
-        return {};
-    }
+        -> std::string;
 
     auto get_token() const
         -> token const*
@@ -2290,6 +2296,9 @@ struct parameter_declaration_node
 
     //  API
     //
+    auto to_string() const
+        -> std::string;
+
     auto has_name() const
         -> bool;
 
@@ -2309,6 +2318,9 @@ struct parameter_declaration_node
         -> bool;
 
     auto is_in_template_param_list() const
+        -> bool;
+
+    auto is_in_function_scope() const
         -> bool;
 
     auto is_implicit() const
@@ -2366,17 +2378,38 @@ struct parameter_declaration_node
 
 struct parameter_declaration_list_node
 {
-    token const* open_paren             = {};
-    token const* close_paren            = {};
-    bool         in_function_typeid     = false;
-    bool         in_template_param_list = false;
+    token const* open_paren              = {};
+    token const* close_paren             = {};
+    bool         in_function_typeid      = false;
+    bool         in_template_param_list  = false;
+    bool         in_statement_param_list = false;
 
     std::vector<std::unique_ptr<parameter_declaration_node>> parameters;
 
-    parameter_declaration_list_node(bool f = false, bool t = false) : in_function_typeid{f}, in_template_param_list{t} { }
+    parameter_declaration_list_node(bool f = false, bool t = false, bool s = false) 
+        : in_function_typeid{f}
+        , in_template_param_list{t}
+        , in_statement_param_list{s}
+    { }
 
     //  API
     //
+    auto to_string() const
+        -> std::string
+    {
+        assert(open_paren && close_paren);
+
+        auto ret = open_paren->to_string();
+
+        for (auto const& p: parameters) {
+            ret += p->to_string() + ", ";
+        }
+
+        ret += close_paren->as_string_view();
+
+        return ret;
+    }
+
     auto ssize() const -> auto {
         return std::ssize(parameters);
     }
@@ -2463,6 +2496,29 @@ struct function_type_node
 
     //  API
     //
+    auto to_string() const
+        -> std::string
+    {
+        assert (parameters);
+
+        auto ret = parameters->to_string();
+        
+        if (throws) {
+            ret += " throws";
+        }
+
+        if (auto t = std::get_if<id>(&returns)) {
+            ret += " -> ";
+            ret += to_string_view(t->pass);
+            ret += " " + t->type->to_string();
+        }
+        else if (auto t = std::get_if<list>(&returns)) {
+            ret += " -> " + (*t)->to_string();
+        }
+
+        return ret;
+    }
+
     auto has_postconditions() const
         -> bool;
 
@@ -2700,6 +2756,40 @@ struct function_type_node
 };
 
 
+auto type_id_node::to_string() const
+    -> std::string
+{
+    auto ret = std::string{};
+
+    for (auto& qual : pc_qualifiers) {
+        assert(qual);
+        ret += qual->as_string_view();
+        ret += " ";
+    }
+
+    switch (id.index()) {
+    break;case empty:
+        ret += "_";
+    break;case qualified:
+        ret += std::get<qualified>(id)->to_string();
+    break;case unqualified:
+        ret += std::get<unqualified>(id)->to_string();
+    break;case function:
+        ret += std::get<function>(id)->to_string();
+    break;case keyword:
+        ret += std::get<keyword>(id)->to_string();
+    break;default:
+        assert(false && "ICE: invalid type_id state");
+    }
+
+    if (constraint) {
+        ret += "is " + constraint->to_string();
+    }
+
+    return ret;
+}
+
+
 struct type_node
 {
     token const* type;
@@ -2883,6 +2973,8 @@ struct declaration_node
 
     //  API
     //
+    auto to_string() const
+        -> std::string;
 
     auto is_template_parameter() const
         -> bool
@@ -3908,6 +4000,30 @@ public:
 };
 
 
+auto parameter_declaration_node::to_string() const
+    -> std::string
+{
+    auto ret = std::string{};
+
+    switch (mod) {
+    break;case modifier::implicit:
+        ret += "implicit ";
+    break;case modifier::virtual_:
+        ret += "virtual ";
+    break;case modifier::override_:
+        ret += "override ";
+    break;case modifier::final_:
+        ret += "final ";
+    break;default:
+        ;
+    }
+
+    ret += to_string_view(pass) + declaration->to_string();
+
+    return ret;
+}
+
+
 compound_statement_node::compound_statement_node(source_position o)
     : open_brace{o}
 { }
@@ -3958,6 +4074,20 @@ auto parameter_declaration_node::is_in_template_param_list() const
 }
 
 
+auto parameter_declaration_node::is_in_function_scope() const
+    -> bool
+{
+    return
+        my_list->in_statement_param_list
+        || (
+            declaration->parent_is_function()
+            && !declaration->parent_declaration->parent_is_type()
+            && !declaration->parent_declaration->parent_is_namespace()
+            )
+        ;
+}
+
+
 auto function_type_node::first_parameter_name() const
     -> std::string
 {
@@ -3969,6 +4099,7 @@ auto function_type_node::first_parameter_name() const
     //  Else
     return "";
 }
+
 
 auto function_type_node::nth_parameter_type_name(int n) const
     -> std::string
@@ -4656,6 +4787,14 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
     -> std::string;
 
 
+auto declaration_node::to_string() const
+    -> std::string
+{
+    //  These need to be unified someday... let's not duplicate this long function...
+    return pretty_print_visualize(*this, 0);
+}
+
+
 auto primary_expression_node::to_string() const
 -> std::string
 {
@@ -4685,7 +4824,11 @@ auto primary_expression_node::to_string() const
     break; case declaration: {
         auto const& s = std::get<declaration>(expr);
         assert(s);
-        return pretty_print_visualize(*s, 0);
+        auto ret = pretty_print_visualize(*s, 0);
+        if (ret.ends_with(';')) {
+            ret.resize( ret.size()-1 );
+        }
+        return ret;
     }
 
     break; case literal: {
@@ -5302,7 +5445,7 @@ auto pretty_print_visualize(parameter_declaration_list_node const& n, int indent
     if (std::ssize(n.parameters) > 1) {
         ret += std::string{"\n"} + pre(indent);
     }
-    ret += n.close_paren->to_string();
+    ret += n.close_paren->as_string_view();
 
     return ret;
 }
@@ -8205,7 +8348,7 @@ private:
             return {};
         }
 
-        auto n = std::make_unique<parameter_declaration_list_node>(is_function_typeid, is_template);
+        auto n = std::make_unique<parameter_declaration_list_node>(is_function_typeid, is_template, is_statement);
         n->open_paren = &curr();
         next();
 
@@ -8699,6 +8842,14 @@ private:
             n->metafunctions.push_back( std::move(idx) );
         }
 
+        auto guard =
+            captures_allowed
+            ? std::make_unique<capture_groups_stack_guard>(this, &n->captures)
+            : std::unique_ptr<capture_groups_stack_guard>()
+            ;
+
+        auto guard2 = current_declarations_stack_guard(this, n.get());
+
         //  Next is an optional template parameter list
         if (curr().type() == lexeme::Less) {
             auto template_parameters = parameter_declaration_list(false, false, true);
@@ -8708,14 +8859,6 @@ private:
             }
             n->template_parameters = std::move(template_parameters);
         }
-
-        auto guard =
-            captures_allowed
-            ? std::make_unique<capture_groups_stack_guard>(this, &n->captures)
-            : std::unique_ptr<capture_groups_stack_guard>()
-            ;
-
-        auto guard2 = current_declarations_stack_guard(this, n.get());
 
         //  Next is an an optional type
 

@@ -332,19 +332,41 @@
 #define CPP2_CONTINUE_BREAK(NAME)   goto CONTINUE_##NAME; CONTINUE_##NAME: continue; goto BREAK_##NAME; BREAK_##NAME: break;
                                     // these redundant goto's to avoid 'unused label' warnings
 
+//  Compiler version identification.
+// 
+//  This can use useful with 'if constexpr' to disable code known not to
+//  work on some otherwise-supported compilers (without macros), for example:
+// 
+//    //  Disable tests on lower-level compilers that have blocking bugs
+//    []<auto V = gcc_clang_msvc_min_versions(1400, 1600, 1920)> () { if constexpr (V) {
+//        // ... tests that would fail due to older compilers' bugs ...
+//    }}();
+//
+//  Note: Test Clang first because it pretends to be other compilers.
+//
 #if defined(__clang_major__)
-    constexpr auto CPP2_CLANG_VER = __clang_major__ * 100 + __clang_minor__;
-    constexpr auto CPP2_MSVC_VER  = 0;
-    constexpr auto CPP2_GCC_VER   = 0;
+    constexpr auto gcc_ver   = 0;
+    constexpr auto clang_ver = __clang_major__ * 100 + __clang_minor__;
+    constexpr auto msvc_ver  = 0;
 #elif defined(_MSC_VER)
-    constexpr auto CPP2_CLANG_VER = 0;
-    constexpr auto CPP2_MSVC_VER  = _MSC_VER;
-    constexpr auto CPP2_GCC_VER   = 0;
+    constexpr auto gcc_ver   = 0;
+    constexpr auto clang_ver = 0;
+    constexpr auto msvc_ver  = _MSC_VER;
 #elif defined(__GNUC__)
-    constexpr auto CPP2_CLANG_VER = 0;
-    constexpr auto CPP2_MSVC_VER  = 0;
-    constexpr auto CPP2_GCC_VER   = __GNUC__ * 100 + __GNUC_MINOR__;
+    constexpr auto gcc_ver   = __GNUC__ * 100 + __GNUC_MINOR__;
+    constexpr auto clang_ver = 0;
+    constexpr auto msvc_ver  = 0;
 #endif
+
+constexpr auto gcc_clang_msvc_min_versions(
+    auto gcc,
+    auto clang,
+    auto msvc
+)
+{
+    return gcc_ver > gcc || clang_ver > clang || msvc_ver > msvc;
+}
+
 
 #if defined(_MSC_VER)
    // MSVC can't handle 'inline constexpr' yet in all cases
@@ -670,6 +692,11 @@ concept specialization_of_template_type_and_nttp = requires (X x) {
     { specialization_of_template_helper<C>(std::forward<X>(x)) } -> std::same_as<std::true_type>;
 };
 
+template<typename X>
+concept boolean_testable = std::convertible_to<X, bool> && requires(X&& x) {
+  { !std::forward<X>(x) } -> std::convertible_to<bool>;
+};
+
 template <typename X>
 concept dereferencable = requires (X x) { *x; };
 
@@ -751,6 +778,97 @@ using deref_t = decltype(*std::declval<T&>());
 template <typename T>
 auto pointer_eq(T const* a, T const* b) {
     return std::compare_three_way{}(a, b) == std::strong_ordering::equal;
+}
+
+//-----------------------------------------------------------------------
+//
+//  A type_find_if for iterating over types in parameter packs
+//
+//  Note: This implementation works around limitations in gcc <12.1,
+//  Clang <13, and MSVC <19.29. Otherwise we could avoid type_it and use
+//  a lambda with an explicit parameter type list like this:
+//
+//    template <typename... Ts, typename F>
+//    constexpr auto type_find_if(F&& fun)
+//    {
+//        std::size_t found = std::variant_npos;
+//        [&]<std::size_t... Is>(std::index_sequence<Is...>){
+//            if constexpr ((requires { {CPP2_FORWARD(fun).template operator()<Is, Ts>()} -> std::convertible_to<bool>;} && ...)) {
+//                (((CPP2_FORWARD(fun).template operator()<Is, Ts>()) && (found = Is, true)) || ...);
+//            }
+//        }(std::index_sequence_for<Ts...>());
+//        return found;
+//    }
+//
+//  Note: The internal if constexpr could have else with static_assert.
+//  Unfortunately there doesn't seem to be a way to make it work on MSVC.
+//
+//-----------------------------------------------------------------------
+//
+template <std::size_t Index, typename T>
+struct type_it {
+    using type = T;
+    inline static const std::size_t index = Index;
+};
+
+template <typename... Ts, typename F>
+constexpr auto type_find_if(F&& fun)
+{
+    std::size_t found = std::variant_npos;
+    [&]<std::size_t... Is>(std::index_sequence<Is...>){
+        if constexpr ((requires { {CPP2_FORWARD(fun)(type_it<Is, Ts>{})} -> boolean_testable;} && ...)) {
+            ((CPP2_FORWARD(fun)(type_it<Is, Ts>{}) && (found = Is, true)) || ...);
+        } 
+    }(std::index_sequence_for<Ts...>());
+    return found;
+}
+
+template <typename F, template<typename...> class C, typename... Ts>
+constexpr auto type_find_if(C<Ts...> const&, F&& fun)
+{
+    return type_find_if<Ts...>(CPP2_FORWARD(fun));
+}
+
+template <typename T, typename... Ts>
+constexpr auto variant_contains_type(std::variant<Ts...>)
+{
+    if constexpr (is_any<T, Ts...>) {
+        return std::true_type{};
+    } else {
+        return std::false_type{};
+    }
+}
+
+template <typename C, typename X>
+using constness_like_t =
+  std::conditional_t<
+    std::is_const_v<
+      std::remove_pointer_t<
+        std::remove_reference_t<X>
+      >
+    >,
+    std::add_const_t<C>,
+    std::remove_const_t<C>
+  >;
+
+template<class T, class U>
+[[nodiscard]] constexpr auto&& forward_like(U&& x) noexcept
+{
+    constexpr bool is_adding_const = std::is_const_v<std::remove_reference_t<T>>;
+    if constexpr (std::is_lvalue_reference_v<T&&>)
+    {
+        if constexpr (is_adding_const)
+            return std::as_const(x);
+        else
+            return static_cast<U&>(x);
+    }
+    else
+    {
+        if constexpr (is_adding_const)
+            return std::move(std::as_const(x));
+        else
+            return std::move(x);
+    }
 }
 
 
@@ -1492,8 +1610,9 @@ inline auto to_string(auto const& x) -> std::string
         return x;
     }
 
-    //  Else customize bool (prefer this over << to avoid std::boolalpha)
-    if constexpr( std::is_same_v<CPP2_TYPEOF(x), bool> ) {
+    //  Else customize convertible-to-bool - use { } to avoid narrowing
+    if constexpr( requires{ bool{x}; } ) 
+    {
         return x ? "true" : "false";
     }
 
@@ -1901,214 +2020,62 @@ auto as(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT_AS) -> decltype(auto)
 //  std::variant is and as
 //
 
-//  Common internal helper
-//
-template<std::size_t I, typename... Ts>
-constexpr auto operator_as( std::variant<Ts...> && x ) -> decltype(auto) {
-    if constexpr (I < std::variant_size_v<std::variant<Ts...>>) {
-        return std::get<I>( x );
-    }
-    else {
-        return nonesuch;
-    }
-}
-
-template<std::size_t I, typename... Ts>
-constexpr auto operator_as( std::variant<Ts...> & x ) -> decltype(auto) {
-    if constexpr (I < std::variant_size_v<std::variant<Ts...>>) {
-        return std::get<I>( x );
-    }
-    else {
-        return nonesuch;
-    }
-}
-
-template<std::size_t I, typename... Ts>
-constexpr auto operator_as( std::variant<Ts...> const& x ) -> decltype(auto) {
-    if constexpr (I < std::variant_size_v<std::variant<Ts...>>) {
-        return std::get<I>( x );
-    }
-    else {
-        return nonesuch;
-    }
-}
-
-
-//  is Type
-//
-template<typename... Ts>
-constexpr auto operator_is( std::variant<Ts...> const& x ) {
-    return x.index();
-}
-
-template<typename T, typename... Ts>
-auto is( std::variant<Ts...> const& x );
-
-
-//  is Value
-//
-template<typename... Ts>
-constexpr auto is( std::variant<Ts...> const& x, auto&& value ) -> bool
+template< typename C, specialization_of_template<std::variant> X >
+constexpr auto is( X const& x ) -> auto
 {
-    //  Predicate case
-    if constexpr      (requires{ bool{ value(operator_as< 0>(x)) }; }) { if (x.index() ==  0) return value(operator_as< 0>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 1>(x)) }; }) { if (x.index() ==  1) return value(operator_as< 1>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 2>(x)) }; }) { if (x.index() ==  2) return value(operator_as< 2>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 3>(x)) }; }) { if (x.index() ==  3) return value(operator_as< 3>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 4>(x)) }; }) { if (x.index() ==  4) return value(operator_as< 4>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 5>(x)) }; }) { if (x.index() ==  5) return value(operator_as< 5>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 6>(x)) }; }) { if (x.index() ==  6) return value(operator_as< 6>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 7>(x)) }; }) { if (x.index() ==  7) return value(operator_as< 7>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 8>(x)) }; }) { if (x.index() ==  8) return value(operator_as< 8>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 9>(x)) }; }) { if (x.index() ==  9) return value(operator_as< 9>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<10>(x)) }; }) { if (x.index() == 10) return value(operator_as<10>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<11>(x)) }; }) { if (x.index() == 11) return value(operator_as<11>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<12>(x)) }; }) { if (x.index() == 12) return value(operator_as<12>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<13>(x)) }; }) { if (x.index() == 13) return value(operator_as<13>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<14>(x)) }; }) { if (x.index() == 14) return value(operator_as<14>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<15>(x)) }; }) { if (x.index() == 15) return value(operator_as<15>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<16>(x)) }; }) { if (x.index() == 16) return value(operator_as<16>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<17>(x)) }; }) { if (x.index() == 17) return value(operator_as<17>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<18>(x)) }; }) { if (x.index() == 18) return value(operator_as<18>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<19>(x)) }; }) { if (x.index() == 19) return value(operator_as<19>(x)); }
-    else if constexpr (std::is_function_v<decltype(value)> || requires{ &value.operator(); }) {
-        return false;
+    if constexpr (
+        std::is_same_v<C, X>
+        || std::is_base_of_v<C, X>
+    )
+    {
+        return std::true_type{};
     }
-
-    //  Value case
     else {
-        if constexpr (requires{ bool{ operator_as< 0>(x) == value }; }) { if (x.index() ==  0) return operator_as< 0>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 1>(x) == value }; }) { if (x.index() ==  1) return operator_as< 1>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 2>(x) == value }; }) { if (x.index() ==  2) return operator_as< 2>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 3>(x) == value }; }) { if (x.index() ==  3) return operator_as< 3>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 4>(x) == value }; }) { if (x.index() ==  4) return operator_as< 4>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 5>(x) == value }; }) { if (x.index() ==  5) return operator_as< 5>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 6>(x) == value }; }) { if (x.index() ==  6) return operator_as< 6>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 7>(x) == value }; }) { if (x.index() ==  7) return operator_as< 7>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 8>(x) == value }; }) { if (x.index() ==  8) return operator_as< 8>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 9>(x) == value }; }) { if (x.index() ==  9) return operator_as< 9>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<10>(x) == value }; }) { if (x.index() == 10) return operator_as<10>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<11>(x) == value }; }) { if (x.index() == 11) return operator_as<11>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<12>(x) == value }; }) { if (x.index() == 12) return operator_as<12>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<13>(x) == value }; }) { if (x.index() == 13) return operator_as<13>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<14>(x) == value }; }) { if (x.index() == 14) return operator_as<14>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<15>(x) == value }; }) { if (x.index() == 15) return operator_as<15>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<16>(x) == value }; }) { if (x.index() == 16) return operator_as<16>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<17>(x) == value }; }) { if (x.index() == 17) return operator_as<17>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<18>(x) == value }; }) { if (x.index() == 18) return operator_as<18>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<19>(x) == value }; }) { if (x.index() == 19) return operator_as<19>(x) == value; }
+        if (x.valueless_by_exception()) {
+            return std::is_same_v<C, empty>;
+        }
+        if constexpr (
+            std::is_same_v<C, empty>
+        )
+        {
+            if constexpr (requires { {variant_contains_type<std::monostate>(std::declval<X>())} -> std::same_as<std::true_type>; }) {
+                return std::get_if<std::monostate>(&x) != nullptr;
+            }
+        }
+        return type_find_if(x, [&]<typename It>(It const&) -> bool {
+            if (x.index() == It::index) { return std::is_same_v<C, std::variant_alternative_t<It::index, X>>;}
+            return false;
+        }) != std::variant_npos;
     }
-    return false;
 }
 
 
-//  as
-//
-template<typename T, typename... Ts>
-auto is( std::variant<Ts...> const& x ) {
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 0>(x)), T >) { if (x.index() ==  0) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 1>(x)), T >) { if (x.index() ==  1) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 2>(x)), T >) { if (x.index() ==  2) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 3>(x)), T >) { if (x.index() ==  3) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 4>(x)), T >) { if (x.index() ==  4) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 5>(x)), T >) { if (x.index() ==  5) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 6>(x)), T >) { if (x.index() ==  6) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 7>(x)), T >) { if (x.index() ==  7) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 8>(x)), T >) { if (x.index() ==  8) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 9>(x)), T >) { if (x.index() ==  9) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<10>(x)), T >) { if (x.index() == 10) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<11>(x)), T >) { if (x.index() == 11) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<12>(x)), T >) { if (x.index() == 12) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<13>(x)), T >) { if (x.index() == 13) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<14>(x)), T >) { if (x.index() == 14) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<15>(x)), T >) { if (x.index() == 15) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<16>(x)), T >) { if (x.index() == 16) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<17>(x)), T >) { if (x.index() == 17) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<18>(x)), T >) { if (x.index() == 18) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<19>(x)), T >) { if (x.index() == 19) return true; }
-    if constexpr (std::is_same_v< T, empty > ) {
-        if (x.valueless_by_exception()) return true;
-        //  Need to guard this with is_any otherwise the get_if is illegal
-        if constexpr (is_any<std::monostate, Ts...>) return std::get_if<std::monostate>(&x) != nullptr;
-    }
-    return false;
+template <specialization_of_template<std::variant> X>
+inline constexpr auto is( X const& x, auto&& value ) -> bool
+{
+    return type_find_if(x, [&]<typename It>(It const&) -> bool {
+        if (x.index() == It::index) {
+            if constexpr (valid_predicate<decltype(value), decltype(std::get<It::index>(x))>) {
+                return value(std::get<It::index>(x));
+            } else if constexpr ( requires { bool{std::get<It::index>(x) == value}; }  ) {
+                return std::get<It::index>(x) == value;
+            }
+        }
+        return false;
+    }) != std::variant_npos;
 }
 
-template<typename T, typename... Ts>
-auto as( std::variant<Ts...> && x ) -> decltype(auto) {
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 0>(x)), T >) { if (x.index() ==  0) return operator_as<0>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 1>(x)), T >) { if (x.index() ==  1) return operator_as<1>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 2>(x)), T >) { if (x.index() ==  2) return operator_as<2>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 3>(x)), T >) { if (x.index() ==  3) return operator_as<3>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 4>(x)), T >) { if (x.index() ==  4) return operator_as<4>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 5>(x)), T >) { if (x.index() ==  5) return operator_as<5>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 6>(x)), T >) { if (x.index() ==  6) return operator_as<6>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 7>(x)), T >) { if (x.index() ==  7) return operator_as<7>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 8>(x)), T >) { if (x.index() ==  8) return operator_as<8>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 9>(x)), T >) { if (x.index() ==  9) return operator_as<9>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<10>(x)), T >) { if (x.index() == 10) return operator_as<10>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<11>(x)), T >) { if (x.index() == 11) return operator_as<11>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<12>(x)), T >) { if (x.index() == 12) return operator_as<12>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<13>(x)), T >) { if (x.index() == 13) return operator_as<13>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<14>(x)), T >) { if (x.index() == 14) return operator_as<14>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<15>(x)), T >) { if (x.index() == 15) return operator_as<15>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<16>(x)), T >) { if (x.index() == 16) return operator_as<16>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<17>(x)), T >) { if (x.index() == 17) return operator_as<17>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<18>(x)), T >) { if (x.index() == 18) return operator_as<18>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<19>(x)), T >) { if (x.index() == 19) return operator_as<19>(x); }
-    Throw( std::bad_variant_access(), "'as' cast failed for 'variant'");
+template< typename C, specialization_of_template<std::variant> X >
+auto as(X&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT_AS) -> decltype(auto)
+{
+    constness_like_t<C, decltype(x)>* ptr = nullptr;
+    type_find_if(CPP2_FORWARD(x), [&]<typename It>(It const&) -> bool {
+        if constexpr (std::is_same_v< typename It::type, C >) { if (CPP2_FORWARD(x).index() ==  It::index) { ptr = &std::get<It::index>(x); return true; } }; 
+        return false;
+    });
+    if (!ptr) { Throw( std::bad_variant_access(), "'as' cast failed for 'variant'"); }
+    return cpp2::forward_like<decltype(x)>(*ptr);
 }
-
-template<typename T, typename... Ts>
-auto as( std::variant<Ts...> & x ) -> decltype(auto) {
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 0>(x)), T >) { if (x.index() ==  0) return operator_as<0>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 1>(x)), T >) { if (x.index() ==  1) return operator_as<1>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 2>(x)), T >) { if (x.index() ==  2) return operator_as<2>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 3>(x)), T >) { if (x.index() ==  3) return operator_as<3>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 4>(x)), T >) { if (x.index() ==  4) return operator_as<4>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 5>(x)), T >) { if (x.index() ==  5) return operator_as<5>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 6>(x)), T >) { if (x.index() ==  6) return operator_as<6>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 7>(x)), T >) { if (x.index() ==  7) return operator_as<7>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 8>(x)), T >) { if (x.index() ==  8) return operator_as<8>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 9>(x)), T >) { if (x.index() ==  9) return operator_as<9>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<10>(x)), T >) { if (x.index() == 10) return operator_as<10>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<11>(x)), T >) { if (x.index() == 11) return operator_as<11>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<12>(x)), T >) { if (x.index() == 12) return operator_as<12>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<13>(x)), T >) { if (x.index() == 13) return operator_as<13>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<14>(x)), T >) { if (x.index() == 14) return operator_as<14>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<15>(x)), T >) { if (x.index() == 15) return operator_as<15>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<16>(x)), T >) { if (x.index() == 16) return operator_as<16>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<17>(x)), T >) { if (x.index() == 17) return operator_as<17>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<18>(x)), T >) { if (x.index() == 18) return operator_as<18>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<19>(x)), T >) { if (x.index() == 19) return operator_as<19>(x); }
-    Throw( std::bad_variant_access(), "'as' cast failed for 'variant'");
-}
-
-template<typename T, typename... Ts>
-auto as( std::variant<Ts...> const& x ) -> decltype(auto) {
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 0>(x)), T >) { if (x.index() ==  0) return operator_as<0>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 1>(x)), T >) { if (x.index() ==  1) return operator_as<1>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 2>(x)), T >) { if (x.index() ==  2) return operator_as<2>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 3>(x)), T >) { if (x.index() ==  3) return operator_as<3>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 4>(x)), T >) { if (x.index() ==  4) return operator_as<4>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 5>(x)), T >) { if (x.index() ==  5) return operator_as<5>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 6>(x)), T >) { if (x.index() ==  6) return operator_as<6>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 7>(x)), T >) { if (x.index() ==  7) return operator_as<7>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 8>(x)), T >) { if (x.index() ==  8) return operator_as<8>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 9>(x)), T >) { if (x.index() ==  9) return operator_as<9>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<10>(x)), T >) { if (x.index() == 10) return operator_as<10>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<11>(x)), T >) { if (x.index() == 11) return operator_as<11>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<12>(x)), T >) { if (x.index() == 12) return operator_as<12>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<13>(x)), T >) { if (x.index() == 13) return operator_as<13>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<14>(x)), T >) { if (x.index() == 14) return operator_as<14>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<15>(x)), T >) { if (x.index() == 15) return operator_as<15>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<16>(x)), T >) { if (x.index() == 16) return operator_as<16>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<17>(x)), T >) { if (x.index() == 17) return operator_as<17>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<18>(x)), T >) { if (x.index() == 18) return operator_as<18>(x); }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<19>(x)), T >) { if (x.index() == 19) return operator_as<19>(x); }
-    Throw( std::bad_variant_access(), "'as' cast failed for 'variant'");
-}
-
 
 //-------------------------------------------------------------------------------------------------------------
 //  std::any is and as

@@ -21,50 +21,32 @@ class Shape { public: virtual ~Shape() { } };
 class Circle : public Shape { };
 class Square : public Shape { };
 
-//--- printing helpers -----------------
+#line 12 "mixed-type-safety-1.cpp2"
+template<typename T> auto print(cpp2::impl::in<std::string> msg, T const& x) -> void;
 
-#line 13 "mixed-type-safety-1.cpp2"
-template<typename T> auto print(cpp2::impl::in<std::string> msg, T const& x) -> void
-CPP2_REQUIRES (!(std::convertible_to<T,bool>)) ;
-
-#line 17 "mixed-type-safety-1.cpp2"
-auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void;
-
-#line 25 "mixed-type-safety-1.cpp2"
-//--- examples -------------------------
-
+#line 15 "mixed-type-safety-1.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
 
 #line 1 "mixed-type-safety-1.cpp2"
 
-#line 13 "mixed-type-safety-1.cpp2"
-template<typename T> auto print(cpp2::impl::in<std::string> msg, T const& x) -> void
-requires (!(std::convertible_to<T,bool>))  { 
+#line 12 "mixed-type-safety-1.cpp2"
+template<typename T> auto print(cpp2::impl::in<std::string> msg, T const& x) -> void { 
+    std::cout << "" + cpp2::to_string(msg) + " " + cpp2::to_string(x) + "\n";  }
 
 #line 15 "mixed-type-safety-1.cpp2"
-    std::cout << msg << x << "\n";  }
-
-#line 17 "mixed-type-safety-1.cpp2"
-auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void
-{
-    cpp2::impl::deferred_init<char const*> bmsg; 
-    if (b) { bmsg.construct("true");}
-    else {bmsg.construct("false"); }
-    std::cout << msg << cpp2::move(bmsg.value()) << "\n";
-}
-
-#line 27 "mixed-type-safety-1.cpp2"
 [[nodiscard]] auto main() -> int
 {
-    print("1.1 is int? ", cpp2::impl::is<int>(1.1));
-    print( "1   is int? ", cpp2::impl::is<int>(1));
+    // Full qualification is necessary to avoid ambiguity in C++23
+    // C++23 defines std::print, which would be picked up here by ADL
+    ::print("1.1 is int?", cpp2::impl::is<int>(1.1));
+    ::print( "1   is int?", cpp2::impl::is<int>(1));
 
     auto c {cpp2_new<Circle>()}; // safe by construction
     Shape* s {CPP2_UFCS(get)(cpp2::move(c))}; // safe by Lifetime
-    print("\ns* is Shape?  ", cpp2::impl::is<Shape>(*cpp2::impl::assert_not_null(s)));
-    print(  "s* is Circle? ", cpp2::impl::is<Circle>(*cpp2::impl::assert_not_null(s)));
-    print(  "s* is Square? ", cpp2::impl::is<Square>(*cpp2::impl::assert_not_null(cpp2::move(s))));
+    ::print("\ns* is Shape? ", cpp2::impl::is<Shape>(*cpp2::impl::assert_not_null(s)));
+    ::print(  "s* is Circle?", cpp2::impl::is<Circle>(*cpp2::impl::assert_not_null(s)));
+    ::print(  "s* is Square?", cpp2::impl::is<Square>(*cpp2::impl::assert_not_null(cpp2::move(s))));
 }
 

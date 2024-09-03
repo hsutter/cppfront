@@ -70,9 +70,11 @@ class person_in_family_tree {
 
 class mystruct {
     public: int val {0}; 
-    public: mystruct(auto const& val_);
+    public: mystruct(auto&& val_)
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(val_), std::add_const_t<int>&>) ;
 
-public: auto operator=(auto const& val_) -> mystruct& ;
+public: auto operator=(auto&& val_) -> mystruct& 
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(val_), std::add_const_t<int>&>) ;
 public: mystruct();
 
 #line 19 "pure2-types-ordering-via-meta-functions.cpp2"
@@ -111,12 +113,14 @@ auto main() -> int;
                                             return *this; }
 
 
-    mystruct::mystruct(auto const& val_)
-                                               : val{ val_ }{}
+    mystruct::mystruct(auto&& val_)
+requires (std::is_convertible_v<CPP2_TYPEOF(val_), std::add_const_t<int>&>) 
+                                                             : val{ CPP2_FORWARD(val_) }{}
 
-auto mystruct::operator=(auto const& val_) -> mystruct& {
-                                               val = val_;
-                                               return *this;}
+auto mystruct::operator=(auto&& val_) -> mystruct& 
+requires (std::is_convertible_v<CPP2_TYPEOF(val_), std::add_const_t<int>&>) {
+                                                             val = CPP2_FORWARD(val_);
+                                                             return *this;}
 mystruct::mystruct(){}
 #line 21 "pure2-types-ordering-via-meta-functions.cpp2"
 auto main() -> int{

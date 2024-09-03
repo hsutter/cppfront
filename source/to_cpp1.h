@@ -4064,11 +4064,6 @@ public:
     )
         -> void
     {   STACKINSTR
-        if (n.default_initializer) {
-          printer.print_cpp2("{}", n.position());
-          return;
-        }
-
         auto add_parens =
             should_add_expression_list_parens()
             && !n.inside_initializer
@@ -4078,6 +4073,14 @@ public:
             n.is_fold_expression() &&
             !(n.inside_initializer && current_declarations.back()->initializer->position() != n.open_paren->position())
             ;
+
+        if (n.default_initializer) {
+            if (add_parens) {
+                printer.print_cpp2("{}", n.position());
+            }
+            return;
+        }
+
         if (add_parens) {
             printer.print_cpp2( *n.open_paren, n.position());
         }
@@ -4401,15 +4404,36 @@ public:
         //
         auto emit_initializer = [&]
         {
+            assert(n.declaration);
+            auto is_param_to_namespace_scope_type =
+                n.declaration->parent_is_type() 
+                && n.declaration->parent_declaration->parent_is_namespace() 
+                ;
+
+            auto emit_in_phase_0 =
+                is_param_to_namespace_scope_type
+                && printer.get_phase() == printer.phase0_type_decls
+                ;
+
+            auto emit_in_phase_1 =
+                !is_param_to_namespace_scope_type
+                && printer.get_phase() == printer.phase1_type_defs_func_decls
+                ;
+
             if (
                 !is_returns
                 && n.declaration->initializer
                 && (
-                    is_statement 
-                    || printer.get_phase() != printer.phase2_func_defs
+                    n.is_in_function_scope()    // implies we're in phase 1 or 2
+                    || emit_in_phase_0
+                    || emit_in_phase_1
                     )
                 )
             {
+                auto expr  = n.declaration->initializer->get_if<expression_statement_node>();
+                assert(expr->expr);
+                auto empty = expr && expr->is_empty_expression_list();
+
                 auto guard = stack_element(current_declarations, &*n.declaration);
                 if (is_statement) {
                     printer.print_cpp2( "{", n.declaration->initializer->position() );
@@ -4417,7 +4441,14 @@ public:
                 else {
                     printer.print_cpp2( " = ", n.declaration->initializer->position() );
                 }
-                emit(*n.declaration->initializer, false);
+
+                if (empty && !is_statement) {
+                    printer.print_cpp2( "{}", n.declaration->initializer->position() );
+                }
+                else {
+                    emit(*n.declaration->initializer, false);
+                }
+
                 if (is_statement) {
                     printer.print_cpp2( "};", n.declaration->initializer->position() );
                 }
@@ -4502,6 +4533,7 @@ public:
             printer.print_cpp2("typename ", identifier_pos);
 
             emit_template_name();
+            emit_initializer();
             return;
         }
 
@@ -4617,10 +4649,8 @@ public:
                 && !type_id.is_wildcard()
                 )
             {
-                auto name = n.declaration->identifier->get_token();
-                assert(name);
                 auto req = std::string{"(std::is_convertible_v<CPP2_TYPEOF("};
-                req += *name;
+                req += identifier;
                 req += "), ";
                 req += param_type;
                 req += "> && ...)";
@@ -4646,13 +4676,11 @@ public:
             }
 
             if (type_id.constraint) {
-                auto name = n.declaration->identifier->get_token();
-                assert(name);
                 auto req = print_to_string(*type_id.constraint);
                 if (auto pos = req.find('<'); pos != req.npos) {
-                    req.insert(pos+1, "CPP2_TYPEOF(" + name->to_string() + "), ");
+                    req.insert(pos+1, "CPP2_TYPEOF(" + identifier + "), ");
                 } else {
-                    req.append("<CPP2_TYPEOF("+ name->to_string() +")>");
+                    req.append("<CPP2_TYPEOF("+ identifier +")>");
                 }
                 function_requires_conditions.push_back(req);
             }
@@ -4660,13 +4688,11 @@ public:
         else if (n.pass == passing_style::forward) {
             printer.print_cpp2("auto", n.position());
 
-            auto name = n.declaration->identifier->get_token();
-            assert(name);
-            auto req = std::string{"std::is_same_v<"};
+            auto req = std::string{"std::is_convertible_v<CPP2_TYPEOF("};
+            req += identifier;
+            req += "), std::add_const_t<";
             req += param_type;
-            req += ", CPP2_TYPEOF(";
-            req += *name;
-            req += ")>";
+            req += ">&>";
             function_requires_conditions.push_back(req);
         }
         else {
@@ -4996,7 +5022,7 @@ public:
                 //  printer.print_cpp2( " constexpr", n.position() );
                 //      // consider enabling when P2242, P2280, and similar papers are widely implemented
             }
-            else {
+            else if (!n.my_decl->captures.members.empty()) {
                 printer.print_cpp2( " mutable", n.position() );
             }
         }

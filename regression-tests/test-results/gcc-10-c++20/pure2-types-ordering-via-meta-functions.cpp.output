@@ -1,0 +1,20 @@
+pure2-types-ordering-via-meta-functions.cpp2:19:33: error: expected ‘;’ at end of member declaration
+In file included from pure2-types-ordering-via-meta-functions.cpp:7:
+../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
+pure2-types-ordering-via-meta-functions.cpp2:20:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-types-ordering-via-meta-functions.cpp2:22:48: error: expected ‘;’ at end of member declaration
+In file included from pure2-types-ordering-via-meta-functions.cpp:7:
+../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
+pure2-types-ordering-via-meta-functions.cpp2:23:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-types-ordering-via-meta-functions.cpp2:19:5: error: no declaration matches ‘mystruct::mystruct(auto:98&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(mystruct::__ct ::val_)>::type>::type, const std::add_const_t&>’
+pure2-types-ordering-via-meta-functions.cpp2:17:7: note: candidates are: ‘constexpr mystruct::mystruct(mystruct&&)’
+pure2-types-ordering-via-meta-functions.cpp2:17:7: note:                 ‘constexpr mystruct::mystruct(const mystruct&)’
+pure2-types-ordering-via-meta-functions.cpp2:24:9: note:                 ‘mystruct::mystruct()’
+pure2-types-ordering-via-meta-functions.cpp2:19:13: note:                 ‘template<class auto:96> mystruct::mystruct(auto:96&&)’
+pure2-types-ordering-via-meta-functions.cpp2:17:7: note: ‘class mystruct’ defined here
+pure2-types-ordering-via-meta-functions.cpp2:21:89: error: expected unqualified-id before ‘{’ token
+pure2-types-ordering-via-meta-functions.cpp2:23:6: error: no declaration matches ‘mystruct& mystruct::operator=(auto:99&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(mystruct::operator=::val_)>::type>::type, const std::add_const_t&>’
+pure2-types-ordering-via-meta-functions.cpp2:17:7: note: candidates are: ‘constexpr mystruct& mystruct::operator=(mystruct&&)’
+pure2-types-ordering-via-meta-functions.cpp2:17:7: note:                 ‘constexpr mystruct& mystruct::operator=(const mystruct&)’
+pure2-types-ordering-via-meta-functions.cpp2:22:14: note:                 ‘template<class auto:97> mystruct& mystruct::operator=(auto:97&&)’
+pure2-types-ordering-via-meta-functions.cpp2:17:7: note: ‘class mystruct’ defined here

@@ -13,7 +13,7 @@
 
 #line 1 "pure2-function-multiple-forward-arguments.cpp2"
 auto fun(auto&& s1, auto&& s2, auto&& s3) -> void
-CPP2_REQUIRES (std::is_same_v<std::string, CPP2_TYPEOF(s1)> && std::is_same_v<std::string, CPP2_TYPEOF(s2)> && std::is_same_v<std::string, CPP2_TYPEOF(s3)>) ;
+CPP2_REQUIRES (std::is_convertible_v<CPP2_TYPEOF(s1), std::add_const_t<std::string>&> && std::is_convertible_v<CPP2_TYPEOF(s2), std::add_const_t<std::string>&> && std::is_convertible_v<CPP2_TYPEOF(s3), std::add_const_t<std::string>&>) ;
 
 #line 5 "pure2-function-multiple-forward-arguments.cpp2"
 auto main() -> int;
@@ -22,7 +22,7 @@ auto main() -> int;
 
 #line 1 "pure2-function-multiple-forward-arguments.cpp2"
 auto fun(auto&& s1, auto&& s2, auto&& s3) -> void
-requires (std::is_same_v<std::string, CPP2_TYPEOF(s1)> && std::is_same_v<std::string, CPP2_TYPEOF(s2)> && std::is_same_v<std::string, CPP2_TYPEOF(s3)>) {
+requires (std::is_convertible_v<CPP2_TYPEOF(s1), std::add_const_t<std::string>&> && std::is_convertible_v<CPP2_TYPEOF(s2), std::add_const_t<std::string>&> && std::is_convertible_v<CPP2_TYPEOF(s3), std::add_const_t<std::string>&>) {
 #line 2 "pure2-function-multiple-forward-arguments.cpp2"
     std::cout << CPP2_FORWARD(s1) << CPP2_FORWARD(s2) << CPP2_FORWARD(s3) << std::endl;
 }

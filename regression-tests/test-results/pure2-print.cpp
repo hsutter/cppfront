@@ -123,9 +123,9 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias{ 42 };
             if (cpp2::cpp2_default.is_active() && !(CPP2_UFCS(empty)(m) == false || false) ) { cpp2::cpp2_default.report_violation(CPP2_CONTRACT_MSG("message")); }
             if (testing_enabled && cpp2::bounds_safety.is_active() && !([_0 = 0, _1 = CPP2_UFCS(ssize)(m), _2 = 100]{ return cpp2::impl::cmp_less(_0,_1) && cpp2::impl::cmp_less(_1,_2); }() && true != false) ) { cpp2::bounds_safety.report_violation(CPP2_CONTRACT_MSG("size is " + cpp2::to_string(CPP2_UFCS(ssize)(m)) + "")); }
 #line 37 "pure2-print.cpp2"
-            auto a {[]() mutable -> void{}}; 
-            auto b {[]() mutable -> void{}}; 
-            auto c {[]() mutable -> void{}}; 
+            auto a {[]() -> void{}}; 
+            auto b {[]() -> void{}}; 
+            auto c {[]() -> void{}}; 
 
             for( ; CPP2_UFCS(empty)(s); a() ) {break; }
 

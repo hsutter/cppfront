@@ -1,0 +1,110 @@
+pure2-last-use.cpp2:259:32: error: expected ‘;’ at end of member declaration
+In file included from pure2-last-use.cpp:7:
+../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
+pure2-last-use.cpp2:260:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-last-use.cpp2:262:49: error: expected ‘;’ at end of member declaration
+In file included from pure2-last-use.cpp:7:
+../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
+pure2-last-use.cpp2:263:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-last-use.cpp2:265:32: error: expected ‘;’ at end of member declaration
+In file included from pure2-last-use.cpp:7:
+../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
+pure2-last-use.cpp2:266:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-last-use.cpp2:268:49: error: expected ‘;’ at end of member declaration
+In file included from pure2-last-use.cpp:7:
+../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
+pure2-last-use.cpp2:269:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-last-use.cpp2:269:32: error: expected ‘;’ at end of member declaration
+In file included from pure2-last-use.cpp:7:
+../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
+pure2-last-use.cpp2:270:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-last-use.cpp2:272:49: error: expected ‘;’ at end of member declaration
+In file included from pure2-last-use.cpp:7:
+../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
+pure2-last-use.cpp2:273:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-last-use.cpp2:274:16: error: ‘move_only_function’ in namespace ‘std’ does not name a template type
+pure2-last-use.cpp2:275:16: error: ‘move_only_function’ in namespace ‘std’ does not name a template type
+pure2-last-use.cpp2:276:67: error: expected ‘;’ at end of member declaration
+In file included from pure2-last-use.cpp:7:
+../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
+pure2-last-use.cpp2:277:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-last-use.cpp2:334:32: error: expected ‘;’ at end of member declaration
+In file included from pure2-last-use.cpp:7:
+../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
+pure2-last-use.cpp2:335:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-last-use.cpp2:337:49: error: expected ‘;’ at end of member declaration
+In file included from pure2-last-use.cpp:7:
+../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
+pure2-last-use.cpp2:338:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-last-use.cpp2:340:32: error: expected ‘;’ at end of member declaration
+In file included from pure2-last-use.cpp:7:
+../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
+pure2-last-use.cpp2:341:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-last-use.cpp2:344:16: error: ‘move_only_function’ in namespace ‘std’ does not name a template type
+pure2-last-use.cpp2:347:54: error: expected ‘;’ at end of member declaration
+In file included from pure2-last-use.cpp:7:
+../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
+pure2-last-use.cpp2:348:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-last-use.cpp2:773:64: error: ‘std::move_only_function’ has not been declared
+pure2-last-use.cpp2:773:87: error: expected ‘,’ or ‘...’ before ‘<’ token
+pure2-last-use.cpp2:849:49: error: expected ‘;’ at end of member declaration
+In file included from pure2-last-use.cpp:7:
+../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
+pure2-last-use.cpp2:850:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-last-use.cpp2:922:22: error: expected ‘;’ at end of member declaration
+In file included from pure2-last-use.cpp:7:
+../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
+pure2-last-use.cpp2:923:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-last-use.cpp2:925:39: error: expected ‘;’ at end of member declaration
+In file included from pure2-last-use.cpp:7:
+../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
+pure2-last-use.cpp2:926:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-last-use.cpp2:980:26: error: expected ‘;’ at end of member declaration
+In file included from pure2-last-use.cpp:7:
+../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
+pure2-last-use.cpp2:981:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-last-use.cpp2:983:43: error: expected ‘;’ at end of member declaration
+In file included from pure2-last-use.cpp:7:
+../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
+pure2-last-use.cpp2:984:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-last-use.cpp2:183:3: error: no declaration matches ‘issue_857_2::issue_857_2(auto:141&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(issue_857_2::__ct ::a_)>::type>::type, const std::add_const_t<std::unique_ptr<int, std::default_delete<int> > >&>’
+pure2-last-use.cpp2:257:7: note: candidates are: ‘issue_857_2::issue_857_2(issue_857_2&&)’
+pure2-last-use.cpp2:257:7: note:                 ‘issue_857_2::issue_857_2(const issue_857_2&)’
+pure2-last-use.cpp2:259:11: note:                 ‘template<class auto:106> issue_857_2::issue_857_2(auto:106&&)’
+pure2-last-use.cpp2:257:7: note: ‘class issue_857_2’ defined here
+pure2-last-use.cpp2:185:100: error: expected unqualified-id before ‘{’ token
+pure2-last-use.cpp2:187:6: error: no declaration matches ‘issue_857_2& issue_857_2::operator=(auto:142&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(issue_857_2::operator=::a_)>::type>::type, const std::add_const_t<std::unique_ptr<int, std::default_delete<int> > >&>’
+pure2-last-use.cpp2:257:7: note: candidates are: ‘issue_857_2& issue_857_2::operator=(issue_857_2&&)’
+pure2-last-use.cpp2:257:7: note:                 ‘issue_857_2& issue_857_2::operator=(const issue_857_2&)’
+pure2-last-use.cpp2:262:14: note:                 ‘template<class auto:107> issue_857_2& issue_857_2::operator=(auto:107&&)’
+pure2-last-use.cpp2:257:7: note: ‘class issue_857_2’ defined here
+pure2-last-use.cpp2:266:3: error: no declaration matches ‘issue_857_3::issue_857_3(auto:143&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(issue_857_3::__ct ::i_)>::type>::type, int&>’
+pure2-last-use.cpp2:262:7: note: candidates are: ‘constexpr issue_857_3::issue_857_3(issue_857_3&&)’
+pure2-last-use.cpp2:262:7: note:                 ‘constexpr issue_857_3::issue_857_3(const issue_857_3&)’
+pure2-last-use.cpp2:270:9: note:                 ‘issue_857_3::issue_857_3()’
+pure2-last-use.cpp2:265:11: note:                 ‘template<class auto:108> issue_857_3::issue_857_3(auto:108&&)’
+pure2-last-use.cpp2:262:7: note: ‘class issue_857_3’ defined here
+pure2-last-use.cpp2:268:112: error: expected unqualified-id before ‘{’ token
+pure2-last-use.cpp2:270:6: error: no declaration matches ‘issue_857_3& issue_857_3::operator=(auto:144&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(issue_857_3::operator=::i_)>::type>::type, int&>’
+pure2-last-use.cpp2:262:7: note: candidates are: ‘issue_857_3& issue_857_3::operator=(issue_857_3&&)’
+pure2-last-use.cpp2:262:7: note:                 ‘issue_857_3& issue_857_3::operator=(const issue_857_3&)’
+pure2-last-use.cpp2:268:14: note:                 ‘template<class auto:109> issue_857_3& issue_857_3::operator=(auto:109&&)’
+pure2-last-use.cpp2:262:7: note: ‘class issue_857_3’ defined here
+pure2-last-use.cpp2:269:3: error: no declaration matches ‘issue_857_6::issue_857_6(auto:145&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(issue_857_6::__ct ::i_)>::type>::type, int&>’
+pure2-last-use.cpp2:266:7: note: candidates are: ‘constexpr issue_857_6::issue_857_6(issue_857_6&&)’
+pure2-last-use.cpp2:266:7: note:                 ‘constexpr issue_857_6::issue_857_6(const issue_857_6&)’
+pure2-last-use.cpp2:274:9: note:                 ‘issue_857_6::issue_857_6()’
+pure2-last-use.cpp2:269:11: note:                 ‘template<class auto:110> issue_857_6::issue_857_6(auto:110&&)’
+pure2-last-use.cpp2:266:7: note: ‘class issue_857_6’ defined here
+pure2-last-use.cpp2:271:112: error: expected unqualified-id before ‘{’ token
+pure2-last-use.cpp2:273:6: error: no declaration matches ‘issue_857_6& issue_857_6::operator=(auto:146&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(issue_857_6::operator=::i_)>::type>::type, int&>’
+pure2-last-use.cpp2:266:7: note: candidates are: ‘issue_857_6& issue_857_6::operator=(issue_857_6&&)’
+pure2-last-use.cpp2:266:7: note:                 ‘issue_857_6& issue_857_6::operator=(const issue_857_6&)’
+pure2-last-use.cpp2:272:14: note:                 ‘template<class auto:111> issue_857_6& issue_857_6::operator=(auto:111&&)’
+pure2-last-use.cpp2:266:7: note: ‘class issue_857_6’ defined here
+pure2-last-use.cpp2:279:272: error: ‘move_only_function’ is not a member of ‘std’
+pure2-last-use.cpp2:279:295: error: template argument 1 is invalid
+pure2-last-use.cpp2:279:299: error: expected primary-expression before ‘>’ token
+pure2-last-use.cpp2:279:304: error: label ‘std’ referenced outside of any function
+pure2-last-use.cpp2:279:307: error: expected ‘)’ before ‘::’ token
+pure2-last-use.cpp2:280: confused by earlier errors, bailing out
