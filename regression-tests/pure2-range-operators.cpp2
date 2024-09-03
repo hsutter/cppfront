@@ -13,6 +13,11 @@ main: () = {
         std::cout << "  (e)$  (v[e])$\n";
     }
 
+    std::cout << "\nAnd test the range when mixing signed & unsigned types:\n";
+    for 0 ..< v.size() do (e) {
+        std::cout << "  (e)$  (v[e])$\n";
+    }
+
     all_about: std::list = 
         ( "Hokey", "Pokey" );
         

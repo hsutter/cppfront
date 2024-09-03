@@ -746,6 +746,11 @@ concept valid_custom_is_operator = predicate_member_fun<X, F, &F::op_is>
                         || brace_initializable_to<X, argument_of_op_is_t<F>> 
                       );
 
+template <typename T, typename U>
+concept has_common_type = requires (T t, U u) {
+    typename std::common_type_t<T, U>;
+};
+
 //-----------------------------------------------------------------------
 //
 //  General helpers
@@ -2429,6 +2434,19 @@ public:
         }
     }
 
+    //  When the first & last types are different, use a CTAD deduction guide
+    //  to find the `std::common_type` for them, if one exists. See below
+    //  after the class definition for the deduction guide.
+    template <typename U>
+        requires has_common_type<T, U>
+    range(
+        T const& f,
+        U const& l,
+        bool     include_last = false
+    )
+        : range(f, l, include_last)
+    {}
+
     class iterator 
     {
         TT first = T{};
@@ -2563,6 +2581,16 @@ public:
         }
     }
 };
+
+//  CTAD deduction guide for the `range` constructor that takes two different types.
+//  Deduces the `std::common_type` for them, if one exists.
+template <typename T, typename U>
+    requires has_common_type<T, U>
+range(
+    T const& f,
+    U const& l,
+    bool     include_last = false
+) -> range<std::common_type_t<T, U>>;
 
 template<typename T>
 auto contains(range<T> const& r, T const& t)
