@@ -1295,7 +1295,7 @@ private:
                             assert (std::ssize(selection_stack.back().branches) > 0);
                             selection_stack.back().branches.back().result = sym.standalone_assignment_to;
 
-                            int this_depth = symbols[pos].depth;
+                            const int this_depth = symbols[pos].depth;
                             while (symbols[pos + 1].depth >= this_depth) {
                                 ++pos;
                             }
@@ -1320,7 +1320,7 @@ private:
 
                         //  The depth of this branch should always be the depth of
                         //  the current selection statement + 1
-                        int branch_depth = symbols[selection_stack.back().pos].depth + 1;
+                        const int branch_depth = symbols[selection_stack.back().pos].depth + 1;
                         while (symbols[pos + 1].depth > branch_depth) {
                             ++pos;
                         }

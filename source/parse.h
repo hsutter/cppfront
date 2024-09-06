@@ -6105,7 +6105,7 @@ private:
             //  Remember current position, because we may need to backtrack
             auto start_pos = pos;
 
-            bool inside_initializer = (
+            const bool inside_initializer = (
                 peek(-1) && peek(-1)->type() == lexeme::Assignment
             );
             auto open_paren = &curr();
@@ -8069,7 +8069,7 @@ private:
     )
         -> std::unique_ptr<compound_statement_node>
     {
-        bool is_braced = curr().type() == lexeme::LeftBrace;
+        const bool is_braced = curr().type() == lexeme::LeftBrace;
         if (
             !is_braced
             && !allow_single_unbraced_statement

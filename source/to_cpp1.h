@@ -1739,7 +1739,7 @@ public:
 
         //  We always want to std::move from named return values,
         //  regardless of their types, so use std::move for that
-        bool add_std_move =
+        const bool add_std_move =
             synthesized_multi_return_size > 1
             || (
                 synthesized_multi_return_size == 1
@@ -1763,7 +1763,7 @@ public:
 
         //  Add `cpp2::move(*this).` when implicitly moving a member on last use
         //  This way, members of lvalue reference type won't be implicitly moved
-        bool add_this =
+        const bool add_this =
             add_move
             && decl
             && decl->identifier
