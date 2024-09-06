@@ -617,7 +617,7 @@ public:
     //
     auto open(
         std::string const&          cpp2_filename_,
-        std::string                 cpp1_filename_,
+        std::string const&          cpp1_filename_,
         std::vector<comment> const& comments,
         cpp2::source const&         source,
         cpp2::parser const&         parser
@@ -632,7 +632,7 @@ public:
             && !pcomments
             && "ICE: tried to call .open twice"
         );
-        cpp1_filename = std::move(cpp1_filename_);
+        cpp1_filename = cpp1_filename_;
         if (cpp1_filename == "stdout") {
             out = &std::cout;
         }
