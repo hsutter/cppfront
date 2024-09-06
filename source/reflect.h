@@ -33,80 +33,80 @@ class object_declaration;
 #line 467 "reflect.h2"
 class type_declaration;
 
-#line 604 "reflect.h2"
+#line 605 "reflect.h2"
 class alias_declaration;
 
-#line 1022 "reflect.h2"
+#line 1023 "reflect.h2"
 class value_member_info;
 
-#line 1540 "reflect.h2"
+#line 1541 "reflect.h2"
 class expression_flags;
 
-#line 1556 "reflect.h2"
+#line 1557 "reflect.h2"
 class regex_token;
 
-#line 1582 "reflect.h2"
+#line 1583 "reflect.h2"
 class regex_token_check;
 
-#line 1601 "reflect.h2"
+#line 1602 "reflect.h2"
 class regex_token_code;
 
-#line 1620 "reflect.h2"
+#line 1621 "reflect.h2"
 class regex_token_empty;
 
-#line 1636 "reflect.h2"
+#line 1637 "reflect.h2"
 class regex_token_list;
 
-#line 1675 "reflect.h2"
+#line 1676 "reflect.h2"
 class parse_context_group_state;
 
-#line 1736 "reflect.h2"
+#line 1737 "reflect.h2"
 class parse_context_branch_reset_state;
 
-#line 1779 "reflect.h2"
+#line 1780 "reflect.h2"
 class parse_context;
 
-#line 2177 "reflect.h2"
+#line 2178 "reflect.h2"
 class generation_function_context;
     
 
-#line 2195 "reflect.h2"
+#line 2196 "reflect.h2"
 class generation_context;
 
-#line 2393 "reflect.h2"
+#line 2394 "reflect.h2"
 class alternative_token;
 
-#line 2408 "reflect.h2"
+#line 2409 "reflect.h2"
 class alternative_token_gen;
 
-#line 2460 "reflect.h2"
+#line 2461 "reflect.h2"
 class any_token;
 
-#line 2478 "reflect.h2"
+#line 2479 "reflect.h2"
 class char_token;
 
-#line 2581 "reflect.h2"
+#line 2582 "reflect.h2"
 class class_token;
 
-#line 2796 "reflect.h2"
+#line 2797 "reflect.h2"
 class group_ref_token;
 
-#line 2927 "reflect.h2"
+#line 2928 "reflect.h2"
 class group_token;
 
-#line 3214 "reflect.h2"
+#line 3215 "reflect.h2"
 class lookahead_token;
 
-#line 3295 "reflect.h2"
+#line 3296 "reflect.h2"
 class range_token;
 
-#line 3443 "reflect.h2"
+#line 3444 "reflect.h2"
 class special_range_token;
 
-#line 3510 "reflect.h2"
+#line 3511 "reflect.h2"
 template<typename Error_out> class regex_generator;
 
-#line 3751 "reflect.h2"
+#line 3752 "reflect.h2"
 }
 
 }
@@ -441,24 +441,24 @@ struct query_declared_value_set_functions_ret { bool out_this_in_that; bool out_
 #line 565 "reflect.h2"
     public: [[nodiscard]] auto query_declared_value_set_functions() const& -> query_declared_value_set_functions_ret;
 
-#line 580 "reflect.h2"
+#line 581 "reflect.h2"
     public: auto add_member(cpp2::impl::in<std::string_view> source) & -> void;
 
-#line 594 "reflect.h2"
+#line 595 "reflect.h2"
     public: auto remove_marked_members() & -> void;
     public: auto remove_all_members() & -> void;
 
     public: auto disable_member_function_generation() & -> void;
     public: type_declaration(type_declaration const& that);
 
-#line 598 "reflect.h2"
+#line 599 "reflect.h2"
 };
 
-#line 604 "reflect.h2"
+#line 605 "reflect.h2"
 class alias_declaration
 : public declaration {
 
-#line 608 "reflect.h2"
+#line 609 "reflect.h2"
     public: explicit alias_declaration(
 
         declaration_node* n_, 
@@ -467,62 +467,62 @@ class alias_declaration
     public: alias_declaration(alias_declaration const& that);
 
 
-#line 617 "reflect.h2"
+#line 618 "reflect.h2"
 };
 
-#line 632 "reflect.h2"
+#line 633 "reflect.h2"
 auto add_virtual_destructor(meta::type_declaration& t) -> void;
 
-#line 650 "reflect.h2"
+#line 651 "reflect.h2"
 auto interface(meta::type_declaration& t) -> void;
 
-#line 696 "reflect.h2"
+#line 697 "reflect.h2"
 auto polymorphic_base(meta::type_declaration& t) -> void;
 
-#line 741 "reflect.h2"
+#line 742 "reflect.h2"
 auto ordered_impl(
     meta::type_declaration& t, 
     cpp2::impl::in<std::string_view> ordering
 ) -> void;
 
-#line 770 "reflect.h2"
+#line 771 "reflect.h2"
 auto ordered(meta::type_declaration& t) -> void;
 
-#line 778 "reflect.h2"
+#line 779 "reflect.h2"
 auto weakly_ordered(meta::type_declaration& t) -> void;
 
-#line 786 "reflect.h2"
+#line 787 "reflect.h2"
 auto partially_ordered(meta::type_declaration& t) -> void;
 
-#line 808 "reflect.h2"
+#line 809 "reflect.h2"
 auto copyable(meta::type_declaration& t) -> void;
 
-#line 842 "reflect.h2"
+#line 843 "reflect.h2"
 auto basic_value(meta::type_declaration& t) -> void;
 
-#line 870 "reflect.h2"
+#line 871 "reflect.h2"
 auto value(meta::type_declaration& t) -> void;
 
-#line 876 "reflect.h2"
+#line 877 "reflect.h2"
 auto weakly_ordered_value(meta::type_declaration& t) -> void;
 
-#line 882 "reflect.h2"
+#line 883 "reflect.h2"
 auto partially_ordered_value(meta::type_declaration& t) -> void;
 
-#line 911 "reflect.h2"
+#line 912 "reflect.h2"
 auto cpp1_rule_of_zero(meta::type_declaration& t) -> void;
 
-#line 953 "reflect.h2"
+#line 954 "reflect.h2"
 auto cpp2_struct(meta::type_declaration& t) -> void;
 
-#line 1022 "reflect.h2"
+#line 1023 "reflect.h2"
 class value_member_info {
     public: std::string name; 
     public: std::string type; 
     public: std::string value; 
     public: value_member_info(auto const& name_, auto const& type_, auto const& value_);
 
-#line 1026 "reflect.h2"
+#line 1027 "reflect.h2"
 };
 
 auto basic_enum(
@@ -531,22 +531,22 @@ auto basic_enum(
     cpp2::impl::in<bool> bitwise
     ) -> void;
 
-#line 1292 "reflect.h2"
+#line 1293 "reflect.h2"
 auto cpp2_enum(meta::type_declaration& t) -> void;
 
-#line 1319 "reflect.h2"
+#line 1320 "reflect.h2"
 auto flag_enum(meta::type_declaration& t) -> void;
 
-#line 1365 "reflect.h2"
+#line 1366 "reflect.h2"
 auto cpp2_union(meta::type_declaration& t) -> void;
 
-#line 1516 "reflect.h2"
+#line 1517 "reflect.h2"
 auto print(cpp2::impl::in<meta::type_declaration> t) -> void;
 
-#line 1536 "reflect.h2"
+#line 1537 "reflect.h2"
 using error_func = std::function<void(cpp2::impl::in<std::string> x)>;
 
-#line 1540 "reflect.h2"
+#line 1541 "reflect.h2"
 class expression_flags
  {
 private: cpp2::u8 _value; private: constexpr expression_flags(cpp2::impl::in<cpp2::i64> _val);
@@ -581,20 +581,20 @@ public: [[nodiscard]] auto to_code() const& -> std::string;
 public: [[nodiscard]] static auto from_string(cpp2::impl::in<std::string_view> s) -> expression_flags;
 public: [[nodiscard]] static auto from_code(cpp2::impl::in<std::string_view> s) -> expression_flags;
 
-#line 1548 "reflect.h2"
+#line 1549 "reflect.h2"
 };
 
-#line 1556 "reflect.h2"
+#line 1557 "reflect.h2"
 class regex_token
  {
     public: std::string string_rep; 
 
     public: explicit regex_token(cpp2::impl::in<std::string> str);
 
-#line 1564 "reflect.h2"
+#line 1565 "reflect.h2"
     public: explicit regex_token();
 
-#line 1569 "reflect.h2"
+#line 1570 "reflect.h2"
     public: virtual auto generate_code([[maybe_unused]] generation_context& unnamed_param_2) const -> void = 0;
 
     public: virtual auto add_groups([[maybe_unused]] std::set<int>& unnamed_param_2) const -> void;
@@ -605,24 +605,24 @@ class regex_token
     public: regex_token(regex_token const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(regex_token const&) -> void = delete;
 
-#line 1574 "reflect.h2"
+#line 1575 "reflect.h2"
 };
 
 using token_ptr = std::shared_ptr<regex_token>;
 using token_vec = std::vector<token_ptr>;
 
-#line 1580 "reflect.h2"
+#line 1581 "reflect.h2"
 //  Adds a check in code generation.
 //
 class regex_token_check
 : public regex_token {
 
-#line 1586 "reflect.h2"
+#line 1587 "reflect.h2"
     private: std::string check; 
 
     public: explicit regex_token_check(cpp2::impl::in<std::string> str, cpp2::impl::in<std::string> check_);
 
-#line 1593 "reflect.h2"
+#line 1594 "reflect.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
     public: virtual ~regex_token_check() noexcept;
 
@@ -630,21 +630,21 @@ class regex_token_check
     public: auto operator=(regex_token_check const&) -> void = delete;
 
 
-#line 1596 "reflect.h2"
+#line 1597 "reflect.h2"
 };
 
-#line 1599 "reflect.h2"
+#line 1600 "reflect.h2"
 //  Adds code in code generation.
 //
 class regex_token_code
 : public regex_token {
 
-#line 1605 "reflect.h2"
+#line 1606 "reflect.h2"
     private: std::string code; 
 
     public: explicit regex_token_code(cpp2::impl::in<std::string> str, cpp2::impl::in<std::string> code_);
 
-#line 1612 "reflect.h2"
+#line 1613 "reflect.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
     public: virtual ~regex_token_code() noexcept;
 
@@ -652,19 +652,19 @@ class regex_token_code
     public: auto operator=(regex_token_code const&) -> void = delete;
 
 
-#line 1615 "reflect.h2"
+#line 1616 "reflect.h2"
 };
 
-#line 1618 "reflect.h2"
+#line 1619 "reflect.h2"
 //  Token that does not influence the matching. E.g. comment.
 //
 class regex_token_empty
 : public regex_token {
 
-#line 1624 "reflect.h2"
+#line 1625 "reflect.h2"
     public: explicit regex_token_empty(cpp2::impl::in<std::string> str);
 
-#line 1628 "reflect.h2"
+#line 1629 "reflect.h2"
     public: auto generate_code([[maybe_unused]] generation_context& unnamed_param_2) const -> void override;
     public: virtual ~regex_token_empty() noexcept;
 
@@ -672,27 +672,27 @@ class regex_token_empty
     public: auto operator=(regex_token_empty const&) -> void = delete;
 
 
-#line 1631 "reflect.h2"
+#line 1632 "reflect.h2"
 };
 
-#line 1634 "reflect.h2"
+#line 1635 "reflect.h2"
 //  Represents a list of regex tokens as one token.
 //
 class regex_token_list
 : public regex_token {
 
-#line 1640 "reflect.h2"
+#line 1641 "reflect.h2"
     public: token_vec tokens; 
 
     public: explicit regex_token_list(cpp2::impl::in<token_vec> t);
 
-#line 1647 "reflect.h2"
+#line 1648 "reflect.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
 
-#line 1653 "reflect.h2"
+#line 1654 "reflect.h2"
     public: auto add_groups(std::set<int>& groups) const -> void override;
 
-#line 1659 "reflect.h2"
+#line 1660 "reflect.h2"
     public: [[nodiscard]] static auto gen_string(cpp2::impl::in<token_vec> vec) -> std::string;
     public: virtual ~regex_token_list() noexcept;
 
@@ -700,10 +700,10 @@ class regex_token_list
     public: auto operator=(regex_token_list const&) -> void = delete;
 
 
-#line 1666 "reflect.h2"
+#line 1667 "reflect.h2"
 };
 
-#line 1669 "reflect.h2"
+#line 1670 "reflect.h2"
 //
 //  Parse and generation context.
 //
@@ -719,33 +719,33 @@ class parse_context_group_state
     //  Start a new alternative.
     public: auto next_alternative() & -> void;
 
-#line 1689 "reflect.h2"
-    //  Swap this state with the other one.
+#line 1690 "reflect.h2"
+    //  Swap this state with the other one. NOLINTNEXTLINE(performance-noexcept-swap)
     public: auto swap(parse_context_group_state& t) & -> void;
 
-#line 1696 "reflect.h2"
+#line 1697 "reflect.h2"
     //  Convert this state into a regex token.
     public: [[nodiscard]] auto get_as_token() & -> token_ptr;
 
-#line 1708 "reflect.h2"
+#line 1709 "reflect.h2"
     //  Add a token to the current matcher list.
     public: auto add(cpp2::impl::in<token_ptr> token) & -> void;
 
-#line 1713 "reflect.h2"
+#line 1714 "reflect.h2"
     //  True if current matcher list is empty.
     public: [[nodiscard]] auto empty() const& -> bool;
 
-#line 1717 "reflect.h2"
+#line 1718 "reflect.h2"
     //  Apply optimizations to the matcher list.
     public: static auto post_process_list(token_vec& list) -> void;
     public: parse_context_group_state(auto const& cur_match_list_, auto const& alternate_match_lists_, auto const& modifiers_);
 public: parse_context_group_state();
 
 
-#line 1731 "reflect.h2"
+#line 1732 "reflect.h2"
 };
 
-#line 1734 "reflect.h2"
+#line 1735 "reflect.h2"
 //  State for the branch reset. Takes care of the group numbering. See '(|<pattern>)'.
 //
 class parse_context_branch_reset_state
@@ -758,25 +758,25 @@ class parse_context_branch_reset_state
     //  Next group identifier.
     public: [[nodiscard]] auto next() & -> int;
 
-#line 1752 "reflect.h2"
+#line 1753 "reflect.h2"
     //  Set next group identifier.
     public: auto set_next(cpp2::impl::in<int> g) & -> void;
 
-#line 1758 "reflect.h2"
+#line 1759 "reflect.h2"
     //  Start a new alternative branch.
     public: auto next_alternative() & -> void;
 
-#line 1765 "reflect.h2"
+#line 1766 "reflect.h2"
     //  Initialize for a branch reset group.
     public: auto set_active_reset(cpp2::impl::in<int> restart) & -> void;
     public: parse_context_branch_reset_state(auto const& is_active_, auto const& cur_group_, auto const& max_group_, auto const& from_);
 public: parse_context_branch_reset_state();
 
 
-#line 1772 "reflect.h2"
+#line 1773 "reflect.h2"
 };
 
-#line 1775 "reflect.h2"
+#line 1776 "reflect.h2"
 //  Context during parsing of the regular expressions.
 // 
 //  Keeps track of the distributed group identifiers, current parsed group and branch resets.
@@ -790,7 +790,7 @@ class parse_context
     private: parse_context_group_state cur_group_state {}; 
     private: parse_context_branch_reset_state cur_branch_reset_state {}; 
 
-#line 1789 "reflect.h2"
+#line 1790 "reflect.h2"
            public: std::map<std::string,int> named_groups {}; 
 
     private: error_func error_out; // TODO: Declaring std::function<void(std::string)> fails for cpp2.
@@ -798,64 +798,64 @@ class parse_context
 
     public: explicit parse_context(cpp2::impl::in<std::string_view> r, auto const& e);
 
-#line 1800 "reflect.h2"
+#line 1801 "reflect.h2"
     //  State management functions
     //
 
     //  Returned group state needs to be stored and provided in `end_group`.
     public: [[nodiscard]] auto start_group() & -> parse_context_group_state;
 
-#line 1813 "reflect.h2"
+#line 1814 "reflect.h2"
     //  `old_state` argument needs to be from start group.
     public: [[nodiscard]] auto end_group(cpp2::impl::in<parse_context_group_state> old_state) & -> token_ptr;
 
-#line 1821 "reflect.h2"
+#line 1822 "reflect.h2"
     public: [[nodiscard]] auto get_modifiers() const& -> expression_flags;
 
-#line 1825 "reflect.h2"
+#line 1826 "reflect.h2"
     public: auto set_modifiers(cpp2::impl::in<expression_flags> mod) & -> void;
 
-#line 1829 "reflect.h2"
+#line 1830 "reflect.h2"
     //  Branch reset management functions
     //
 
     public: [[nodiscard]] auto branch_reset_new_state() & -> parse_context_branch_reset_state;
 
-#line 1841 "reflect.h2"
+#line 1842 "reflect.h2"
     public: auto branch_reset_restore_state(cpp2::impl::in<parse_context_branch_reset_state> old_state) & -> void;
 
-#line 1848 "reflect.h2"
+#line 1849 "reflect.h2"
     public: auto next_alternative() & -> void;
 
-#line 1854 "reflect.h2"
+#line 1855 "reflect.h2"
     //  Regex token management
     //
     public: auto add_token(cpp2::impl::in<token_ptr> token) & -> void;
 
-#line 1860 "reflect.h2"
+#line 1861 "reflect.h2"
     public: [[nodiscard]] auto has_token() const& -> bool;
 
-#line 1864 "reflect.h2"
+#line 1865 "reflect.h2"
     public: [[nodiscard]] auto pop_token() & -> token_ptr;
 
-#line 1875 "reflect.h2"
+#line 1876 "reflect.h2"
     public: [[nodiscard]] auto get_as_token() & -> token_ptr;
 
-#line 1879 "reflect.h2"
+#line 1880 "reflect.h2"
     //  Group management
     //
     public: [[nodiscard]] auto get_cur_group() const& -> int;
 
-#line 1885 "reflect.h2"
+#line 1886 "reflect.h2"
     public: [[nodiscard]] auto next_group() & -> int;
 
-#line 1889 "reflect.h2"
+#line 1890 "reflect.h2"
     public: auto set_named_group(cpp2::impl::in<std::string> name, cpp2::impl::in<int> id) & -> void;
 
-#line 1896 "reflect.h2"
+#line 1897 "reflect.h2"
     public: [[nodiscard]] auto get_named_group(cpp2::impl::in<std::string> name) const& -> int;
 
-#line 1907 "reflect.h2"
+#line 1908 "reflect.h2"
     //  Position management functions
     //
     public: [[nodiscard]] auto current() const& -> char;
@@ -863,51 +863,51 @@ class parse_context
     //  Get the next token in the regex, skipping spaces according to the parameters. See `x` and `xx` modifiers.
     private: [[nodiscard]] auto get_next_position(cpp2::impl::in<bool> in_class, cpp2::impl::in<bool> no_skip) const& -> size_t;
 
-#line 1951 "reflect.h2"
+#line 1952 "reflect.h2"
     //  Return true if next token is available.
     private: [[nodiscard]] auto next_impl(cpp2::impl::in<bool> in_class, cpp2::impl::in<bool> no_skip) & -> bool;
 
-#line 1963 "reflect.h2"
+#line 1964 "reflect.h2"
     public: [[nodiscard]] auto next() & -> auto;
     public: [[nodiscard]] auto next_in_class() & -> auto;
     public: [[nodiscard]] auto next_no_skip() & -> auto;
 
     public: [[nodiscard]] auto next_n(cpp2::impl::in<int> n) & -> bool;
 
-#line 1976 "reflect.h2"
+#line 1977 "reflect.h2"
     public: [[nodiscard]] auto has_next() const& -> bool;
 
     private: [[nodiscard]] auto grab_until_impl(cpp2::impl::in<std::string> e, cpp2::impl::out<std::string> r, cpp2::impl::in<bool> any) & -> bool;
 
-#line 1999 "reflect.h2"
+#line 2000 "reflect.h2"
     public: [[nodiscard]] auto grab_until(cpp2::impl::in<std::string> e, cpp2::impl::out<std::string> r) & -> auto;
     public: [[nodiscard]] auto grab_until(cpp2::impl::in<char> e, cpp2::impl::out<std::string> r) & -> auto;
     public: [[nodiscard]] auto grab_until_one_of(cpp2::impl::in<std::string> e, cpp2::impl::out<std::string> r) & -> auto;
 
     public: [[nodiscard]] auto grab_n(cpp2::impl::in<int> n, cpp2::impl::out<std::string> r) & -> bool;
 
-#line 2016 "reflect.h2"
+#line 2017 "reflect.h2"
     public: [[nodiscard]] auto grab_number() & -> std::string;
 
-#line 2037 "reflect.h2"
+#line 2038 "reflect.h2"
     private: [[nodiscard]] auto peek_impl(cpp2::impl::in<bool> in_class) const& -> char;
 
-#line 2047 "reflect.h2"
+#line 2048 "reflect.h2"
     public: [[nodiscard]] auto peek() const& -> auto;
     public: [[nodiscard]] auto peek_in_class() const& -> auto;
 
-#line 2051 "reflect.h2"
+#line 2052 "reflect.h2"
     //  Parsing functions
     //
     public: [[nodiscard]] auto parser_group_modifiers(cpp2::impl::in<std::string> change_str, expression_flags& parser_modifiers) & -> bool;
 
-#line 2107 "reflect.h2"
+#line 2108 "reflect.h2"
     public: [[nodiscard]] auto parse_until(cpp2::impl::in<char> term) & -> bool;
 
-#line 2145 "reflect.h2"
+#line 2146 "reflect.h2"
     public: [[nodiscard]] auto parse(cpp2::impl::in<std::string> modifiers) & -> bool;
 
-#line 2160 "reflect.h2"
+#line 2161 "reflect.h2"
     //  Misc functions
 
     public: [[nodiscard]] auto get_pos() const& -> auto;
@@ -919,10 +919,10 @@ class parse_context
     public: auto operator=(parse_context const&) -> void = delete;
 
 
-#line 2171 "reflect.h2"
+#line 2172 "reflect.h2"
 };
 
-#line 2174 "reflect.h2"
+#line 2175 "reflect.h2"
 //  Context for one function generation. Generation of functions can be interleaved,
 //  therefore we buffer the code for one function here.
 //
@@ -932,16 +932,16 @@ class generation_function_context {
 
     public: auto add_tabs(cpp2::impl::in<int> c) & -> void;
 
-#line 2188 "reflect.h2"
+#line 2189 "reflect.h2"
     public: auto remove_tabs(cpp2::impl::in<int> c) & -> void;
     public: generation_function_context(auto const& code_, auto const& tabs_);
 public: generation_function_context();
 
 
-#line 2191 "reflect.h2"
+#line 2192 "reflect.h2"
 };
 
-#line 2194 "reflect.h2"
+#line 2195 "reflect.h2"
 //  Context for generating the state machine.
 class generation_context
  {
@@ -961,68 +961,68 @@ class generation_context
     //  Add code line.
     public: auto add(cpp2::impl::in<std::string> s) & -> void;
 
-#line 2216 "reflect.h2"
+#line 2217 "reflect.h2"
     //  Add check for token. The check needs to be a function call that returns a boolean.
     public: auto add_check(cpp2::impl::in<std::string> check) & -> void;
 
-#line 2222 "reflect.h2"
+#line 2223 "reflect.h2"
     //  Add a stateful check. The check needs to return a `match_return`.
     public: auto add_statefull(cpp2::impl::in<std::string> next_func, cpp2::impl::in<std::string> check) & -> void;
 
-#line 2231 "reflect.h2"
+#line 2232 "reflect.h2"
     protected: auto start_func_named(cpp2::impl::in<std::string> name) & -> void;
 
-#line 2242 "reflect.h2"
+#line 2243 "reflect.h2"
     protected: [[nodiscard]] auto start_func() & -> std::string;
 
-#line 2249 "reflect.h2"
+#line 2250 "reflect.h2"
     protected: auto end_func_statefull(cpp2::impl::in<std::string> s) & -> void;
 
-#line 2268 "reflect.h2"
+#line 2269 "reflect.h2"
     //  Generate the function for a token.
     public: [[nodiscard]] auto generate_func(cpp2::impl::in<token_ptr> token) & -> std::string;
 
-#line 2278 "reflect.h2"
+#line 2279 "reflect.h2"
     //  Generate the reset for a list of group identifiers.
     public: [[nodiscard]] auto generate_reset(cpp2::impl::in<std::set<int>> groups) & -> std::string;
 
-#line 2301 "reflect.h2"
+#line 2302 "reflect.h2"
     //  Name generation
     //
     protected: [[nodiscard]] auto gen_func_name() & -> std::string;
 
-#line 2309 "reflect.h2"
+#line 2310 "reflect.h2"
     public: [[nodiscard]] auto next_func_name() & -> std::string;
 
-#line 2313 "reflect.h2"
+#line 2314 "reflect.h2"
     protected: [[nodiscard]] auto gen_reset_func_name() & -> std::string;
 
-#line 2319 "reflect.h2"
+#line 2320 "reflect.h2"
     public: [[nodiscard]] auto gen_temp() & -> std::string;
 
-#line 2325 "reflect.h2"
+#line 2326 "reflect.h2"
     //  Context management
     //
     public: [[nodiscard]] auto new_context() & -> generation_function_context*;
 
-#line 2335 "reflect.h2"
+#line 2336 "reflect.h2"
     public: auto finish_context() & -> void;
 
-#line 2343 "reflect.h2"
+#line 2344 "reflect.h2"
     //  Misc functions
     //
     private: [[nodiscard]] auto get_current() & -> generation_function_context*;
 
-#line 2349 "reflect.h2"
+#line 2350 "reflect.h2"
     private: [[nodiscard]] auto get_base() & -> generation_function_context*;
 
-#line 2353 "reflect.h2"
+#line 2354 "reflect.h2"
     public: [[nodiscard]] auto get_entry_func() const& -> std::string;
 
-#line 2357 "reflect.h2"
+#line 2358 "reflect.h2"
     public: [[nodiscard]] auto create_named_group_lookup(cpp2::impl::in<std::map<std::string,int>> named_groups) const& -> std::string;
 
-#line 2381 "reflect.h2"
+#line 2382 "reflect.h2"
     //  Run the generation for the token.
     public: [[nodiscard]] auto run(cpp2::impl::in<token_ptr> token) & -> std::string;
     public: generation_context() = default;
@@ -1030,7 +1030,7 @@ class generation_context
     public: auto operator=(generation_context const&) -> void = delete;
 
 
-#line 2387 "reflect.h2"
+#line 2388 "reflect.h2"
 };
 
 //  Regex syntax: |  Example: ab|ba
@@ -1050,24 +1050,24 @@ class alternative_token
     public: auto operator=(alternative_token const&) -> void = delete;
 
 
-#line 2406 "reflect.h2"
+#line 2407 "reflect.h2"
 };
 
 class alternative_token_gen
 : public regex_token {
 
-#line 2412 "reflect.h2"
+#line 2413 "reflect.h2"
     private: token_vec alternatives; 
 
     public: explicit alternative_token_gen(cpp2::impl::in<token_vec> a);
 
-#line 2419 "reflect.h2"
+#line 2420 "reflect.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
 
-#line 2436 "reflect.h2"
+#line 2437 "reflect.h2"
     public: auto add_groups(std::set<int>& groups) const -> void override;
 
-#line 2443 "reflect.h2"
+#line 2444 "reflect.h2"
     public: [[nodiscard]] static auto gen_string(cpp2::impl::in<token_vec> a) -> std::string;
     public: virtual ~alternative_token_gen() noexcept;
 
@@ -1075,19 +1075,19 @@ class alternative_token_gen
     public: auto operator=(alternative_token_gen const&) -> void = delete;
 
 
-#line 2455 "reflect.h2"
+#line 2456 "reflect.h2"
 };
 
-#line 2458 "reflect.h2"
+#line 2459 "reflect.h2"
 //  Regex syntax: .
 //
 class any_token
 : public regex_token_check {
 
-#line 2464 "reflect.h2"
+#line 2465 "reflect.h2"
     public: explicit any_token(cpp2::impl::in<bool> single_line);
 
-#line 2468 "reflect.h2"
+#line 2469 "reflect.h2"
     public: [[nodiscard]] static auto parse(parse_context& ctx) -> token_ptr;
     public: virtual ~any_token() noexcept;
 
@@ -1095,37 +1095,37 @@ class any_token
     public: auto operator=(any_token const&) -> void = delete;
 
 
-#line 2473 "reflect.h2"
+#line 2474 "reflect.h2"
 };
 
-#line 2476 "reflect.h2"
+#line 2477 "reflect.h2"
 //  Regex syntax: a
 //
 class char_token
 : public regex_token {
 
-#line 2482 "reflect.h2"
+#line 2483 "reflect.h2"
     private: std::string token; 
     private: bool ignore_case; 
 
     public: explicit char_token(cpp2::impl::in<char> t, cpp2::impl::in<bool> ignore_case_);
 
-#line 2491 "reflect.h2"
+#line 2492 "reflect.h2"
     public: [[nodiscard]] static auto parse(parse_context& ctx) -> token_ptr;
 
-#line 2495 "reflect.h2"
+#line 2496 "reflect.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
 
-#line 2518 "reflect.h2"
+#line 2519 "reflect.h2"
     public: auto gen_case_insensitive(cpp2::impl::in<std::string> lower, cpp2::impl::in<std::string> upper, generation_context& ctx) const& -> void;
 
-#line 2539 "reflect.h2"
+#line 2540 "reflect.h2"
     public: auto gen_case_sensitive(generation_context& ctx) const& -> void;
 
-#line 2557 "reflect.h2"
+#line 2558 "reflect.h2"
     public: [[nodiscard]] auto add_escapes(std::string str) const& -> std::string;
 
-#line 2572 "reflect.h2"
+#line 2573 "reflect.h2"
     public: auto append(char_token const& that) & -> void;
     public: virtual ~char_token() noexcept;
 
@@ -1133,30 +1133,30 @@ class char_token
     public: auto operator=(char_token const&) -> void = delete;
 
 
-#line 2576 "reflect.h2"
+#line 2577 "reflect.h2"
 };
 
-#line 2579 "reflect.h2"
+#line 2580 "reflect.h2"
 //  Regex syntax: [<character classes>]  Example: [abcx-y[:digits:]]
 //
 class class_token
 : public regex_token {
 
-#line 2585 "reflect.h2"
+#line 2586 "reflect.h2"
     private: bool negate; 
     private: bool case_insensitive; 
     private: std::string class_str; 
 
     public: explicit class_token(cpp2::impl::in<bool> negate_, cpp2::impl::in<bool> case_insensitive_, cpp2::impl::in<std::string> class_str_, cpp2::impl::in<std::string> str);
 
-#line 2597 "reflect.h2"
+#line 2598 "reflect.h2"
     //  TODO: Rework class generation: Generate check functions for classes.
     public: [[nodiscard]] static auto parse(parse_context& ctx) -> token_ptr;
 
-#line 2723 "reflect.h2"
+#line 2724 "reflect.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
 
-#line 2728 "reflect.h2"
+#line 2729 "reflect.h2"
     private: [[nodiscard]] static auto create_matcher(cpp2::impl::in<std::string> name, cpp2::impl::in<std::string> template_arguments) -> std::string;
     public: virtual ~class_token() noexcept;
 
@@ -1164,20 +1164,20 @@ class class_token
     public: auto operator=(class_token const&) -> void = delete;
 
 
-#line 2735 "reflect.h2"
+#line 2736 "reflect.h2"
 };
 
-#line 2738 "reflect.h2"
+#line 2739 "reflect.h2"
 //  Regex syntax: \a or \n or \[
 //
 [[nodiscard]] auto escape_token_parse(parse_context& ctx) -> token_ptr;
 
-#line 2779 "reflect.h2"
+#line 2780 "reflect.h2"
 //  Regex syntax: \K Example: ab\Kcd
 //
 [[nodiscard]] auto global_group_reset_token_parse(parse_context& ctx) -> token_ptr;
 
-#line 2790 "reflect.h2"
+#line 2791 "reflect.h2"
 //  Regex syntax: \<number>  Example: \1
 //                \g{name_or_number}
 //                \k{name_or_number}
@@ -1187,16 +1187,16 @@ class class_token
 class group_ref_token
 : public regex_token {
 
-#line 2800 "reflect.h2"
+#line 2801 "reflect.h2"
     private: int id; 
     private: bool case_insensitive; 
 
     public: explicit group_ref_token(cpp2::impl::in<int> id_, cpp2::impl::in<bool> case_insensitive_, cpp2::impl::in<std::string> str);
 
-#line 2810 "reflect.h2"
+#line 2811 "reflect.h2"
     public: [[nodiscard]] static auto parse(parse_context& ctx) -> token_ptr;
 
-#line 2911 "reflect.h2"
+#line 2912 "reflect.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
     public: virtual ~group_ref_token() noexcept;
 
@@ -1204,10 +1204,10 @@ class group_ref_token
     public: auto operator=(group_ref_token const&) -> void = delete;
 
 
-#line 2914 "reflect.h2"
+#line 2915 "reflect.h2"
 };
 
-#line 2917 "reflect.h2"
+#line 2918 "reflect.h2"
 //  Regex syntax: (<tokens>)      Example: (abc)
 //                (?<modifiers)            (?i)
 //                (?<modifiers>:<tokens>)  (?i:abc)
@@ -1221,22 +1221,22 @@ class group_ref_token
 class group_token
 : public regex_token {
 
-#line 2931 "reflect.h2"
+#line 2932 "reflect.h2"
     private: int number {-1}; 
     private: token_ptr inner {nullptr}; 
 
     public: [[nodiscard]] static auto parse_lookahead(parse_context& ctx, cpp2::impl::in<std::string> syntax, cpp2::impl::in<bool> positive) -> token_ptr;
 
-#line 2948 "reflect.h2"
+#line 2949 "reflect.h2"
     public: [[nodiscard]] static auto parse(parse_context& ctx) -> token_ptr;
 
-#line 3085 "reflect.h2"
+#line 3086 "reflect.h2"
     public: [[nodiscard]] static auto gen_string(cpp2::impl::in<std::string> name, cpp2::impl::in<bool> name_brackets, cpp2::impl::in<bool> has_modifier, cpp2::impl::in<std::string> modifiers, cpp2::impl::in<token_ptr> inner_) -> std::string;
 
-#line 3103 "reflect.h2"
+#line 3104 "reflect.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
 
-#line 3123 "reflect.h2"
+#line 3124 "reflect.h2"
     public: auto add_groups(std::set<int>& groups) const -> void override;
     public: virtual ~group_token() noexcept;
 
@@ -1245,25 +1245,25 @@ class group_token
     public: auto operator=(group_token const&) -> void = delete;
 
 
-#line 3130 "reflect.h2"
+#line 3131 "reflect.h2"
 };
 
-#line 3133 "reflect.h2"
+#line 3134 "reflect.h2"
 //  Regex syntax: \x<number> or \x{<number>}  Example: \x{62}
 //
 [[nodiscard]] auto hexadecimal_token_parse(parse_context& ctx) -> token_ptr;
 
-#line 3174 "reflect.h2"
+#line 3175 "reflect.h2"
 //  Regex syntax: $  Example: aa$
 //
 [[nodiscard]] auto line_end_token_parse(parse_context& ctx) -> token_ptr;
 
-#line 3194 "reflect.h2"
+#line 3195 "reflect.h2"
 //  Regex syntax: ^  Example: ^aa
 //
 [[nodiscard]] auto line_start_token_parse(parse_context& ctx) -> token_ptr;
 
-#line 3210 "reflect.h2"
+#line 3211 "reflect.h2"
 //  Regex syntax: (?=) or (?!) or (*pla), etc.  Example: (?=AA)
 //
 //  Parsed in group_token.
@@ -1271,16 +1271,16 @@ class group_token
 class lookahead_token
 : public regex_token {
 
-#line 3218 "reflect.h2"
+#line 3219 "reflect.h2"
     protected: bool positive; 
     public:   token_ptr inner {nullptr}; 
 
     public: explicit lookahead_token(cpp2::impl::in<bool> positive_);
 
-#line 3225 "reflect.h2"
+#line 3226 "reflect.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
 
-#line 3231 "reflect.h2"
+#line 3232 "reflect.h2"
     public: auto add_groups(std::set<int>& groups) const -> void override;
     public: virtual ~lookahead_token() noexcept;
 
@@ -1288,26 +1288,26 @@ class lookahead_token
     public: auto operator=(lookahead_token const&) -> void = delete;
 
 
-#line 3234 "reflect.h2"
+#line 3235 "reflect.h2"
 };
 
-#line 3237 "reflect.h2"
+#line 3238 "reflect.h2"
 // Named character classes
 //
 [[nodiscard]] auto named_class_token_parse(parse_context& ctx) -> token_ptr;
 
-#line 3265 "reflect.h2"
+#line 3266 "reflect.h2"
 //  Regex syntax: \o{<number>}  Example: \o{142}
 //
 [[nodiscard]] auto octal_token_parse(parse_context& ctx) -> token_ptr;
 
-#line 3293 "reflect.h2"
+#line 3294 "reflect.h2"
 //  Regex syntax: <matcher>{min, max}  Example: a{2,4}
 //
 class range_token
 : public regex_token {
 
-#line 3299 "reflect.h2"
+#line 3300 "reflect.h2"
               protected: int min_count {-1}; 
               protected: int max_count {-1}; 
               protected: int kind {range_flags::greedy}; 
@@ -1317,19 +1317,19 @@ class range_token
 
     public: [[nodiscard]] static auto parse(parse_context& ctx) -> token_ptr;
 
-#line 3379 "reflect.h2"
+#line 3380 "reflect.h2"
     public: auto parse_modifier(parse_context& ctx) & -> void;
 
-#line 3391 "reflect.h2"
+#line 3392 "reflect.h2"
     public: [[nodiscard]] auto gen_mod_string() const& -> std::string;
 
-#line 3404 "reflect.h2"
+#line 3405 "reflect.h2"
     public: [[nodiscard]] auto gen_range_string() const& -> std::string;
 
-#line 3423 "reflect.h2"
+#line 3424 "reflect.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
 
-#line 3434 "reflect.h2"
+#line 3435 "reflect.h2"
     public: auto add_groups(std::set<int>& groups) const -> void override;
     public: virtual ~range_token() noexcept;
 
@@ -1337,16 +1337,16 @@ class range_token
     public: auto operator=(range_token const&) -> void = delete;
 
 
-#line 3438 "reflect.h2"
+#line 3439 "reflect.h2"
 };
 
-#line 3441 "reflect.h2"
+#line 3442 "reflect.h2"
 //  Regex syntax: *, +, or ?  Example: aa*
 //
 class special_range_token
 : public range_token {
 
-#line 3447 "reflect.h2"
+#line 3448 "reflect.h2"
     public: [[nodiscard]] static auto parse(parse_context& ctx) -> token_ptr;
     public: virtual ~special_range_token() noexcept;
 
@@ -1355,17 +1355,17 @@ class special_range_token
     public: auto operator=(special_range_token const&) -> void = delete;
 
 
-#line 3477 "reflect.h2"
+#line 3478 "reflect.h2"
 };
 
-#line 3480 "reflect.h2"
+#line 3481 "reflect.h2"
 //  Regex syntax: \b or \B  Example: \bword\b
 //
 //  Matches the start end end of word boundaries.
 //
 [[nodiscard]] auto word_boundary_token_parse(parse_context& ctx) -> token_ptr;
 
-#line 3502 "reflect.h2"
+#line 3503 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  Parser for regular expression.
@@ -1386,24 +1386,24 @@ template<typename Error_out> class regex_generator
 
     public: explicit regex_generator(cpp2::impl::in<std::string_view> r, Error_out const& e);
 
-#line 3525 "reflect.h2"
+#line 3526 "reflect.h2"
     public: [[nodiscard]] auto parse() & -> std::string;
 
-#line 3560 "reflect.h2"
+#line 3561 "reflect.h2"
     private: auto extract_modifiers() & -> void;
     public: regex_generator(regex_generator const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(regex_generator const&) -> void = delete;
 
 
-#line 3574 "reflect.h2"
+#line 3575 "reflect.h2"
 };
 
 template<typename Err> [[nodiscard]] auto generate_regex(cpp2::impl::in<std::string_view> regex, Err const& err) -> std::string;
 
-#line 3586 "reflect.h2"
+#line 3587 "reflect.h2"
 auto regex_gen(meta::type_declaration& t) -> void;
 
-#line 3641 "reflect.h2"
+#line 3642 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  apply_metafunctions
@@ -1414,7 +1414,7 @@ auto regex_gen(meta::type_declaration& t) -> void;
     auto const& error
     ) -> bool;
 
-#line 3751 "reflect.h2"
+#line 3752 "reflect.h2"
 }
 
 }
@@ -2116,9 +2116,10 @@ declaration::declaration(declaration const& that)
         out_this_move_that.construct(declared.out_this_move_that != nullptr);
         inout_this_in_that.construct(declared.inout_this_in_that != nullptr);
         inout_this_move_that.construct(cpp2::move(declared).inout_this_move_that != nullptr);
-    return  { std::move(out_this_in_that.value()), std::move(out_this_move_that.value()), std::move(inout_this_in_that.value()), std::move(inout_this_move_that.value()) }; }
+        return  { std::move(out_this_in_that.value()), std::move(out_this_move_that.value()), std::move(inout_this_in_that.value()), std::move(inout_this_move_that.value()) }; // NOLINT(performance-move-const-arg)
+    }
 
-#line 580 "reflect.h2"
+#line 581 "reflect.h2"
     auto type_declaration::add_member(cpp2::impl::in<std::string_view> source) & -> void
     {
         auto decl {parse_statement(source)}; 
@@ -2133,30 +2134,30 @@ declaration::declaration(declaration const& that)
                  std::string("unexpected error while attempting to add member:\n") + source);
     }
 
-#line 594 "reflect.h2"
-    auto type_declaration::remove_marked_members() & -> void { CPP2_UFCS(type_remove_marked_members)((*cpp2::impl::assert_not_null(n)));  }
 #line 595 "reflect.h2"
+    auto type_declaration::remove_marked_members() & -> void { CPP2_UFCS(type_remove_marked_members)((*cpp2::impl::assert_not_null(n)));  }
+#line 596 "reflect.h2"
     auto type_declaration::remove_all_members() & -> void { CPP2_UFCS(type_remove_all_members)((*cpp2::impl::assert_not_null(n))); }
 
-#line 597 "reflect.h2"
+#line 598 "reflect.h2"
     auto type_declaration::disable_member_function_generation() & -> void { CPP2_UFCS(type_disable_member_function_generation)((*cpp2::impl::assert_not_null(n)));  }
 
     type_declaration::type_declaration(type_declaration const& that)
                                 : declaration{ static_cast<declaration const&>(that) }{}
 
-#line 601 "reflect.h2"
+#line 602 "reflect.h2"
 //-----------------------------------------------------------------------
 //  Alias declarations
 //
 
-#line 608 "reflect.h2"
+#line 609 "reflect.h2"
     alias_declaration::alias_declaration(
 
         declaration_node* n_, 
         cpp2::impl::in<compiler_services> s
     )
         : declaration{ n_, s }
-#line 613 "reflect.h2"
+#line 614 "reflect.h2"
     {
 
         if (cpp2::cpp2_default.is_active() && !(CPP2_UFCS(is_alias)((*cpp2::impl::assert_not_null(n)))) ) { cpp2::cpp2_default.report_violation(""); }
@@ -2165,7 +2166,7 @@ declaration::declaration(declaration const& that)
     alias_declaration::alias_declaration(alias_declaration const& that)
                                 : declaration{ static_cast<declaration const&>(that) }{}
 
-#line 620 "reflect.h2"
+#line 621 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  Metafunctions - these are hardwired for now until we get to the
@@ -2178,13 +2179,13 @@ declaration::declaration(declaration const& that)
 //  Some common metafunction helpers (metafunctions are just functions,
 //  so they can be factored as usual)
 //
-#line 632 "reflect.h2"
+#line 633 "reflect.h2"
 auto add_virtual_destructor(meta::type_declaration& t) -> void
 {
     CPP2_UFCS(add_member)(t, "operator=: (virtual move this) = { }");
 }
 
-#line 638 "reflect.h2"
+#line 639 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //      "... an abstract base class defines an interface ..."
@@ -2197,7 +2198,7 @@ auto add_virtual_destructor(meta::type_declaration& t) -> void
 //
 //  an abstract base class having only pure virtual functions
 //
-#line 650 "reflect.h2"
+#line 651 "reflect.h2"
 auto interface(meta::type_declaration& t) -> void
 {
     auto has_dtor {false}; 
@@ -2224,7 +2225,7 @@ auto interface(meta::type_declaration& t) -> void
     }
 }
 
-#line 677 "reflect.h2"
+#line 678 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "C.35: A base class destructor should be either public and
@@ -2244,7 +2245,7 @@ auto interface(meta::type_declaration& t) -> void
 //
 //  Unlike an interface, it can have nonpublic and nonvirtual functions.
 //
-#line 696 "reflect.h2"
+#line 697 "reflect.h2"
 auto polymorphic_base(meta::type_declaration& t) -> void
 {
     auto has_dtor {false}; 
@@ -2269,7 +2270,7 @@ auto polymorphic_base(meta::type_declaration& t) -> void
     }
 }
 
-#line 721 "reflect.h2"
+#line 722 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "... A totally ordered type ... requires operator<=> that
@@ -2290,7 +2291,7 @@ auto polymorphic_base(meta::type_declaration& t) -> void
 //-----------------------------------------------------------------------
 //
 
-#line 741 "reflect.h2"
+#line 742 "reflect.h2"
 auto ordered_impl(
     meta::type_declaration& t, 
     cpp2::impl::in<std::string_view> ordering// must be "strong_ordering" etc.
@@ -2320,7 +2321,7 @@ auto ordered_impl(
 //
 //  Note: the ordering that should be encouraged as default gets the nice name
 //
-#line 770 "reflect.h2"
+#line 771 "reflect.h2"
 auto ordered(meta::type_declaration& t) -> void
 {
     ordered_impl(t, "strong_ordering");
@@ -2329,7 +2330,7 @@ auto ordered(meta::type_declaration& t) -> void
 //-----------------------------------------------------------------------
 //  weakly_ordered - a weakly ordered type
 //
-#line 778 "reflect.h2"
+#line 779 "reflect.h2"
 auto weakly_ordered(meta::type_declaration& t) -> void
 {
     ordered_impl(t, "weak_ordering");
@@ -2338,13 +2339,13 @@ auto weakly_ordered(meta::type_declaration& t) -> void
 //-----------------------------------------------------------------------
 //  partially_ordered - a partially ordered type
 //
-#line 786 "reflect.h2"
+#line 787 "reflect.h2"
 auto partially_ordered(meta::type_declaration& t) -> void
 {
     ordered_impl(t, "partial_ordering");
 }
 
-#line 792 "reflect.h2"
+#line 793 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "A value is ... a regular type. It must have all public
@@ -2361,7 +2362,7 @@ auto partially_ordered(meta::type_declaration& t) -> void
 //
 //  A type with (copy and move) x (construction and assignment)
 //
-#line 808 "reflect.h2"
+#line 809 "reflect.h2"
 auto copyable(meta::type_declaration& t) -> void
 {
     //  If the user explicitly wrote any of the copy/move functions,
@@ -2396,7 +2397,7 @@ auto copyable(meta::type_declaration& t) -> void
 //  A regular type: copyable, plus has public default construction
 //  and no protected or virtual functions
 //
-#line 842 "reflect.h2"
+#line 843 "reflect.h2"
 auto basic_value(meta::type_declaration& t) -> void
 {
     CPP2_UFCS(copyable)(t);
@@ -2425,28 +2426,28 @@ auto basic_value(meta::type_declaration& t) -> void
 //
 //  Note: the ordering that should be encouraged as default gets the nice name
 //
-#line 870 "reflect.h2"
+#line 871 "reflect.h2"
 auto value(meta::type_declaration& t) -> void
 {
     CPP2_UFCS(ordered)(t);
     CPP2_UFCS(basic_value)(t);
 }
 
-#line 876 "reflect.h2"
+#line 877 "reflect.h2"
 auto weakly_ordered_value(meta::type_declaration& t) -> void
 {
     CPP2_UFCS(weakly_ordered)(t);
     CPP2_UFCS(basic_value)(t);
 }
 
-#line 882 "reflect.h2"
+#line 883 "reflect.h2"
 auto partially_ordered_value(meta::type_declaration& t) -> void
 {
     CPP2_UFCS(partially_ordered)(t);
     CPP2_UFCS(basic_value)(t);
 }
 
-#line 889 "reflect.h2"
+#line 890 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     C.20: If you can avoid defining default operations, do
@@ -2469,7 +2470,7 @@ auto partially_ordered_value(meta::type_declaration& t) -> void
 //
 //  a type without declared copy/move/destructor functions
 //
-#line 911 "reflect.h2"
+#line 912 "reflect.h2"
 auto cpp1_rule_of_zero(meta::type_declaration& t) -> void
 {
     for ( auto& mf : CPP2_UFCS(get_member_functions)(t) ) 
@@ -2512,7 +2513,7 @@ auto cpp1_rule_of_zero(meta::type_declaration& t) -> void
 //  parameters instead of concrete forwarding parameters (mainly used
 //  for cppfront internal use, so cppfront builds under GCC 10)
 //
-#line 953 "reflect.h2"
+#line 954 "reflect.h2"
 auto cpp2_struct(meta::type_declaration& t) -> void
 {
     std::string ctor_params {}; 
@@ -2569,7 +2570,7 @@ value_member_info::value_member_info(auto const& name_, auto const& type_, auto 
                                                                , type{ type_ }
                                                                , value{ value_ }{}
 
-#line 1005 "reflect.h2"
+#line 1006 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "C enumerations constitute a curiously half-baked concept. ...
@@ -2588,7 +2589,7 @@ value_member_info::value_member_info(auto const& name_, auto const& type_, auto 
 //  a type together with named constants that are its possible values
 //
 
-#line 1028 "reflect.h2"
+#line 1029 "reflect.h2"
 auto basic_enum(
     meta::type_declaration& t, 
     auto const& nextval, 
@@ -2613,7 +2614,7 @@ auto basic_enum(
 {
 std::string value{"-1"};
 
-#line 1051 "reflect.h2"
+#line 1052 "reflect.h2"
     for ( 
           auto const& m : CPP2_UFCS(get_members)(t) ) 
     if (  CPP2_UFCS(is_member_object)(m)) 
@@ -2655,7 +2656,7 @@ std::string value{"-1"};
     }
 }
 
-#line 1091 "reflect.h2"
+#line 1092 "reflect.h2"
     if ((CPP2_UFCS(empty)(enumerators))) {
         CPP2_UFCS(error)(t, "an enumeration must contain at least one enumerator value");
         return ; 
@@ -2706,7 +2707,7 @@ std::string value{"-1"};
         }
     }
 
-#line 1142 "reflect.h2"
+#line 1143 "reflect.h2"
     //  2. Replace: Erase the contents and replace with modified contents
     //
     //  Note that most values and functions are declared as '==' compile-time values, i.e. Cpp1 'constexpr'
@@ -2756,7 +2757,7 @@ std::string to_string_impl{"    to_string_impl: (this, prefix: std::string_view"
     //  Provide 'to_string' and 'to_code' functions to print enumerator
     //  name(s) as human-readable strings or as code expressions
 
-#line 1189 "reflect.h2"
+#line 1190 "reflect.h2"
     {
         if (bitwise) {
             to_string_impl += ", separator: std::string_view ) -> std::string = { \n"
@@ -2797,7 +2798,7 @@ std::string to_string_impl{"    to_string_impl: (this, prefix: std::string_view"
     }
 }
 
-#line 1228 "reflect.h2"
+#line 1229 "reflect.h2"
     if (bitwise) {
         CPP2_UFCS(add_member)(t, "    to_string: (this) -> std::string = to_string_impl( \"\", \", \" );");
         CPP2_UFCS(add_member)(t, "    to_code  : (this) -> std::string = to_string_impl( \"" + cpp2::to_string(CPP2_UFCS(name)(t)) + "::\", \" | \" );");
@@ -2811,7 +2812,7 @@ std::string from_string{"    from_string: (s: std::string_view) -> " + cpp2::to_
 
     //  Provide a 'from_string' function to parse strings into enumerators    
 
-#line 1239 "reflect.h2"
+#line 1240 "reflect.h2"
     {
         std::string_view prefix {""}; 
         std::string_view combine_op {"return"}; 
@@ -2833,7 +2834,7 @@ std::string from_string{"    from_string: (s: std::string_view) -> " + cpp2::to_
 {
 std::string_view else_{""};
 
-#line 1259 "reflect.h2"
+#line 1260 "reflect.h2"
         for ( 
               auto const& e : cpp2::move(enumerators) ) {
             from_string += "            " + cpp2::to_string(else_) + "if \"" + cpp2::to_string(e.name) + "\" == x { " + cpp2::to_string(combine_op) + " " + cpp2::to_string(e.name) + "; }\n";
@@ -2841,7 +2842,7 @@ std::string_view else_{""};
         }
 }
 
-#line 1265 "reflect.h2"
+#line 1266 "reflect.h2"
         if (bitwise) {
             from_string += "            else { break outer; }\n"
                            "        }\n"
@@ -2857,11 +2858,11 @@ std::string_view else_{""};
     }
 }
 
-#line 1279 "reflect.h2"
+#line 1280 "reflect.h2"
     CPP2_UFCS(add_member)(t, "    from_code: (s: std::string_view) -> " + cpp2::to_string(CPP2_UFCS(name)(t)) + " = { str: std::string = s; return from_string( cpp2::string_util::replace_all(str, \"" + cpp2::to_string(CPP2_UFCS(name)(t)) + "::\", \"\" ) ); }");
 }
 
-#line 1283 "reflect.h2"
+#line 1284 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //    "An enum[...] is a totally ordered value type that stores a
@@ -2871,7 +2872,7 @@ std::string_view else_{""};
 //
 //          -- P0707R4, section 3
 //
-#line 1292 "reflect.h2"
+#line 1293 "reflect.h2"
 auto cpp2_enum(meta::type_declaration& t) -> void
 {
     //  Let basic_enum do its thing, with an incrementing value generator
@@ -2888,7 +2889,7 @@ auto cpp2_enum(meta::type_declaration& t) -> void
     );
 }
 
-#line 1309 "reflect.h2"
+#line 1310 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "flag_enum expresses an enumeration that stores values
@@ -2899,7 +2900,7 @@ auto cpp2_enum(meta::type_declaration& t) -> void
 //
 //          -- P0707R4, section 3
 //
-#line 1319 "reflect.h2"
+#line 1320 "reflect.h2"
 auto flag_enum(meta::type_declaration& t) -> void
 {
     //  Let basic_enum do its thing, with a power-of-two value generator
@@ -2921,7 +2922,7 @@ auto flag_enum(meta::type_declaration& t) -> void
     );
 }
 
-#line 1341 "reflect.h2"
+#line 1342 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "As with void*, programmers should know that unions [...] are
@@ -2946,7 +2947,7 @@ auto flag_enum(meta::type_declaration& t) -> void
 //  a type that contains exactly one of a fixed set of values at a time
 //
 
-#line 1365 "reflect.h2"
+#line 1366 "reflect.h2"
 auto cpp2_union(meta::type_declaration& t) -> void
 {
     std::vector<value_member_info> alternatives {}; 
@@ -2955,7 +2956,7 @@ auto value{0};
 
     //  1. Gather: All the user-written members, and find/compute the max size
 
-#line 1372 "reflect.h2"
+#line 1373 "reflect.h2"
     for ( 
 
            auto const& m : CPP2_UFCS(get_members)(t) )  { do 
@@ -2985,7 +2986,7 @@ auto value{0};
     } while (false); ++value; }
 }
 
-#line 1400 "reflect.h2"
+#line 1401 "reflect.h2"
     std::string discriminator_type {}; 
     if (cpp2::impl::cmp_less(CPP2_UFCS(ssize)(alternatives),std::numeric_limits<cpp2::i8>::max())) {
         discriminator_type = "i8";
@@ -3000,7 +3001,7 @@ auto value{0};
         discriminator_type = "i64";
     }}}
 
-#line 1415 "reflect.h2"
+#line 1416 "reflect.h2"
     //  2. Replace: Erase the contents and replace with modified contents
 
     CPP2_UFCS(remove_marked_members)(t);
@@ -3009,7 +3010,7 @@ std::string storage{"    _storage: cpp2::aligned_storage<cpp2::max( "};
 
     //  Provide storage
 
-#line 1421 "reflect.h2"
+#line 1422 "reflect.h2"
     {
         for ( 
               auto const& e : alternatives ) {
@@ -3029,7 +3030,7 @@ std::string storage{"    _storage: cpp2::aligned_storage<cpp2::max( "};
 }
 
     //  Provide discriminator
-#line 1439 "reflect.h2"
+#line 1440 "reflect.h2"
     CPP2_UFCS(add_member)(t, "    _discriminator: " + cpp2::to_string(cpp2::move(discriminator_type)) + " = -1;\n");
 
     //  Add the alternatives: is_alternative, get_alternative, and set_alternative
@@ -3065,7 +3066,7 @@ std::string destroy{"    private _destroy: (inout this) = {\n"};
 
     //  Add destroy
 
-#line 1472 "reflect.h2"
+#line 1473 "reflect.h2"
     {
         for ( 
               auto const& a : alternatives ) {
@@ -3079,7 +3080,7 @@ std::string destroy{"    private _destroy: (inout this) = {\n"};
 }
 
     //  Add the destructor
-#line 1484 "reflect.h2"
+#line 1485 "reflect.h2"
     CPP2_UFCS(add_member)(t, "    operator=: (move this) = { _destroy(); _ = this; }");
 
     //  Add default constructor
@@ -3089,7 +3090,7 @@ std::string value_set{""};
 
     //  Add copy/move construction and assignment
 
-#line 1491 "reflect.h2"
+#line 1492 "reflect.h2"
     {
         for ( 
               auto const& a : cpp2::move(alternatives) ) {
@@ -3109,15 +3110,15 @@ std::string value_set{""};
                     );
     }
 }
-#line 1509 "reflect.h2"
+#line 1510 "reflect.h2"
 }
 
-#line 1512 "reflect.h2"
+#line 1513 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  print - output a pretty-printed visualization of t
 //
-#line 1516 "reflect.h2"
+#line 1517 "reflect.h2"
 auto print(cpp2::impl::in<meta::type_declaration> t) -> void
 {
     std::cout << CPP2_UFCS(print)(t) << "\n";
@@ -3214,7 +3215,7 @@ return none;
 [[nodiscard]] auto expression_flags::from_code(cpp2::impl::in<std::string_view> s) -> expression_flags{
 std::string str {s}; return from_string(cpp2::string_util::replace_all(cpp2::move(str), "expression_flags::", "")); }
 
-#line 1522 "reflect.h2"
+#line 1523 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  regex - creates regular expressions from members
@@ -3230,11 +3231,11 @@ std::string str {s}; return from_string(cpp2::string_util::replace_all(cpp2::mov
 //  ```
 //
 
-#line 1538 "reflect.h2"
+#line 1539 "reflect.h2"
 //  Possible modifiers for a regular expression.
 //
 
-#line 1542 "reflect.h2"
+#line 1543 "reflect.h2"
                                   // mod: i
                                   // mod: m
                                   // mod: s
@@ -3242,106 +3243,106 @@ std::string str {s}; return from_string(cpp2::string_util::replace_all(cpp2::mov
                                   // mod: x
                                   // mod: xx
 
-#line 1551 "reflect.h2"
+#line 1552 "reflect.h2"
 //  Tokens for regular expressions.
 //
 
 // Basic class for a regex token.
 //
 
-#line 1560 "reflect.h2"
+#line 1561 "reflect.h2"
     regex_token::regex_token(cpp2::impl::in<std::string> str)
         : string_rep{ str }{
 
-#line 1562 "reflect.h2"
+#line 1563 "reflect.h2"
     }
 
-#line 1564 "reflect.h2"
+#line 1565 "reflect.h2"
     regex_token::regex_token()
         : string_rep{ "" }{
 
-#line 1566 "reflect.h2"
+#line 1567 "reflect.h2"
     }
 
     //parse: (inout ctx: parse_context) -> token_ptr;
                                                                        // Generate the matching code.
 
-#line 1571 "reflect.h2"
-    auto regex_token::add_groups([[maybe_unused]] std::set<int>& unnamed_param_2) const -> void{}// Adds all group indices to the set.
 #line 1572 "reflect.h2"
-    [[nodiscard]] auto regex_token::to_string() const& -> std::string{return string_rep; }// Create a string representation.
+    auto regex_token::add_groups([[maybe_unused]] std::set<int>& unnamed_param_2) const -> void{}// Adds all group indices to the set.
 #line 1573 "reflect.h2"
+    [[nodiscard]] auto regex_token::to_string() const& -> std::string{return string_rep; }// Create a string representation.
+#line 1574 "reflect.h2"
     auto regex_token::set_string(cpp2::impl::in<std::string> s) & -> void{string_rep = s; }
 
     regex_token::~regex_token() noexcept{}// Set the string representation.
 
-#line 1588 "reflect.h2"
+#line 1589 "reflect.h2"
     regex_token_check::regex_token_check(cpp2::impl::in<std::string> str, cpp2::impl::in<std::string> check_)
         : regex_token{ str }
         , check{ check_ }{
 
-#line 1591 "reflect.h2"
+#line 1592 "reflect.h2"
     }
 
-#line 1593 "reflect.h2"
+#line 1594 "reflect.h2"
     auto regex_token_check::generate_code(generation_context& ctx) const -> void{
         ctx.add_check(check + "(" + ctx.match_parameters() + ")");
     }
 
     regex_token_check::~regex_token_check() noexcept{}
 
-#line 1607 "reflect.h2"
+#line 1608 "reflect.h2"
     regex_token_code::regex_token_code(cpp2::impl::in<std::string> str, cpp2::impl::in<std::string> code_)
         : regex_token{ str }
         , code{ code_ }{
 
-#line 1610 "reflect.h2"
+#line 1611 "reflect.h2"
     }
 
-#line 1612 "reflect.h2"
+#line 1613 "reflect.h2"
     auto regex_token_code::generate_code(generation_context& ctx) const -> void{
         ctx.add(code);
     }
 
     regex_token_code::~regex_token_code() noexcept{}
 
-#line 1624 "reflect.h2"
+#line 1625 "reflect.h2"
     regex_token_empty::regex_token_empty(cpp2::impl::in<std::string> str)
         : regex_token{ str }{
 
-#line 1626 "reflect.h2"
+#line 1627 "reflect.h2"
     }
 
-#line 1628 "reflect.h2"
+#line 1629 "reflect.h2"
     auto regex_token_empty::generate_code([[maybe_unused]] generation_context& unnamed_param_2) const -> void{
         // Nothing.
     }
 
     regex_token_empty::~regex_token_empty() noexcept{}
 
-#line 1642 "reflect.h2"
+#line 1643 "reflect.h2"
     regex_token_list::regex_token_list(cpp2::impl::in<token_vec> t)
         : regex_token{ gen_string(t) }
         , tokens{ t }{
 
-#line 1645 "reflect.h2"
+#line 1646 "reflect.h2"
     }
 
-#line 1647 "reflect.h2"
+#line 1648 "reflect.h2"
     auto regex_token_list::generate_code(generation_context& ctx) const -> void{
         for ( auto const& token : tokens ) {
             (*cpp2::impl::assert_not_null(token)).generate_code(ctx);
         }
     }
 
-#line 1653 "reflect.h2"
+#line 1654 "reflect.h2"
     auto regex_token_list::add_groups(std::set<int>& groups) const -> void{
         for ( auto const& token : tokens ) {
             (*cpp2::impl::assert_not_null(token)).add_groups(groups);
         }
     }
 
-#line 1659 "reflect.h2"
+#line 1660 "reflect.h2"
     [[nodiscard]] auto regex_token_list::gen_string(cpp2::impl::in<token_vec> vec) -> std::string{
         std::string r {""}; 
         for ( auto const& token : vec ) {
@@ -3352,7 +3353,7 @@ std::string str {s}; return from_string(cpp2::string_util::replace_all(cpp2::mov
 
     regex_token_list::~regex_token_list() noexcept{}
 
-#line 1682 "reflect.h2"
+#line 1683 "reflect.h2"
     auto parse_context_group_state::next_alternative() & -> void{
         token_vec new_list {}; 
         std::swap(new_list, cur_match_list);
@@ -3360,14 +3361,14 @@ std::string str {s}; return from_string(cpp2::string_util::replace_all(cpp2::mov
         static_cast<void>(alternate_match_lists.insert(alternate_match_lists.end(), CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_list>)(cpp2::shared, cpp2::move(new_list))));
     }
 
-#line 1690 "reflect.h2"
-    auto parse_context_group_state::swap(parse_context_group_state& t) & -> void{
+#line 1691 "reflect.h2"
+    auto parse_context_group_state::swap(parse_context_group_state& t) & -> void{// NOLINT(performance-noexcept-swap)
         std::swap(cur_match_list, t.cur_match_list);
         std::swap(alternate_match_lists, t.alternate_match_lists);
         std::swap(modifiers, t.modifiers);
     }
 
-#line 1697 "reflect.h2"
+#line 1698 "reflect.h2"
     [[nodiscard]] auto parse_context_group_state::get_as_token() & -> token_ptr{
         if (alternate_match_lists.empty()) {
             post_process_list(cur_match_list);
@@ -3379,15 +3380,15 @@ std::string str {s}; return from_string(cpp2::string_util::replace_all(cpp2::mov
         }
     }
 
-#line 1709 "reflect.h2"
+#line 1710 "reflect.h2"
     auto parse_context_group_state::add(cpp2::impl::in<token_ptr> token) & -> void{
         cur_match_list.push_back(token);
     }
 
-#line 1714 "reflect.h2"
+#line 1715 "reflect.h2"
     [[nodiscard]] auto parse_context_group_state::empty() const& -> bool { return cur_match_list.empty();  }
 
-#line 1718 "reflect.h2"
+#line 1719 "reflect.h2"
     auto parse_context_group_state::post_process_list(token_vec& list) -> void{
         // Merge all characters
         auto merge_pos {list.begin()}; 
@@ -3408,7 +3409,7 @@ std::string str {s}; return from_string(cpp2::string_util::replace_all(cpp2::mov
                                                                                               , modifiers{ modifiers_ }{}
 parse_context_group_state::parse_context_group_state(){}
 
-#line 1744 "reflect.h2"
+#line 1745 "reflect.h2"
     [[nodiscard]] auto parse_context_branch_reset_state::next() & -> int{
         auto g {cur_group}; 
         cur_group += 1;
@@ -3417,20 +3418,20 @@ parse_context_group_state::parse_context_group_state(){}
         return g; 
     }
 
-#line 1753 "reflect.h2"
+#line 1754 "reflect.h2"
     auto parse_context_branch_reset_state::set_next(cpp2::impl::in<int> g) & -> void{
         cur_group = g;
         max_group = max(max_group, g);
     }
 
-#line 1759 "reflect.h2"
+#line 1760 "reflect.h2"
     auto parse_context_branch_reset_state::next_alternative() & -> void{
         if (is_active) {
             cur_group = from;
         }
     }
 
-#line 1766 "reflect.h2"
+#line 1767 "reflect.h2"
     auto parse_context_branch_reset_state::set_active_reset(cpp2::impl::in<int> restart) & -> void{
         is_active = true;
         cur_group = restart;
@@ -3445,16 +3446,16 @@ parse_context_group_state::parse_context_group_state(){}
                                                                                     , from{ from_ }{}
 parse_context_branch_reset_state::parse_context_branch_reset_state(){}
 
-#line 1794 "reflect.h2"
+#line 1795 "reflect.h2"
     parse_context::parse_context(cpp2::impl::in<std::string_view> r, auto const& e)
         : regex{ r }
         , root{ CPP2_UFCS_TEMPLATE_NONLOCAL(cpp2_new<regex_token_empty>)(cpp2::shared, "") }
         , error_out{ e }{
 
-#line 1798 "reflect.h2"
+#line 1799 "reflect.h2"
     }
 
-#line 1804 "reflect.h2"
+#line 1805 "reflect.h2"
     [[nodiscard]] auto parse_context::start_group() & -> parse_context_group_state
     {
         parse_context_group_state old_state {}; 
@@ -3464,7 +3465,7 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
         return old_state; 
     }
 
-#line 1814 "reflect.h2"
+#line 1815 "reflect.h2"
     [[nodiscard]] auto parse_context::end_group(cpp2::impl::in<parse_context_group_state> old_state) & -> token_ptr
     {
         auto inner {cur_group_state.get_as_token()}; 
@@ -3472,17 +3473,17 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
         return inner; 
     }
 
-#line 1821 "reflect.h2"
+#line 1822 "reflect.h2"
     [[nodiscard]] auto parse_context::get_modifiers() const& -> expression_flags{
         return cur_group_state.modifiers; 
     }
 
-#line 1825 "reflect.h2"
+#line 1826 "reflect.h2"
     auto parse_context::set_modifiers(cpp2::impl::in<expression_flags> mod) & -> void{
         cur_group_state.modifiers = mod;
     }
 
-#line 1832 "reflect.h2"
+#line 1833 "reflect.h2"
     [[nodiscard]] auto parse_context::branch_reset_new_state() & -> parse_context_branch_reset_state
     {
         parse_context_branch_reset_state old_state {}; 
@@ -3492,7 +3493,7 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
         return old_state; 
     }
 
-#line 1841 "reflect.h2"
+#line 1842 "reflect.h2"
     auto parse_context::branch_reset_restore_state(cpp2::impl::in<parse_context_branch_reset_state> old_state) & -> void
     {
         auto max_group {cur_branch_reset_state.max_group}; 
@@ -3500,24 +3501,24 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
         cur_branch_reset_state.set_next(cpp2::move(max_group));
     }
 
-#line 1848 "reflect.h2"
+#line 1849 "reflect.h2"
     auto parse_context::next_alternative() & -> void
     {
         cur_group_state.next_alternative();
         cur_branch_reset_state.next_alternative();
     }
 
-#line 1856 "reflect.h2"
+#line 1857 "reflect.h2"
     auto parse_context::add_token(cpp2::impl::in<token_ptr> token) & -> void{
         cur_group_state.add(token);
     }
 
-#line 1860 "reflect.h2"
+#line 1861 "reflect.h2"
     [[nodiscard]] auto parse_context::has_token() const& -> bool{
         return !(cur_group_state.empty()); 
     }
 
-#line 1864 "reflect.h2"
+#line 1865 "reflect.h2"
     [[nodiscard]] auto parse_context::pop_token() & -> token_ptr
     {
         token_ptr r {nullptr}; 
@@ -3529,22 +3530,22 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
         return r; 
     }
 
-#line 1875 "reflect.h2"
+#line 1876 "reflect.h2"
     [[nodiscard]] auto parse_context::get_as_token() & -> token_ptr{
         return root; 
     }
 
-#line 1881 "reflect.h2"
+#line 1882 "reflect.h2"
     [[nodiscard]] auto parse_context::get_cur_group() const& -> int{
         return cur_branch_reset_state.cur_group; 
     }
 
-#line 1885 "reflect.h2"
+#line 1886 "reflect.h2"
     [[nodiscard]] auto parse_context::next_group() & -> int{
         return cur_branch_reset_state.next(); 
     }
 
-#line 1889 "reflect.h2"
+#line 1890 "reflect.h2"
     auto parse_context::set_named_group(cpp2::impl::in<std::string> name, cpp2::impl::in<int> id) & -> void
     {
         if (!(named_groups.contains(name))) {// Redefinition of group name is not an error. The left most one is retained.
@@ -3552,7 +3553,7 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
         }
     }
 
-#line 1896 "reflect.h2"
+#line 1897 "reflect.h2"
     [[nodiscard]] auto parse_context::get_named_group(cpp2::impl::in<std::string> name) const& -> int
     {
         auto iter {named_groups.find(name)}; 
@@ -3564,10 +3565,10 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
         }
     }
 
-#line 1909 "reflect.h2"
+#line 1910 "reflect.h2"
     [[nodiscard]] auto parse_context::current() const& -> char{return CPP2_ASSERT_IN_BOUNDS(regex, pos); }
 
-#line 1912 "reflect.h2"
+#line 1913 "reflect.h2"
     [[nodiscard]] auto parse_context::get_next_position(cpp2::impl::in<bool> in_class, cpp2::impl::in<bool> no_skip) const& -> size_t
     {
         auto perl_syntax {false}; 
@@ -3588,7 +3589,7 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
                     continue;
                 }
                 else {if (!(in_class) && '#' == cpp2::move(n)) {
-                    cur = regex.find("\n", cur);
+                    cur = regex.find('\n', cur);
                     if (std::string::npos == cur) {
                         // No new line, comment runs until the end of the pattern
                         cur = regex.size();
@@ -3607,7 +3608,7 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
         return cur; 
     }
 
-#line 1952 "reflect.h2"
+#line 1953 "reflect.h2"
     [[nodiscard]] auto parse_context::next_impl(cpp2::impl::in<bool> in_class, cpp2::impl::in<bool> no_skip) & -> bool
     {
         pos = get_next_position(in_class, no_skip);
@@ -3619,14 +3620,14 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
         }
     }
 
-#line 1963 "reflect.h2"
-    [[nodiscard]] auto parse_context::next() & -> auto { return next_impl(false, false); }
 #line 1964 "reflect.h2"
-    [[nodiscard]] auto parse_context::next_in_class() & -> auto { return next_impl(true, false);  }
+    [[nodiscard]] auto parse_context::next() & -> auto { return next_impl(false, false); }
 #line 1965 "reflect.h2"
+    [[nodiscard]] auto parse_context::next_in_class() & -> auto { return next_impl(true, false);  }
+#line 1966 "reflect.h2"
     [[nodiscard]] auto parse_context::next_no_skip() & -> auto { return next_impl(false, true); }
 
-#line 1967 "reflect.h2"
+#line 1968 "reflect.h2"
     [[nodiscard]] auto parse_context::next_n(cpp2::impl::in<int> n) & -> bool{
         auto r {true}; 
         auto cur {0}; 
@@ -3636,10 +3637,10 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
         return r; 
     }
 
-#line 1976 "reflect.h2"
+#line 1977 "reflect.h2"
     [[nodiscard]] auto parse_context::has_next() const& -> bool{return cpp2::impl::cmp_less(pos,regex.size()); }
 
-#line 1978 "reflect.h2"
+#line 1979 "reflect.h2"
     [[nodiscard]] auto parse_context::grab_until_impl(cpp2::impl::in<std::string> e, cpp2::impl::out<std::string> r, cpp2::impl::in<bool> any) & -> bool
     {
         auto end {pos}; // NOLINT(clang-analyzer-deadcode.DeadStores)
@@ -3661,14 +3662,14 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
         }
     }
 
-#line 1999 "reflect.h2"
-    [[nodiscard]] auto parse_context::grab_until(cpp2::impl::in<std::string> e, cpp2::impl::out<std::string> r) & -> auto { return grab_until_impl(e, cpp2::impl::out(&r), false); }
 #line 2000 "reflect.h2"
-    [[nodiscard]] auto parse_context::grab_until(cpp2::impl::in<char> e, cpp2::impl::out<std::string> r) & -> auto { return grab_until_impl(std::string(1, e), cpp2::impl::out(&r), false); }
+    [[nodiscard]] auto parse_context::grab_until(cpp2::impl::in<std::string> e, cpp2::impl::out<std::string> r) & -> auto { return grab_until_impl(e, cpp2::impl::out(&r), false); }
 #line 2001 "reflect.h2"
+    [[nodiscard]] auto parse_context::grab_until(cpp2::impl::in<char> e, cpp2::impl::out<std::string> r) & -> auto { return grab_until_impl(std::string(1, e), cpp2::impl::out(&r), false); }
+#line 2002 "reflect.h2"
     [[nodiscard]] auto parse_context::grab_until_one_of(cpp2::impl::in<std::string> e, cpp2::impl::out<std::string> r) & -> auto { return grab_until_impl(e, cpp2::impl::out(&r), true);  }
 
-#line 2003 "reflect.h2"
+#line 2004 "reflect.h2"
     [[nodiscard]] auto parse_context::grab_n(cpp2::impl::in<int> n, cpp2::impl::out<std::string> r) & -> bool
     {
         if (cpp2::impl::cmp_less_eq(pos + cpp2::impl::as_<size_t>(n),regex.size())) {
@@ -3682,7 +3683,7 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
         }
     }
 
-#line 2016 "reflect.h2"
+#line 2017 "reflect.h2"
     [[nodiscard]] auto parse_context::grab_number() & -> std::string
     {
         auto start {pos}; 
@@ -3704,7 +3705,7 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
         return cpp2::move(r.value()); 
     }
 
-#line 2037 "reflect.h2"
+#line 2038 "reflect.h2"
     [[nodiscard]] auto parse_context::peek_impl(cpp2::impl::in<bool> in_class) const& -> char{
         auto next_pos {get_next_position(in_class, false)}; 
         if (cpp2::impl::cmp_less(next_pos,regex.size())) {
@@ -3715,12 +3716,12 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
         }
     }
 
-#line 2047 "reflect.h2"
-    [[nodiscard]] auto parse_context::peek() const& -> auto { return peek_impl(false); }
 #line 2048 "reflect.h2"
+    [[nodiscard]] auto parse_context::peek() const& -> auto { return peek_impl(false); }
+#line 2049 "reflect.h2"
     [[nodiscard]] auto parse_context::peek_in_class() const& -> auto { return peek_impl(true);  }
 
-#line 2053 "reflect.h2"
+#line 2054 "reflect.h2"
     [[nodiscard]] auto parse_context::parser_group_modifiers(cpp2::impl::in<std::string> change_str, expression_flags& parser_modifiers) & -> bool
     {
         auto is_negative {false}; 
@@ -3775,7 +3776,7 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
         return true; 
     }
 
-#line 2107 "reflect.h2"
+#line 2108 "reflect.h2"
     [[nodiscard]] auto parse_context::parse_until(cpp2::impl::in<char> term) & -> bool{
         token_ptr cur_token {}; 
 
@@ -3814,7 +3815,7 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
         return true; 
     }
 
-#line 2145 "reflect.h2"
+#line 2146 "reflect.h2"
     [[nodiscard]] auto parse_context::parse(cpp2::impl::in<std::string> modifiers) & -> bool
     {
 
@@ -3830,21 +3831,21 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
         return r; 
     }
 
-#line 2162 "reflect.h2"
-    [[nodiscard]] auto parse_context::get_pos() const& -> auto { return pos; }
 #line 2163 "reflect.h2"
-    [[nodiscard]] auto parse_context::get_range(cpp2::impl::in<size_t> start, cpp2::impl::in<size_t> end) const& -> auto { return std::string(regex.substr(start, end - start + 1));  }
+    [[nodiscard]] auto parse_context::get_pos() const& -> auto { return pos; }
 #line 2164 "reflect.h2"
+    [[nodiscard]] auto parse_context::get_range(cpp2::impl::in<size_t> start, cpp2::impl::in<size_t> end) const& -> auto { return std::string(regex.substr(start, end - start + 1));  }
+#line 2165 "reflect.h2"
     [[nodiscard]] auto parse_context::valid() const& -> bool{return has_next() && !(has_error); }
 
-#line 2166 "reflect.h2"
+#line 2167 "reflect.h2"
     [[nodiscard]] auto parse_context::error(cpp2::impl::in<std::string> err) & -> token_ptr{
         has_error = true;
         error_out("Error during parsing of regex '" + cpp2::to_string(regex) + "' at position '" + cpp2::to_string(pos) + "': " + cpp2::to_string(err) + "");
         return nullptr; 
     }
 
-#line 2181 "reflect.h2"
+#line 2182 "reflect.h2"
     auto generation_function_context::add_tabs(cpp2::impl::in<int> c) & -> void{
         int i {0}; 
         for( ; cpp2::impl::cmp_less(i,c); i += 1 ) {
@@ -3852,7 +3853,7 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
         }
     }
 
-#line 2188 "reflect.h2"
+#line 2189 "reflect.h2"
     auto generation_function_context::remove_tabs(cpp2::impl::in<int> c) & -> void{
         tabs = tabs.substr(0, (cpp2::impl::as_<size_t>(c)) * 2);
     }
@@ -3862,22 +3863,22 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
                                                        , tabs{ tabs_ }{}
 generation_function_context::generation_function_context(){}
 
-#line 2206 "reflect.h2"
+#line 2207 "reflect.h2"
     [[nodiscard]] auto generation_context::match_parameters() const& -> std::string{return "r.pos, ctx"; }
 
-#line 2211 "reflect.h2"
+#line 2212 "reflect.h2"
     auto generation_context::add(cpp2::impl::in<std::string> s) & -> void{
         auto cur {get_current()}; 
         (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + cpp2::to_string(s) + "\n";
     }
 
-#line 2217 "reflect.h2"
+#line 2218 "reflect.h2"
     auto generation_context::add_check(cpp2::impl::in<std::string> check) & -> void{
         auto cur {get_current()}; 
         (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "if !cpp2::regex::" + cpp2::to_string(check) + " { r.matched = false; break; }\n";
     }
 
-#line 2223 "reflect.h2"
+#line 2224 "reflect.h2"
     auto generation_context::add_statefull(cpp2::impl::in<std::string> next_func, cpp2::impl::in<std::string> check) & -> void
     {
         end_func_statefull(check);
@@ -3886,7 +3887,7 @@ generation_function_context::generation_function_context(){}
         start_func_named(cpp2::move(name));
     }
 
-#line 2231 "reflect.h2"
+#line 2232 "reflect.h2"
     auto generation_context::start_func_named(cpp2::impl::in<std::string> name) & -> void
     {
         auto cur {new_context()}; 
@@ -3898,7 +3899,7 @@ generation_function_context::generation_function_context(){}
         (*cpp2::impl::assert_not_null(cpp2::move(cur))).add_tabs(3);
     }
 
-#line 2242 "reflect.h2"
+#line 2243 "reflect.h2"
     [[nodiscard]] auto generation_context::start_func() & -> std::string
     {
         auto name {gen_func_name()}; 
@@ -3906,7 +3907,7 @@ generation_function_context::generation_function_context(){}
         return cpp2::move(name) + "()"; 
     }
 
-#line 2249 "reflect.h2"
+#line 2250 "reflect.h2"
     auto generation_context::end_func_statefull(cpp2::impl::in<std::string> s) & -> void
     {
         auto cur {get_current()}; 
@@ -3926,7 +3927,7 @@ generation_function_context::generation_function_context(){}
         finish_context();
     }
 
-#line 2269 "reflect.h2"
+#line 2270 "reflect.h2"
     [[nodiscard]] auto generation_context::generate_func(cpp2::impl::in<token_ptr> token) & -> std::string
     {
         auto name {start_func()}; 
@@ -3936,7 +3937,7 @@ generation_function_context::generation_function_context(){}
         return name; 
     }
 
-#line 2279 "reflect.h2"
+#line 2280 "reflect.h2"
     [[nodiscard]] auto generation_context::generate_reset(cpp2::impl::in<std::set<int>> groups) & -> std::string
     {
         if (groups.empty()) {
@@ -3959,33 +3960,33 @@ generation_function_context::generation_function_context(){}
         return cpp2::move(name) + "()"; 
     }
 
-#line 2303 "reflect.h2"
+#line 2304 "reflect.h2"
     [[nodiscard]] auto generation_context::gen_func_name() & -> std::string{
         auto cur_id {matcher_func}; 
         matcher_func += 1;
         return "func_" + cpp2::to_string(cpp2::move(cur_id)) + ""; 
     }
 
-#line 2309 "reflect.h2"
+#line 2310 "reflect.h2"
     [[nodiscard]] auto generation_context::next_func_name() & -> std::string{
         return gen_func_name() + "()"; 
     }
 
-#line 2313 "reflect.h2"
+#line 2314 "reflect.h2"
     [[nodiscard]] auto generation_context::gen_reset_func_name() & -> std::string{
         auto cur_id {reset_func}; 
         reset_func += 1;
         return "reset_" + cpp2::to_string(cpp2::move(cur_id)) + ""; 
     }
 
-#line 2319 "reflect.h2"
+#line 2320 "reflect.h2"
     [[nodiscard]] auto generation_context::gen_temp() & -> std::string{
         auto cur_id {temp_name}; 
         temp_name += 1;
         return "tmp_" + cpp2::to_string(cpp2::move(cur_id)) + ""; 
     }
 
-#line 2327 "reflect.h2"
+#line 2328 "reflect.h2"
     [[nodiscard]] auto generation_context::new_context() & -> generation_function_context*{
         gen_stack.push_back(generation_function_context());
         auto cur {get_current()}; 
@@ -3994,7 +3995,7 @@ generation_function_context::generation_function_context(){}
         return cur; 
     }
 
-#line 2335 "reflect.h2"
+#line 2336 "reflect.h2"
     auto generation_context::finish_context() & -> void{
         auto cur {get_current()}; 
         auto base {get_base()}; 
@@ -4003,22 +4004,22 @@ generation_function_context::generation_function_context(){}
         gen_stack.pop_back();
     }
 
-#line 2345 "reflect.h2"
+#line 2346 "reflect.h2"
     [[nodiscard]] auto generation_context::get_current() & -> generation_function_context*{
         return &gen_stack.back(); 
     }
 
-#line 2349 "reflect.h2"
+#line 2350 "reflect.h2"
     [[nodiscard]] auto generation_context::get_base() & -> generation_function_context*{
         return &CPP2_ASSERT_IN_BOUNDS_LITERAL(gen_stack, 0); 
     }
 
-#line 2353 "reflect.h2"
+#line 2354 "reflect.h2"
     [[nodiscard]] auto generation_context::get_entry_func() const& -> std::string{
         return entry_func; 
     }
 
-#line 2357 "reflect.h2"
+#line 2358 "reflect.h2"
     [[nodiscard]] auto generation_context::create_named_group_lookup(cpp2::impl::in<std::map<std::string,int>> named_groups) const& -> std::string
     {
         std::string res {"get_named_group_index: (name) -> int = {\n"}; 
@@ -4042,18 +4043,18 @@ generation_function_context::generation_function_context(){}
         return res; 
     }
 
-#line 2382 "reflect.h2"
+#line 2383 "reflect.h2"
     [[nodiscard]] auto generation_context::run(cpp2::impl::in<token_ptr> token) & -> std::string{
         entry_func = generate_func(token);
 
         return (*cpp2::impl::assert_not_null(get_base())).code; 
     }
 
-#line 2397 "reflect.h2"
+#line 2398 "reflect.h2"
     alternative_token::alternative_token()
                             : regex_token_empty{ "" }{}
 
-#line 2399 "reflect.h2"
+#line 2400 "reflect.h2"
     [[nodiscard]] auto alternative_token::parse(parse_context& ctx) -> token_ptr{
         if (ctx.current() != '|') {return nullptr; }
 
@@ -4064,15 +4065,15 @@ generation_function_context::generation_function_context(){}
 
     alternative_token::~alternative_token() noexcept{}
 
-#line 2414 "reflect.h2"
+#line 2415 "reflect.h2"
     alternative_token_gen::alternative_token_gen(cpp2::impl::in<token_vec> a)
         : regex_token{ gen_string(a) }
         , alternatives{ a }{
 
-#line 2417 "reflect.h2"
+#line 2418 "reflect.h2"
     }
 
-#line 2419 "reflect.h2"
+#line 2420 "reflect.h2"
     auto alternative_token_gen::generate_code(generation_context& ctx) const -> void
     {
         std::string functions {""}; 
@@ -4090,7 +4091,7 @@ generation_function_context::generation_function_context(){}
         ctx.add_statefull(next_name, "cpp2::regex::alternative_token_matcher<char>::match(" + cpp2::to_string(ctx.match_parameters()) + ", other, " + cpp2::to_string(next_name) + " " + cpp2::to_string(cpp2::move(functions)) + ")");
     }
 
-#line 2436 "reflect.h2"
+#line 2437 "reflect.h2"
     auto alternative_token_gen::add_groups(std::set<int>& groups) const -> void
     {
         for ( auto const& cur : alternatives ) {
@@ -4098,7 +4099,7 @@ generation_function_context::generation_function_context(){}
         }
     }
 
-#line 2443 "reflect.h2"
+#line 2444 "reflect.h2"
     [[nodiscard]] auto alternative_token_gen::gen_string(cpp2::impl::in<token_vec> a) -> std::string
     {
         std::string r {""}; 
@@ -4114,14 +4115,14 @@ generation_function_context::generation_function_context(){}
 
     alternative_token_gen::~alternative_token_gen() noexcept{}
 
-#line 2464 "reflect.h2"
+#line 2465 "reflect.h2"
     any_token::any_token(cpp2::impl::in<bool> single_line)
         : regex_token_check{ ".", "any_token_matcher<char, " + cpp2::to_string(single_line) + ">" }{
 
-#line 2466 "reflect.h2"
+#line 2467 "reflect.h2"
     }
 
-#line 2468 "reflect.h2"
+#line 2469 "reflect.h2"
     [[nodiscard]] auto any_token::parse(parse_context& ctx) -> token_ptr{
         if ('.' != ctx.current()) {return nullptr; }
 
@@ -4130,21 +4131,21 @@ generation_function_context::generation_function_context(){}
 
     any_token::~any_token() noexcept{}
 
-#line 2485 "reflect.h2"
+#line 2486 "reflect.h2"
     char_token::char_token(cpp2::impl::in<char> t, cpp2::impl::in<bool> ignore_case_)
         : regex_token{ std::string(1, t) }
         , token{ t }
         , ignore_case{ ignore_case_ }{
 
-#line 2489 "reflect.h2"
+#line 2490 "reflect.h2"
     }
 
-#line 2491 "reflect.h2"
+#line 2492 "reflect.h2"
     [[nodiscard]] auto char_token::parse(parse_context& ctx) -> token_ptr{
         return CPP2_UFCS_TEMPLATE(cpp2_new<char_token>)(cpp2::shared, ctx.current(), ctx.get_modifiers().has(expression_flags::case_insensitive)); 
     }
 
-#line 2495 "reflect.h2"
+#line 2496 "reflect.h2"
     auto char_token::generate_code(generation_context& ctx) const -> void
     {
         if (ignore_case) {
@@ -4153,14 +4154,14 @@ generation_function_context::generation_function_context(){}
 {
 size_t i{0};
 
-#line 2501 "reflect.h2"
+#line 2502 "reflect.h2"
             for( ; cpp2::impl::cmp_less(i,token.size()); i += 1 ) {
                 CPP2_ASSERT_IN_BOUNDS(lower, i) = string_util::safe_tolower(CPP2_ASSERT_IN_BOUNDS(token, i));
                 CPP2_ASSERT_IN_BOUNDS(upper, i) = string_util::safe_toupper(CPP2_ASSERT_IN_BOUNDS(token, i));
             }
 }
 
-#line 2506 "reflect.h2"
+#line 2507 "reflect.h2"
             if (upper != lower) {
                 gen_case_insensitive(cpp2::move(lower), cpp2::move(upper), ctx);
             }
@@ -4173,7 +4174,7 @@ size_t i{0};
         }
     }
 
-#line 2518 "reflect.h2"
+#line 2519 "reflect.h2"
     auto char_token::gen_case_insensitive(cpp2::impl::in<std::string> lower, cpp2::impl::in<std::string> upper, generation_context& ctx) const& -> void
     {
         std::string name {"str_" + cpp2::to_string(ctx.gen_temp()) + ""}; 
@@ -4195,7 +4196,7 @@ size_t i{0};
         ctx.add("else { break; }");
     }
 
-#line 2539 "reflect.h2"
+#line 2540 "reflect.h2"
     auto char_token::gen_case_sensitive(generation_context& ctx) const& -> void
     {
         std::string name {"str_" + cpp2::to_string(ctx.gen_temp()) + ""}; 
@@ -4214,7 +4215,7 @@ size_t i{0};
         ctx.add("else { break; }");
     }
 
-#line 2557 "reflect.h2"
+#line 2558 "reflect.h2"
     [[nodiscard]] auto char_token::add_escapes(std::string str) const& -> std::string
     {
         str = string_util::replace_all(str, "\\", "\\\\");
@@ -4230,7 +4231,7 @@ size_t i{0};
         return cpp2::move(str); 
     }
 
-#line 2572 "reflect.h2"
+#line 2573 "reflect.h2"
     auto char_token::append(char_token const& that) & -> void{
         (*this).token += that.token;
         (*this).string_rep += that.string_rep;
@@ -4238,19 +4239,19 @@ size_t i{0};
 
     char_token::~char_token() noexcept{}
 
-#line 2589 "reflect.h2"
+#line 2590 "reflect.h2"
     class_token::class_token(cpp2::impl::in<bool> negate_, cpp2::impl::in<bool> case_insensitive_, cpp2::impl::in<std::string> class_str_, cpp2::impl::in<std::string> str)
         : regex_token{ str }
         , negate{ negate_ }
         , case_insensitive{ case_insensitive_ }
         , class_str{ class_str_ }
-#line 2590 "reflect.h2"
+#line 2591 "reflect.h2"
     {
 
-#line 2595 "reflect.h2"
+#line 2596 "reflect.h2"
     }
 
-#line 2598 "reflect.h2"
+#line 2599 "reflect.h2"
     [[nodiscard]] auto class_token::parse(parse_context& ctx) -> token_ptr
     {
         if (ctx.current() != '[') {return nullptr; }
@@ -4376,13 +4377,13 @@ size_t i{0};
             ); 
     }
 
-#line 2723 "reflect.h2"
+#line 2724 "reflect.h2"
     auto class_token::generate_code(generation_context& ctx) const -> void
     {
         ctx.add_check("class_token_matcher<char, " + cpp2::to_string(negate) + ", " + cpp2::to_string(case_insensitive) + ", " + cpp2::to_string(class_str) + ">::match(" + cpp2::to_string(ctx.match_parameters()) + ")");
     }
 
-#line 2728 "reflect.h2"
+#line 2729 "reflect.h2"
     [[nodiscard]] auto class_token::create_matcher(cpp2::impl::in<std::string> name, cpp2::impl::in<std::string> template_arguments) -> std::string
     {
         auto sep {", "}; 
@@ -4393,12 +4394,12 @@ size_t i{0};
 
     class_token::~class_token() noexcept{}
 
-#line 2740 "reflect.h2"
+#line 2741 "reflect.h2"
 [[nodiscard]] auto escape_token_parse(parse_context& ctx) -> token_ptr
 {
     if (ctx.current() != '\\') {return nullptr; }
 
-#line 2745 "reflect.h2"
+#line 2746 "reflect.h2"
     if (std::string::npos == std::string("afenrt^.[]()*{}?+|\\").find(ctx.peek())) {
         return nullptr; 
     }
@@ -4432,7 +4433,7 @@ size_t i{0};
 
 }
 
-#line 2781 "reflect.h2"
+#line 2782 "reflect.h2"
 [[nodiscard]] auto global_group_reset_token_parse(parse_context& ctx) -> token_ptr
 {
     if (!((ctx.current() == '\\' && ctx.peek() == 'K'))) {return nullptr; }
@@ -4441,18 +4442,18 @@ size_t i{0};
     return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_code>)(cpp2::shared, "\\K", "ctx..set_group_start(0, r.pos);"); 
 }
 
-#line 2803 "reflect.h2"
+#line 2804 "reflect.h2"
     group_ref_token::group_ref_token(cpp2::impl::in<int> id_, cpp2::impl::in<bool> case_insensitive_, cpp2::impl::in<std::string> str)
         : regex_token{ str }
         , id{ id_ }
         , case_insensitive{ case_insensitive_ }
-#line 2804 "reflect.h2"
+#line 2805 "reflect.h2"
     {
 
-#line 2808 "reflect.h2"
+#line 2809 "reflect.h2"
     }
 
-#line 2810 "reflect.h2"
+#line 2811 "reflect.h2"
     [[nodiscard]] auto group_ref_token::parse(parse_context& ctx) -> token_ptr
     {
         if (ctx.current() != '\\') {return nullptr; }
@@ -4554,14 +4555,14 @@ size_t i{0};
         return CPP2_UFCS_TEMPLATE(cpp2_new<group_ref_token>)(cpp2::shared, cpp2::move(group_id), ctx.get_modifiers().has(expression_flags::case_insensitive), cpp2::move(str)); 
     }
 
-#line 2911 "reflect.h2"
+#line 2912 "reflect.h2"
     auto group_ref_token::generate_code(generation_context& ctx) const -> void{
         ctx.add_check("group_ref_token_matcher<char, " + cpp2::to_string(id) + ", " + cpp2::to_string(case_insensitive) + ">(" + cpp2::to_string(ctx.match_parameters()) + ")");
     }
 
     group_ref_token::~group_ref_token() noexcept{}
 
-#line 2934 "reflect.h2"
+#line 2935 "reflect.h2"
     [[nodiscard]] auto group_token::parse_lookahead(parse_context& ctx, cpp2::impl::in<std::string> syntax, cpp2::impl::in<bool> positive) -> token_ptr
     {
         static_cast<void>(ctx.next());// Skip last token defining the syntax
@@ -4576,7 +4577,7 @@ size_t i{0};
         return r; 
     }
 
-#line 2948 "reflect.h2"
+#line 2949 "reflect.h2"
     [[nodiscard]] auto group_token::parse(parse_context& ctx) -> token_ptr
     {
         if (ctx.current() != '(') {return nullptr; }
@@ -4714,7 +4715,7 @@ size_t i{0};
         }
     }
 
-#line 3085 "reflect.h2"
+#line 3086 "reflect.h2"
     [[nodiscard]] auto group_token::gen_string(cpp2::impl::in<std::string> name, cpp2::impl::in<bool> name_brackets, cpp2::impl::in<bool> has_modifier, cpp2::impl::in<std::string> modifiers, cpp2::impl::in<token_ptr> inner_) -> std::string
     {
         std::string start {"("}; 
@@ -4733,7 +4734,7 @@ size_t i{0};
         return cpp2::move(start) + (*cpp2::impl::assert_not_null(inner_)).to_string() + ")"; 
     }
 
-#line 3103 "reflect.h2"
+#line 3104 "reflect.h2"
     auto group_token::generate_code(generation_context& ctx) const -> void
     {
         if (-1 != number) {
@@ -4754,7 +4755,7 @@ size_t i{0};
         }
     }
 
-#line 3123 "reflect.h2"
+#line 3124 "reflect.h2"
     auto group_token::add_groups(std::set<int>& groups) const -> void
     {
         (*cpp2::impl::assert_not_null(inner)).add_groups(groups);
@@ -4765,7 +4766,7 @@ size_t i{0};
 
     group_token::~group_token() noexcept{}
 
-#line 3135 "reflect.h2"
+#line 3136 "reflect.h2"
 [[nodiscard]] auto hexadecimal_token_parse(parse_context& ctx) -> token_ptr
 {
     if (!((ctx.current() == '\\' && ctx.peek() == 'x'))) {return nullptr; }
@@ -4804,7 +4805,7 @@ size_t i{0};
     return r; 
 }
 
-#line 3176 "reflect.h2"
+#line 3177 "reflect.h2"
 [[nodiscard]] auto line_end_token_parse(parse_context& ctx) -> token_ptr
 {
     if (ctx.current() == '$' || (ctx.current() == '\\' && ctx.peek() == '$')) {
@@ -4822,7 +4823,7 @@ size_t i{0};
     }}
 }
 
-#line 3196 "reflect.h2"
+#line 3197 "reflect.h2"
 [[nodiscard]] auto line_start_token_parse(parse_context& ctx) -> token_ptr
 {
     if (ctx.current() != '^' && !((ctx.current() == '\\' && ctx.peek() == 'A'))) {return nullptr; }
@@ -4836,29 +4837,29 @@ size_t i{0};
     }
 }
 
-#line 3221 "reflect.h2"
+#line 3222 "reflect.h2"
     lookahead_token::lookahead_token(cpp2::impl::in<bool> positive_)
         : regex_token{ "" }
         , positive{ positive_ }{
 
-#line 3223 "reflect.h2"
+#line 3224 "reflect.h2"
     }
 
-#line 3225 "reflect.h2"
+#line 3226 "reflect.h2"
     auto lookahead_token::generate_code(generation_context& ctx) const -> void{
         auto inner_name {ctx.generate_func(inner)}; 
 
         ctx.add_check("lookahead_token_matcher<char, " + cpp2::to_string(positive) + ">(" + cpp2::to_string(ctx.match_parameters()) + ", " + cpp2::to_string(cpp2::move(inner_name)) + ")");
     }
 
-#line 3231 "reflect.h2"
+#line 3232 "reflect.h2"
     auto lookahead_token::add_groups(std::set<int>& groups) const -> void{
         (*cpp2::impl::assert_not_null(inner)).add_groups(groups);
     }
 
     lookahead_token::~lookahead_token() noexcept{}
 
-#line 3239 "reflect.h2"
+#line 3240 "reflect.h2"
 [[nodiscard]] auto named_class_token_parse(parse_context& ctx) -> token_ptr
 {
     if (ctx.current() != '\\') {return nullptr; }
@@ -4884,7 +4885,7 @@ size_t i{0};
     return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_check>)(cpp2::shared, "\\" + cpp2::to_string(ctx.current()) + "", "" + cpp2::to_string(cpp2::move(name)) + "<char, " + cpp2::to_string(ctx.get_modifiers().has(expression_flags::case_insensitive)) + ">::match"); 
 }
 
-#line 3267 "reflect.h2"
+#line 3268 "reflect.h2"
 [[nodiscard]] auto octal_token_parse(parse_context& ctx) -> token_ptr
 {
     if (!((ctx.current() == '\\' && ctx.peek() == 'o'))) {return nullptr; }
@@ -4910,11 +4911,11 @@ size_t i{0};
     return r; 
 }
 
-#line 3304 "reflect.h2"
+#line 3305 "reflect.h2"
     range_token::range_token()
                              : regex_token{ "" }{}
 
-#line 3306 "reflect.h2"
+#line 3307 "reflect.h2"
     [[nodiscard]] auto range_token::parse(parse_context& ctx) -> token_ptr
     {
         auto r {CPP2_UFCS_TEMPLATE(cpp2_new<range_token>)(cpp2::shared)}; 
@@ -4935,7 +4936,7 @@ size_t i{0};
             std::string min_count_str {"-1"}; 
             std::string max_count_str {"-1"}; 
 
-            size_t sep {inner.find(",")}; 
+            size_t sep {inner.find(',')}; 
             if (sep == std::string::npos) 
             {
                 min_count_str = inner;
@@ -4988,7 +4989,7 @@ size_t i{0};
         return nullptr; 
     }
 
-#line 3379 "reflect.h2"
+#line 3380 "reflect.h2"
     auto range_token::parse_modifier(parse_context& ctx) & -> void
     {
         if (ctx.peek() == '?') {
@@ -5001,7 +5002,7 @@ size_t i{0};
         }}
     }
 
-#line 3391 "reflect.h2"
+#line 3392 "reflect.h2"
     [[nodiscard]] auto range_token::gen_mod_string() const& -> std::string
     {
         if (kind == range_flags::not_greedy) {
@@ -5015,7 +5016,7 @@ size_t i{0};
         }}
     }
 
-#line 3404 "reflect.h2"
+#line 3405 "reflect.h2"
     [[nodiscard]] auto range_token::gen_range_string() const& -> std::string
     {
         std::string r {""}; 
@@ -5035,7 +5036,7 @@ size_t i{0};
         return r; 
     }
 
-#line 3423 "reflect.h2"
+#line 3424 "reflect.h2"
     auto range_token::generate_code(generation_context& ctx) const -> void
     {
         auto inner_name {ctx.generate_func(inner_token)}; 
@@ -5047,14 +5048,14 @@ size_t i{0};
         ctx.add_statefull(next_name, "cpp2::regex::range_token_matcher<char, " + cpp2::to_string(min_count) + ", " + cpp2::to_string(max_count) + ", " + cpp2::to_string(kind) + ">::match(" + cpp2::to_string(ctx.match_parameters()) + ", " + cpp2::to_string(cpp2::move(inner_name)) + ", " + cpp2::to_string(cpp2::move(reset_name)) + ", other, " + cpp2::to_string(next_name) + ")");
     }
 
-#line 3434 "reflect.h2"
+#line 3435 "reflect.h2"
     auto range_token::add_groups(std::set<int>& groups) const -> void{
         (*cpp2::impl::assert_not_null(inner_token)).add_groups(groups);
     }
 
     range_token::~range_token() noexcept{}
 
-#line 3447 "reflect.h2"
+#line 3448 "reflect.h2"
     [[nodiscard]] auto special_range_token::parse(parse_context& ctx) -> token_ptr
     {
         auto r {CPP2_UFCS_TEMPLATE(cpp2_new<special_range_token>)(cpp2::shared)}; 
@@ -5078,7 +5079,7 @@ size_t i{0};
 
         if (!(ctx.has_token())) {return ctx.error("'" + cpp2::to_string(ctx.current()) + "' without previous element."); }
 
-#line 3471 "reflect.h2"
+#line 3472 "reflect.h2"
         (*cpp2::impl::assert_not_null(r)).parse_modifier(ctx);
 
         (*cpp2::impl::assert_not_null(r)).inner_token = ctx.pop_token();
@@ -5088,7 +5089,7 @@ size_t i{0};
 
     special_range_token::~special_range_token() noexcept{}
 
-#line 3484 "reflect.h2"
+#line 3485 "reflect.h2"
 [[nodiscard]] auto word_boundary_token_parse(parse_context& ctx) -> token_ptr
 {
     if (ctx.current() != '\\') {return nullptr; }
@@ -5106,15 +5107,15 @@ size_t i{0};
     }}
 }
 
-#line 3520 "reflect.h2"
+#line 3521 "reflect.h2"
     template <typename Error_out> regex_generator<Error_out>::regex_generator(cpp2::impl::in<std::string_view> r, Error_out const& e)
         : regex{ r }
         , error_out{ e }{
 
-#line 3523 "reflect.h2"
+#line 3524 "reflect.h2"
     }
 
-#line 3525 "reflect.h2"
+#line 3526 "reflect.h2"
     template <typename Error_out> [[nodiscard]] auto regex_generator<Error_out>::parse() & -> std::string
     {
         // Extract modifiers and adapt regex.
@@ -5150,7 +5151,7 @@ size_t i{0};
         return source; 
     }
 
-#line 3560 "reflect.h2"
+#line 3561 "reflect.h2"
     template <typename Error_out> auto regex_generator<Error_out>::extract_modifiers() & -> void
     {
         if (regex.find_first_of("'/") == 0) {
@@ -5166,7 +5167,7 @@ size_t i{0};
         }
     }
 
-#line 3576 "reflect.h2"
+#line 3577 "reflect.h2"
 template<typename Err> [[nodiscard]] auto generate_regex(cpp2::impl::in<std::string_view> regex, Err const& err) -> std::string
 {
     regex_generator<Err> parser {regex, err}; 
@@ -5175,7 +5176,7 @@ template<typename Err> [[nodiscard]] auto generate_regex(cpp2::impl::in<std::str
     return r; 
 }
 
-#line 3586 "reflect.h2"
+#line 3587 "reflect.h2"
 auto regex_gen(meta::type_declaration& t) -> void
 {
     auto has_default {false}; 
@@ -5230,7 +5231,7 @@ auto regex_gen(meta::type_declaration& t) -> void
     CPP2_UFCS(add_runtime_support_include)(t, "cpp2regex.h");
 }
 
-#line 3645 "reflect.h2"
+#line 3646 "reflect.h2"
 [[nodiscard]] auto apply_metafunctions(
     declaration_node& n, 
     type_declaration& rtype, 
@@ -5336,7 +5337,7 @@ auto regex_gen(meta::type_declaration& t) -> void
     return true; 
 }
 
-#line 3751 "reflect.h2"
+#line 3752 "reflect.h2"
 }
 
 }

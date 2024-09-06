@@ -575,6 +575,7 @@ type_declaration: @copyable type =
         out_this_move_that   = declared.out_this_move_that   != nullptr;
         inout_this_in_that   = declared.inout_this_in_that   != nullptr;
         inout_this_move_that = declared.inout_this_move_that != nullptr;
+        // NOLINT(performance-move-const-arg)
     }
 
     add_member: (inout this, source: std::string_view)
@@ -1686,8 +1687,8 @@ parse_context_group_state: @struct<noforward> type =
         _ = alternate_match_lists..insert(alternate_match_lists..end(), shared.new<regex_token_list>(new_list));
     }
 
-    //  Swap this state with the other one.
-    swap: (inout this, inout t: parse_context_group_state) = {
+    //  Swap this state with the other one. NOLINTNEXTLINE(performance-noexcept-swap)
+    swap: (inout this, inout t: parse_context_group_state) = { // NOLINT(performance-noexcept-swap)
         std::swap(cur_match_list, t.cur_match_list);
         std::swap(alternate_match_lists, t.alternate_match_lists);
         std::swap(modifiers, t.modifiers);
@@ -1929,7 +1930,7 @@ parse_context: type =
                     continue;
                 }
                 else if !in_class && '#' == n {
-                    cur = regex..find("\n", cur);
+                    cur = regex..find('\n', cur);
                     if std::string::npos == cur {
                         // No new line, comment runs until the end of the pattern
                         cur = regex..size();
@@ -3323,7 +3324,7 @@ range_token: @polymorphic_base type =
             min_count_str: std::string = "-1";
             max_count_str: std::string = "-1";
 
-            sep: size_t = inner..find(",");
+            sep: size_t = inner..find(',');
             if sep == std::string::npos 
             {
                 min_count_str = inner;

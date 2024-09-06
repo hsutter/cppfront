@@ -88,7 +88,7 @@ struct declaration_sym {
 };
 
 struct identifier_sym {
-    enum kind { use, using_declaration, deactivation } kind_ = use;
+    enum kind: std::uint8_t { use, using_declaration, deactivation } kind_ = use;
     bool standalone_assignment_to = false;
     bool is_captured = false;
     bool is_after_dot = false;
@@ -174,7 +174,7 @@ struct selection_sym {
 struct compound_sym {
     bool start = false;
     compound_statement_node const* compound = {};
-    enum kind { is_scope, is_true, is_false, is_loop } kind_ = is_scope;
+    enum kind : std::uint8_t { is_scope, is_true, is_false, is_loop } kind_ = is_scope;
 
     compound_sym(
         bool                           s,
@@ -201,7 +201,7 @@ struct compound_sym {
 };
 
 struct symbol {
-    enum active { declaration=0, identifier, selection, compound };
+    enum active : std::uint8_t { declaration=0, identifier, selection, compound };
     std::variant <
         declaration_sym,
         identifier_sym,

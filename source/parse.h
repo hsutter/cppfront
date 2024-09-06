@@ -130,7 +130,7 @@ struct template_argument;
 
 struct primary_expression_node
 {
-    enum active { empty=0, identifier, expression_list, id_expression, declaration, inspect, literal };
+    enum active : std::uint8_t { empty=0, identifier, expression_list, id_expression, declaration, inspect, literal };
     std::variant<
         std::monostate,
         token const*,
@@ -669,7 +669,7 @@ auto binary_expression_node<Name, Term>::is_standalone_expression() const
 }
 
 
-enum class passing_style { in=0, copy, inout, out, move, forward, invalid };
+enum class passing_style : std::uint8_t { in=0, copy, inout, out, move, forward, invalid };
 auto to_passing_style(token const& t) -> passing_style {
     if (t.type() == lexeme::Identifier) {
         if (t == "in"     ) { return passing_style::in; }
@@ -1179,7 +1179,7 @@ struct template_args_tag { };
 
 struct template_argument
 {
-    enum active { empty=0, expression, type_id };
+    enum active : std::uint8_t { empty=0, expression, type_id };
     source_position comma;
     std::variant<
         std::monostate,
@@ -1365,7 +1365,7 @@ struct type_id_node
     int                       dereference_cnt           = {};
     token const*              suspicious_initialization = {};
 
-    enum active { empty=0, qualified, unqualified, function, keyword };
+    enum active : std::uint8_t { empty=0, qualified, unqualified, function, keyword };
     std::variant<
         std::monostate,
         std::unique_ptr<qualified_id_node>,
@@ -1666,7 +1666,7 @@ struct id_expression_node
 {
     source_position pos;
 
-    enum active { empty=0, qualified, unqualified };
+    enum active : std::uint8_t { empty=0, qualified, unqualified };
     std::variant<
         std::monostate,
         std::unique_ptr<qualified_id_node>,
@@ -2153,7 +2153,7 @@ struct statement_node
     // type(s) used in a std::unique_ptr as a member
     ~statement_node();
 
-    enum active { expression=0, compound, selection, declaration, return_, iteration, using_, contract, inspect, jump };
+    enum active : std::uint8_t { expression=0, compound, selection, declaration, return_, iteration, using_, contract, inspect, jump };
     std::variant<
         std::unique_ptr<expression_statement_node>,
         std::unique_ptr<compound_statement_node>,
@@ -2281,7 +2281,7 @@ struct parameter_declaration_node
     passing_style   pass    = passing_style::in;
     int             ordinal = 1;
 
-    enum class modifier { none=0, implicit, virtual_, override_, final_ };
+    enum class modifier : std::uint8_t { none=0, implicit, virtual_, override_, final_ };
     modifier mod = modifier::none;
 
     std::unique_ptr<declaration_node> declaration;
@@ -2483,7 +2483,7 @@ struct function_type_node
         passing_style pass = passing_style::move;
     };
 
-    enum active { empty = 0, id, list };
+    enum active : std::uint8_t { empty = 0, id, list };
     std::variant<
         std::monostate,
         single_type_id,
@@ -2903,7 +2903,7 @@ struct alias_node
 };
 
 
-enum class accessibility { default_ = 0, public_, protected_, private_ };
+enum class accessibility : std::uint8_t { default_ = 0, public_, protected_, private_ };
 
 auto to_string(accessibility a)
     -> std::string
@@ -3353,7 +3353,7 @@ public:
     auto parent_is_polymorphic() const -> bool
         { return  parent_declaration && parent_declaration->is_polymorphic(); }
 
-    enum which {
+    enum which : std::uint8_t {
         functions = 1,
         objects   = 2,
         types     = 4,

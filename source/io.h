@@ -504,7 +504,7 @@ public:
 //
 //  line    current line being processed
 //
-enum class preprocessor_conditional {
+enum class preprocessor_conditional : std::uint8_t {
     none = 0, pre_if, pre_else, pre_endif
 };
 auto starts_with_preprocessor_if_else_endif(
@@ -635,7 +635,7 @@ auto process_cpp_line(
                         i+=2;
                         if (i < ssize(line) - 1)
                         {
-                            if (auto paren_pos = line.find("(", i);
+                            if (auto paren_pos = line.find('(', i);
                                 paren_pos != line.npos
                                 )
                             {
