@@ -10,7 +10,7 @@ As always, `main` is the entry point of the program. For example:
 
 - One parameter of implicit type named `args`: &emsp; **`#!cpp main: (args) /*etc.*/`**
 
-    - The type of `args` cannot be explicitly specified. It is always `cpp2::args_t`, which behaves similarly to a `#!cpp const std::array<std::string_view>`.
+    - The type of `args` cannot be explicitly specified. It is always `cpp2::args`, which behaves similarly to a `#!cpp const std::array<std::string_view>`.
 
     - Using `args` performs zero heap allocations. Every `string_view` is directly bound to the string storage provided by host environment.
 
