@@ -1,0 +1,12 @@
+main: (args) = {
+    static_assert(std::bidirectional_iterator<cpp2::args::iterator>);
+    static_assert(std::ranges::bidirectional_range<cpp2::args>);
+    static_assert(std::ranges::viewable_range<cpp2::args>);
+
+    // Output command line arguments, dropping the program name argc[0].
+    for args | std::ranges::views::drop(1) do (arg)
+    {
+        std::cout
+            << arg << std::endl;
+    }
+}
