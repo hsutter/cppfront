@@ -29,7 +29,7 @@ pi: <T: type> T == 3.14159'26535'89793'23846L;
 pi: _ == 3.14159'26535'89793'23846L;    // same, deducing the object's type
 ```
 
-The parameter type can be deduced by writing `_` (the default, so it can be omitted). You can use `is` to declare a type constraint (e.g., a concept) that a deduced type must match, in which case `_` is required. For example:
+The object type can be deduced by writing `_` (the default, so it can be omitted). You can use `is` to declare a type constraint (e.g., a concept) that a deduced type must match, in which case `_` is required. For example:
 
 ``` cpp title="Declaring an object of constrained deduced type" hl_lines="2"
 //  number's type is deduced, but must match the std::regular concept
