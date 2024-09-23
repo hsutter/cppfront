@@ -44,3 +44,6 @@ true
 true
 false
 false
+
+Make sure views::take works:
+1 2 3 4 5 2 3 4 
