@@ -364,7 +364,7 @@ constexpr auto gcc_clang_msvc_min_versions(
     auto msvc
 )
 {
-    return gcc_ver > gcc || clang_ver > clang || msvc_ver > msvc;
+    return gcc_ver >= gcc || clang_ver >= clang || msvc_ver >= msvc;
 }
 
 
