@@ -243,7 +243,7 @@ private:
 
 public:
     //  Modal information
-    enum phases : std::uint8_t {
+    enum phases : u8 {
         phase0_type_decls           = 0,
         phase1_type_defs_func_decls = 1,
         phase2_func_defs            = 2
@@ -266,7 +266,7 @@ private:
     std::vector<std::string*>                emit_string_targets;       // option to emit to string instead of out file
     std::vector<std::vector<text_with_pos>*> emit_text_chunks_targets;  // similar for vector<text_pos>
 
-    enum class target_type : std::uint8_t { string, chunks };
+    enum class target_type : u8 { string, chunks };
     std::vector<target_type>                 emit_target_stack;         // to interleave them sensibly
 
 

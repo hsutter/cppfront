@@ -33,7 +33,7 @@ namespace cpp2 {
 //-----------------------------------------------------------------------
 //
 
-enum class lexeme : std::int8_t {
+enum class lexeme : i8 {
     SlashEq,
     Slash,
     LeftShiftEq,

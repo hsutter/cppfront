@@ -504,7 +504,7 @@ public:
 //
 //  line    current line being processed
 //
-enum class preprocessor_conditional : std::uint8_t {
+enum class preprocessor_conditional : u8 {
     none = 0, pre_if, pre_else, pre_endif
 };
 auto starts_with_preprocessor_if_else_endif(
