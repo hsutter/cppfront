@@ -73,7 +73,7 @@ auto main(
             else {
                 std::cerr << arg.text << " - ambiguous compiler flag name, did you mean one of these?\n";
                 for (auto a : ambiguous) {
-                    std::cerr << "    " << arg.text.front() << a << "\n";
+                    std::cerr << "  " << arg.text.front() << a << "\n";
                 }
             }
             return EXIT_FAILURE;
