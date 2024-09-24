@@ -243,7 +243,7 @@ private:
 
 public:
     //  Modal information
-    enum phases {
+    enum phases : u8 {
         phase0_type_decls           = 0,
         phase1_type_defs_func_decls = 1,
         phase2_func_defs            = 2
@@ -266,7 +266,7 @@ private:
     std::vector<std::string*>                emit_string_targets;       // option to emit to string instead of out file
     std::vector<std::vector<text_with_pos>*> emit_text_chunks_targets;  // similar for vector<text_pos>
 
-    enum class target_type { string, chunks };
+    enum class target_type : u8 { string, chunks };
     std::vector<target_type>                 emit_target_stack;         // to interleave them sensibly
 
 
@@ -423,7 +423,7 @@ private:
         if (c.kind == comment::comment_kind::line_comment) {
             print( pad( c.start.colno - curr_pos.colno + 1 ) );
             print( c.text );
-            assert( c.text.find("\n") == c.text.npos ); // we shouldn't have newlines
+            assert( c.text.find('\n') == c.text.npos ); // we shouldn't have newlines
             print("\n");
         }
 
@@ -616,8 +616,8 @@ public:
     //  Open
     //
     auto open(
-        std::string                 cpp2_filename_,
-        std::string                 cpp1_filename_,
+        std::string const&          cpp2_filename_,
+        std::string const&          cpp1_filename_,
         std::vector<comment> const& comments,
         cpp2::source const&         source,
         cpp2::parser const&         parser
@@ -1084,7 +1084,7 @@ class cppfront
         )
             : decl{decl_}
             , func{func_}
-            , declared_value_set_functions{declared_value_set_functions_}
+            , declared_value_set_functions{std::move(declared_value_set_functions_)}
         { }
     };
     class current_functions_
@@ -1092,9 +1092,9 @@ class cppfront
         stable_vector<function_info> list = { {} };
     public:
         auto push(
-            declaration_node const*                    decl,
-            function_type_node const*                  func,
-            declaration_node::declared_value_set_funcs thats
+            declaration_node const*                           decl,
+            function_type_node const*                         func,
+            declaration_node::declared_value_set_funcs const& thats
         ) {
             list.emplace_back(decl, func, thats);
         }
@@ -1739,7 +1739,7 @@ public:
 
         //  We always want to std::move from named return values,
         //  regardless of their types, so use std::move for that
-        bool add_std_move =
+        const bool add_std_move =
             synthesized_multi_return_size > 1
             || (
                 synthesized_multi_return_size == 1
@@ -1763,7 +1763,7 @@ public:
 
         //  Add `cpp2::move(*this).` when implicitly moving a member on last use
         //  This way, members of lvalue reference type won't be implicitly moved
-        bool add_this =
+        const bool add_this =
             add_move
             && decl
             && decl->identifier
@@ -4918,9 +4918,9 @@ public:
         function_type_node const& n,
         bool                      is_main                    = false,
         bool                      is_ctor_or_dtor            = false,
-        std::string               suffix1                    = {},
+        std::string const&        suffix1                    = {},
         bool                      generating_postfix_inc_dec = false,
-        std::string               identifier                 = {}
+        std::string const&        identifier                 = {}
     )
         -> void
     {   STACKINSTR
@@ -5248,7 +5248,7 @@ public:
     //
     auto emit_special_member_function(
         declaration_node const& n,
-        std::string             prefix
+        std::string const&      prefix
     )
         -> void
     {   STACKINSTR

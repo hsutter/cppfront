@@ -88,7 +88,7 @@ struct declaration_sym {
 };
 
 struct identifier_sym {
-    enum kind { use, using_declaration, deactivation } kind_ = use;
+    enum kind: u8 { use, using_declaration, deactivation } kind_ = use;
     bool standalone_assignment_to = false;
     bool is_captured = false;
     bool is_after_dot = false;
@@ -174,7 +174,7 @@ struct selection_sym {
 struct compound_sym {
     bool start = false;
     compound_statement_node const* compound = {};
-    enum kind { is_scope, is_true, is_false, is_loop } kind_ = is_scope;
+    enum kind : u8 { is_scope, is_true, is_false, is_loop } kind_ = is_scope;
 
     compound_sym(
         bool                           s,
@@ -201,7 +201,7 @@ struct compound_sym {
 };
 
 struct symbol {
-    enum active { declaration=0, identifier, selection, compound };
+    enum active : u8 { declaration=0, identifier, selection, compound };
     std::variant <
         declaration_sym,
         identifier_sym,
@@ -1295,7 +1295,7 @@ private:
                             assert (std::ssize(selection_stack.back().branches) > 0);
                             selection_stack.back().branches.back().result = sym.standalone_assignment_to;
 
-                            int this_depth = symbols[pos].depth;
+                            const int this_depth = symbols[pos].depth;
                             while (symbols[pos + 1].depth >= this_depth) {
                                 ++pos;
                             }
@@ -1320,7 +1320,7 @@ private:
 
                         //  The depth of this branch should always be the depth of
                         //  the current selection statement + 1
-                        int branch_depth = symbols[selection_stack.back().pos].depth + 1;
+                        const int branch_depth = symbols[selection_stack.back().pos].depth + 1;
                         while (symbols[pos + 1].depth > branch_depth) {
                             ++pos;
                         }
