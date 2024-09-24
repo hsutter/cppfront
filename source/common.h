@@ -648,6 +648,22 @@ class cmdline_processor
         flag(int g, std::string_view n, std::string_view d, callback0 h0, callback1 h1, std::string_view s, bool o)
             : group{g}, name{n}, description{d}, handler0{h0}, handler1{h1}, synonym{s}, opt_out{o}
         { }
+
+        auto get_name(bool indicate_short_name = false) const {
+            auto n = name.substr(0, unique_prefix);
+            if (unique_prefix < std::ssize(name)) {
+                auto name_length = _as<int>(std::min(name.find(' '), name.size()));
+                if (indicate_short_name) {
+                    n += "[";
+                }
+                n += name.substr(unique_prefix, name_length - unique_prefix);
+                if (indicate_short_name) {
+                    n += "]";
+                }
+                n += name.substr(name_length);
+            }
+            return n;
+        }
     };
     std::vector<flag> flags;
     int max_flag_length = 0;
@@ -669,13 +685,16 @@ class cmdline_processor
     }
 
 public:
-    auto flags_starting_with(std::string_view s)
+    auto flags_starting_with(
+        std::string_view s, 
+        bool             indicate_short_name = true
+    )
         -> std::vector<std::string>
     {
         auto ret = std::vector<std::string>{};
-        for (auto const& f : flags) {
-            if (f.name.starts_with(s)) {
-                ret.push_back(f.name);
+        for (auto const& flag : flags) {
+            if (flag.name.starts_with(s)) {
+                ret.push_back( flag.get_name(indicate_short_name) );
             }
         }
         return ret;
@@ -801,14 +820,7 @@ public:
                 }
             }
             print("  -");
-            auto n = flag.name.substr(0, flag.unique_prefix);
-            if (flag.unique_prefix < std::ssize(flag.name)) {
-                auto name_length = _as<int>(std::min(flag.name.find(' '), flag.name.size()));
-                n += "[";
-                n += flag.name.substr(flag.unique_prefix, name_length - flag.unique_prefix);
-                n += "]";
-                n += flag.name.substr(name_length);
-            }
+            auto n = flag.get_name(true);
             if (flag.opt_out) {
                 n += "[-]";
             }

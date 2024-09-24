@@ -364,12 +364,12 @@ constexpr auto gcc_clang_msvc_min_versions(
     auto msvc
 )
 {
-    return gcc_ver > gcc || clang_ver > clang || msvc_ver > msvc;
+    return gcc_ver >= gcc || clang_ver >= clang || msvc_ver >= msvc;
 }
 
 
 #if defined(_MSC_VER)
-   // MSVC can't handle 'inline constexpr' yet in all cases
+   // MSVC can't handle 'inline constexpr' variables yet in all cases
     #define CPP2_CONSTEXPR const
 #else
     #define CPP2_CONSTEXPR constexpr
@@ -423,7 +423,7 @@ namespace string_util {
 
 //  Break a string_view into a vector of views of simple qidentifier
 //  substrings separated by other characters
-auto split_string_list(std::string_view str)
+inline auto split_string_list(std::string_view str)
     -> std::vector<std::string_view>
 {
     std::vector<std::string_view> ret;
@@ -512,7 +512,7 @@ fixed_string(const CharT (&)[N])->fixed_string<CharT, N-1>;
 
 //  Other string utility functions.
 
-inline bool is_escaped(std::string_view s) {
+constexpr bool is_escaped(std::string_view s) {
     return 
         s.starts_with("\"") 
         && s.ends_with("\"")
@@ -754,16 +754,16 @@ concept valid_custom_is_operator = predicate_member_fun<X, F, &F::op_is>
 //
 
 template <typename T>
-inline constexpr auto move(T&& t) -> decltype(auto) {
+constexpr auto move(T&& t) -> decltype(auto) {
     return std::move(t);
 }
 
-inline constexpr auto max(auto... values) {
+constexpr auto max(auto... values) {
     return std::max( { values... } );
 }
 
 template <class T, class... Ts>
-inline constexpr auto is_any = std::disjunction_v<std::is_same<T, Ts>...>;
+constexpr auto is_any = std::disjunction_v<std::is_same<T, Ts>...>;
 
 template <std::size_t Len, std::size_t Align>
 struct aligned_storage {
@@ -776,7 +776,7 @@ using deref_t = decltype(*std::declval<T&>());
 
 //  Guaranteed to be a total order, unlike built-in operator== for T*
 template <typename T>
-auto pointer_eq(T const* a, T const* b) {
+inline auto pointer_eq(T const* a, T const* b) {
     return std::compare_three_way{}(a, b) == std::strong_ordering::equal;
 }
 
@@ -991,7 +991,7 @@ concept Expected = std::is_same_v<T, std::expected<typename T::value_type, typen
 
 #endif
 
-auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+constexpr auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
 {
     //  NOTE: This "!= T{}" test may or may not work for STL iterators. The standard
     //        doesn't guarantee that using == and != will reliably report whether an
@@ -1049,21 +1049,21 @@ auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decl
 }
 
 template<typename NumType, auto arg>
-auto assert_not_zero([[maybe_unused]] char _ CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto
+constexpr auto assert_not_zero([[maybe_unused]] char _ CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto
     CPP2_ASSERT_NOT_ZERO_IMPL
 
 template<typename NumType, auto arg>
-auto assert_not_zero([[maybe_unused]] char _ CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto
+constexpr auto assert_not_zero([[maybe_unused]] char _ CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto
 {
     return arg;
 }
 
 template<typename NumType>
-auto assert_not_zero(auto   arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto
+constexpr auto assert_not_zero(auto   arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto
     CPP2_ASSERT_NOT_ZERO_IMPL
 
 template<typename NumType>
-auto assert_not_zero(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+constexpr auto assert_not_zero(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
     requires (!std::is_integral_v<CPP2_TYPEOF(arg)>
               || !std::is_integral_v<NumType>)
 {
@@ -1100,19 +1100,19 @@ auto assert_not_zero(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decl
 }
 
 template<auto arg>
-auto assert_in_bounds(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+constexpr auto assert_in_bounds(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
     CPP2_ASSERT_IN_BOUNDS_IMPL
 
 template<auto arg>
-auto assert_in_bounds(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+constexpr auto assert_in_bounds(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
 {
     return CPP2_FORWARD(x) [ arg ];
 }
 
-auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+constexpr auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
     CPP2_ASSERT_IN_BOUNDS_IMPL
 
-auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+    constexpr auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
 {
     return CPP2_FORWARD(x) [ CPP2_FORWARD(arg) ];
 }
@@ -1211,7 +1211,7 @@ inline auto Uncaught_exceptions() -> int {
 }
 
 template<typename T>
-auto Dynamic_cast( [[maybe_unused]] auto&& x ) -> decltype(auto) {
+constexpr auto Dynamic_cast( [[maybe_unused]] auto&& x ) -> decltype(auto) {
 #ifdef CPP2_NO_RTTI
     type_safety.report_violation( "'as' dynamic casting is disabled with -fno-rtti" );
     return nullptr;
@@ -1221,7 +1221,7 @@ auto Dynamic_cast( [[maybe_unused]] auto&& x ) -> decltype(auto) {
 }
 
 template<typename T>
-auto Typeid() -> decltype(auto) {
+constexpr auto Typeid() -> decltype(auto) {
 #ifdef CPP2_NO_RTTI
     type_safety.report_violation( "'any' dynamic casting is disabled with -fno-rtti" );
 #else
@@ -1229,7 +1229,7 @@ auto Typeid() -> decltype(auto) {
 #endif
 }
 
-auto Typeid( [[maybe_unused]] auto&& x ) -> decltype(auto) {
+constexpr auto Typeid( [[maybe_unused]] auto&& x ) -> decltype(auto) {
 #ifdef CPP2_NO_RTTI
     type_safety.report_violation( "'typeid' is disabled with -fno-rtti" );
 #else
@@ -1350,11 +1350,11 @@ class deferred_init {
     auto destroy() -> void         { if (init) { t().~T(); }  init = false; }
 
 public:
-    deferred_init() noexcept       { }
-   ~deferred_init() noexcept       { destroy(); }
-    auto value()    noexcept -> T& { cpp2_default.enforce(init);  return t(); }
+    constexpr  deferred_init() noexcept       { }
+    constexpr ~deferred_init() noexcept       { destroy(); }
+    constexpr auto value()    noexcept -> T& { cpp2_default.enforce(init);  return t(); }
 
-    auto construct(auto&& ...args) -> void { cpp2_default.enforce(!init);  new (&data) T{CPP2_FORWARD(args)...};  init = true; }
+    constexpr auto construct(auto&& ...args) -> void { cpp2_default.enforce(!init);  new (&data) T{CPP2_FORWARD(args)...};  init = true; }
 };
 
 
@@ -1374,21 +1374,21 @@ class out {
     bool called_construct_ = false;
 
 public:
-    out(T*                 t_) noexcept :  t{ t_}, has_t{true}       { cpp2_default.enforce( t); }
-    out(deferred_init<T>* dt_) noexcept : dt{dt_}, has_t{false}      { cpp2_default.enforce(dt); }
-    out(out<T>*           ot_) noexcept : ot{ot_}, has_t{ot_->has_t} { cpp2_default.enforce(ot);
+    constexpr out(T*                 t_) noexcept :  t{ t_}, has_t{true}       { cpp2_default.enforce( t); }
+    constexpr out(deferred_init<T>* dt_) noexcept : dt{dt_}, has_t{false}      { cpp2_default.enforce(dt); }
+    constexpr out(out<T>*           ot_) noexcept : ot{ot_}, has_t{ot_->has_t} { cpp2_default.enforce(ot);
         if (has_t) {  t = ot->t;  }
         else       { dt = ot->dt; }
     }
 
-    auto called_construct() -> bool& {
+    constexpr auto called_construct() -> bool& {
         if (ot) { return ot->called_construct(); }
         else    { return called_construct_; }
     }
 
     //  In the case of an exception, if the parameter was uninitialized
     //  then leave it in the same state on exit (strong guarantee)
-    ~out() {
+    constexpr ~out() {
         if (called_construct() && uncaught_count != Uncaught_exceptions()) {
             cpp2_default.enforce(!has_t);
             dt->destroy();
@@ -1396,7 +1396,7 @@ public:
         }
     }
 
-    auto construct(auto&& ...args) -> void {
+    constexpr auto construct(auto&& ...args) -> void {
         if (has_t || called_construct()) {
             if constexpr (requires { *t = T(CPP2_FORWARD(args)...); }) {
                 cpp2_default.enforce( t );
@@ -1423,7 +1423,7 @@ public:
         }
     }
 
-    auto value() noexcept -> T& {
+    constexpr auto value() noexcept -> T& {
         if (has_t) {
             cpp2_default.enforce( t );
             return *t;
@@ -1812,7 +1812,7 @@ constexpr auto is( X const& x ) -> auto {
 
 //  Values
 //
-inline constexpr auto is( auto const& x, auto&& value ) -> bool
+constexpr auto is( auto const& x, auto&& value ) -> bool
 {
     //  Value with customized operator_is case
     if constexpr (valid_custom_is_operator<decltype(x), decltype(value)>) {
@@ -1843,7 +1843,7 @@ inline constexpr auto is( auto const& x, auto&& value ) -> bool
 //
 
 template <typename X>
-inline constexpr auto is( X const& x, bool (*value)(X const&) ) -> bool {
+constexpr auto is( X const& x, bool (*value)(X const&) ) -> bool {
     return value(x);
 }
 
@@ -1855,7 +1855,7 @@ inline constexpr auto is( X const& x, bool (*value)(X const&) ) -> bool {
 //  If it's confusing, we can switch this to <From, To>
 
 template< typename To, typename From >
-inline constexpr auto is_narrowing_v =
+constexpr auto is_narrowing_v =
     // [dcl.init.list] 7.1
     (std::is_floating_point_v<From> && std::is_integral_v<To>) ||
     // [dcl.init.list] 7.2
@@ -1871,7 +1871,7 @@ inline constexpr auto is_narrowing_v =
     ;
 
 template< typename To, typename From >
-inline constexpr auto is_unsafe_pointer_conversion_v =
+constexpr auto is_unsafe_pointer_conversion_v =
     std::is_pointer_v<To>
     && std::is_pointer_v<From>
 // Work around Clang <= 15 C++20 mode not conforming to C++20 P0929
@@ -1883,11 +1883,11 @@ inline constexpr auto is_unsafe_pointer_conversion_v =
     ;
 
 template <typename... Ts>
-inline constexpr auto program_violates_type_safety_guarantee = sizeof...(Ts) < 0;
+constexpr auto program_violates_type_safety_guarantee = sizeof...(Ts) < 0;
 
 //  For literals we can check for safe 'narrowing' at a compile time (e.g., 1 as std::size_t)
 template< typename C, auto x >
-inline constexpr bool is_castable_v =
+constexpr bool is_castable_v =
     std::is_integral_v<C> &&
     std::is_integral_v<CPP2_TYPEOF(x)> &&
     !(static_cast<CPP2_TYPEOF(x)>(static_cast<C>(x)) != x ||
@@ -1902,7 +1902,7 @@ inline constexpr bool is_castable_v =
 
 template< typename C, auto x >
     requires (std::is_arithmetic_v<C> && std::is_arithmetic_v<CPP2_TYPEOF(x)>)
-inline constexpr auto as() -> auto
+constexpr auto as() -> auto
 {
     if constexpr ( is_castable_v<C, x> ) {
         return static_cast<C>(x);
@@ -1913,7 +1913,7 @@ inline constexpr auto as() -> auto
 
 template< typename C, auto x >
     requires (std::is_same_v<C, std::string> && std::is_integral_v<CPP2_TYPEOF(x)>)
-inline constexpr auto as() -> auto
+constexpr auto as() -> auto
 {
     return cpp2::to_string(CPP2_FORWARD(x));
 }
@@ -1927,7 +1927,7 @@ inline constexpr auto as() -> auto
     #define CPP2_SOURCE_LOCATION_ARG_AS                   CPP2_SOURCE_LOCATION_ARG
 #endif
 template< typename C >
-auto as(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT_AS) -> decltype(auto)
+constexpr auto as(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT_AS) -> decltype(auto)
     //  This "requires" list may need to be tweaked further. The idea is to have
     //  this function used for all the cases it's supposed to cover, but not
     //  hide user-supplied extensions (such as the ones later in this file for
@@ -2051,7 +2051,7 @@ constexpr auto is( X const& x ) -> auto
 
 
 template <specialization_of_template<std::variant> X>
-inline constexpr auto is( X const& x, auto&& value ) -> bool
+constexpr auto is( X const& x, auto&& value ) -> bool
 {
     return type_find_if(x, [&]<typename It>(It const&) -> bool {
         if (x.index() == It::index) {
@@ -2093,7 +2093,7 @@ constexpr auto is( X const& x ) -> bool{
 
 //  is Value
 //
-inline constexpr auto is( std::any const& x, auto&& value ) -> bool
+constexpr auto is( std::any const& x, auto&& value ) -> bool
 {
     //  Predicate case
     if constexpr (valid_predicate<decltype(value), decltype(x)>) {
@@ -2194,17 +2194,17 @@ template <class F>
 class finally_success
 {
 public:
-    explicit finally_success(const F& ff) noexcept : f{ff} { }
-    explicit finally_success(F&& ff) noexcept : f{std::move(ff)} { }
+    constexpr explicit finally_success(const F& ff) noexcept : f{ff} { }
+    constexpr explicit finally_success(F&& ff) noexcept : f{std::move(ff)} { }
 
-    ~finally_success() noexcept
+    constexpr ~finally_success() noexcept
     {
         if (invoke && ecount == std::uncaught_exceptions()) {
             f();
         }
     }
 
-    finally_success(finally_success&& that) noexcept
+    constexpr finally_success(finally_success&& that) noexcept
         : f(std::move(that.f)), invoke(std::exchange(that.invoke, false))
     { }
 
@@ -2223,12 +2223,12 @@ template <class F>
 class finally
 {
 public:
-    explicit finally(const F& ff) noexcept : f{ff} { }
-    explicit finally(F&& ff) noexcept : f{std::move(ff)} { }
+    constexpr explicit finally(const F& ff) noexcept : f{ff} { }
+    constexpr explicit finally(F&& ff) noexcept : f{std::move(ff)} { }
 
-    ~finally() noexcept { f(); }
+    constexpr ~finally() noexcept { f(); }
 
-    finally(finally&& that) noexcept
+    constexpr finally(finally&& that) noexcept
         : f(std::move(that.f)), invoke(std::exchange(that.invoke, false))
     { }
 
@@ -2318,28 +2318,28 @@ constexpr auto unsafe_cast( X&& x ) noexcept
 //
 struct args
 {
-    args(int c, char** v) : argc{c}, argv{v} {}
+    constexpr args(int c, char** v) : argc{c}, argv{v} {}
 
     class iterator {
     public:
-        iterator(int c, char** v, int start) : argc{c}, argv{v}, curr{start} {}
+        constexpr iterator(int c, char** v, int start) : argc{c}, argv{v}, curr{start} {}
 
-        auto operator*() const {
+        constexpr auto operator*() const {
             if (curr < argc) { return std::string_view{ argv[curr] }; }
             else             { return std::string_view{}; }
         }
 
-        auto operator+(int i) -> iterator  {
+        constexpr auto operator+(int i) -> iterator  {
             if (i > 0) { return { argc, argv, std::min(curr+i, argc) }; }
             else       { return { argc, argv, std::max(curr+i, 0   ) }; }
         }
-        auto operator-(int i) -> iterator  { return operator+(-i); }
-        auto operator++()     -> iterator& { curr = std::min(curr+1, argc);  return *this; }
-        auto operator--()     -> iterator& { curr = std::max(curr-1, 0   );  return *this; }
-        auto operator++(int)  -> iterator  { auto old = *this;  ++*this;  return old; }
-        auto operator--(int)  -> iterator  { auto old = *this;  ++*this;  return old; }
+        constexpr auto operator-(int i) -> iterator  { return operator+(-i); }
+        constexpr auto operator++()     -> iterator& { curr = std::min(curr+1, argc);  return *this; }
+        constexpr auto operator--()     -> iterator& { curr = std::max(curr-1, 0   );  return *this; }
+        constexpr auto operator++(int)  -> iterator  { auto old = *this;  ++*this;  return old; }
+        constexpr auto operator--(int)  -> iterator  { auto old = *this;  ++*this;  return old; }
 
-        auto operator<=>(iterator const&) const = default;
+        constexpr auto operator<=>(iterator const&) const = default;
 
     private:
         int    argc;
@@ -2347,23 +2347,23 @@ struct args
         int    curr;
     };
 
-    auto begin()  const -> iterator       { return iterator{ argc, argv, 0    }; }
-    auto end()    const -> iterator       { return iterator{ argc, argv, argc }; }
-    auto cbegin() const -> iterator       { return begin(); }
-    auto cend()   const -> iterator       { return end(); }
-    auto size()   const -> std::size_t    { return cpp2::unsafe_narrow<std::size_t>(ssize()); }
-    auto ssize()  const -> std::ptrdiff_t { return argc; }
+    constexpr auto begin()  const -> iterator       { return iterator{ argc, argv, 0    }; }
+    constexpr auto end()    const -> iterator       { return iterator{ argc, argv, argc }; }
+    constexpr auto cbegin() const -> iterator       { return begin(); }
+    constexpr auto cend()   const -> iterator       { return end(); }
+    constexpr auto size()   const -> std::size_t    { return cpp2::unsafe_narrow<std::size_t>(ssize()); }
+    constexpr auto ssize()  const -> std::ptrdiff_t { return argc; }
 
-    auto operator[](int i) const {
+    constexpr auto operator[](int i) const {
         if (0 <= i && i < ssize())        { return std::string_view{ argv[i] }; }
         else                              { return std::string_view{}; }
     }
 
-    mutable int        argc = 0;        //  mutable for compatibility with frameworks that take 'int& argc'
+    mutable int        argc = 0;        //  'mutable' is for compatibility with frameworks that take 'int& argc'
     char**             argv = nullptr;
 };
 
-inline auto make_args(int argc, char** argv) -> args
+constexpr auto make_args(int argc, char** argv) -> args
 {
     return args{argc, argv};
 }
@@ -2407,7 +2407,7 @@ public:
     using pointer         = T*;
     using reference       = T&;
 
-    range(
+    constexpr range(
         T const&                       f,
         std::type_identity_t<T> const& l,
         bool                           include_last = false
@@ -2452,18 +2452,18 @@ public:
         using reference         = T&;
         using iterator_category = typename range_iterator_category<T>::tag;
 
-        iterator() { }
+        constexpr iterator() { }
 
-        iterator(TT const& f, TT const& l, TT start) : first{ f }, last{ l }, curr{ start } {}
+        constexpr iterator(TT const& f, TT const& l, TT start) : first{ f }, last{ l }, curr{ start } {}
 
         auto operator<=>(iterator const&) const = default;
 
-        operator typename range<const T>::iterator() const { return {first, last, curr}; }
+        constexpr operator typename range<const T>::iterator() const { return {first, last, curr}; }
 
         //  In this section, we don't use relational comparisons so that
         //  this works when T is a less-powerful-than-random-access iterator
         //
-        auto operator*() const -> T
+        constexpr auto operator*() const -> T
         {
             if (curr != last) { 
                 if constexpr (std::is_same_v<T, TT>) { 
@@ -2478,15 +2478,15 @@ public:
             }
         }
 
-        auto operator++()    -> iterator& { if (curr != last ) { ++curr; }  return *this; }
-        auto operator--()    -> iterator& { if (curr != first) { --curr; }  return *this; }
-        auto operator++(int) -> iterator  { auto old = *this;  ++*this;  return old; }
-        auto operator--(int) -> iterator  { auto old = *this;  ++*this;  return old; }
+        constexpr auto operator++()    -> iterator& { if (curr != last ) { ++curr; }  return *this; }
+        constexpr auto operator--()    -> iterator& { if (curr != first) { --curr; }  return *this; }
+        constexpr auto operator++(int) -> iterator  { auto old = *this;  ++*this;  return old; }
+        constexpr auto operator--(int) -> iterator  { auto old = *this;  ++*this;  return old; }
 
         //  And now all the random-access operations which can use relational
         //  comparisons (these functions are valid if T is random-access)
         //
-        auto operator[](difference_type i) const -> T {
+        constexpr auto operator[](difference_type i) const -> T {
             if (curr + i != last) { 
                 if constexpr (std::is_same_v<T, TT>) { 
                     return curr + i;
@@ -2500,33 +2500,33 @@ public:
             }
         }
 
-        auto operator+=(difference_type i) -> iterator& 
+        constexpr auto operator+=(difference_type i) -> iterator& 
             { if (curr + i <= last ) { curr += i; } else { curr = last;  }  return *this; }
-        auto operator-=(difference_type i) -> iterator& 
+        constexpr auto operator-=(difference_type i) -> iterator& 
             { if (curr - i >= first) { curr -= i; } else { curr = first; }  return *this; }
 
         friend 
-        auto operator+ (difference_type i, iterator const& iter) -> iterator 
+        constexpr auto operator+ (difference_type i, iterator const& iter) -> iterator 
             { auto ret = *iter;  return ret += i; }
 
-        auto operator+ (difference_type i   ) const -> iterator        { auto ret = *this;  return ret += i; }
-        auto operator- (difference_type i   ) const -> iterator        { auto ret = *this;  return ret -= i; }
-        auto operator- (iterator        that) const -> difference_type { return that.curr - curr; }
+        constexpr auto operator+ (difference_type i   ) const -> iterator        { auto ret = *this;  return ret += i; }
+        constexpr auto operator- (difference_type i   ) const -> iterator        { auto ret = *this;  return ret -= i; }
+        constexpr auto operator- (iterator        that) const -> difference_type { return that.curr - curr; }
     };
 
     using const_iterator = typename range<const T>::iterator;
 
-    auto cbegin() const -> const_iterator { return begin(); }
-    auto cend()   const -> const_iterator { return end(); }
-    auto begin()  const -> const_iterator { return iterator{ first, last, first }; }
-    auto end()    const -> const_iterator { return iterator{ first, last, last }; }
-    auto begin()        -> iterator       { return iterator{ first, last, first }; }
-    auto end()          -> iterator       { return iterator{ first, last, last }; }
-    auto size()   const -> std::size_t    { return unsafe_narrow<std::size_t>(ssize()); }
-    auto ssize()  const -> std::ptrdiff_t { return last - first; }
-    auto empty()  const -> bool           { return first == last; }
+    constexpr auto cbegin() const -> const_iterator { return begin(); }
+    constexpr auto cend()   const -> const_iterator { return end(); }
+    constexpr auto begin()  const -> const_iterator { return iterator{ first, last, first }; }
+    constexpr auto end()    const -> const_iterator { return iterator{ first, last, last }; }
+    constexpr auto begin()        -> iterator       { return iterator{ first, last, first }; }
+    constexpr auto end()          -> iterator       { return iterator{ first, last, last }; }
+    constexpr auto size()   const -> std::size_t    { return unsafe_narrow<std::size_t>(ssize()); }
+    constexpr auto ssize()  const -> std::ptrdiff_t { return last - first; }
+    constexpr auto empty()  const -> bool           { return first == last; }
 
-    auto front() const -> T { 
+    constexpr auto front() const -> T { 
         type_safety.enforce(!empty()); 
         if constexpr (std::is_same_v<T, TT>) { 
             return first;
@@ -2536,7 +2536,7 @@ public:
         }
     }
 
-    auto back() const -> T { 
+    constexpr auto back() const -> T { 
         type_safety.enforce(!empty()); 
         if constexpr (std::is_same_v<T, TT>) { 
             auto ret = last; 
@@ -2548,7 +2548,7 @@ public:
         }
     }
 
-    auto operator[](difference_type i) const -> T
+    constexpr auto operator[](difference_type i) const -> T
     {
         if (0 <= i && i < ssize()) { 
             if constexpr (std::is_same_v<T, TT>) { 
@@ -2565,7 +2565,7 @@ public:
 };
 
 template<typename T>
-auto contains(range<T> const& r, T const& t)
+constexpr auto contains(range<T> const& r, T const& t)
     -> bool
 {
     if (r.empty()) {
@@ -2575,7 +2575,7 @@ auto contains(range<T> const& r, T const& t)
 }
 
 template<typename T>
-auto sum(range<T> const& r)
+constexpr auto sum(range<T> const& r)
     -> T 
 { 
     return std::accumulate(r.begin(), r.end(), T{});
@@ -2606,7 +2606,7 @@ using alien_memory = T volatile;
 //-----------------------------------------------------------------------
 //
 template <typename T>
-auto has_flags(T flags)
+constexpr auto has_flags(T flags)
 {
     return [=](T value) { return (value & flags) == flags; };
 }
@@ -2801,7 +2801,7 @@ CPP2_FORCE_INLINE constexpr auto cmp_greater_eq(auto&& t, auto&& u) -> decltype(
 //-----------------------------------------------------------------------
 //
 template< typename C >
-inline constexpr auto as_( auto&& x ) -> decltype(auto)
+constexpr auto as_( auto&& x ) -> decltype(auto)
 {
     if constexpr (is_narrowing_v<C, CPP2_TYPEOF(x)>) {
         static_assert(
@@ -2827,7 +2827,7 @@ inline constexpr auto as_( auto&& x ) -> decltype(auto)
 }
 
 template< typename C, auto x >
-inline constexpr auto as_() -> decltype(auto)
+constexpr auto as_() -> decltype(auto)
 {
     if constexpr (requires { as<C, x>(); }) {
         if constexpr( std::is_same_v< CPP2_TYPEOF((as<C, x>())), nonesuch_ > ) {
