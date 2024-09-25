@@ -6057,7 +6057,7 @@ public:
 
         //  Now, emit our own template parameters
         if (
-            n.template_parameters
+            (n.template_parameters && !n.is_alias())
             && (
                 printer.get_phase() <  printer.phase2_func_defs
                 || n.is_object()
