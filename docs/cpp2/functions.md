@@ -45,7 +45,7 @@ There are six ways to pass parameters that cover all use cases, that can be writ
 | Parameter ***kind*** | "Pass an `x` the function ______" | Accepts arguments that are | Special semantics | ***kind*** `x: X` Compiles to Cpp1 as |
 |---|---|---|---|---|
 | `in` (default) | can read from | anything | always `#!cpp const`<p>automatically passes by value if cheaply copyable | `X const x` or `X const& x` |
-| `copy` | takes a copy of | anything | acts like a normal local variable initialized with the argument | `X x` |
+| `copy` | gets a copy of | anything | acts like a normal local variable initialized with the argument | `X x` |
 | `inout` | can read from and write to | lvalues | | `X& x` |
 | `out` | writes to (including construct) | lvalues (including uninitialized) | must `=` assign/construct before other uses | `cpp2::impl::out<X>` |
 | `move` | moves from (consume the value of) | rvalues | automatically moves from every definite last use | `X&&` |
