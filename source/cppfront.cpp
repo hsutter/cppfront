@@ -72,7 +72,7 @@ auto main(
             }
             else {
                 std::cerr << arg.text << " - ambiguous compiler flag name, did you mean one of these?\n";
-                for (auto a : ambiguous) {
+                for (auto const& a : ambiguous) {
                     std::cerr << "  " << arg.text.front() << a << "\n";
                 }
             }
@@ -137,7 +137,7 @@ auto main(
                     auto total_time = print_with_thousands(t.elapsed().count());
                     std::cout << "\n   Time  " << total_time << " ms";
 
-                    std::multimap< long long, std::string_view, std::greater<long long> > sorted_timers;
+                    std::multimap< long long, std::string_view, std::greater<> > sorted_timers;
                     for (auto [name, t] : timers) {
                         sorted_timers.insert({t.elapsed().count(), name});
                     }

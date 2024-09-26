@@ -33,7 +33,7 @@ namespace cpp2 {
 //-----------------------------------------------------------------------
 //
 
-enum class lexeme : std::int8_t {
+enum class lexeme : i8 {
     SlashEq,
     Slash,
     LeftShiftEq,
@@ -1496,7 +1496,7 @@ auto lex_line(
                     auto R_pos = i + 1;
                     auto seq_pos = i + 3;
 
-                    if (auto paren_pos = line.find("(", seq_pos); paren_pos != line.npos) {
+                    if (auto paren_pos = line.find('(', seq_pos); paren_pos != line.npos) {
                         auto opening_seq = line.substr(i, paren_pos - i + 1);
                         auto closing_seq = ")"+line.substr(seq_pos, paren_pos-seq_pos)+"\"";
 
@@ -1717,7 +1717,7 @@ auto lex_line(
                     if (peek(j-2) == 'R') {
                         auto seq_pos = i + j;
 
-                        if (auto paren_pos = line.find("(", seq_pos); paren_pos != line.npos) {
+                        if (auto paren_pos = line.find('(', seq_pos); paren_pos != line.npos) {
                             auto opening_seq = line.substr(i, paren_pos - i + 1);
                             auto closing_seq = ")"+line.substr(seq_pos, paren_pos-seq_pos)+"\"";
 

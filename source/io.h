@@ -504,7 +504,7 @@ public:
 //
 //  line    current line being processed
 //
-enum class preprocessor_conditional {
+enum class preprocessor_conditional : u8 {
     none = 0, pre_if, pre_else, pre_endif
 };
 auto starts_with_preprocessor_if_else_endif(
@@ -635,7 +635,7 @@ auto process_cpp_line(
                         i+=2;
                         if (i < ssize(line) - 1)
                         {
-                            if (auto paren_pos = line.find("(", i);
+                            if (auto paren_pos = line.find('(', i);
                                 paren_pos != line.npos
                                 )
                             {
@@ -841,7 +841,7 @@ class source
     static const int max_line_len = 90'000;
         //  do not reduce this - I encountered an 80,556-char
         //  line in real world code during testing
-    char buf[max_line_len];
+    char buf[max_line_len] {0};
 
 public:
     //-----------------------------------------------------------------------
@@ -854,7 +854,6 @@ public:
     )
         : errors{ errors_ }
         , lines( 1 )        // extra blank to avoid off-by-one everywhere
-        , buf{0}
     {
     }
 

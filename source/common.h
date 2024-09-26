@@ -65,7 +65,7 @@ struct source_line
 {
     std::string text;
 
-    enum class category { empty, preprocessor, comment, import, cpp1, cpp2, rawstring };
+    enum class category : u8 { empty, preprocessor, comment, import, cpp1, cpp2, rawstring };
     category cat;
 
     bool all_tokens_are_densely_spaced = true; // to be overridden in lexing if they're not
@@ -128,7 +128,7 @@ struct source_position
 
 struct comment
 {
-    enum class comment_kind { line_comment = 0, stream_comment };
+    enum class comment_kind : u8 { line_comment = 0, stream_comment };
 
     comment_kind    kind;
     source_position start;
@@ -141,7 +141,7 @@ struct comment
 struct string_parts {
     struct cpp_code   { std::string text; };
     struct raw_string { std::string text; };
-    enum adds_sequences { no_ends = 0, on_the_beginning = 1, on_the_end = 2, on_both_ends = 3 };
+    enum adds_sequences : u8 { no_ends = 0, on_the_beginning = 1, on_the_end = 2, on_both_ends = 3 };
 
     string_parts(const std::string& beginseq,
                  const std::string& endseq,
@@ -892,8 +892,8 @@ public:
         -> void
     {
         help_requested = true;
-        std::string_view a = __DATE__;
-        std::string_view b = __TIME__;
+        constexpr std::string_view a = __DATE__;
+        constexpr std::string_view b = __TIME__;
         std::unordered_map<std::string_view, char> m = { {"Jan",'1'}, {"Feb",'2'}, {"Mar",'3'}, {"Apr",'4'}, {"May",'5'}, {"Jun",'6'}, {"Jul",'7'}, {"Aug",'8'}, {"Sep",'9'}, {"Oct",'A'}, {"Nov",'B'}, {"Dec",'C'} };
 
         auto stamp = std::to_string(atoi(&a[9])-15);
