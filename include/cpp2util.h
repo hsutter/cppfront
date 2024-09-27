@@ -2327,8 +2327,8 @@ struct args
         using difference_type = std::ptrdiff_t;
         using value_type      = std::string_view;
 
-        iterator() : argc(0), argv(nullptr), curr(0) {}
-        iterator(const iterator& o) : argc(o.argc), argv(o.argv), curr(o.curr) {}
+        constexpr iterator() : argc(0), argv(nullptr), curr(0) {}
+        constexpr iterator(const iterator& o) : argc(o.argc), argv(o.argv), curr(o.curr) {}
 
         constexpr auto operator*() const {
             if (curr < argc) { return std::string_view{ argv[curr] }; }
