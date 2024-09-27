@@ -2327,8 +2327,11 @@ struct args
         using difference_type = std::ptrdiff_t;
         using value_type      = std::string_view;
 
-        constexpr iterator() : argc(0), argv(nullptr), curr(0) {}
-        constexpr iterator(const iterator& o) : argc(o.argc), argv(o.argv), curr(o.curr) {}
+        constexpr iterator() = default;
+        constexpr iterator(const iterator& o) = default;
+        constexpr iterator(iterator&& o) = default;
+        constexpr iterator& operator=(const iterator& o) = default;
+        constexpr iterator& operator=(iterator&& o) = default;
 
         constexpr auto operator*() const {
             if (curr < argc) { return std::string_view{ argv[curr] }; }
@@ -2348,9 +2351,9 @@ struct args
         constexpr auto operator<=>(iterator const&) const = default;
 
     private:
-        int    argc;
-        char** argv;
-        int    curr;
+        int    argc = 0;
+        char** argv = nullptr;
+        int    curr = 0;
     };
 
     constexpr auto begin()  const -> iterator       { return iterator{ argc, argv, 0    }; }
