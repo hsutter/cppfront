@@ -835,6 +835,44 @@ copyable: (inout t: meta::type_declaration) =
 
 //-----------------------------------------------------------------------
 //
+//  hashable
+//
+//  A memberwise hashable type
+//
+hashable: (inout t: meta::type_declaration) =
+{
+    t.require( !t.get_member_objects().empty(),
+               "a hashable type must have at least one data member");
+
+    hash: std::string = "    hash: (this) -> size_t =";
+    count := 0;
+
+    for  t.get_member_objects() 
+    next count++
+    do   (o)
+    {
+        o_hash: std::string;
+        if o.name() == "this" {
+            o_hash = "(o.type())$::hash()";
+        }
+        else {
+            o_hash = "std::hash<(o.type())$>()((o.name())$)";
+        }
+
+        if count == 0 { 
+            hash += " (o_hash)$";
+        }
+        else {
+            hash += " ^ ((o_hash)$ << (count)$)";
+        }
+    }
+
+    t.add_member(hash + ";");
+}
+
+
+//-----------------------------------------------------------------------
+//
 //  basic_value
 //
 //  A regular type: copyable, plus has public default construction
@@ -981,7 +1019,7 @@ struct: (inout t: meta::type_declaration) =
                 ctor_inits  += "(mo.name())$ = (mo.name())$_; ";
             }
             else {
-                ctor_inits += "(mo.type())$ = (); ";
+                ctor_inits += "(mo.type())$ = ((mo.initializer())$); ";
             }
             found_member_without_initializer |= !mo.has_initializer();
         }
@@ -3699,6 +3737,9 @@ apply_metafunctions: (
         }
         else if name == "copyable" {
             copyable( rtype );
+        }
+        else if name == "hashable" {
+            hashable( rtype );
         }
         else if name == "basic_value" {
             basic_value( rtype );

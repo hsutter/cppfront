@@ -749,8 +749,8 @@ struct expression_list_node
             ret += term.expr->to_string();
         }
 
-        if (open_paren) {
-            ret += *open_paren;
+        if (close_paren) {
+            ret += *close_paren;
         }
 
         return ret;
