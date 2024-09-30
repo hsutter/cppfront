@@ -57,14 +57,28 @@ auto base::operator=(auto&& h_) -> base&
 requires (std::is_convertible_v<CPP2_TYPEOF(h_), std::add_const_t<cpp2::i32>&>) {
                                                            h = CPP2_FORWARD(h_);
                                                            return *this;}
-[[nodiscard]] auto base::hash() const& -> size_t { return std::hash<cpp2::i32>()(h); }
+[[nodiscard]] auto base::hash() const& -> size_t{
+
+size_t ret {0}; 
+ret ^= std::hash<cpp2::i32>()(h) + (ret << 6) + (ret >> 2);
+return ret; 
+}
+
 mystruct::mystruct(auto&& i_, auto&& j_, auto&& k_)
 requires (std::is_convertible_v<CPP2_TYPEOF(i_), std::add_const_t<cpp2::i32>&> && std::is_convertible_v<CPP2_TYPEOF(j_), std::add_const_t<std::string>&> && std::is_convertible_v<CPP2_TYPEOF(k_), std::add_const_t<cpp2::u64>&>) 
                                                                                                        : base{ (1) }
                                                                                                        , i{ CPP2_FORWARD(i_) }
                                                                                                        , j{ CPP2_FORWARD(j_) }
                                                                                                        , k{ CPP2_FORWARD(k_) }{}
-[[nodiscard]] auto mystruct::hash() const& -> size_t { return base::hash() ^ (std::hash<cpp2::i32>()(i) << 1) ^ (std::hash<std::string>()(j) << 2) ^ (std::hash<cpp2::u64>()(k) << 3); }
+[[nodiscard]] auto mystruct::hash() const& -> size_t{
+
+size_t ret {0}; 
+ret ^= base::hash() + (ret << 6) + (ret >> 2);
+ret ^= std::hash<cpp2::i32>()(i) + (ret << 6) + (ret >> 2);
+ret ^= std::hash<std::string>()(j) + (ret << 6) + (ret >> 2);
+ret ^= std::hash<cpp2::u64>()(k) + (ret << 6) + (ret >> 2);
+return ret; 
+}
 #line 12 "pure2-hashable.cpp2"
 auto main() -> int{
     mystruct x {2, "three", 4u}; 

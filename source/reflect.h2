@@ -844,11 +844,10 @@ hashable: (inout t: meta::type_declaration) =
     t.require( !t.get_member_objects().empty(),
                "a hashable type must have at least one data member");
 
-    hash: std::string = "    hash: (this) -> size_t =";
-    count := 0;
+    hash: std::string = "    hash: (this) -> size_t = {\n"
+                        "        ret: size_t = 0;";
 
     for  t.get_member_objects() 
-    next count++
     do   (o)
     {
         o_hash: std::string;
@@ -859,15 +858,10 @@ hashable: (inout t: meta::type_declaration) =
             o_hash = "std::hash<(o.type())$>()((o.name())$)";
         }
 
-        if count == 0 { 
-            hash += " (o_hash)$";
-        }
-        else {
-            hash += " ^ ((o_hash)$ << (count)$)";
-        }
+        hash += "\n        ret ^= (o_hash)$ + (ret << 6) + (ret >> 2);";
     }
 
-    t.add_member(hash + ";");
+    t.add_member(hash + "\n        return ret;\n    }");
 }
 
 
