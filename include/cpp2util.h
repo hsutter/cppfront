@@ -2323,15 +2323,10 @@ struct args
     class iterator {
     public:
         constexpr iterator(int c, char** v, int start) : argc{c}, argv{v}, curr{start} {}
+        constexpr iterator() = default;
 
         using difference_type = std::ptrdiff_t;
         using value_type      = std::string_view;
-
-        constexpr iterator() = default;
-        constexpr iterator(const iterator& o) = default;
-        constexpr iterator(iterator&& o) = default;
-        constexpr iterator& operator=(const iterator& o) = default;
-        constexpr iterator& operator=(iterator&& o) = default;
 
         constexpr auto operator*() const {
             if (curr < argc) { return std::string_view{ argv[curr] }; }
