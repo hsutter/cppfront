@@ -1255,7 +1255,7 @@ public:
 
         //  Now we'll open the Cpp1 file
         auto cpp1_filename = sourcefile.substr(0, std::ssize(sourcefile) - 1);
-        
+
         //  Use explicit filename override if present,
         //  otherwise strip leading path
         if (!flag_cpp1_filename.empty()) {
@@ -3458,12 +3458,12 @@ public:
                 last_was_prefixed = true;
             }
 
-            //  Handle the other Cpp2 postfix operators that stay postfix in Cpp1 
+            //  Handle the other Cpp2 postfix operators that stay postfix in Cpp1
             //  (currently '...' for expansion, not when used as a range operator)
             else if (
                 is_postfix_operator(i->op->type())
                 && !i->last_expr    // not being used as a range operator
-                ) 
+                )
             {
                 flush_args();
                 suffix.emplace_back( i->op->to_string(), i->op->position());
@@ -3504,7 +3504,7 @@ public:
                     }
 
                     auto print = print_to_string(
-                        *i->id_expr, 
+                        *i->id_expr,
                         false, // not a local name
                         i->op->type() == lexeme::Dot || i->op->type() == lexeme::DotDot // member access
                     );
@@ -4453,8 +4453,8 @@ public:
         {
             assert(n.declaration);
             auto is_param_to_namespace_scope_type =
-                n.declaration->parent_is_type() 
-                && n.declaration->parent_declaration->parent_is_namespace() 
+                n.declaration->parent_is_type()
+                && n.declaration->parent_declaration->parent_is_namespace()
                 ;
 
             auto emit_in_phase_0 =
@@ -5091,7 +5091,7 @@ public:
             || n.is_swap()
             || n.is_destructor()
             || (
-                n.my_decl 
+                n.my_decl
                 && generating_move_from == n.my_decl
                 )
             )
@@ -5105,7 +5105,7 @@ public:
         if (
             n.is_assignment()
             || (
-                n.my_decl 
+                n.my_decl
                 && generating_assignment_from == n.my_decl
                 )
             )
@@ -5776,8 +5776,18 @@ public:
             auto& a = std::get<declaration_node::an_alias>(n.type);
             assert(a);
 
+            //  Helper for aliases that emit as a defining declaration.
+            auto const type_scope_object_alias_emits_in_phase_1_only = [&]() {
+                assert(
+                    n.parent_is_type()
+                    && n.is_object_alias()
+                );
+                return !a->type_id
+                       || a->type_id->is_wildcard();
+            };
+
             //  Namespace-scope aliases are emitted in phase 1,
-            //  type-scope object aliases in both phases 1 and 2, and
+            //  type-scope object aliases is emitted in phase 1 and maybe 2, and
             //  function-scope aliases in phase 2
             if (
                 (
@@ -5789,6 +5799,7 @@ public:
                     n.parent_is_type()
                     && n.is_object_alias()
                     && printer.get_phase() == printer.phase2_func_defs
+                    && !type_scope_object_alias_emits_in_phase_1_only()
                     )
                 ||
                 (
@@ -5863,7 +5874,7 @@ public:
                 //  Handle object aliases:
                 //      - at function scope, it's const&
                 //      - at namespace scope, it's inline constexpr
-                //      - at type scope, it's also inline constexpr but see note (*) below
+                //      - at type scope, it's also static constexpr but see note (*) below
                 else if (a->is_object_alias())
                 {
                     auto type = std::string{"auto"};
@@ -5888,13 +5899,26 @@ public:
                         }
                     };
 
-                    //  (*) If this is at type scope, Cpp1 requires an out-of-line declaration dance
-                    //  for some cases to work - see https://stackoverflow.com/questions/11928089/
                     if (n.parent_is_type())
                     {
                         assert (n.parent_declaration->name());
 
-                        if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
+                        if (type_scope_object_alias_emits_in_phase_1_only()) {
+                            if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
+                                printer.print_cpp2(
+                                    "static constexpr "
+                                        + type + " "
+                                        + print_to_string(*n.identifier)
+                                        + " = "
+                                        + print_to_string( *std::get<alias_node::an_object>(a->initializer) )
+                                        + ";\n",
+                                    n.position()
+                                );
+                            }
+                        }
+                        //  At type scope, Cpp1 requires an out-of-line declaration dance
+                        //  for some cases to work - see https://stackoverflow.com/questions/11928089/
+                        else if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
                             printer.print_cpp2(
                                 "static const "
                                     + type + " "
@@ -6072,7 +6096,10 @@ public:
 
         //  In class definitions, emit the explicit access specifier if there
         //  is one, or default to private for data and public for functions
-        if (printer.get_phase() == printer.phase1_type_defs_func_decls)
+        if (
+            printer.get_phase() == printer.phase1_type_defs_func_decls
+            && n.identifier
+            )
         {
             if (!n.is_default_access()) {
                 assert (is_in_type);
@@ -6995,8 +7022,8 @@ public:
                         return;
                     }
                 }
-                printer.preempt_position_push(n.position()); 
-                emit( *type, {}, print_to_string(*n.identifier) ); 
+                printer.preempt_position_push(n.position());
+                emit( *type, {}, print_to_string(*n.identifier) );
                 printer.preempt_position_pop();
 
                 if (

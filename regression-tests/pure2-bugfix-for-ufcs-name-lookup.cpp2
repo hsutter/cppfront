@@ -12,10 +12,10 @@ ns: namespace = {
 f: (_) -> int == 1;
 } // namespace ns
 
-// v: @struct type = {
-//   f :== :(_) 0; // Pending on #706.
-//   g: (i) i.f();
-// }
+v: @struct type = {
+  f :== :(_) = 0;
+  g: (i) = _ = i.f();
+}
 
 main: () = {
   {

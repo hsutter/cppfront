@@ -22,6 +22,8 @@ namespace ns {
 
 }
 
+class v;
+  
 
 //=== Cpp2 type definitions and function declarations ===========================
 
@@ -41,10 +43,10 @@ namespace ns {
 [[nodiscard]] constexpr auto f([[maybe_unused]] auto const& unnamed_param_1) -> int;
 } // namespace ns
 
-// v: @struct type = {
-//   f :== :(_) 0; // Pending on #706.
-//   g: (i) i.f();
-// }
+class v {
+  public: static constexpr auto f = []([[maybe_unused]] auto const& unnamed_param_1) -> decltype(auto) { return 0; };
+  public: [[nodiscard]] static auto g(auto const& i) -> decltype(auto);
+};
 
 auto main() -> int;
 
@@ -63,6 +65,9 @@ namespace ns {
 #line 12 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
 [[nodiscard]] constexpr auto f([[maybe_unused]] auto const& unnamed_param_1) -> int { return 1;  }
 }
+
+#line 17 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
+  [[nodiscard]] auto v::g(auto const& i) -> decltype(auto) { return static_cast<void>(CPP2_UFCS(f)(i));  }
 
 #line 20 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
 auto main() -> int{
