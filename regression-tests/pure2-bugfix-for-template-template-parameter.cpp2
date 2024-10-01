@@ -1,0 +1,5 @@
+t: @struct <T: <_, _: _>> type = { }
+
+u: @struct <T, V: _> type = { }
+
+main: () = { _ = :t<u> = (); }

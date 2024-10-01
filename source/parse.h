@@ -3347,6 +3347,8 @@ public:
 
     auto is_function_expression () const -> bool
         { return is_function() && !identifier;  }
+    auto is_template() const -> bool
+        { return template_parameters != nullptr; }
 
     auto is_polymorphic() const // has base types or virtual functions
         -> bool

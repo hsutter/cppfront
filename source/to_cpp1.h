@@ -1255,7 +1255,7 @@ public:
 
         //  Now we'll open the Cpp1 file
         auto cpp1_filename = sourcefile.substr(0, std::ssize(sourcefile) - 1);
-        
+
         //  Use explicit filename override if present,
         //  otherwise strip leading path
         if (!flag_cpp1_filename.empty()) {
@@ -3458,12 +3458,12 @@ public:
                 last_was_prefixed = true;
             }
 
-            //  Handle the other Cpp2 postfix operators that stay postfix in Cpp1 
+            //  Handle the other Cpp2 postfix operators that stay postfix in Cpp1
             //  (currently '...' for expansion, not when used as a range operator)
             else if (
                 is_postfix_operator(i->op->type())
                 && !i->last_expr    // not being used as a range operator
-                ) 
+                )
             {
                 flush_args();
                 suffix.emplace_back( i->op->to_string(), i->op->position());
@@ -3504,7 +3504,7 @@ public:
                     }
 
                     auto print = print_to_string(
-                        *i->id_expr, 
+                        *i->id_expr,
                         false, // not a local name
                         i->op->type() == lexeme::Dot || i->op->type() == lexeme::DotDot // member access
                     );
@@ -4453,8 +4453,8 @@ public:
         {
             assert(n.declaration);
             auto is_param_to_namespace_scope_type =
-                n.declaration->parent_is_type() 
-                && n.declaration->parent_declaration->parent_is_namespace() 
+                n.declaration->parent_is_type()
+                && n.declaration->parent_declaration->parent_is_namespace()
                 ;
 
             auto emit_in_phase_0 =
@@ -4578,6 +4578,20 @@ public:
         if (n.declaration->is_type()) {
             assert( is_template_parameter );
             printer.print_cpp2("typename ", identifier_pos);
+
+            emit_template_name();
+            emit_initializer();
+            return;
+        }
+
+        //-----------------------------------------------------------------------
+        //  Handle template parameters
+
+        if (n.declaration->is_template()) {
+            assert( n.declaration->is_template() );
+            printer.print_cpp2("template ", identifier_pos);
+            emit(*n.declaration->template_parameters, is_returns, true);
+            printer.print_cpp2(" class ", identifier_pos);
 
             emit_template_name();
             emit_initializer();
@@ -5091,7 +5105,7 @@ public:
             || n.is_swap()
             || n.is_destructor()
             || (
-                n.my_decl 
+                n.my_decl
                 && generating_move_from == n.my_decl
                 )
             )
@@ -5105,7 +5119,7 @@ public:
         if (
             n.is_assignment()
             || (
-                n.my_decl 
+                n.my_decl
                 && generating_assignment_from == n.my_decl
                 )
             )
@@ -6995,8 +7009,8 @@ public:
                         return;
                     }
                 }
-                printer.preempt_position_push(n.position()); 
-                emit( *type, {}, print_to_string(*n.identifier) ); 
+                printer.preempt_position_push(n.position());
+                emit( *type, {}, print_to_string(*n.identifier) );
                 printer.preempt_position_pop();
 
                 if (
