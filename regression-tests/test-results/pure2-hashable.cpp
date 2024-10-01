@@ -60,7 +60,7 @@ requires (std::is_convertible_v<CPP2_TYPEOF(h_), std::add_const_t<cpp2::i32>&>) 
 [[nodiscard]] auto base::hash() const& -> size_t{
 
 size_t ret {0}; 
-ret ^= std::hash<cpp2::i32>()(h) + (ret << 6) + (ret >> 2);
+cpp2::hash_combine(ret, std::hash<cpp2::i32>()(h));
 return ret; 
 }
 
@@ -73,10 +73,10 @@ requires (std::is_convertible_v<CPP2_TYPEOF(i_), std::add_const_t<cpp2::i32>&> &
 [[nodiscard]] auto mystruct::hash() const& -> size_t{
 
 size_t ret {0}; 
-ret ^= base::hash() + (ret << 6) + (ret >> 2);
-ret ^= std::hash<cpp2::i32>()(i) + (ret << 6) + (ret >> 2);
-ret ^= std::hash<std::string>()(j) + (ret << 6) + (ret >> 2);
-ret ^= std::hash<cpp2::u64>()(k) + (ret << 6) + (ret >> 2);
+cpp2::hash_combine(ret, base::hash());
+cpp2::hash_combine(ret, std::hash<cpp2::i32>()(i));
+cpp2::hash_combine(ret, std::hash<std::string>()(j));
+cpp2::hash_combine(ret, std::hash<cpp2::u64>()(k));
 return ret; 
 }
 #line 12 "pure2-hashable.cpp2"

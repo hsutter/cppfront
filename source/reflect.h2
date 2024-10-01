@@ -858,7 +858,7 @@ hashable: (inout t: meta::type_declaration) =
             o_hash = "std::hash<(o.type())$>()((o.name())$)";
         }
 
-        hash += "\n        ret ^= (o_hash)$ + (ret << 6) + (ret >> 2);";
+        hash += "\n        cpp2::hash_combine( ret, (o_hash)$ );";
     }
 
     t.add_member(hash + "\n        return ret;\n    }");

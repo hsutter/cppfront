@@ -2419,7 +2419,7 @@ auto hashable(meta::type_declaration& t) -> void
             o_hash.construct("std::hash<" + cpp2::to_string(CPP2_UFCS(type)(o)) + ">()(" + cpp2::to_string(CPP2_UFCS(name)(o)) + ")");
         }
 
-        hash += "\n        ret ^= " + cpp2::to_string(cpp2::move(o_hash.value())) + " + (ret << 6) + (ret >> 2);";
+        hash += "\n        cpp2::hash_combine( ret, " + cpp2::to_string(cpp2::move(o_hash.value())) + " );";
     }
 
     CPP2_UFCS(add_member)(t, cpp2::move(hash) + "\n        return ret;\n    }");

@@ -780,6 +780,14 @@ inline auto pointer_eq(T const* a, T const* b) {
     return std::compare_three_way{}(a, b) == std::strong_ordering::equal;
 }
 
+//  PRs welcome to improve this, for suggestions and background see
+//  https://www.boost.org/doc/libs/1_86_0/libs/container_hash/doc/html/hash.html#notes_hash_combine
+inline auto hash_combine(size_t& seed, size_t v) -> void
+{
+    seed ^= v + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
+
 //-----------------------------------------------------------------------
 //
 //  A type_find_if for iterating over types in parameter packs
