@@ -217,7 +217,7 @@ struct literal_node {
             if (
                 !std::exchange(first, false)
                 && p->as_string_view().starts_with("\"")
-                ) 
+                )
             {
                 ret += " ";
             }
@@ -1401,6 +1401,8 @@ struct type_id_node
 
     std::unique_ptr<type_id_node> constraint = {};
 
+    bool type_only_context = false;
+
     // Out-of-line definition of the dtor is necessary due to the forward-declared
     // type(s) used in a std::unique_ptr as a member
     ~type_id_node();
@@ -2426,7 +2428,7 @@ struct parameter_declaration_list_node
 
     std::vector<std::unique_ptr<parameter_declaration_node>> parameters;
 
-    parameter_declaration_list_node(bool f = false, bool t = false, bool s = false) 
+    parameter_declaration_list_node(bool f = false, bool t = false, bool s = false)
         : in_function_typeid{f}
         , in_template_param_list{t}
         , in_statement_param_list{s}
@@ -2542,7 +2544,7 @@ struct function_type_node
         assert (parameters);
 
         auto ret = parameters->to_string();
-        
+
         if (throws) {
             ret += " throws";
         }
@@ -5907,7 +5909,7 @@ public:
     //
     //  errors      error list
     //
-    parser( 
+    parser(
         std::vector<error_entry>& errors_,
         std::set<std::string>&    includes_
     )
@@ -6370,9 +6372,9 @@ private:
                 //  Next should be an expression-list followed by a ')'
                 //  If not, then this wasn't a call expression so backtrack to
                 //  the '(' which will be part of the next grammar production
-		        is_inside_call_expr = true;
+                is_inside_call_expr = true;
                 term.expr_list = expression_list(term.op, lexeme::RightParen);
-		        is_inside_call_expr = false;
+                is_inside_call_expr = false;
 
                 if (
                     term.expr_list
@@ -6401,7 +6403,7 @@ private:
                 }
             }
             else if (
-                ( 
+                (
                     term.op->type() == lexeme::EllipsisLess
                     || term.op->type() == lexeme::EllipsisEqual
                     )
@@ -6958,11 +6960,13 @@ private:
     auto type_id(
         bool allow_omitting_type_name = false,
         bool allow_constraint         = false,
-        bool allow_function_type      = false
+        bool allow_function_type      = false,
+        bool type_only_context        = true
     )
         -> std::unique_ptr<type_id_node>
     {
         auto n = std::make_unique<type_id_node>();
+        n->type_only_context = type_only_context;
 
         //  Remember current position, because we need to look ahead
         auto start_pos = pos;
@@ -7226,7 +7230,7 @@ private:
                 }
 
                 //  Else try parsing it as a type id
-                else if (auto i = type_id(false, false, true)) {
+                else if (auto i = type_id(false, false, true, false)) {
                     term.arg = std::move(i);
                 }
 
@@ -7321,7 +7325,7 @@ private:
 
         n->ids.push_back( std::move(term) );
 
-        for ( 
+        for (
             auto first_time_through_loop = true;
             curr().type() == lexeme::Scope;
             first_time_through_loop = false
@@ -7340,7 +7344,7 @@ private:
                 && first_uid_was_std
                 && term.scope_op->type() == lexeme::Scope
                 && *term.id->identifier == "forward"
-                ) 
+                )
             {
                 error("std::forward is not needed in Cpp2 - use 'forward' parameters/arguments instead", false);
                 return {};
@@ -7993,7 +7997,7 @@ private:
         }
 
         if (
-            peek(1) 
+            peek(1)
             && *peek(1) == "namespace"
             )
         {

@@ -1,0 +1,32 @@
+// Dependent, non-deducible parameters are wrapped like non-dependent parameters.
+init: <T> (out x: std::integral_constant<i32, T::value>) = { x = (); }
+init: <T> (out x: std::integral_constant<i32, T::value>, _: T) = { x = (); }
+id: <T> (in_ref x: std::integral_constant<i32, T::value>) = x;
+id: <T> (x: std::integral_constant<i32, T::value>, y: T) = { assert(x& == y&); }
+
+main: () = {
+  zero: type == std::integral_constant<i32, 0>;
+
+  z: zero;
+  init<zero>(out z);
+  assert(id<zero>(z)& == z&);
+
+  // Deducible parameters.
+  _ = :v                   = 0;
+  :<T> (_: std::vector<T>) = {}(:std::vector<i32> = ());
+  :<T> (_: std::vector<std::vector<T>>) = {}(:std::vector<std::vector<i32>> = ());
+  // _ = :<T, U> (x: std::pair<T, typename U::value_type>, y: U) = {}(:std::pair = (0, 0), z); // Blocked on #727.
+  :<T, U> (_: std::array<T, U::value>, _: U) = {}(:std::array<i32, 0> = (), z);
+  init(out z, z);
+  id(z, z);
+
+  // Test that these are emitted unwrapped in case they are deducible.
+  (copy f := :<T> (_: std::vector<std::type_identity_t<T>>) = {})
+    static_assert(!std::is_invocable_v<decltype(f), std::vector<i32>>, "`T` is non-deducible.");
+  (copy f := :<T> (_: std::vector<std::vector<T>>) = {})
+    static_assert(std::is_invocable_v<decltype(f), std::vector<std::vector<i32>>>, "`T` is deducible.");
+}
+
+v: <T> type = {
+  operator=: (out this, _: T) = { }
+}
