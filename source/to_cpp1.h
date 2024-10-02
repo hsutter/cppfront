@@ -1722,10 +1722,12 @@ public:
         bool                       is_local_name                 = true,
         bool                       is_qualified                  = false,
         bool                       is_class_member_access        = false,
-        bool                       emit_identifier = true
+        bool                       is_dependent                  = false,
+        bool                       emit_identifier               = true
     )
         -> void
     {   STACKINSTR
+        (void)is_dependent; // Avoid conflict with #533.
         assert( n.identifier );
         auto last_use = is_definite_last_use(n.identifier);
 
@@ -5278,7 +5280,7 @@ public:
             {
                 auto list = std::string{""};
                 if (parent->specialization_template_arguments) {
-                    list = print_to_string(*parent->specialization_template_arguments, 0, false, false, false, false);
+                    list = print_to_string(*parent->specialization_template_arguments, 0, false, false, false, false, false);
                 }
                 else if (parent->template_parameters) {
                     auto separator = std::string{"<"};
@@ -5965,7 +5967,7 @@ public:
 
                         auto specialization_template_arguments = std::string{};
                         if (n.specialization_template_arguments) {
-                            specialization_template_arguments = print_to_string(*n.specialization_template_arguments, 0, false, false, false, false);
+                            specialization_template_arguments = print_to_string(*n.specialization_template_arguments, 0, false, false, false, false, false);
                         }
 
                         printer.print_cpp2(
@@ -6197,7 +6199,7 @@ public:
                 printer.print_cpp2("class ", n.position());
                 emit(*n.identifier);
                 if (n.specialization_template_arguments) {
-                    emit(*n.specialization_template_arguments, 0, false, false, false, false);
+                    emit(*n.specialization_template_arguments, 0, false, false, false, false, false);
                 }
 
                 //  Type declaration
@@ -7090,7 +7092,7 @@ public:
             else if (!n.is_object_with_function_typeid()) {
                 emit(*n.identifier);
                 if (n.specialization_template_arguments) {
-                    emit(*n.specialization_template_arguments, 0, false, false, false, false);
+                    emit(*n.specialization_template_arguments, 0, false, false, false, false, false);
                 }
             }
 
