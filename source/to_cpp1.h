@@ -1941,6 +1941,7 @@ public:
         else {
             try_emit<type_id_node::unqualified>(n.id, 0, false);
             try_emit<type_id_node::qualified  >(n.id);
+            try_emit<type_id_node::decltype_  >(n.id);
             try_emit<type_id_node::keyword    >(n.id);
         }
 

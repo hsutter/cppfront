@@ -606,7 +606,7 @@ auto issue_313() -> void{
     static_cast<void>(cpp2::impl::is(e, (e)));
 
     auto f {cpp2_new<int>(0)}; 
-    static_cast<void>(cpp2::impl::is<std::type_identity_t<decltype(f)>>(f));// OK?
+    static_cast<void>(cpp2::impl::is<decltype(f)>(f));// OK?
 
     auto g {cpp2_new<int>(0)}; 
     for ( 

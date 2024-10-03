@@ -1,0 +1,5 @@
+pure2-deduction-2-error.cpp2...
+pure2-deduction-2-error.cpp2(1,4): error: decltype(auto) is not needed in Cpp2 - use 'forward: _' parameters/returns/objects instead
+  (temporary alpha limitation) returns means auto&&
+  (temporary alpha limitation) objects are not yet supported
+
