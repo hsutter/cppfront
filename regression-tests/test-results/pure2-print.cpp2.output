@@ -146,6 +146,8 @@ outer:/* @print */ type =
     }
 
     all: <Args...: type, >(in args...: Args, ) -> move bool = (... && args);
+
+    sizeof_dependent_type: <T: type, >() = sizeof(type T::value_type);
 }
  ok (all Cpp2, passes safety checks)
 

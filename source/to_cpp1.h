@@ -3260,7 +3260,7 @@ public:
                 auto local_args = text_chunks_with_parens_position{{}, i->op->position(), i->op_close->position()};
 
                 assert (i->expr_list);
-                if (!i->expr_list->expressions.empty()) {
+                if (!i->expr_list->arguments.empty()) {
                     local_args.text_chunks = print_to_text_chunks(*i->expr_list);
                 }
 
@@ -3451,7 +3451,7 @@ public:
                 if (
                     flag_safe_subscripts
                     && i->op->type() == lexeme::LeftBracket
-                    && std::ssize(i->expr_list->expressions) == 1
+                    && std::ssize(i->expr_list->arguments) == 1
                     )
                 {
                     suffix.emplace_back( ")", i->op->position() );
@@ -3505,10 +3505,14 @@ public:
                 if (
                     flag_safe_subscripts
                     && i->op->type() == lexeme::LeftBracket
-                    && std::ssize(i->expr_list->expressions) == 1
+                    && std::ssize(i->expr_list->arguments) == 1
+                    && i->expr_list->arguments.front().argument.index() == expression_list_node::term::expression
                     )
                 {
-                    if (auto lit = i->expr_list->expressions.front().expr->get_literal();
+                    auto& expr = std::get<expression_list_node::term::expression>(
+                        i->expr_list->arguments.front().argument
+                    )->expr;
+                    if (auto lit = expr->get_literal();
                         lit
                         && lit->get_token()->type() == lexeme::DecimalLiteral
                         )
@@ -4086,47 +4090,60 @@ public:
         }
 
         auto first = true;
-        for (auto const& x : n.expressions) {
+        for (auto const& arg : n.arguments) {
             if (!first) {
                 printer.print_cpp2(", ", n.position());
             }
             first = false;
-            auto is_out = false;
-
-            if (x.pass != passing_style::in) {
-                assert(
-                    x.pass == passing_style::out
-                    || x.pass == passing_style::move
-                    || x.pass == passing_style::forward
-                );
-                if (x.pass == passing_style::out) {
-                    is_out = true;
-                    printer.print_cpp2("cpp2::impl::out(&", n.position());
-                }
-                else if (x.pass == passing_style::move) {
-                    printer.print_cpp2("std::move(", n.position());
-                }
-            }
-
-            if (is_out) {
-                in_non_rvalue_context.push_back(true);
-            }
-
-            assert(x.expr);
-            current_args.push_back( {x.pass} );
-            emit(*x.expr);
-            current_args.pop_back();
-
-            if (is_out) {
-                in_non_rvalue_context.pop_back();
-            }
-
-            if (
-                x.pass == passing_style::move
-                || x.pass == passing_style::out
-                )
+            if (auto x_ = std::get_if<expression_list_node::term::expression>(&arg.argument))
             {
-                printer.print_cpp2(")", n.position());
+                auto& x = **x_;
+                auto is_out = false;
+
+                if (x.pass != passing_style::in) {
+                    assert(
+                        x.pass == passing_style::out
+                        || x.pass == passing_style::move
+                        || x.pass == passing_style::forward
+                    );
+                    if (x.pass == passing_style::out) {
+                        is_out = true;
+                        printer.print_cpp2("cpp2::impl::out(&", n.position());
+                    }
+                    else if (x.pass == passing_style::move) {
+                        printer.print_cpp2("std::move(", n.position());
+                    }
+                }
+
+                if (is_out) {
+                    in_non_rvalue_context.push_back(true);
+                }
+
+                assert(x.expr);
+                current_args.push_back( {x.pass} );
+                emit(*x.expr);
+                current_args.pop_back();
+
+                if (is_out) {
+                    in_non_rvalue_context.pop_back();
+                }
+
+                if (
+                    x.pass == passing_style::move
+                    || x.pass == passing_style::out
+                    )
+                {
+                    printer.print_cpp2(")", n.position());
+                }
+            }
+            else if (auto x_ = std::get_if<expression_list_node::term::type>(&arg.argument))
+            {
+                auto& x = **x_;
+                if (x.has_disambiguating_type) {
+                    printer.print_cpp2("typename ", n.position());
+                }
+                assert(x.type);
+                emit(*x.type);
             }
         }
 
