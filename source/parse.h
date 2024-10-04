@@ -6930,9 +6930,7 @@ private:
                 && peek(3) && peek(3)->type() == lexeme::RightParen)
             {
                 error(
-                    "decltype(auto) is not needed in Cpp2 - use 'forward: _' parameters/returns/objects instead"
-                    "\n  (temporary alpha limitation) returns means auto&&"
-                    "\n  (temporary alpha limitation) objects are not yet supported",
+                    "decltype(auto) is not needed in Cpp2 - for return types, use '-> forward _' instead",
                     false,
                     c.position()
                 );
