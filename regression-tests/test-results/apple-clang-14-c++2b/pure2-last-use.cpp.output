@@ -55,10 +55,11 @@ requires (std::is_convertible_v<CPP2_TYPEOF(a_), std::add_const_t<std::unique_pt
 pure2-last-use.cpp2:773:69: error: no template named 'move_only_function' in namespace 'std'
 auto issue_888_1([[maybe_unused]] std::string unnamed_param_1, std::move_only_function<int(cpp2::impl::in<int> x)> size) -> void{
                                                                ~~~~~^
-error: constexpr if condition is not a constant expression
-pure2-last-use.cpp2:774:41: note: in instantiation of function template specialization 'issue_888_1(std::string, int)::(anonymous class)::operator()<int>' requested here
-  static_cast<void>(CPP2_UFCS_MOVE(size)(0));
-                                        ^
-error: constexpr if condition is not a constant expression
+pure2-last-use.cpp2:790:8: error: no member named 'move_only_function' in namespace 'std'
+  std::move_only_function<int(cpp2::impl::in<int> x)> vertex {}; 
+  ~~~~~^
+pure2-last-use.cpp2:790:51: error: expected '(' for function-style cast or type construction
+  std::move_only_function<int(cpp2::impl::in<int> x)> vertex {}; 
+                              ~~~~~~~~~~~~~~~~~~~ ^
 fatal error: too many errors emitted, stopping now [-ferror-limit=]
 20 errors generated.

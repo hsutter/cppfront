@@ -283,11 +283,11 @@ public: issue_857_6();
 
 class issue_857_4 {
    public: std::add_pointer_t<int()> f; 
-   public: std::add_pointer_t<int([[maybe_unused]] cpp2::impl::in<int> unnamed_param_1)> g; 
+   public: std::add_pointer_t<int(cpp2::impl::in<int> x)> g; 
   public: std::move_only_function<int()> mf; 
-  public: std::move_only_function<int([[maybe_unused]] cpp2::impl::in<int> unnamed_param_1)> mg; 
+  public: std::move_only_function<int(cpp2::impl::in<int> x)> mg; 
   public: issue_857_4(auto&& f_, auto&& g_, auto&& mf_, auto&& mg_)
-CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(f_), std::add_const_t<std::add_pointer_t<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(g_), std::add_const_t<std::add_pointer_t<int(cpp2::impl::in<int> in_)>>&> && std::is_convertible_v<CPP2_TYPEOF(mf_), std::add_const_t<std::move_only_function<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(mg_), std::add_const_t<std::move_only_function<int(cpp2::impl::in<int> in_)>>&>) ;
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(f_), std::add_const_t<std::add_pointer_t<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(g_), std::add_const_t<std::add_pointer_t<int(cpp2::impl::in<int> inx)>>&> && std::is_convertible_v<CPP2_TYPEOF(mf_), std::add_const_t<std::move_only_function<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(mg_), std::add_const_t<std::move_only_function<int(cpp2::impl::in<int> inx)>>&>) ;
 
 //   h0: (move this) = _ = mf();
 //   h1: (move this) = _ = this.mf();
@@ -438,7 +438,7 @@ auto issue_884() -> void;
 auto issue_888_0(std::string r, int size) -> void;
 
 #line 773 "pure2-last-use.cpp2"
-auto issue_888_1([[maybe_unused]] std::string unnamed_param_1, std::move_only_function<int([[maybe_unused]] cpp2::impl::in<int> unnamed_param_1)> size) -> void;
+auto issue_888_1([[maybe_unused]] std::string unnamed_param_1, std::move_only_function<int(cpp2::impl::in<int> x)> size) -> void;
 
 #line 777 "pure2-last-use.cpp2"
 auto issue_890() -> void;
@@ -772,7 +772,7 @@ requires (std::is_convertible_v<CPP2_TYPEOF(i_), std::add_const_t<std::add_lvalu
                                                                                         return *this;}
 issue_857_6::issue_857_6(){}
 issue_857_4::issue_857_4(auto&& f_, auto&& g_, auto&& mf_, auto&& mg_)
-requires (std::is_convertible_v<CPP2_TYPEOF(f_), std::add_const_t<std::add_pointer_t<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(g_), std::add_const_t<std::add_pointer_t<int(cpp2::impl::in<int> in_)>>&> && std::is_convertible_v<CPP2_TYPEOF(mf_), std::add_const_t<std::move_only_function<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(mg_), std::add_const_t<std::move_only_function<int(cpp2::impl::in<int> in_)>>&>) 
+requires (std::is_convertible_v<CPP2_TYPEOF(f_), std::add_const_t<std::add_pointer_t<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(g_), std::add_const_t<std::add_pointer_t<int(cpp2::impl::in<int> inx)>>&> && std::is_convertible_v<CPP2_TYPEOF(mf_), std::add_const_t<std::move_only_function<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(mg_), std::add_const_t<std::move_only_function<int(cpp2::impl::in<int> inx)>>&>) 
                                                                                                                                                                                                                                                                              : f{ CPP2_FORWARD(f_) }
                                                                                                                                                                                                                                                                              , g{ CPP2_FORWARD(g_) }
                                                                                                                                                                                                                                                                              , mf{ CPP2_FORWARD(mf_) }
@@ -1272,7 +1272,7 @@ auto issue_888_0(std::string r, int size) -> void{
   static_cast<void>(CPP2_UFCS_MOVE(size)(cpp2::move(r)));
 }
 #line 773 "pure2-last-use.cpp2"
-auto issue_888_1([[maybe_unused]] std::string unnamed_param_1, std::move_only_function<int([[maybe_unused]] cpp2::impl::in<int> unnamed_param_1)> size) -> void{
+auto issue_888_1([[maybe_unused]] std::string unnamed_param_1, std::move_only_function<int(cpp2::impl::in<int> x)> size) -> void{
   static_cast<void>(CPP2_UFCS_MOVE(size)(0));
 }
 
@@ -1297,7 +1297,7 @@ auto issue_962(cpp2::impl::in<::std::string> s) -> void{
 #line 788 "pure2-last-use.cpp2"
 auto draw() -> void{
   auto pos {0}; 
-  std::move_only_function<int([[maybe_unused]] cpp2::impl::in<int> unnamed_param_1)> vertex {}; 
+  std::move_only_function<int(cpp2::impl::in<int> x)> vertex {}; 
   static_cast<void>(CPP2_UFCS_MOVE(vertex)((cpp2::move(pos))));
 }
 

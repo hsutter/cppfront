@@ -1,1 +1,13 @@
 pure2-last-use.cpp
+pure2-last-use.cpp2(274): error C2039: 'move_only_function': is not a member of 'std'
+predefined C++ types (compiler internal)(347): note: see declaration of 'std'
+pure2-last-use.cpp2(274): error C7568: argument list missing after assumed function template 'move_only_function'
+pure2-last-use.cpp2(274): error C2062: type 'unknown-type' unexpected
+pure2-last-use.cpp2(274): error C2238: unexpected token(s) preceding ';'
+pure2-last-use.cpp2(275): error C2039: 'move_only_function': is not a member of 'std'
+predefined C++ types (compiler internal)(347): note: see declaration of 'std'
+pure2-last-use.cpp2(275): error C7568: argument list missing after assumed function template 'move_only_function'
+pure2-last-use.cpp2(275): error C2062: type 'unknown-type' unexpected
+pure2-last-use.cpp2(275): error C2238: unexpected token(s) preceding ';'
+pure2-last-use.cpp2(277): error C2760: syntax error: '>' was unexpected here; expected 'expression'
+pure2-last-use.cpp2(276): fatal error C1907: unable to recover from previous error(s); stopping compilation
