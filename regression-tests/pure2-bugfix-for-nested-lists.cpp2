@@ -25,3 +25,9 @@ main: () = {
     // Still parentheses (for now?)
     assert((:std::vector = (17, 29)).size() == 2);
 }
+
+issue_1283: () = {
+  arr: std::array<std::string, 10> = ();
+  f: MyFunctor = ("Some initial value");
+  std::ranges::generate(arr, :() (f&$*)());
+}

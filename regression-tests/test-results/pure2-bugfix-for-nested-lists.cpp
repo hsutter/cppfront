@@ -34,6 +34,9 @@ public: explicit point();
 
 auto main() -> int;
 
+#line 29 "pure2-bugfix-for-nested-lists.cpp2"
+auto issue_1283() -> void;
+
 //=== Cpp2 function definitions =================================================
 
 #line 1 "pure2-bugfix-for-nested-lists.cpp2"
@@ -82,5 +85,12 @@ auto main() -> int{
 
     // Still parentheses (for now?)
     if (cpp2::cpp2_default.is_active() && !(CPP2_UFCS(size)((std::vector{17, 29})) == 2) ) { cpp2::cpp2_default.report_violation(""); }
+}
+
+#line 29 "pure2-bugfix-for-nested-lists.cpp2"
+auto issue_1283() -> void{
+  std::array<std::string,10> arr {}; 
+  MyFunctor f {"Some initial value"}; 
+  std::ranges::generate(cpp2::move(arr), [_0 = (&f)]() mutable -> auto { return (*cpp2::impl::assert_not_null(_0))();  });
 }
 
