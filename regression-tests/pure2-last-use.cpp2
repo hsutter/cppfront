@@ -42,7 +42,7 @@ issue_313: () = {
     _ = e is (e);
 
     f := new<int>(0);
-    _ = f is std::type_identity_t<decltype(f)>; // OK?
+    _ = f is decltype(f); // OK?
 
     g := new<int>(0);
     for (identity(g)* + identity(g)*)

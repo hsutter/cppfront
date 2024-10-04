@@ -4,10 +4,10 @@
 
 v: <T> concept = :() -> bool = true;();
 
-u: type == std::type_identity_t<decltype(:() = {})>;
+u: type == decltype(:() = {});
 
 t: @struct type = {
-    this: std::type_identity_t<decltype(:() = {})>;
+    this: decltype(:() = {});
 }
 
 main: () = { }
