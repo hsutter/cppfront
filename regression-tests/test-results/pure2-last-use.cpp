@@ -81,7 +81,7 @@ auto f_inout([[maybe_unused]] auto& unnamed_param_1) -> void;
 auto f_copy([[maybe_unused]] auto ...unnamed_param_1) -> void;
 [[nodiscard]] auto pred([[maybe_unused]] auto const& ...unnamed_param_1) -> auto;
 [[nodiscard]] auto pred_copy([[maybe_unused]] auto ...unnamed_param_1) -> auto;
-template<typename T> [[nodiscard]] constexpr auto identity(T&& x) -> auto&&
+template<typename T> [[nodiscard]] constexpr auto identity(T&& x) -> decltype(auto)
 CPP2_REQUIRES (std::is_reference_v<T>) ;
 #line 6 "pure2-last-use.cpp2"
 [[nodiscard]] auto identity_copy(auto x) -> auto
@@ -560,7 +560,7 @@ auto f_copy([[maybe_unused]] auto ...unnamed_param_1) -> void{}
 #line 4 "pure2-last-use.cpp2"
 [[nodiscard]] auto pred_copy([[maybe_unused]] auto ...unnamed_param_1) -> auto { return true;  }
 #line 5 "pure2-last-use.cpp2"
-template<typename T> [[nodiscard]] constexpr auto identity(T&& x) -> auto&&
+template<typename T> [[nodiscard]] constexpr auto identity(T&& x) -> decltype(auto)
 requires (std::is_reference_v<T>) {return CPP2_FORWARD(x); }
 #line 6 "pure2-last-use.cpp2"
 [[nodiscard]] auto identity_copy(auto x) -> auto
@@ -1430,7 +1430,7 @@ namespace captures {
 auto f() -> void{
   auto x {cpp2_new<int>(0)}; 
   f_copy(std::move(cpp2::move(x)));
-  auto id {[](auto const& x) -> auto&& { return x;  }}; 
+  auto id {[](auto const& x) -> decltype(auto) { return x;  }}; 
   auto y {cpp2_new<int>(0)}; 
   if (cpp2::cpp2_default.is_active() && !(&cpp2::move(id)(y) == &y) ) { cpp2::cpp2_default.report_violation(""); }
 }

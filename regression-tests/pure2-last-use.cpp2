@@ -159,7 +159,7 @@ issue_850: () = {
     v: std::vector = ( 1, 2, 3, 4, 5 );
 
     //  Definite last use of v => move-capture v into f's closure
-    f := :() -> forward _ = { return v$; };
+    f := :() -> forward_ref _ = { return v$; };
 
     //  Now we can access the vector captured inside f()...
     f().push_back(6);

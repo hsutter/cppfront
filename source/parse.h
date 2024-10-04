@@ -669,27 +669,31 @@ auto binary_expression_node<Name, Term>::is_standalone_expression() const
 }
 
 
-enum class passing_style : u8 { in=0, copy, inout, out, move, forward, invalid };
+enum class passing_style : u8 { in=0, in_ref, copy, inout, out, move, forward, forward_ref, invalid };
 auto to_passing_style(token const& t) -> passing_style {
     if (t.type() == lexeme::Identifier) {
-        if (t == "in"     ) { return passing_style::in; }
-        if (t == "copy"   ) { return passing_style::copy; }
-        if (t == "inout"  ) { return passing_style::inout; }
-        if (t == "out"    ) { return passing_style::out; }
-        if (t == "move"   ) { return passing_style::move; }
-        if (t == "forward") { return passing_style::forward; }
+        if (t == "in"     )     { return passing_style::in; }
+        if (t == "in_ref" )     { return passing_style::in_ref; }
+        if (t == "copy"   )     { return passing_style::copy; }
+        if (t == "inout"  )     { return passing_style::inout; }
+        if (t == "out"    )     { return passing_style::out; }
+        if (t == "move"   )     { return passing_style::move; }
+        if (t == "forward")     { return passing_style::forward; }
+        if (t == "forward_ref") { return passing_style::forward_ref; }
     }
     return passing_style::invalid;
 }
 auto to_string_view(passing_style pass) -> std::string_view {
     switch (pass) {
-    break;case passing_style::in     : return "in";
-    break;case passing_style::copy   : return "copy";
-    break;case passing_style::inout  : return "inout";
-    break;case passing_style::out    : return "out";
-    break;case passing_style::move   : return "move";
-    break;case passing_style::forward: return "forward";
-    break;default                    : return "INVALID passing_style";
+    break;case passing_style::in         : return "in";
+    break;case passing_style::in_ref     : return "in_ref";
+    break;case passing_style::copy       : return "copy";
+    break;case passing_style::inout      : return "inout";
+    break;case passing_style::out        : return "out";
+    break;case passing_style::move       : return "move";
+    break;case passing_style::forward    : return "forward";
+    break;case passing_style::forward_ref: return "forward_ref";
+    break;default                        : return "INVALID passing_style";
     }
 }
 
@@ -1918,7 +1922,6 @@ struct iteration_statement_node
     std::unique_ptr<expression_node>            range;              // used for "for", else null
     std::unique_ptr<parameter_declaration_node> parameter;          // used for "for", else null
     std::unique_ptr<statement_node>             body;               // used for "for", else null
-    bool                                        for_with_in = false;// used for "for," says whether loop variable is 'in'
 
     // Out-of-line definition of the dtor is necessary due to the forward-declared
     // type(s) used in a std::unique_ptr as a member
@@ -2688,6 +2691,12 @@ struct function_type_node
         return has_parameter_with_name_and_pass(s, passing_style::in);
     }
 
+    auto has_in_ref_parameter_named(std::string_view s) const
+        -> bool
+    {
+        return has_parameter_with_name_and_pass(s, passing_style::in_ref);
+    }
+
     auto has_copy_parameter_named(std::string_view s) const
         -> bool
     {
@@ -3195,6 +3204,15 @@ public:
             return false;
         }
         return std::get<a_function>(type)->has_in_parameter_named(s);
+    }
+
+    auto has_in_ref_parameter_named(std::string_view s) const
+        -> bool
+    {
+        if (!is_function()) {
+            return false;
+        }
+        return std::get<a_function>(type)->has_in_ref_parameter_named(s);
     }
 
     auto has_copy_parameter_named(std::string_view s) const
@@ -7650,10 +7668,6 @@ private:
                 error("invalid for..do loop body", false, source_position{}, true);
                 return {};
             }
-            //  else
-            if (n->parameter->pass == passing_style::in) {
-                n->for_with_in = true;
-            }
 
             if (!done() && curr().type() == lexeme::Semicolon) {
                 error("a loop body may not be followed by a semicolon (empty statements are not allowed)");
@@ -8199,6 +8213,10 @@ private:
                     error("a return value cannot be 'in'");
                     return {};
                 }
+                if (dir == passing_style::in_ref) {
+                    error("a return value cannot be 'in_ref'");
+                    return {};
+                }
                 if (dir == passing_style::copy) {
                     error("a return value cannot be 'copy'");
                     return {};
@@ -8212,6 +8230,13 @@ private:
                     return {};
                 }
             }
+            else {
+                if (dir == passing_style::forward_ref) {
+                    error("a parameter cannot be 'forward_ref'");
+                    return {};
+                }
+            }
+
             if (
                 !is_named
                 && dir == passing_style::out
@@ -8277,14 +8302,15 @@ private:
             !is_returns
             && n->declaration->is_const()
             && n->pass != passing_style::copy
-            && n->pass != passing_style::inout
             )
         {
             switch (n->pass) {
             break;case passing_style::in:
                 error( "an 'in' parameter is always const, 'const' isn't needed and isn't allowed", false );
+            break;case passing_style::in_ref:
+                error( "an 'in_ref' parameter is always const, 'const' isn't needed and isn't allowed", false );
             break;case passing_style::inout:
-                // error( "an 'inout' parameter can't be const, if you do want it to be const then use 'in' instead", false );
+                error( "an 'inout' parameter can't be const, if you do want it to be const then use 'in' instead", false );
             break;case passing_style::out:
                 error( "an 'out' parameter can't be const, otherwise it can't be initialized in the function body", false );
             break;case passing_style::move:
@@ -8294,6 +8320,11 @@ private:
             break;default:
                 assert (false && "ICE: missing case");
             }
+            return {};
+        }
+
+        if (n->pass == passing_style::forward_ref) {
+            error("'forward_ref' is for a single anonymous deduced return value: -> forward_ref _", false);
             return {};
         }
 
@@ -8311,6 +8342,7 @@ private:
                 return {};
             }
         }
+
         return n;
     }
 
@@ -8598,15 +8630,27 @@ private:
                 )
             {
                 if (
-                    pass != passing_style::forward
-                    && pass != passing_style::move
+                    pass != passing_style::move
+                    && pass != passing_style::forward
+                    && pass != passing_style::forward_ref
                     )
                 {
-                    error("only 'forward' and 'move' return passing style are allowed from functions");
+                    error("only 'move' and 'forward' return passing style are allowed from functions");
                     return {};
                 }
+
                 next();
+
                 if (auto t = type_id()) {
+                    if (
+                        pass == passing_style::forward_ref
+                        && !t->is_wildcard()
+                        )
+                    {
+                        error("'forward_ref' is for a single anonymous deduced return value: -> forward_ref _", false);
+                        return {};
+                    }
+
                     n->returns = function_type_node::single_type_id{ std::move(t), pass };
                     assert(n->returns.index() == function_type_node::id);
                 }
@@ -8616,6 +8660,7 @@ private:
                     error(msg + "' must be followed by a type-id");
                     return {};
                 }
+
             }
 
             else if (auto t = type_id())
@@ -8625,7 +8670,7 @@ private:
                     && t->get_token()->to_string() == "auto"
                     )
                 {
-                    auto name = std::string{"v"};
+                    auto name = std::string{"f"};
                     if (my_decl && my_decl->name()) {
                         name = my_decl->name()->to_string();
                     }
@@ -8647,7 +8692,7 @@ private:
                 }
 
                 if (std::ssize(returns_list->parameters) < 1) {
-                    error("an explicit return value list cannot be empty");
+                    error("an explicit return value list cannot be empty", true, {}, true);
                     return {};
                 }
                 n->returns = std::move(returns_list);
@@ -9950,16 +9995,7 @@ public:
     {
         o << pre(indent) << "parameter-declaration\n";
 
-        o << pre(indent+1);
-        switch (n.pass) {
-        break;case passing_style::in     : o << "in";
-        break;case passing_style::copy   : o << "copy";
-        break;case passing_style::inout  : o << "inout";
-        break;case passing_style::out    : o << "out";
-        break;case passing_style::move   : o << "move";
-        break;case passing_style::forward: o << "forward";
-        break;default: ;
-        }
+        o << pre(indent+1) << to_string_view(n.pass);
 
         o << pre(indent+1);
         switch (n.mod) {

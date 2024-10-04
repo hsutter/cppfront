@@ -2401,7 +2401,11 @@ public:
             assert(!current_functions.empty());
             auto is_forward_return =
                 !function_returns.empty()
-                && function_returns.back().pass == passing_style::forward;
+                && (
+                    function_returns.back().pass == passing_style::forward
+                    || function_returns.back().pass == passing_style::forward_ref
+                    )
+                ;
             auto is_deduced_return =
                 !function_returns.empty()
                 && function_returns.back().is_deduced;
@@ -4093,7 +4097,11 @@ public:
             first = false;
             auto is_out = false;
 
-            if (x.pass != passing_style::in) {
+            if (
+                x.pass != passing_style::in
+                && x.pass != passing_style::in_ref
+                ) 
+            {
                 assert(
                     x.pass == passing_style::out
                     || x.pass == passing_style::move
@@ -4658,7 +4666,8 @@ public:
             }
 
             switch (n.pass) {
-            break;case passing_style::in     : printer.print_cpp2( name+" const&", n.position() );
+            break;case passing_style::in     : 
+                  case passing_style::in_ref : printer.print_cpp2( name+" const&", n.position() );
             break;case passing_style::copy   : printer.print_cpp2( name,           n.position() );
             break;case passing_style::inout  : printer.print_cpp2( name+"&",       n.position() );
 
@@ -4717,12 +4726,13 @@ public:
             )
         {
             switch (n.pass) {
-            break;case passing_style::in     : printer.print_cpp2( ">",  n.position() );
-            break;case passing_style::copy   : printer.print_cpp2( "",   n.position() );
-            break;case passing_style::inout  : printer.print_cpp2( "&",  n.position() );
-            break;case passing_style::out    : printer.print_cpp2( ">",  n.position() );
-            break;case passing_style::move   : printer.print_cpp2( "&&", n.position() );
-            break;case passing_style::forward: printer.print_cpp2( "&&", n.position() );
+            break;case passing_style::in     : printer.print_cpp2( ">",       n.position() );
+            break;case passing_style::in_ref : printer.print_cpp2( " const&", n.position() );
+            break;case passing_style::copy   : printer.print_cpp2( "",        n.position() );
+            break;case passing_style::inout  : printer.print_cpp2( "&",       n.position() );
+            break;case passing_style::out    : printer.print_cpp2( ">",       n.position() );
+            break;case passing_style::move   : printer.print_cpp2( "&&",      n.position() );
+            break;case passing_style::forward: printer.print_cpp2( "&&",      n.position() );
             break;default: ;
             }
         }
@@ -4954,9 +4964,18 @@ public:
 
             auto return_type = print_to_string(*r.type);
 
-            if (r.pass == passing_style::forward) {
+            if (
+                r.pass == passing_style::forward
+                || r.pass == passing_style::forward_ref
+                )
+            {
                 if (r.type->is_wildcard()) {
-                    printer.print_cpp2( "auto&&", n.position() );
+                    if (r.pass == passing_style::forward) {
+                        printer.print_cpp2( "decltype(auto)", n.position() );
+                    }
+                    else {
+                        printer.print_cpp2( "auto&&", n.position() );
+                    }
                 }
                 else {
                     printer.print_cpp2( return_type, n.position() );
@@ -6434,7 +6453,9 @@ public:
                     //  We shouldn't be able to get into a state where these values
                     //  exist here, if we did it's our compiler bug
                     break;case passing_style::copy:
+                          case passing_style::in_ref:
                           case passing_style::forward:
+                          case passing_style::forward_ref:
                           default:
                         errors.emplace_back( n.position(), "ICE: invalid parameter passing style, should have been rejected", true);
                     }

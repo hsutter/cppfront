@@ -12,7 +12,7 @@
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "pure2-for-loop-range-with-lambda.cpp2"
-[[nodiscard]] auto first(auto&& f, [[maybe_unused]] auto&& ...unnamed_param_2) -> auto&&;
+[[nodiscard]] auto first(auto&& f, [[maybe_unused]] auto&& ...unnamed_param_2) -> decltype(auto);
 
 #line 3 "pure2-for-loop-range-with-lambda.cpp2"
 auto main(int const argc_, char** argv_) -> int;
@@ -20,7 +20,7 @@ auto main(int const argc_, char** argv_) -> int;
 //=== Cpp2 function definitions =================================================
 
 #line 1 "pure2-for-loop-range-with-lambda.cpp2"
-[[nodiscard]] auto first(auto&& f, [[maybe_unused]] auto&& ...unnamed_param_2) -> auto&& { return CPP2_FORWARD(f);  }
+[[nodiscard]] auto first(auto&& f, [[maybe_unused]] auto&& ...unnamed_param_2) -> decltype(auto) { return CPP2_FORWARD(f);  }
 
 #line 3 "pure2-for-loop-range-with-lambda.cpp2"
 auto main(int const argc_, char** argv_) -> int{
