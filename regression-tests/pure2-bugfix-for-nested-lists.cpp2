@@ -1,0 +1,27 @@
+point: @value type = {
+    public x: int = 0;
+    public y: int = 0;
+    operator=: (implicit out this, x_: int, y_: int) = {
+        x = x_;
+        y = y_;
+    }
+}
+
+check: (p: point) p;
+
+main: () = {
+    assert(check((17, 29)).x == 17);
+    assert(check((17, 29)).y == 29);
+
+    board: std::array<std::array<u8, 3>, 3> = ((
+                                            ('O', 'X', 'O'),
+                                            (' ', ('X'), 'X'),
+                                            ('X', 'O', 'O')
+    ));
+    assert(board[0] == :std::array<u8, 3> = ('O', 'X', 'O'));
+    assert(board[1] == :std::array<u8, 3> = (' ', 'X', 'X'));
+    assert(board[2] == :std::array<u8, 3> = ('X', 'O', 'O'));
+
+    // Still parentheses (for now?)
+    assert((:std::vector = (17, 29)).size() == 2);
+}
