@@ -66,7 +66,7 @@ return ret;
 
 mystruct::mystruct(auto&& i_, auto&& j_, auto&& k_)
 requires (std::is_convertible_v<CPP2_TYPEOF(i_), std::add_const_t<cpp2::i32>&> && std::is_convertible_v<CPP2_TYPEOF(j_), std::add_const_t<std::string>&> && std::is_convertible_v<CPP2_TYPEOF(k_), std::add_const_t<cpp2::u64>&>) 
-                                                                                                       : base{ { 1 } }
+                                                                                                       : base{ 1 }
                                                                                                        , i{ CPP2_FORWARD(i_) }
                                                                                                        , j{ CPP2_FORWARD(j_) }
                                                                                                        , k{ CPP2_FORWARD(k_) }{}
