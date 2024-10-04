@@ -89,8 +89,7 @@ auto main() -> int{
 
 #line 29 "pure2-bugfix-for-nested-lists.cpp2"
 auto issue_1283() -> void{
-  std::array<std::string,10> arr {}; 
-  MyFunctor f {"Some initial value"}; 
-  std::ranges::generate(cpp2::move(arr), [_0 = (&f)]() mutable -> auto { return (*cpp2::impl::assert_not_null(_0))();  });
+  auto f {[]() -> void{}}; 
+  static_cast<void>([_0 = (&f)]() mutable -> void { (*cpp2::impl::assert_not_null(_0))();  });
 }
 
