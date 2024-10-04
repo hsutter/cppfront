@@ -27,7 +27,6 @@ main: () = {
 }
 
 issue_1283: () = {
-  arr: std::array<std::string, 10> = ();
-  f: MyFunctor = ("Some initial value");
-  std::ranges::generate(arr, :() (f&$*)());
+  f := :() = { };
+  _ = :() = (f&$*)();
 }
