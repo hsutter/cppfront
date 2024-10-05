@@ -1389,7 +1389,7 @@ struct type_id_node
     int                       dereference_cnt           = {};
     token const*              suspicious_initialization = {};
 
-    enum active : u8 { empty=0, decltype_, qualified, unqualified, function, keyword };
+    enum active : u8 { empty=0, postfix, qualified, unqualified, function, keyword };
     std::variant<
         std::monostate,
         std::unique_ptr<postfix_expression_node>,
@@ -1460,7 +1460,7 @@ struct type_id_node
         switch (id.index()) {
         break;case empty:
             return {};
-        break;case decltype_:
+        break;case postfix:
             return {};
         break;case qualified:
             return {};
@@ -1490,7 +1490,7 @@ struct type_id_node
         for (auto q : pc_qualifiers) {
             v.start(*q, depth+1);
         }
-        try_visit<decltype_  >(id, v, depth);
+        try_visit<postfix    >(id, v, depth);
         try_visit<qualified  >(id, v, depth);
         try_visit<unqualified>(id, v, depth);
         try_visit<function   >(id, v, depth);
@@ -2825,8 +2825,8 @@ auto type_id_node::to_string() const
     switch (id.index()) {
     break;case empty:
         ret += "_";
-    break;case decltype_:
-        ret += std::get<decltype_>(id)->to_string();
+    break;case postfix:
+        ret += std::get<postfix>(id)->to_string();
     break;case qualified:
         ret += std::get<qualified>(id)->to_string();
     break;case unqualified:
@@ -5157,7 +5157,7 @@ auto pretty_print_visualize(type_id_node const& n, int indent)
     }
 
     if (n.id.index() == type_id_node::empty) { ret += "_"; }
-    ret += try_pretty_print_visualize<type_id_node::decltype_  >(n.id, indent);
+    ret += try_pretty_print_visualize<type_id_node::postfix    >(n.id, indent);
     ret += try_pretty_print_visualize<type_id_node::qualified  >(n.id, indent);
     ret += try_pretty_print_visualize<type_id_node::unqualified>(n.id, indent);
     ret += try_pretty_print_visualize<type_id_node::function   >(n.id, indent);
@@ -6941,6 +6941,7 @@ private:
 
 
     //G type-id:
+    //G     type-qualifier-seq? 'type_of'  '(' expression ')' is-type-constraint?
     //G     type-qualifier-seq? 'decltype' '(' expression ')' is-type-constraint?
     //G     type-qualifier-seq? qualified-id is-type-constraint?
     //G     type-qualifier-seq? unqualified-id is-type-constraint?
@@ -6985,11 +6986,13 @@ private:
         }
 
         if (auto& c = curr();
-            c == "decltype"
+            c == "type_of"
+            || c == "decltype"
             )
         {
             if (
-                peek(1) && peek(1)->type() == lexeme::LeftParen
+                c == "decltype"
+                && peek(1) && peek(1)->type() == lexeme::LeftParen
                 && peek(2) && *peek(2) == "auto"
                 && peek(3) && peek(3)->type() == lexeme::RightParen)
             {
@@ -7008,11 +7011,11 @@ private:
             {
                 n->pos = id->position();
                 n->id  = std::move(id);
-                assert (n->id.index() == type_id_node::decltype_);
+                assert (n->id.index() == type_id_node::postfix);
             }
             else
             {
-                error("'decltype' must be followed by a single parenthesized expression", false, c.position());
+                error("'" + std::string{c} + "' must be followed by a single parenthesized expression", false, c.position());
                 return {};
             }
         }

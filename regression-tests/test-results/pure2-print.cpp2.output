@@ -147,7 +147,7 @@ outer:/* @print */ type =
 
     all: <Args...: type, >(in args...: Args, ) -> move bool = (... && args);
 
-    y:(in _: decltype(0), ) = 
+    y:(in _: type_of(0), ) = 
     {
     }
 }

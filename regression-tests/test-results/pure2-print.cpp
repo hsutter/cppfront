@@ -72,7 +72,7 @@ CPP2_REQUIRES_ (cpp2::impl::cmp_greater_eq(sizeof...(Args),0u)) ;
     public: template<typename ...Args> [[nodiscard]] static auto all(Args const& ...args) -> bool;
 
 #line 103 "pure2-print.cpp2"
-    public: static auto y([[maybe_unused]] cpp2::impl::in<decltype(0)> unnamed_param_1) -> void;
+    public: static auto y([[maybe_unused]] cpp2::impl::in<CPP2_TYPEOF(0)> unnamed_param_1) -> void;
     public: outer() = default;
     public: outer(outer const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(outer const&) -> void = delete;
@@ -203,7 +203,7 @@ requires (cpp2::impl::cmp_greater_eq(sizeof...(Args),0u)) {
         return (... && args);  }
 
 #line 103 "pure2-print.cpp2"
-    auto outer::y([[maybe_unused]] cpp2::impl::in<decltype(0)> unnamed_param_1) -> void{}
+    auto outer::y([[maybe_unused]] cpp2::impl::in<CPP2_TYPEOF(0)> unnamed_param_1) -> void{}
 
 #line 107 "pure2-print.cpp2"
 auto main() -> int{
