@@ -1,6 +1,6 @@
 In file included from mixed-bugfix-for-ufcs-non-local.cpp:6:
 ../../../include/cpp2util.h:2100:1: error: lambda-expression in template parameter type
- 2100 | }
+2100 | }
       | ^
 ../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
  2137 | template<typename T, specialization_of_template<std::optional> X>

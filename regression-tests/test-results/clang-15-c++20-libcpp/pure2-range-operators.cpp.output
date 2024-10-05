@@ -1,4 +1,4 @@
-pure2-range-operators.cpp2:44:34: error: expected namespace name
+pure2-range-operators.cpp2:49:34: error: expected namespace name
             using namespace std::views;
                             ~~~~~^
 1 error generated.
