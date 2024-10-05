@@ -100,7 +100,7 @@ outer: @print type = {
     all: <Args...: type> (args...: Args) -> bool =
         (... && args);
 
-    y: (_: decltype(0)) = { }
+    y: (_: type_of(0)) = { }
 
 }
 
