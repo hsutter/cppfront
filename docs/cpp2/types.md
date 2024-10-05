@@ -281,6 +281,8 @@ The above is the same as in Cpp1 because most of Cpp2's `#!cpp operator<=>` feat
 if lo <= requested < hi {
     // ... do something ...
 }
+
+//  Equivalent result to: (lo ..< hi).contains( requested )
 ```
 
 For more details, see [P0515R0 "Consistent comparison" section 3.3](https://wg21.link/p0515r0) and [P0893 "Chaining comparisons"](https://wg21.link/p0893).

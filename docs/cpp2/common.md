@@ -68,7 +68,7 @@ All lists use `,` commas between list items, and may be enclosed by
 For example:
 
 ``` cpp title="Lists" hl_lines="1 4 6 7"
-print: <T,U> (t: T, u: U) = std::cout << t << u << "\n";
+print: <T,U> (t: T, u: U) = { std::cout << t << u << "\n"; }
 
 main: () = {
     array: std::array = ('A', 'B', 'C');
@@ -89,7 +89,7 @@ An extra comma at the end of the list, before the closing `)` or `>`, is always 
 For example:
 
 ``` cpp title="Lists, using optional trailing commas just because we can" hl_lines="1 4 6 7"
-print: <T,U,> (t: T, u: U,) = std::cout << t << u << "\n";
+print: <T,U,> (t: T, u: U,) = { std::cout << t << u << "\n"; }
 
 main: () = {
     array: std::array = ('A', 'B', 'C',);

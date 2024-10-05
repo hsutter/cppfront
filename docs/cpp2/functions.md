@@ -113,7 +113,7 @@ For example:
 //  A function returning no value (void)
 increment_in_place: (inout a: i32) -> void = { a++; }
 //  Or, using syntactic defaults, the following has identical meaning:
-increment_in_place: (inout a: i32) = a++;
+increment_in_place: (inout a: i32) = { a++; }
 
 //  A function returning a single value of type i32
 add_one: (a: i32) -> i32 = { return a+1; }
@@ -127,11 +127,11 @@ add: (a, b) -> forward _ = a+b;
 add: (a, b) a+b;
 
 //  A generic function expression returning a single value of deduced type
-vec.std::ranges::sort( :(x:_, y:_) -> _ = { return y<x; } );
+vec.std::ranges::sort( :(x:_, y:_) -> forward _ = { return y<x; } );
 //  Or, using syntactic defaults, the following has identical meaning:
-vec.std::ranges::sort( :(x,y) y<x );
+vec.std::ranges::sort( :(x,y) = y<x );
 //  Both are identical to this, which uses the most verbose possible syntax:
-vec.std::ranges::sort( :<T:type, U:type> (x:T, y:U) -> _ = { return y<x; } );
+vec.std::ranges::sort( :<X:type, Y:type> (x:X, y:Y) -> forward _ = { return y<x; } );
 ```
 
 #### Return parameter lists: Nameable return value(s)
@@ -466,22 +466,22 @@ Next, `in` is the default [parameter kind](#parameters). So we can use that defa
 equals: (a, b) -> _ = { return a == b; }
 ```
 
-We already saw that `{` `}` is the default for a single-line function that returns nothing. Similarly, `{ return` and `}` is the default for a single-line function that returns something:
+We already saw that `{ return` ... `; }` is the default for a single-expression function body that deduces its return type:
 
 ``` cpp title="equals: Identical meaning, now using the { return ... } default body decoration"
 equals: (a, b) -> _ = a == b;
 ```
 
-Next, `#!cpp -> _ =` (deduced return type) is the default for single-expression functions that return something and so can be omitted:
+Next, `#!cpp -> forward _` (fully deduced return type) is the default for single-expression functions that return something, and in this case will have the same meaning as `#!cpp -> _` :
 
 ``` cpp title="equals: Identical meaning, now using the -> _ = default for functions that return something"
-equals: (a, b) a == b;
+equals: (a, b) = a == b;
 ```
 
 Finally, at expression scope (aka "lambda/temporary") functions/objects aren't named, and the trailing `;` is optional:
 
 ``` cpp title="(not) 'equals': Identical meaning, but without a name as an unnamed function at expression scope"
-:(a, b) a == b
+:(a, b) = a == b
 ```
 
 Here are some additional examples of unnamed function expressions:
@@ -489,9 +489,9 @@ Here are some additional examples of unnamed function expressions:
 ``` cpp title="Some more examples of unnamed function expressions"
 std::ranges::for_each( a, :(x) = std::cout << x );
 
-std::ranges::transform( a, b, :(x) x+1 );
+std::ranges::transform( a, std::back_inserter(b), :(x) = x+1 );
 
-where_is = std::ranges::find_if( a, :(x) x == waldo$ );
+where_is = std::ranges::find_if( b, :(x) = x == waldo$ );
 ```
 
 > Note: Cpp2 doesn't have a separate "lambda" syntax; you just use the regular function syntax at expression scope to write an unnamed function, and the syntactic defaults are chosen to make such function expressions convenient to write. And because in Cpp2 every local variable [capture](expressions.md#captures) (for example, `waldo$` above) is written in the body, it doesn't affect the function syntax.
