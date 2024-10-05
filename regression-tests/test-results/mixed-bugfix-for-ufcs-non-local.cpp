@@ -97,7 +97,7 @@ auto g() -> void{
   inline CPP2_CONSTEXPR bool u::b{ CPP2_UFCS_NONLOCAL(f)(o) };
   inline CPP2_CONSTEXPR bool u::c{ [](auto&& x) -> decltype(auto)// Fails on Clang 12 (lambda in unevaluated context).
 #line 42 "mixed-bugfix-for-ufcs-non-local.cpp2"
-  requires (std::is_convertible_v<CPP2_TYPEOF(x), std::add_const_t<decltype(f(o))>&>)  { return CPP2_FORWARD(x); }(true) };
+  requires (std::is_convertible_v<CPP2_TYPEOF(x), std::add_const_t<decltype(CPP2_UFCS_NONLOCAL(f)(o))>&>)  { return CPP2_FORWARD(x); }(true) };
 #line 42 "mixed-bugfix-for-ufcs-non-local.cpp2"
   auto u::g(auto const& s, auto const& sz) -> void{
                                   if (cpp2::cpp2_default.is_active() && !(CPP2_UFCS(sz)(s) != 0) ) { cpp2::cpp2_default.report_violation(""); }}

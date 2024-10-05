@@ -1,1 +1,10 @@
 mixed-bugfix-for-ufcs-non-local.cpp
+mixed-bugfix-for-ufcs-non-local.cpp2(42): fatal error C1001: Internal compiler error.
+(compiler file 'msc1.cpp', line 1593)
+ To work around this problem, try simplifying or changing the program near the locations listed above.
+If possible please provide a repro here: https://developercommunity.visualstudio.com 
+Please choose the Technical Support command on the Visual C++ 
+ Help menu, or open the Technical Support help file for more information
+INTERNAL COMPILER ERROR in 'C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.40.33807\bin\HostX64\x64\cl.exe'
+    Please choose the Technical Support command on the Visual C++
+    Help menu, or open the Technical Support help file for more information
