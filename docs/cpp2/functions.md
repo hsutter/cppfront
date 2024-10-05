@@ -66,7 +66,7 @@ There are six ways to pass parameters that cover all use cases, that can be writ
 | <big>**`inout`**</big> | can read from and write to | lvalues | | `X& x` |
 | <big>**`out`**</big> | writes to (including construct) | lvalues (including uninitialized) | must `=` assign/construct before other uses | `cpp2::impl::out<X>` |
 | <big>**`move`**</big> | moves from (consume the value of) | rvalues | automatically moves from every definite last use | `X&&` |
-| <big>**`forward`**</big> | forwards | anything | automatically forwards from every definite last use<br><br> for a deduced type (`-> forward _`), deduces a by-reference or by-value return (the latter if the function returns an rvalue); to guarantee a by-reference return, use `-> forward_ref _` | for&nbsp;a&nbsp;specific&nbsp;type, `-> forward T` compiles to Cpp1 `-> T&&`, and adds `const` if the function has an `in this` parameter (Cpp1 `const` member function)<br><br> for a deduced type, `-> forward _` compiles to Cpp1 `-> decltype(auto)`, and `-> forward_ref _` compiles to Cpp1 `-> auto&&` |
+| <big>**`forward`**</big> | forwards | anything | automatically forwards from every definite last use | `auto&&`, and if a specific type is named also a `requires`-constraint requiring convertibilty to that type |
 
 > Note: All parameters and other objects in Cpp2 are `#!cpp const` by default, except for local variables. For details, see [Design note: `#!cpp const` objects by default](https://github.com/hsutter/cppfront/wiki/Design-note%3A-const-objects-by-default).
 
@@ -102,7 +102,7 @@ A function can return either a single anonymous return value, or a return parame
 To deduce the return type, write `_`:
 
 - `-> _` deduces by-value return.
-- `-> forward _` deduces by-value return (if the function returns an rvalue) or by-reference return (everything else).
+- `-> forward _` deduces by-value return (if the function returns a prvalue or type member object) or by-reference return (everything else), based on the `decltype` of the returned expression.
 - `-> forward_ref _` deduces by-reference return only.
 
 A function whose body is a single expression `= expr;` defaults to `-> forward _ = { return expr; }`.
