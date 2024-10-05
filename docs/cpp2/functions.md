@@ -14,6 +14,23 @@ func: ( /* no parameters */ ) = { /* empty body */ }
 
 ## <a id="function-signatures"></a> Function signatures: Parameters, returns, and using function types
 
+### <a id="parameter-kinds"></a> Overview
+
+There are six kinds of function parameters, and two of them are the kinds of functions returns:
+
+| Kind | Parameter | Return |
+| -------- | -------- | ------- |
+| `in` | ⭐   |  |
+| `inout` | ✅    | |
+| `out` | ✅  |   |
+| `copy` | ✅  | |
+| `move` | ✅  | ✅ |
+| `forward` | ✅  | ⭐ |
+
+The two cases marked ⭐ can automatically pass/return by value or by reference, and so they can be optionally written with `_ref` to require pass/return by reference and not by value (i.e., `in_ref`, `-> forward_ref`).
+
+That's it. For details, see below.
+
 ### <a id="parameters"></a> Parameters
 
 The parameter list is a [list](common.md#lists) enclosed by `(` `)` parentheses. Each parameter is declared using the [same unified syntax](declarations.md) as used for all declarations. For example:
@@ -42,14 +59,14 @@ calc: (number: _ is std::integral) = { /*...*/ }
 
 There are six ways to pass parameters that cover all use cases, that can be written before the parameter name:
 
-| Parameter ***kind*** | "Pass me an `x` I can ______" | Accepts arguments that are | Special semantics | ***kind*** `x: X` Compiles to Cpp1 as |
+| Parameter&nbsp;***kind*** | "Pass an `x` the function ______" | Accepts arguments that are | Special semantics | ***kind*** `x: X` compiles&nbsp;to&nbsp;Cpp1&nbsp;as |
 |---|---|---|---|---|
-| `in` (default) | read from | anything | always `#!cpp const`<p>automatically passes by value if cheaply copyable | `X const x` or `X const& x` |
-| `copy` | take a copy of | anything | acts like a normal local variable initialized with the argument | `X x` |
-| `inout` | read from and write to | lvalues | | `X& x` |
-| `out` | write to (including construct) | lvalues (including uninitialized) | must `=` assign/construct before other uses | `cpp2::impl::out<X>` |
-| `move` | move from (consume the value of) | rvalues | automatically moves from every definite last use | `X&&` |
-| `forward` | forward | anything | automatically forwards from every definite last use | `T&&` constrained to type `X` |
+| <big>**`in`**</big> (default) | can read from | anything | always `#!cpp const`<p>automatically passes by value if cheaply copyable<br><br>to guarantee a by-reference passing, use `in_ref` | `X const x` or <br> `X const& x` |
+| <big>**`copy`**</big> | gets a copy of | anything | acts like a normal local variable initialized with the argument | `X x` |
+| <big>**`inout`**</big> | can read from and write to | lvalues | | `X& x` |
+| <big>**`out`**</big> | writes to (including construct) | lvalues (including uninitialized) | must `=` assign/construct before other uses | `cpp2::impl::out<X>` |
+| <big>**`move`**</big> | moves from (consume the value of) | rvalues | automatically moves from every definite last use | `X&&` |
+| <big>**`forward`**</big> | forwards | anything | automatically forwards from every definite last use | `auto&&`, and if a specific type is named also a `requires`-constraint requiring convertibilty to that type |
 
 > Note: All parameters and other objects in Cpp2 are `#!cpp const` by default, except for local variables. For details, see [Design note: `#!cpp const` objects by default](https://github.com/hsutter/cppfront/wiki/Design-note%3A-const-objects-by-default).
 
@@ -76,11 +93,19 @@ wrap_f: (
 
 ### <a id="return-values"></a> Return values
 
-A function can return either of the following. The default is `#!cpp -> void`.
+A function can return either a single anonymous return value, or a return parameter list containing named return value(s). The default is `#!cpp -> void`.
 
-(1) **`#!cpp -> X`** to return a single unnamed value of type `X`, which can be  `#!cpp void` to signify the function has no return value. If `X` is not `#!cpp void`, the function body must have a `#!cpp return /*value*/;` statement that returns a value of type `X` on every path that exits the function.
+#### Single anonymous return values
 
-To deduce the return type, write `-> _`. A function whose body returns a single expression `expr` can deduce the return type, and omit writing the leading `-> _ = { return` and trailing `; }`.
+**`#!cpp ->` _kind_ `X`** to return a single unnamed value of type `X` using the same kinds as in the [parameters](#parameters) syntax, but where the only legal kinds are `move` (the default) or `forward` (with optional `forward_ref`; see below).  The type can be  `#!cpp -> void` to signify the function has no return value. If `X` is not `#!cpp void`, the function body must have a `#!cpp return /*value*/;` statement that returns a value of type `X` on every path that exits the function, or must be a single expression of type `X`.
+
+To deduce the return type, write `_`:
+
+- `-> _` deduces by-value return.
+- `-> forward _` deduces by-value return (if the function returns a prvalue or type member object) or by-reference return (everything else), based on the `decltype` of the returned expression.
+- `-> forward_ref _` deduces by-reference return only.
+
+A function whose body is a single expression `= expr;` defaults to `-> forward _ = { return expr; }`.
 
 For example:
 
@@ -88,7 +113,7 @@ For example:
 //  A function returning no value (void)
 increment_in_place: (inout a: i32) -> void = { a++; }
 //  Or, using syntactic defaults, the following has identical meaning:
-increment_in_place: (inout a: i32) = a++;
+increment_in_place: (inout a: i32) = { a++; }
 
 //  A function returning a single value of type i32
 add_one: (a: i32) -> i32 = { return a+1; }
@@ -96,20 +121,22 @@ add_one: (a: i32) -> i32 = { return a+1; }
 add_one: (a: i32) -> i32 = a+1;
 
 //  A generic function returning a single value of deduced type
-add: <T: type, U: type> (a:T, b:U) -> decltype(a+b) = { return a+b; }
+add: <T: type, U: type> (a:T, b:U) -> forward _ = { return a+b; }
 //  Or, using syntactic defaults, the following have identical meaning:
-add: (a, b) -> _ = a+b;
+add: (a, b) -> forward _ = a+b;
 add: (a, b) a+b;
 
 //  A generic function expression returning a single value of deduced type
-vec.std::ranges::sort( :(x:_, y:_) -> _ = { return y<x; } );
+vec.std::ranges::sort( :(x:_, y:_) -> forward _ = { return y<x; } );
 //  Or, using syntactic defaults, the following has identical meaning:
-vec.std::ranges::sort( :(x,y) y<x );
+vec.std::ranges::sort( :(x,y) = y<x );
 //  Both are identical to this, which uses the most verbose possible syntax:
-vec.std::ranges::sort( :<T:type, U:type> (x:T, y:U) -> _ = { return y<x; } );
+vec.std::ranges::sort( :<X:type, Y:type> (x:X, y:Y) -> forward _ = { return y<x; } );
 ```
 
-(2) **`#!cpp -> ( /* parameter list */ )`** to return a list of named return parameters using the same [parameters](#parameters) syntax, but where the only passing styles are `out` (the default, which moves where possible) or `forward`. The function body must [initialize](objects.md#init) the value of each return-parameter `ret` in its body the same way as any other local variable. An explicit return statement is written just `#!cpp return;` and returns the named values; the function has an implicit `#!cpp return;` at the end. If only a single return parameter is in the list, it is emitted in the lowered Cpp1 code the same way as (1) above, so its name is only available inside the function body.
+#### Return parameter lists: Nameable return value(s)
+
+**`#!cpp -> ( /* parameter list */ )`** to return a list of named return parameters using the same [parameters](#parameters) syntax, but where the only needed kinds are `out` (the default, which moves where possible) or `forward`. The function body must [initialize](objects.md#init) the value of each return-parameter `ret` in its body the same way as any other local variable. An explicit return statement is written just `#!cpp return;` and returns the named values; the function has an implicit `#!cpp return;` at the end. If only a single return parameter is in the list, it is emitted in the lowered Cpp1 code the same way as a single anonymous return value above, so its name is only available inside the function body.
 
 For example:
 
@@ -256,7 +283,7 @@ else {
 
 **`#!cpp do`** and **`#!cpp while`** are like always in C++, except that `(` `)` parentheses around the condition are not required. Instead, `{` `}` braces around the loop body *are* required.
 
-**`#!cpp for range do (e)`** ***statement*** says "for each element in `range`, call it `e` and perform the statement." The loop parameter `(e)` is an ordinary parameter that can be passed using any [parameter passing style](#parameters); as always, the default is `in`, which is read-only and expresses a read-only loop. The statement is not required to be enclosed in braces.
+**`#!cpp for range do (e)`** ***statement*** says "for each element in `range`, call it `e` and perform the statement." The loop parameter `(e)` is an ordinary parameter that can be passed using any [parameter kinds](#parameters); as always, the default is `in`, which is read-only and expresses a read-only loop. The statement is not required to be enclosed in braces.
 
 Every loop can have a `next` clause, that is performed at the end of each loop body execution. This makes it easy to have a counter for any loop, including a range `#!cpp for` loop.
 
@@ -433,28 +460,28 @@ Next, `: _` is also the default parameter type, so we don't need to write even t
 equals: (in a, in b) -> _ = { return a == b; }
 ```
 
-Next, `in` is the default [parameter passing mode](#parameters). So we can use that default too:
+Next, `in` is the default [parameter kind](#parameters). So we can use that default too:
 
-``` cpp title="equals: Identical meaning, now using the 'in' default parameter passing style"
+``` cpp title="equals: Identical meaning, now using the 'in' default parameter kind"
 equals: (a, b) -> _ = { return a == b; }
 ```
 
-We already saw that `{` `}` is the default for a single-line function that returns nothing. Similarly, `{ return` and `}` is the default for a single-line function that returns something:
+We already saw that `{ return` ... `; }` is the default for a single-expression function body that deduces its return type:
 
 ``` cpp title="equals: Identical meaning, now using the { return ... } default body decoration"
 equals: (a, b) -> _ = a == b;
 ```
 
-Next, `#!cpp -> _ =` (deduced return type) is the default for single-expression functions that return something and so can be omitted:
+Next, `#!cpp -> forward _` (fully deduced return type) is the default for single-expression functions that return something, and in this case will have the same meaning as `#!cpp -> _` :
 
 ``` cpp title="equals: Identical meaning, now using the -> _ = default for functions that return something"
-equals: (a, b) a == b;
+equals: (a, b) = a == b;
 ```
 
 Finally, at expression scope (aka "lambda/temporary") functions/objects aren't named, and the trailing `;` is optional:
 
 ``` cpp title="(not) 'equals': Identical meaning, but without a name as an unnamed function at expression scope"
-:(a, b) a == b
+:(a, b) = a == b
 ```
 
 Here are some additional examples of unnamed function expressions:
@@ -462,9 +489,9 @@ Here are some additional examples of unnamed function expressions:
 ``` cpp title="Some more examples of unnamed function expressions"
 std::ranges::for_each( a, :(x) = std::cout << x );
 
-std::ranges::transform( a, b, :(x) x+1 );
+std::ranges::transform( a, std::back_inserter(b), :(x) = x+1 );
 
-where_is = std::ranges::find_if( a, :(x) x == waldo$ );
+where_is = std::ranges::find_if( b, :(x) = x == waldo$ );
 ```
 
 > Note: Cpp2 doesn't have a separate "lambda" syntax; you just use the regular function syntax at expression scope to write an unnamed function, and the syntactic defaults are chosen to make such function expressions convenient to write. And because in Cpp2 every local variable [capture](expressions.md#captures) (for example, `waldo$` above) is written in the body, it doesn't affect the function syntax.

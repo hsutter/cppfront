@@ -13,8 +13,9 @@ decorate: (inout thing: _ ) -> int = {
     return thing.ssize();
 }
 
-print_it: (x: _, len: _) =
+print_it: (x: _, len: _) = {
     std::cout
         << ">> " << x
         << " - length "
         << len << "\n";
+}

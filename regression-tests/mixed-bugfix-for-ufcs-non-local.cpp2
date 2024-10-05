@@ -38,7 +38,7 @@ d: _ == t<o.f()>(); // Fails on Clang 12 (lambda in unevaluated context).
 
 u: @struct type = {
   b: bool == o.f();
-  c: bool == :(x: std::type_identity_t<decltype(o.f())>) x;(true); // Fails on Clang 12 (lambda in unevaluated context).
+  c: bool == :(forward x: decltype(o.f())) = x;(true); // Fails on Clang 12 (lambda in unevaluated context).
   g: (s, sz) pre(s.sz() != 0) = { }
 }
 

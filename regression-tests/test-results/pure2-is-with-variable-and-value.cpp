@@ -30,7 +30,7 @@ auto fun(auto const& name, auto const& v) -> void;
 
 #line 26 "pure2-is-with-variable-and-value.cpp2"
 class WithOp {
-    public: [[nodiscard]] auto op_is(cpp2::impl::in<int> x) const& -> auto;
+    public: [[nodiscard]] auto op_is(cpp2::impl::in<int> x) const& -> decltype(auto);
     public: WithOp() = default;
     public: WithOp(WithOp const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(WithOp const&) -> void = delete;
@@ -89,7 +89,7 @@ auto fun(auto const& name, auto const& v) -> void{
 }
 
 #line 27 "pure2-is-with-variable-and-value.cpp2"
-    [[nodiscard]] auto WithOp::op_is(cpp2::impl::in<int> x) const& -> auto { return x == 123;  }
+    [[nodiscard]] auto WithOp::op_is(cpp2::impl::in<int> x) const& -> decltype(auto) { return x == 123;  }
 
 #line 31 "pure2-is-with-variable-and-value.cpp2"
     [[nodiscard]] auto WithGenOp::op_is(auto const& x) const& -> bool{

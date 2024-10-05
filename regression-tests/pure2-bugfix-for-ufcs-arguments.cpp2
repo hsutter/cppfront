@@ -67,5 +67,5 @@ A: @struct type = {
 
 B: @struct type = {
   m: A;
-  f: (this) = m.f();
+  f: (this) = { m.f(); }
 }

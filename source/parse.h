@@ -130,7 +130,7 @@ struct template_argument;
 
 struct primary_expression_node
 {
-    enum active { empty=0, identifier, expression_list, id_expression, declaration, inspect, literal };
+    enum active : u8 { empty=0, identifier, expression_list, id_expression, declaration, inspect, literal };
     std::variant<
         std::monostate,
         token const*,
@@ -262,7 +262,7 @@ struct postfix_expression_node;
 
 struct prefix_expression_node
 {
-    std::vector<token const*> ops;
+    std::vector<token const*>                ops;
     std::unique_ptr<postfix_expression_node> expr;
 
     // Out-of-line definition of the dtor is necessary due to the forward-declared
@@ -294,6 +294,16 @@ struct prefix_expression_node
     {
         assert(expr);
         return expr.get();
+    }
+
+    auto get_if_only_a_postfix_expression_node() const
+        -> postfix_expression_node *
+    {
+        if (ops.empty()) {
+            return expr.get();
+        }
+        // Else
+        return {};
     }
 
     auto is_literal() const
@@ -424,6 +434,16 @@ struct binary_expression_node
     {
         assert(expr);
         return expr->get_postfix_expression_node();
+    }
+
+    auto get_if_only_a_postfix_expression_node() const
+        -> postfix_expression_node *
+    {
+        if (terms.empty()) {
+            return expr->get_if_only_a_postfix_expression_node();
+        }
+        // Else
+        return {};
     }
 
     //  Get first right-hand postfix-expression, if there is one
@@ -669,27 +689,31 @@ auto binary_expression_node<Name, Term>::is_standalone_expression() const
 }
 
 
-enum class passing_style { in=0, copy, inout, out, move, forward, invalid };
+enum class passing_style : u8 { in=0, in_ref, copy, inout, out, move, forward, forward_ref, invalid };
 auto to_passing_style(token const& t) -> passing_style {
     if (t.type() == lexeme::Identifier) {
-        if (t == "in"     ) { return passing_style::in; }
-        if (t == "copy"   ) { return passing_style::copy; }
-        if (t == "inout"  ) { return passing_style::inout; }
-        if (t == "out"    ) { return passing_style::out; }
-        if (t == "move"   ) { return passing_style::move; }
-        if (t == "forward") { return passing_style::forward; }
+        if (t == "in"     )     { return passing_style::in; }
+        if (t == "in_ref" )     { return passing_style::in_ref; }
+        if (t == "copy"   )     { return passing_style::copy; }
+        if (t == "inout"  )     { return passing_style::inout; }
+        if (t == "out"    )     { return passing_style::out; }
+        if (t == "move"   )     { return passing_style::move; }
+        if (t == "forward")     { return passing_style::forward; }
+        if (t == "forward_ref") { return passing_style::forward_ref; }
     }
     return passing_style::invalid;
 }
 auto to_string_view(passing_style pass) -> std::string_view {
     switch (pass) {
-    break;case passing_style::in     : return "in";
-    break;case passing_style::copy   : return "copy";
-    break;case passing_style::inout  : return "inout";
-    break;case passing_style::out    : return "out";
-    break;case passing_style::move   : return "move";
-    break;case passing_style::forward: return "forward";
-    break;default                    : return "INVALID passing_style";
+    break;case passing_style::in         : return "in";
+    break;case passing_style::in_ref     : return "in_ref";
+    break;case passing_style::copy       : return "copy";
+    break;case passing_style::inout      : return "inout";
+    break;case passing_style::out        : return "out";
+    break;case passing_style::move       : return "move";
+    break;case passing_style::forward    : return "forward";
+    break;case passing_style::forward_ref: return "forward_ref";
+    break;default                        : return "INVALID passing_style";
     }
 }
 
@@ -749,8 +773,8 @@ struct expression_list_node
             ret += term.expr->to_string();
         }
 
-        if (open_paren) {
-            ret += *open_paren;
+        if (close_paren) {
+            ret += *close_paren;
         }
 
         return ret;
@@ -1179,7 +1203,7 @@ struct template_args_tag { };
 
 struct template_argument
 {
-    enum active { empty=0, expression, type_id };
+    enum active : u8 { empty=0, expression, type_id };
     source_position comma;
     std::variant<
         std::monostate,
@@ -1365,9 +1389,10 @@ struct type_id_node
     int                       dereference_cnt           = {};
     token const*              suspicious_initialization = {};
 
-    enum active { empty=0, qualified, unqualified, function, keyword };
+    enum active : u8 { empty=0, postfix, qualified, unqualified, function, keyword };
     std::variant<
         std::monostate,
+        std::unique_ptr<postfix_expression_node>,
         std::unique_ptr<qualified_id_node>,
         std::unique_ptr<unqualified_id_node>,
         std::unique_ptr<function_type_node>,
@@ -1419,6 +1444,9 @@ struct type_id_node
         if (id.index() == unqualified) {
             return std::get<unqualified>(id)->template_arguments();
         }
+        else if (id.index() != qualified) {
+            cpp2_default.report_violation("ICE: this type_id has no template arguments");
+        }
         // else
         return std::get<qualified>(id)->template_arguments();
     }
@@ -1431,6 +1459,8 @@ struct type_id_node
     {
         switch (id.index()) {
         break;case empty:
+            return {};
+        break;case postfix:
             return {};
         break;case qualified:
             return {};
@@ -1460,6 +1490,7 @@ struct type_id_node
         for (auto q : pc_qualifiers) {
             v.start(*q, depth+1);
         }
+        try_visit<postfix    >(id, v, depth);
         try_visit<qualified  >(id, v, depth);
         try_visit<unqualified>(id, v, depth);
         try_visit<function   >(id, v, depth);
@@ -1597,6 +1628,16 @@ struct is_as_expression_node
         return expr->get_postfix_expression_node();
     }
 
+    auto get_if_only_a_postfix_expression_node() const
+        -> postfix_expression_node *
+    {
+        if (ops.empty()) {
+            return expr->get_if_only_a_postfix_expression_node();
+        }
+        // Else
+        return {};
+    }
+
     auto is_result_a_temporary_variable() const -> bool {
         if (ops.empty()) {
             assert(expr);
@@ -1666,7 +1707,7 @@ struct id_expression_node
 {
     source_position pos;
 
-    enum active { empty=0, qualified, unqualified };
+    enum active : u8 { empty=0, qualified, unqualified };
     std::variant<
         std::monostate,
         std::unique_ptr<qualified_id_node>,
@@ -1918,7 +1959,6 @@ struct iteration_statement_node
     std::unique_ptr<expression_node>            range;              // used for "for", else null
     std::unique_ptr<parameter_declaration_node> parameter;          // used for "for", else null
     std::unique_ptr<statement_node>             body;               // used for "for", else null
-    bool                                        for_with_in = false;// used for "for," says whether loop variable is 'in'
 
     // Out-of-line definition of the dtor is necessary due to the forward-declared
     // type(s) used in a std::unique_ptr as a member
@@ -2153,7 +2193,7 @@ struct statement_node
     // type(s) used in a std::unique_ptr as a member
     ~statement_node();
 
-    enum active { expression=0, compound, selection, declaration, return_, iteration, using_, contract, inspect, jump };
+    enum active : u8 { expression=0, compound, selection, declaration, return_, iteration, using_, contract, inspect, jump };
     std::variant<
         std::unique_ptr<expression_statement_node>,
         std::unique_ptr<compound_statement_node>,
@@ -2281,7 +2321,7 @@ struct parameter_declaration_node
     passing_style   pass    = passing_style::in;
     int             ordinal = 1;
 
-    enum class modifier { none=0, implicit, virtual_, override_, final_ };
+    enum class modifier : u8 { none=0, implicit, virtual_, override_, final_ };
     modifier mod = modifier::none;
 
     std::unique_ptr<declaration_node> declaration;
@@ -2483,7 +2523,7 @@ struct function_type_node
         passing_style pass = passing_style::move;
     };
 
-    enum active { empty = 0, id, list };
+    enum active : u8 { empty = 0, id, list };
     std::variant<
         std::monostate,
         single_type_id,
@@ -2517,6 +2557,15 @@ struct function_type_node
         }
 
         return ret;
+    }
+
+    auto set_default_return_type_to_forward_wildcard()
+        -> void
+    {
+        if (returns.index() == empty) {
+            returns = single_type_id{ std::make_unique<type_id_node>(), passing_style::forward };
+            assert(returns.index() == id);
+        }
     }
 
     auto has_postconditions() const
@@ -2688,6 +2737,12 @@ struct function_type_node
         return has_parameter_with_name_and_pass(s, passing_style::in);
     }
 
+    auto has_in_ref_parameter_named(std::string_view s) const
+        -> bool
+    {
+        return has_parameter_with_name_and_pass(s, passing_style::in_ref);
+    }
+
     auto has_copy_parameter_named(std::string_view s) const
         -> bool
     {
@@ -2770,6 +2825,8 @@ auto type_id_node::to_string() const
     switch (id.index()) {
     break;case empty:
         ret += "_";
+    break;case postfix:
+        ret += std::get<postfix>(id)->to_string();
     break;case qualified:
         ret += std::get<qualified>(id)->to_string();
     break;case unqualified:
@@ -2862,7 +2919,7 @@ struct alias_node
     token const* type = {};
     std::unique_ptr<type_id_node> type_id;   // for objects
 
-    enum active : std::uint8_t { a_type, a_namespace, an_object };
+    enum active : u8 { a_type, a_namespace, an_object };
     std::variant<
         std::unique_ptr<type_id_node>,
         std::unique_ptr<id_expression_node>,
@@ -2903,7 +2960,7 @@ struct alias_node
 };
 
 
-enum class accessibility { default_ = 0, public_, protected_, private_ };
+enum class accessibility : u8 { default_ = 0, public_, protected_, private_ };
 
 auto to_string(accessibility a)
     -> std::string
@@ -2928,11 +2985,10 @@ struct declaration_node
     source_position                      pos;
     bool                                 is_variadic = false;
     bool                                 is_constexpr = false;
-    bool                                 terse_no_equals = false;
     std::unique_ptr<unqualified_id_node> identifier;
     accessibility                        access = accessibility::default_;
 
-    enum active : std::uint8_t { a_function, an_object, a_type, a_namespace, an_alias };
+    enum active : u8 { a_function, an_object, a_type, a_namespace, an_alias };
     std::variant<
         std::unique_ptr<function_type_node>,
         std::unique_ptr<type_id_node>,
@@ -3197,6 +3253,15 @@ public:
         return std::get<a_function>(type)->has_in_parameter_named(s);
     }
 
+    auto has_in_ref_parameter_named(std::string_view s) const
+        -> bool
+    {
+        if (!is_function()) {
+            return false;
+        }
+        return std::get<a_function>(type)->has_in_ref_parameter_named(s);
+    }
+
     auto has_copy_parameter_named(std::string_view s) const
         -> bool
     {
@@ -3353,7 +3418,7 @@ public:
     auto parent_is_polymorphic() const -> bool
         { return  parent_declaration && parent_declaration->is_polymorphic(); }
 
-    enum which {
+    enum which : u8 {
         functions = 1,
         objects   = 2,
         types     = 4,
@@ -3421,7 +3486,7 @@ public:
     {
         //  Convert the gather_ results to const*
         auto tmp = gather_type_scope_declarations(w);
-        return std::vector<declaration_node const*>(tmp.begin(), tmp.end());
+        return {tmp.begin(), tmp.end()};
     }
 
 
@@ -3952,6 +4017,14 @@ public:
         }
         //  Else
         return {};
+    }
+
+    auto set_default_return_type_to_forward_wildcard()
+        -> void
+    {
+        if (type.index() == a_function) {
+            std::get<a_function>(type).get()->set_default_return_type_to_forward_wildcard();
+        }
     }
 
     //  Internals
@@ -5084,6 +5157,7 @@ auto pretty_print_visualize(type_id_node const& n, int indent)
     }
 
     if (n.id.index() == type_id_node::empty) { ret += "_"; }
+    ret += try_pretty_print_visualize<type_id_node::postfix    >(n.id, indent);
     ret += try_pretty_print_visualize<type_id_node::qualified  >(n.id, indent);
     ret += try_pretty_print_visualize<type_id_node::unqualified>(n.id, indent);
     ret += try_pretty_print_visualize<type_id_node::function   >(n.id, indent);
@@ -6105,7 +6179,7 @@ private:
             //  Remember current position, because we may need to backtrack
             auto start_pos = pos;
 
-            bool inside_initializer = (
+            const bool inside_initializer = (
                 peek(-1) && peek(-1)->type() == lexeme::Assignment
             );
             auto open_paren = &curr();
@@ -6867,6 +6941,8 @@ private:
 
 
     //G type-id:
+    //G     type-qualifier-seq? 'type_of'  '(' expression ')' is-type-constraint?
+    //G     type-qualifier-seq? 'decltype' '(' expression ')' is-type-constraint?
     //G     type-qualifier-seq? qualified-id is-type-constraint?
     //G     type-qualifier-seq? unqualified-id is-type-constraint?
     //G     type-qualifier-seq? function-type is-type-constraint?
@@ -6909,7 +6985,41 @@ private:
             next();
         }
 
-        if (auto id = qualified_id()) {
+        if (auto& c = curr();
+            c == "type_of"
+            || c == "decltype"
+            )
+        {
+            if (
+                c == "decltype"
+                && peek(1) && peek(1)->type() == lexeme::LeftParen
+                && peek(2) && *peek(2) == "auto"
+                && peek(3) && peek(3)->type() == lexeme::RightParen)
+            {
+                error(
+                    "decltype(auto) is not needed in Cpp2 - for return types, use '-> forward _' instead",
+                    false,
+                    c.position()
+                );
+            }
+            if (auto id = postfix_expression();
+                id
+                && id->ops.size() == 1
+                && id->ops[0].expr_list->expressions.size() == 1
+                && id->ops[0].expr_list->open_paren->type() == lexeme::LeftParen
+                )
+            {
+                n->pos = id->position();
+                n->id  = std::move(id);
+                assert (n->id.index() == type_id_node::postfix);
+            }
+            else
+            {
+                error("'" + std::string{c} + "' must be followed by a single parenthesized expression", false, c.position());
+                return {};
+            }
+        }
+        else if (auto id = qualified_id()) {
             n->pos = id->position();
             n->id  = std::move(id);
             assert (n->id.index() == type_id_node::qualified);
@@ -7650,10 +7760,6 @@ private:
                 error("invalid for..do loop body", false, source_position{}, true);
                 return {};
             }
-            //  else
-            if (n->parameter->pass == passing_style::in) {
-                n->for_with_in = true;
-            }
 
             if (!done() && curr().type() == lexeme::Semicolon) {
                 error("a loop body may not be followed by a semicolon (empty statements are not allowed)");
@@ -8069,7 +8175,7 @@ private:
     )
         -> std::unique_ptr<compound_statement_node>
     {
-        bool is_braced = curr().type() == lexeme::LeftBrace;
+        const bool is_braced = curr().type() == lexeme::LeftBrace;
         if (
             !is_braced
             && !allow_single_unbraced_statement
@@ -8199,6 +8305,10 @@ private:
                     error("a return value cannot be 'in'");
                     return {};
                 }
+                if (dir == passing_style::in_ref) {
+                    error("a return value cannot be 'in_ref'");
+                    return {};
+                }
                 if (dir == passing_style::copy) {
                     error("a return value cannot be 'copy'");
                     return {};
@@ -8212,6 +8322,13 @@ private:
                     return {};
                 }
             }
+            else {
+                if (dir == passing_style::forward_ref) {
+                    error("a parameter cannot be 'forward_ref'");
+                    return {};
+                }
+            }
+
             if (
                 !is_named
                 && dir == passing_style::out
@@ -8277,14 +8394,15 @@ private:
             !is_returns
             && n->declaration->is_const()
             && n->pass != passing_style::copy
-            && n->pass != passing_style::inout
             )
         {
             switch (n->pass) {
             break;case passing_style::in:
                 error( "an 'in' parameter is always const, 'const' isn't needed and isn't allowed", false );
+            break;case passing_style::in_ref:
+                error( "an 'in_ref' parameter is always const, 'const' isn't needed and isn't allowed", false );
             break;case passing_style::inout:
-                // error( "an 'inout' parameter can't be const, if you do want it to be const then use 'in' instead", false );
+                error( "an 'inout' parameter can't be const, if you do want it to be const then use 'in' instead", false );
             break;case passing_style::out:
                 error( "an 'out' parameter can't be const, otherwise it can't be initialized in the function body", false );
             break;case passing_style::move:
@@ -8294,6 +8412,11 @@ private:
             break;default:
                 assert (false && "ICE: missing case");
             }
+            return {};
+        }
+
+        if (n->pass == passing_style::forward_ref) {
+            error("'forward_ref' is for a single anonymous deduced return value: -> forward_ref _", false);
             return {};
         }
 
@@ -8311,6 +8434,7 @@ private:
                 return {};
             }
         }
+
         return n;
     }
 
@@ -8580,10 +8704,8 @@ private:
             pos = start_pos;    // backtrack no matter what, we're just peeking here
 
             if (at_an_expression) {
-                n->returns = function_type_node::single_type_id{ std::make_unique<type_id_node>() };
-                assert(n->returns.index() == function_type_node::id);
-                n->my_decl->terse_no_equals = true;
-                return n;
+                error("an '=' is now required before every function body, including when the body is an individual expression - for example, change 'f: () expr;' to 'f: () = expr;'");
+                return {};
             }
         }
 
@@ -8598,15 +8720,27 @@ private:
                 )
             {
                 if (
-                    pass != passing_style::forward
-                    && pass != passing_style::move
+                    pass != passing_style::move
+                    && pass != passing_style::forward
+                    && pass != passing_style::forward_ref
                     )
                 {
-                    error("only 'forward' and 'move' return passing style are allowed from functions");
+                    error("only 'move' and 'forward' return passing style are allowed from functions");
                     return {};
                 }
+
                 next();
+
                 if (auto t = type_id()) {
+                    if (
+                        pass == passing_style::forward_ref
+                        && !t->is_wildcard()
+                        )
+                    {
+                        error("'forward_ref' is for a single anonymous deduced return value: -> forward_ref _", false);
+                        return {};
+                    }
+
                     n->returns = function_type_node::single_type_id{ std::move(t), pass };
                     assert(n->returns.index() == function_type_node::id);
                 }
@@ -8616,6 +8750,7 @@ private:
                     error(msg + "' must be followed by a type-id");
                     return {};
                 }
+
             }
 
             else if (auto t = type_id())
@@ -8625,7 +8760,7 @@ private:
                     && t->get_token()->to_string() == "auto"
                     )
                 {
-                    auto name = std::string{"v"};
+                    auto name = std::string{"f"};
                     if (my_decl && my_decl->name()) {
                         name = my_decl->name()->to_string();
                     }
@@ -8647,7 +8782,7 @@ private:
                 }
 
                 if (std::ssize(returns_list->parameters) < 1) {
-                    error("an explicit return value list cannot be empty");
+                    error("an explicit return value list cannot be empty", true, {}, true);
                     return {};
                 }
                 n->returns = std::move(returns_list);
@@ -8967,21 +9102,8 @@ private:
             return {};
         }
 
-        //  If we've already validated that this is a function where the parameter
-        //  list is followed by a valid expression-statement, parse that again
-        //  (requiring a semicolon as we validated when determining terse_no_equals)
-        if (n->terse_no_equals)
         {
-            n->equal_sign = curr().position();
-            n->initializer = statement(/*ignore semicolon_required*/ false, n->equal_sign);
-            if (!n->initializer) {
-                return {};
-            }
-        }
-
-        else
-        {
-            //  Next is optionally a requires clause (if not using the "-> expr;" syntax)
+            //  Next is optionally a requires clause
             if (curr() == "requires")
             {
                 if (
@@ -9137,6 +9259,19 @@ private:
 
         }
 
+        //  If this is a single-expression function, the default return type is '-> forward _ '
+        //  Except for 'main' and 'operator=', whose return types are defined by the language
+        if (auto is_main = !n->parent_declaration && n->has_name("main");
+            n->is_function()
+            && !is_main
+            && !n->has_name("operator=")
+            && n->initializer
+            && !n->initializer->is_compound()
+            )
+        {
+            n->set_default_return_type_to_forward_wildcard();
+        }
+
         //  If this is a non-local named function with a single-statement body,
         //  followed by a non-declaration statement, they probably forgot { }
         //  so give a nicer diagnostic
@@ -9155,7 +9290,7 @@ private:
             pos = start_pos;    // backtrack no matter what, we're just peeking here
 
             if (at_a_statement) {
-                error("in this scope, a single-statement function body cannot be immediately followed by a statement - did you forget to put { } braces around a multi-statement function body?", false);
+                error("in this scope, a single-expression function body cannot be immediately followed by a statement - did you forget to put { } braces around a multi-statement function body?", false);
                 return {};
             }
         }
@@ -9950,16 +10085,7 @@ public:
     {
         o << pre(indent) << "parameter-declaration\n";
 
-        o << pre(indent+1);
-        switch (n.pass) {
-        break;case passing_style::in     : o << "in";
-        break;case passing_style::copy   : o << "copy";
-        break;case passing_style::inout  : o << "inout";
-        break;case passing_style::out    : o << "out";
-        break;case passing_style::move   : o << "move";
-        break;case passing_style::forward: o << "forward";
-        break;default: ;
-        }
+        o << pre(indent+1) << to_string_view(n.pass);
 
         o << pre(indent+1);
         switch (n.mod) {

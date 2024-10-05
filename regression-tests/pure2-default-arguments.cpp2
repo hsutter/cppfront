@@ -56,7 +56,7 @@ main: (args) = {
     m2: std::map<int, int> = ();
     m2[1] = 22;
 
-    combine_maps( m1, m2, :(x,y) x+y+33 );
+    combine_maps( m1, m2, :(x,y) = x+y+33 );
 
     std::cout << "(m1.size())$, (m2.size())$, (m1[1])$\n";
 }

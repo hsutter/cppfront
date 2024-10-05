@@ -46,10 +46,11 @@ X: type = {
 Y: type = {
     px: *X;
 
-    operator=: (out this, x: *X) = px = x;
+    operator=: (out this, x: *X) = { px = x; }
 
-    why: (this, count: int) =
+    why: (this, count: int) = {
         px*.exx( count+1 );         // use X object from Y
+    }
 }
 
 M: namespace = {
@@ -57,7 +58,7 @@ M: namespace = {
 //  Testing nested templated types
 A: <T, U> type = {
     B: <I: int> type = {
-        f: <V, J: int, W> (w: W) = std::cout << "hallo (w)$\n";
+        f: <V, J: int, W> (w: W) = { std::cout << "hallo (w)$\n"; }
     }
 }
 

@@ -1,0 +1,15 @@
+base: @struct @hashable type = {
+    h: i32;
+}
+
+mystruct: @struct @hashable type = {
+    this: base = (1);
+    i: i32;
+    j: std::string;
+    k: u64;
+}
+
+main: () = {
+    x: mystruct = (2, "three", 4u);
+    std::cout << x.hash();
+}

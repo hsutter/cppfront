@@ -1,11 +1,11 @@
 name: Multi-platform Build of cppfront
 on:
   pull_request:
-    branches-ignore:
-      - docs
+    paths-ignore:
+      - 'docs/**'
   push:
-    branches-ignore:
-      - docs
+    paths-ignore:
+      - 'docs/**'
   workflow_dispatch:
 
 jobs:

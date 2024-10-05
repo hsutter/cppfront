@@ -18,7 +18,7 @@ For example:
 ``` cpp title="Function calls" hl_lines="3 7 11 16 19 20"
 //  Generic function to log something
 //  This calls operator<< using operator notation
-log: (x) = clog << x;
+log: (x) = { clog << x; }
 
 f: ( v : std::vector<widget> ) = {
     //  This calls log() with the result of std::vector::size()

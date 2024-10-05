@@ -16,12 +16,12 @@
 #line 2 "pure2-intro-example-three-loops.cpp2"
 auto print(auto const& thing) -> void;
 
-#line 5 "pure2-intro-example-three-loops.cpp2"
+#line 6 "pure2-intro-example-three-loops.cpp2"
 auto decorate_and_print(auto& thing) -> void;
 
-#line 10 "pure2-intro-example-three-loops.cpp2"
+#line 11 "pure2-intro-example-three-loops.cpp2"
 [[nodiscard]] auto main() -> int;
-#line 30 "pure2-intro-example-three-loops.cpp2"
+#line 31 "pure2-intro-example-three-loops.cpp2"
 
 #line 1 "pure2-intro-example-three-loops.cpp2"
 
@@ -30,16 +30,17 @@ auto decorate_and_print(auto& thing) -> void;
 #line 1 "pure2-intro-example-three-loops.cpp2"
 
 #line 2 "pure2-intro-example-three-loops.cpp2"
-auto print(auto const& thing) -> void { 
-    std::cout << ">> " << thing << "\n";  }
+auto print(auto const& thing) -> void{
+    std::cout << ">> " << thing << "\n";
+}
 
-#line 5 "pure2-intro-example-three-loops.cpp2"
+#line 6 "pure2-intro-example-three-loops.cpp2"
 auto decorate_and_print(auto& thing) -> void{
     thing = "[" + thing + "]";
     print(thing);
 }
 
-#line 10 "pure2-intro-example-three-loops.cpp2"
+#line 11 "pure2-intro-example-three-loops.cpp2"
 [[nodiscard]] auto main() -> int{
     std::vector<std::string> words {
         "hello", "big", "world"}; 

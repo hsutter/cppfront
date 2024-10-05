@@ -157,6 +157,11 @@ A `struct` is a type with only public bases, objects, and functions, with no vir
 - there is a user-written `operator=`
 
 
+#### `hashable`
+
+A `hashable` type provides a `hash: (this) -> size_t` function that performs a memberwise hash of its data members using `std::hash`.
+
+
 ### For polymorphic types (interfaces, base classes)
 
 

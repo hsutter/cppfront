@@ -41,9 +41,10 @@ auto print_it(auto const& x, auto const& len) -> void;
 }
 
 #line 16 "pure2-intro-example-hello-2022.cpp2"
-auto print_it(auto const& x, auto const& len) -> void { 
+auto print_it(auto const& x, auto const& len) -> void{
     std::cout 
         << ">> " << x 
         << " - length " 
-        << len << "\n"; }
+        << len << "\n";
+}
 

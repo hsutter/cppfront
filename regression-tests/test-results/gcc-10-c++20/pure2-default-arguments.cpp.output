@@ -1,66 +1,66 @@
 In file included from pure2-default-arguments.cpp:7:
 ../../../include/cpp2util.h:2086:28: error: local variable ‘obj’ may not appear in this context
- 2086 | //  std::any is and as
+ 2086 | }
       |                            ^  
 ../../../include/cpp2util.h:2047:34: note: in definition of macro ‘CPP2_UFCS_IDENTITY’
- 2047 |                 return std::get_if<std::monostate>(&x) != nullptr;
-      |                                  ^~~~~~~~~~~
+ 2047 |         )
+      |                                  ^          
 ../../../include/cpp2util.h:2086:15: note: in expansion of macro ‘CPP2_FORWARD’
- 2086 | //  std::any is and as
-      |               ^~~~~~~~    
+ 2086 | }
+      |               ^           
 ../../../include/cpp2util.h:2107:22: note: in expansion of macro ‘CPP2_UFCS_CONSTRAINT_ARG’
- 2107 | 
-      |                      ^                       
+ 2107 |     if constexpr (valid_predicate<decltype(value), decltype(x)>) {
+      |                      ^~~~~~~~~~~~~~~~~~~~~~~~
 ../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 |         return std::same_as<T, empty>;
-      |                                                           ^         
+ 2137 | template<typename T, specialization_of_template<std::optional> X>
+      |                                                           ^~~~~~~   
 pure2-default-arguments.cpp2:6:22: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 ../../../include/cpp2util.h:2086:92: error: local variable ‘params’ may not appear in this context
- 2086 | //  std::any is and as
+ 2086 | }
       |                                                                                            ^     
 ../../../include/cpp2util.h:2047:34: note: in definition of macro ‘CPP2_UFCS_IDENTITY’
- 2047 |                 return std::get_if<std::monostate>(&x) != nullptr;
-      |                                  ^~~~~~~~~~~
+ 2047 |         )
+      |                                  ^          
 ../../../include/cpp2util.h:2086:79: note: in expansion of macro ‘CPP2_FORWARD’
- 2086 | //  std::any is and as
+ 2086 | }
       |                                                                               ^           
 ../../../include/cpp2util.h:2107:22: note: in expansion of macro ‘CPP2_UFCS_CONSTRAINT_ARG’
- 2107 | 
-      |                      ^                       
+ 2107 |     if constexpr (valid_predicate<decltype(value), decltype(x)>) {
+      |                      ^~~~~~~~~~~~~~~~~~~~~~~~
 ../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 |         return std::same_as<T, empty>;
-      |                                                           ^         
+ 2137 | template<typename T, specialization_of_template<std::optional> X>
+      |                                                           ^~~~~~~   
 pure2-default-arguments.cpp2:6:22: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 ../../../include/cpp2util.h:2087:74: error: local variable ‘obj’ may not appear in this context
- 2087 | //
+ 2087 | 
       |                                                                          ^  
 ../../../include/cpp2util.h:2047:34: note: in definition of macro ‘CPP2_UFCS_IDENTITY’
- 2047 |                 return std::get_if<std::monostate>(&x) != nullptr;
-      |                                  ^~~~~~~~~~~
+ 2047 |         )
+      |                                  ^          
 ../../../include/cpp2util.h:2087:61: note: in expansion of macro ‘CPP2_FORWARD’
- 2087 | //
+ 2087 | 
       |                                                             ^           
 ../../../include/cpp2util.h:2107:22: note: in expansion of macro ‘CPP2_UFCS_CONSTRAINT_ARG’
- 2107 | 
-      |                      ^                       
+ 2107 |     if constexpr (valid_predicate<decltype(value), decltype(x)>) {
+      |                      ^~~~~~~~~~~~~~~~~~~~~~~~
 ../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 |         return std::same_as<T, empty>;
-      |                                                           ^         
+ 2137 | template<typename T, specialization_of_template<std::optional> X>
+      |                                                           ^~~~~~~   
 pure2-default-arguments.cpp2:6:22: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 ../../../include/cpp2util.h:2087:93: error: local variable ‘params’ may not appear in this context
- 2087 | //
+ 2087 | 
       |                                                                                             ^     
 ../../../include/cpp2util.h:2047:34: note: in definition of macro ‘CPP2_UFCS_IDENTITY’
- 2047 |                 return std::get_if<std::monostate>(&x) != nullptr;
-      |                                  ^~~~~~~~~~~
+ 2047 |         )
+      |                                  ^          
 ../../../include/cpp2util.h:2087:80: note: in expansion of macro ‘CPP2_FORWARD’
- 2087 | //
+ 2087 | 
       |                                                                                ^           
 ../../../include/cpp2util.h:2107:22: note: in expansion of macro ‘CPP2_UFCS_CONSTRAINT_ARG’
- 2107 | 
-      |                      ^                       
+ 2107 |     if constexpr (valid_predicate<decltype(value), decltype(x)>) {
+      |                      ^~~~~~~~~~~~~~~~~~~~~~~~
 ../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 |         return std::same_as<T, empty>;
-      |                                                           ^         
+ 2137 | template<typename T, specialization_of_template<std::optional> X>
+      |                                                           ^~~~~~~   
 pure2-default-arguments.cpp2:6:22: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 pure2-default-arguments.cpp2:6:61: error: ‘std::source_location’ has not been declared

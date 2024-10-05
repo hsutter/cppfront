@@ -68,7 +68,7 @@ All lists use `,` commas between list items, and may be enclosed by
 For example:
 
 ``` cpp title="Lists" hl_lines="1 4 6 7"
-print: <T,U> (t: T, u: U) = std::cout << t << u << "\n";
+print: <T,U> (t: T, u: U) = { std::cout << t << u << "\n"; }
 
 main: () = {
     array: std::array = ('A', 'B', 'C');
@@ -89,7 +89,7 @@ An extra comma at the end of the list, before the closing `)` or `>`, is always 
 For example:
 
 ``` cpp title="Lists, using optional trailing commas just because we can" hl_lines="1 4 6 7"
-print: <T,U,> (t: T, u: U,) = std::cout << t << u << "\n";
+print: <T,U,> (t: T, u: U,) = { std::cout << t << u << "\n"; }
 
 main: () = {
     array: std::array = ('A', 'B', 'C',);
@@ -191,7 +191,7 @@ if !vec.empty() {
 | `+` | `#!cpp +100` | `#!cpp +100` |
 | `-` | `#!cpp -100` | `#!cpp -100` |
 
-The operators `.`, `..`, `*`, `&`, `~`, `++`, `--`, `()`, `[]`, `...`, `..=`, and `$` are postfix. For example:
+The operators `.`, `..`, `*`, `&`, `~`, `++`, `--`, `()`, `[]`, `..<`, `..=`, and `$` are postfix. For example:
 
 ``` cpp title="Using postfix operators"
 //  Cpp1 examples, from cppfront's own source code:
@@ -216,11 +216,13 @@ Postfix notation lets the code read fluidly left-to-right, in the same order in 
 | `#!cpp --` | `#!cpp iter--` | `#!cpp --iter` |
 | `(` `)` | `#!cpp f( 1, 2, 3)` | `#!cpp f( 1, 2, 3)` |
 | `[` `]` | `#!cpp vec[123]` | `#!cpp vec[123]` |
-| `...` | `#!cpp v.begin()...v.end()` | `#!cpp std::ranges::subrange(v.begin(), v.end())` |
+| `..<` | `#!cpp v.begin()..<v.end()` | `#!cpp std::ranges::subrange(v.begin(), v.end())` |
 | `..=` | `#!cpp 1..=10` | `#!cpp std::views::iota(1, 11)` |
 | `$` | `val$` | _reflection — no Cpp1 equivalent yet_ |
 
-> Note: The `...` pack expansion syntax is also supported. The above `...` and `..=` are the Cpp2 range operators, which overlap in syntax.
+> Note: The `...` pack expansion syntax is also supported.
+
+> Note: The `(` `)`, `[` `]`, `..<`, and `..=` operators are treated as postfix unary operators, though they can take additional arguments.
 
 > Note: Because `++` and `--` always have in-place update semantics, we never need to remember "use prefix `++`/`--` unless you need a copy of the old value." If you do need a copy of the old value, just take the copy before calling `++`/`--`. When you write a copyable type that overloads `operator++` or `operator--`, cppfront generates also the copy-old-value overload of that function to support natural use of the type from Cpp1 code.
 

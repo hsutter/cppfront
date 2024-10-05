@@ -14,7 +14,7 @@
 #line 1 "pure2-forward-return.cpp2"
 
 #line 2 "pure2-forward-return.cpp2"
-[[nodiscard]] auto first(auto&& rng) -> auto&&;
+[[nodiscard]] auto first(auto&& rng) -> decltype(auto);
 
 #line 7 "pure2-forward-return.cpp2"
 extern int const global;
@@ -27,7 +27,7 @@ extern int const global;
 #line 1 "pure2-forward-return.cpp2"
 
 #line 2 "pure2-forward-return.cpp2"
-[[nodiscard]] auto first(auto&& rng) -> auto&& { 
+[[nodiscard]] auto first(auto&& rng) -> decltype(auto) { 
     if (cpp2::bounds_safety.is_active() && !(!(std::empty(rng))) ) { cpp2::bounds_safety.report_violation(""); }
 
 #line 5 "pure2-forward-return.cpp2"

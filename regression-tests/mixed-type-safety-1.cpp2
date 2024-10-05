@@ -9,8 +9,9 @@ class Circle : public Shape { };
 class Square : public Shape { };
 
 
-print: <T : type> ( msg: std::string, x: T ) =
+print: <T : type> ( msg: std::string, x: T ) = {
     std::cout << "(msg)$ (x)$\n";
+}
 
 main: () -> int = 
 {

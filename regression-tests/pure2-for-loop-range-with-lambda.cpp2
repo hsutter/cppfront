@@ -13,18 +13,18 @@ main: (args) = {
    }
 
    // Used to cause Error
-   for ints.first(:(x) x) do (i)   {
+   for ints.first(:(forward x) = x) do (i)   {
       std::cout << i;
    }
 
    // OK
-   temp := ints.first(:(x) x);
+   temp := ints.first(:(forward x) = x);
    for temp do (i) {
       std::cout << i;
    }
 
-   for :() args$;() do (i) _ = i;
-   for :(x) x;(args) do (j) _ = j;
-   for :(x) x;(args) next _ = :() args$;() do (k) _ = k;
-   for :(x) x;(args) next _ = :(x) x;(args) do (l) _ = l;
+   for :( )         = args$;()  do (i)  _ = i;
+   for :(forward x) = x;(args)  do (j)  _ = j;
+   for :(forward x) = x;(args)  next _ = :( )         = args$;()  do (k)  _ = k;
+   for :(forward x) = x;(args)  next _ = :(forward x) = x;(args)  do (l)  _ = l;
 }

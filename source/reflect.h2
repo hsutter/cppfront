@@ -180,7 +180,7 @@ compiler_services: @polymorphic_base @copyable type =
         ) );
     }
 
-    is_active:(this) true;
+    is_active:(this) = true;
 }
 
 
@@ -355,6 +355,7 @@ function_declaration: @copyable type =
     index_of_parameter_named     : (this, s: std::string_view) -> int  = n*.index_of_parameter_named(s);
     has_parameter_named          : (this, s: std::string_view) -> bool = n*.has_parameter_named(s);
     has_in_parameter_named       : (this, s: std::string_view) -> bool = n*.has_in_parameter_named(s);
+    has_in_ref_parameter_named   : (this, s: std::string_view) -> bool = n*.has_in_ref_parameter_named(s);
     has_copy_parameter_named     : (this, s: std::string_view) -> bool = n*.has_copy_parameter_named(s);
     has_inout_parameter_named    : (this, s: std::string_view) -> bool = n*.has_inout_parameter_named(s);
     has_out_parameter_named      : (this, s: std::string_view) -> bool = n*.has_out_parameter_named(s);
@@ -575,6 +576,7 @@ type_declaration: @copyable type =
         out_this_move_that   = declared.out_this_move_that   != nullptr;
         inout_this_in_that   = declared.inout_this_in_that   != nullptr;
         inout_this_move_that = declared.inout_this_move_that != nullptr;
+        // NOLINT(performance-move-const-arg)
     }
 
     add_member: (inout this, source: std::string_view)
@@ -834,6 +836,38 @@ copyable: (inout t: meta::type_declaration) =
 
 //-----------------------------------------------------------------------
 //
+//  hashable
+//
+//  A memberwise hashable type
+//
+hashable: (inout t: meta::type_declaration) =
+{
+    t.require( !t.get_member_objects().empty(),
+               "a hashable type must have at least one data member");
+
+    hash: std::string = "    hash: (this) -> size_t = {\n"
+                        "        ret: size_t = 0;";
+
+    for  t.get_member_objects() 
+    do   (o)
+    {
+        o_hash: std::string;
+        if o.name() == "this" {
+            o_hash = "(o.type())$::hash()";
+        }
+        else {
+            o_hash = "std::hash<(o.type())$>()((o.name())$)";
+        }
+
+        hash += "\n        cpp2::hash_combine( ret, (o_hash)$ );";
+    }
+
+    t.add_member(hash + "\n        return ret;\n    }");
+}
+
+
+//-----------------------------------------------------------------------
+//
 //  basic_value
 //
 //  A regular type: copyable, plus has public default construction
@@ -980,7 +1014,7 @@ struct: (inout t: meta::type_declaration) =
                 ctor_inits  += "(mo.name())$ = (mo.name())$_; ";
             }
             else {
-                ctor_inits += "(mo.type())$ = (); ";
+                ctor_inits += "(mo.type())$ = ((mo.initializer())$); ";
             }
             found_member_without_initializer |= !mo.has_initializer();
         }
@@ -1168,8 +1202,8 @@ basic_enum: (
         t.add_member( "    operator& : (       this, that ) -> (t.name())$  == _value &  that._value;");
         t.add_member( "    operator^ : (       this, that ) -> (t.name())$  == _value ^  that._value;");
         t.add_member( "    has       : (       this, that ) -> bool         == _value &  that._value;");
-        t.add_member( "    set       : ( inout this, that )                 == _value |= that._value;");
-        t.add_member( "    clear     : ( inout this, that )                 == _value &= that._value~;");
+        t.add_member( "    set       : ( inout this, that )                 == { _value |= that._value;  }");
+        t.add_member( "    clear     : ( inout this, that )                 == { _value &= that._value~; }");
     }
 
     //  Add the enumerators
@@ -1686,8 +1720,8 @@ parse_context_group_state: @struct<noforward> type =
         _ = alternate_match_lists..insert(alternate_match_lists..end(), shared.new<regex_token_list>(new_list));
     }
 
-    //  Swap this state with the other one.
-    swap: (inout this, inout t: parse_context_group_state) = {
+    //  Swap this state with the other one. NOLINTNEXTLINE(performance-noexcept-swap)
+    swap: (inout this, inout t: parse_context_group_state) = { // NOLINT(performance-noexcept-swap)
         std::swap(cur_match_list, t.cur_match_list);
         std::swap(alternate_match_lists, t.alternate_match_lists);
         std::swap(modifiers, t.modifiers);
@@ -1929,7 +1963,7 @@ parse_context: type =
                     continue;
                 }
                 else if !in_class && '#' == n {
-                    cur = regex..find("\n", cur);
+                    cur = regex..find('\n', cur);
                     if std::string::npos == cur {
                         // No new line, comment runs until the end of the pattern
                         cur = regex..size();
@@ -1960,9 +1994,9 @@ parse_context: type =
         }
     }
 
-    next         : (inout this) next_impl(false, false);
-    next_in_class: (inout this) next_impl( true, false);
-    next_no_skip : (inout this) next_impl(false,  true);
+    next         : (inout this) = next_impl(false, false);
+    next_in_class: (inout this) = next_impl( true, false);
+    next_no_skip : (inout this) = next_impl(false,  true);
 
     next_n: (inout this, n: int) -> bool = {
         r := true;
@@ -1977,7 +2011,7 @@ parse_context: type =
 
     private grab_until_impl: (inout this, in e: std::string, out r: std::string, any: bool) -> bool = 
     {
-        end:= pos;
+        end:= pos; // NOLINT(clang-analyzer-deadcode.DeadStores)
         if any {
             end = regex..find_first_of(e, pos);
         }
@@ -1996,9 +2030,9 @@ parse_context: type =
         }
     }
 
-    grab_until: (inout this, in e: std::string, out r: std::string)        grab_until_impl(e, out r, false);
-    grab_until: (inout this, in e: char, out r: std::string)               grab_until_impl(std::string(1, e), out r, false);
-    grab_until_one_of: (inout this, in e: std::string, out r: std::string) grab_until_impl(e, out r, true);
+    grab_until: (inout this, in e: std::string, out r: std::string)        = grab_until_impl(e, out r, false);
+    grab_until: (inout this, in e: char, out r: std::string)               = grab_until_impl(std::string(1, e), out r, false);
+    grab_until_one_of: (inout this, in e: std::string, out r: std::string) = grab_until_impl(e, out r, true);
 
     grab_n: (inout this, in n: int, out r: std::string) -> bool = 
     {
@@ -2044,8 +2078,8 @@ parse_context: type =
         }
     }
 
-    peek         : (in this) peek_impl(false);
-    peek_in_class: (in this) peek_impl( true);
+    peek         : (in this) = peek_impl(false);
+    peek_in_class: (in this) = peek_impl( true);
 
 
     //  Parsing functions
@@ -2159,9 +2193,9 @@ parse_context: type =
 
     //  Misc functions
 
-    get_pos:   (this)                             pos;
-    get_range: (this, start: size_t, end: size_t) std::string(regex..substr(start, end - start + 1));
-    valid:     (this) -> bool                   = { return has_next() && !has_error; }
+    get_pos:   (this)                             = pos;
+    get_range: (this, start: size_t, end: size_t) = std::string(regex..substr(start, end - start + 1));
+    valid:     (this) -> bool                     = { return has_next() && !has_error; }
 
     error: (inout this, err: std::string) -> token_ptr = {
         has_error = true;
@@ -3323,7 +3357,7 @@ range_token: @polymorphic_base type =
             min_count_str: std::string = "-1";
             max_count_str: std::string = "-1";
 
-            sep: size_t = inner..find(",");
+            sep: size_t = inner..find(',');
             if sep == std::string::npos 
             {
                 min_count_str = inner;
@@ -3652,15 +3686,18 @@ apply_metafunctions: (
     assert( n.is_type() );
 
     //  Check for _names reserved for the metafunction implementation
-    for  rtype.get_members()
-    do   (m)
+    if !n.metafunctions.empty()
     {
-        m.require( 
-            !m.name().starts_with("_") || m.name().ssize() == 1,
-            "a type that applies a metafunction cannot have a body that declares "
-            "a name that starts with '_' - those names are reserved for the "
-            "metafunction implementation"
-        );
+        for  rtype.get_members()
+        do   (m)
+        {
+            m.require( 
+                !m.name().starts_with("_") || m.name().ssize() == 1,
+                "a type that applies a metafunction cannot have a body that declares "
+                "a name that starts with '_' - those names are reserved for the "
+                "metafunction implementation"
+            );
+        }
     }
 
     //  For each metafunction, apply it
@@ -3698,6 +3735,9 @@ apply_metafunctions: (
         }
         else if name == "copyable" {
             copyable( rtype );
+        }
+        else if name == "hashable" {
+            hashable( rtype );
         }
         else if name == "basic_value" {
             basic_value( rtype );

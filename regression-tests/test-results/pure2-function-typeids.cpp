@@ -43,16 +43,16 @@ auto main() -> int;
 #line 1 "pure2-function-typeids.cpp2"
 
 #line 4 "pure2-function-typeids.cpp2"
-auto f() -> void { std::cout << "hello world!\n";  }
+auto f() -> void{std::cout << "hello world!\n"; }
 
 #line 6 "pure2-function-typeids.cpp2"
-auto g_in(      cpp2::impl::in<std::string> s) -> void { std::cout << "Come in, " + cpp2::to_string(s) + "\n"; }
+auto g_in(      cpp2::impl::in<std::string> s) -> void{std::cout << "Come in, " + cpp2::to_string(s) + "\n";}
 #line 7 "pure2-function-typeids.cpp2"
-auto g_inout(std::string& s) -> void { std::cout << "Come in awhile, but take some biscuits on your way out, " + cpp2::to_string(s) + "!\n";  }
+auto g_inout(std::string& s) -> void{std::cout << "Come in awhile, but take some biscuits on your way out, " + cpp2::to_string(s) + "!\n"; }
 #line 8 "pure2-function-typeids.cpp2"
-auto g_out(cpp2::impl::out<std::string> s) -> void { s.construct("A Powerful Mage"); }
+auto g_out(cpp2::impl::out<std::string> s) -> void{s.construct("A Powerful Mage");}
 #line 9 "pure2-function-typeids.cpp2"
-auto g_move(std::string&& s) -> void { std::cout << "I hear you've moving, " + cpp2::to_string(cpp2::move(s)) + "?\n"; }
+auto g_move(std::string&& s) -> void{std::cout << "I hear you've moving, " + cpp2::to_string(cpp2::move(s)) + "?\n";}
 
 #line 11 "pure2-function-typeids.cpp2"
 [[nodiscard]] auto h_forward(std::string& s) -> std::string&{std::cout << "Inout " + cpp2::to_string(s) + " ... "; return s; }

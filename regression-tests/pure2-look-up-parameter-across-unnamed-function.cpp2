@@ -1,6 +1,6 @@
 
 f: () -> (ri : int = 0) = {
-    pred := :(e) e == 1;
+    pred := :(e) = e == 1;
     ri = 42;
     pred(ri);
     // "return;" is implicit"
@@ -8,7 +8,7 @@ f: () -> (ri : int = 0) = {
 
 g: () -> (ri : int) = {
     ri = 0;
-    pred := :(e) e == 1;
+    pred := :(e) = e == 1;
     ri = 42;
     pred(ri);
     return;

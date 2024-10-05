@@ -1,0 +1,3 @@
+pure2-deduction-2-error.cpp2...
+pure2-deduction-2-error.cpp2(1,4): error: decltype(auto) is not needed in Cpp2 - for return types, use '-> forward _' instead
+

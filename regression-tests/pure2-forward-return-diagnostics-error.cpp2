@@ -1,48 +1,55 @@
-fun1:  () -> forward _ = { return global   / 1; } // error: a 'forward' return type cannot return a temporary variable
-fun4:  () -> forward _ = { return global  << 1; } // error: a 'forward' return type cannot return a temporary variable
-fun5:  () -> forward _ = { return global <=> 1; } // error: a 'forward' return type cannot return a temporary variable
-fun6:  () -> forward _ = { return global   < 1; } // error: a 'forward' return type cannot return a temporary variable
-fun7:  () -> forward _ = { return global  <= 1; } // error: a 'forward' return type cannot return a temporary variable
-fun9:  () -> forward _ = { return global  >> 1; } // error: a 'forward' return type cannot return a temporary variable
-fun10: () -> forward _ = { return global  >= 1; } // error: a 'forward' return type cannot return a temporary variable
-fun11: () -> forward _ = { return global   > 1; } // error: a 'forward' return type cannot return a temporary variable
-fun14: () -> forward _ = { return global   + 1; } // error: a 'forward' return type cannot return a temporary variable
-fun15: () -> forward _ = { return global   - 1; } // error: a 'forward' return type cannot return a temporary variable
-fun20: () -> forward _ = { return global  || 1; } // error: a 'forward' return type cannot return a temporary variable
-fun22: () -> forward _ = { return global   | 1; } // error: a 'forward' return type cannot return a temporary variable
-fun24: () -> forward _ = { return global  && 1; } // error: a 'forward' return type cannot return a temporary variable
-fun26: () -> forward _ = { return global   * 1; } // error: a 'forward' return type cannot return a temporary variable
-fun28: () -> forward _ = { return global   % 1; } // error: a 'forward' return type cannot return a temporary variable
-fun30: () -> forward _ = { return global   & 1; } // error: a 'forward' return type cannot return a temporary variable
-fun32: () -> forward _ = { return global   ^ 1; } // error: a 'forward' return type cannot return a temporary variable
-fun35: () -> forward _ = { return global  == 1; } // error: a 'forward' return type cannot return a temporary variable
-fun37: () -> forward _ = { return global  != 1; } // error: a 'forward' return type cannot return a temporary variable
-fun38: () -> forward _ = { return !ptr_g;       } // error: a 'forward' return type cannot return a temporary variable
-fun42: () -> forward _ = { return global&;      } // error: a 'forward' return type cannot return a temporary variable
-fun43: () -> forward _ = { return ptr_g~;       } // error: a 'forward' return type cannot return a temporary variable
+fun0:  () -> forward _ = { i: int = 42; return i;  } // error: a 'forward' return type cannot return a local variable
 
-fun2:  () -> forward _ = { return global  /= 1; }
-fun3:  () -> forward _ = { return global <<= 1; }
-fun8:  () -> forward _ = { return global >>= 1; }
-fun12: () -> forward _ = { return global++;     }
-fun13: () -> forward _ = { return global  += 1; }
-fun16: () -> forward _ = { return global  -= 1; }
-fun17: () -> forward _ = { return ptr_g*.x;     }
-fun18: () -> forward _ = { return global--;     }
-fun21: () -> forward _ = { return global  |= 1; }
-fun25: () -> forward _ = { return global  *= 1; }
-fun27: () -> forward _ = { return global  %= 1; }
-fun29: () -> forward _ = { return global  &= 1; }
-fun31: () -> forward _ = { return global  ^= 1; }
-fun36: () -> forward _ = { return global   = 1; }
-fun39: () -> forward _ = { return g.x;          }
-fun41: () -> forward _ = { return ptr_g*;       }
+
+//  These are no longer errors now that '-> forward _' can deduce
+//  by-value return, but let's keep these cases as comments for now
+
+// fun1:  () -> forward _ = { return global   / 1; } // error: a 'forward' return type cannot return a temporary variable
+// fun4:  () -> forward _ = { return global  << 1; } // error: a 'forward' return type cannot return a temporary variable
+// fun5:  () -> forward _ = { return global <=> 1; } // error: a 'forward' return type cannot return a temporary variable
+// fun6:  () -> forward _ = { return global   < 1; } // error: a 'forward' return type cannot return a temporary variable
+// fun7:  () -> forward _ = { return global  <= 1; } // error: a 'forward' return type cannot return a temporary variable
+// fun9:  () -> forward _ = { return global  >> 1; } // error: a 'forward' return type cannot return a temporary variable
+// fun10: () -> forward _ = { return global  >= 1; } // error: a 'forward' return type cannot return a temporary variable
+// fun11: () -> forward _ = { return global   > 1; } // error: a 'forward' return type cannot return a temporary variable
+// fun14: () -> forward _ = { return global   + 1; } // error: a 'forward' return type cannot return a temporary variable
+// fun15: () -> forward _ = { return global   - 1; } // error: a 'forward' return type cannot return a temporary variable
+// fun20: () -> forward _ = { return global  || 1; } // error: a 'forward' return type cannot return a temporary variable
+// fun22: () -> forward _ = { return global   | 1; } // error: a 'forward' return type cannot return a temporary variable
+// fun24: () -> forward _ = { return global  && 1; } // error: a 'forward' return type cannot return a temporary variable
+// fun26: () -> forward _ = { return global   * 1; } // error: a 'forward' return type cannot return a temporary variable
+// fun28: () -> forward _ = { return global   % 1; } // error: a 'forward' return type cannot return a temporary variable
+// fun30: () -> forward _ = { return global   & 1; } // error: a 'forward' return type cannot return a temporary variable
+// fun32: () -> forward _ = { return global   ^ 1; } // error: a 'forward' return type cannot return a temporary variable
+// fun35: () -> forward _ = { return global  == 1; } // error: a 'forward' return type cannot return a temporary variable
+// fun37: () -> forward _ = { return global  != 1; } // error: a 'forward' return type cannot return a temporary variable
+// fun38: () -> forward _ = { return !ptr_g;       } // error: a 'forward' return type cannot return a temporary variable
+// fun42: () -> forward _ = { return global&;      } // error: a 'forward' return type cannot return a temporary variable
+// fun43: () -> forward _ = { return ptr_g~;       } // error: a 'forward' return type cannot return a temporary variable
+
+// fun2:  () -> forward _ = { return global  /= 1; }
+// fun3:  () -> forward _ = { return global <<= 1; }
+// fun8:  () -> forward _ = { return global >>= 1; }
+// fun12: () -> forward _ = { return global++;     }
+// fun13: () -> forward _ = { return global  += 1; }
+// fun16: () -> forward _ = { return global  -= 1; }
+// fun17: () -> forward _ = { return ptr_g*.x;     }
+// fun18: () -> forward _ = { return global--;     }
+// fun21: () -> forward _ = { return global  |= 1; }
+// fun25: () -> forward _ = { return global  *= 1; }
+// fun27: () -> forward _ = { return global  %= 1; }
+// fun29: () -> forward _ = { return global  &= 1; }
+// fun31: () -> forward _ = { return global  ^= 1; }
+// fun36: () -> forward _ = { return global   = 1; }
+// fun39: () -> forward _ = { return g.x;          }
+// fun41: () -> forward _ = { return ptr_g*;       }
 
 // fun19: () -> forward _ = { return global ||= 1;       } // not supported
 // fun23: () -> forward _ = { return global &&= 1;       } // not supported
 // fun33: () -> forward _ = { return global  ~= 1;       } // not supported
 // fun34: () -> forward _ = { return global   ~ 1;       } // not supported
 // fun40: () -> forward _ = { return ptr_g ? ptr_g* : g; } // not supported
+
 
 global: i32 = 42;
 t: type = {

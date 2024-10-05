@@ -7,6 +7,9 @@
 
 #line 1 "mixed-parameter-passing.cpp2"
 
+#line 43 "mixed-parameter-passing.cpp2"
+template<typename T> class container;
+    
 
 //=== Cpp2 type definitions and function declarations ===========================
 
@@ -27,7 +30,24 @@ auto parameter_styles(
     ) -> void;
 
 #line 40 "mixed-parameter-passing.cpp2"
-[[nodiscard]] auto main() -> int;
+[[nodiscard]] auto min(auto const& a, auto const& b) -> auto&&;
+
+#line 43 "mixed-parameter-passing.cpp2"
+template<typename T> class container {
+    private: std::array<T,10> buf {}; 
+    public: [[nodiscard]] auto operator[](cpp2::impl::in<cpp2::i32> idx) const& -> T const&;
+    public: [[nodiscard]] auto operator[](cpp2::impl::in<cpp2::i32> idx) & -> T&;
+    public: container() = default;
+    public: container(container const&) = delete; /* No 'that' constructor, suppress copy */
+    public: auto operator=(container const&) -> void = delete;
+
+#line 47 "mixed-parameter-passing.cpp2"
+};
+
+auto main() -> int;
+#line 57 "mixed-parameter-passing.cpp2"
+
+#line 1 "mixed-parameter-passing.cpp2"
 
 //=== Cpp2 function definitions =================================================
 
@@ -70,5 +90,21 @@ auto parameter_styles(
 }
 
 #line 40 "mixed-parameter-passing.cpp2"
-[[nodiscard]] auto main() -> int{}
+[[nodiscard]] auto min(auto const& a, auto const& b) -> auto&&
+    {if (cpp2::impl::cmp_less(b,a)) {return b; }else {return a; }}
+
+#line 45 "mixed-parameter-passing.cpp2"
+    template <typename T> [[nodiscard]] auto container<T>::operator[](cpp2::impl::in<cpp2::i32> idx) const& -> T const& { return CPP2_ASSERT_IN_BOUNDS(buf, idx); }
+#line 46 "mixed-parameter-passing.cpp2"
+    template <typename T> [[nodiscard]] auto container<T>::operator[](cpp2::impl::in<cpp2::i32> idx) & -> T& { return CPP2_ASSERT_IN_BOUNDS(buf, idx);  }
+
+#line 49 "mixed-parameter-passing.cpp2"
+auto main() -> int{
+    auto x {456}; 
+    auto y {123}; 
+    std::cout << min(cpp2::move(x), cpp2::move(y)) << '\n';
+
+    container<int> v {}; 
+    std::cout << CPP2_ASSERT_IN_BOUNDS_LITERAL(cpp2::move(v), 0) << '\n';
+}
 

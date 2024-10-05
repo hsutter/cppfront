@@ -51,7 +51,7 @@ auto const& x{t()};
 }
 
 #line 9 "pure2-bugfix-for-unbraced-function-expression.cpp2"
-  if (cpp2::cpp2_default.is_active() && !(!((cpp2::impl::is<int>([]() -> auto { return 0; })))) ) { cpp2::cpp2_default.report_violation(""); }
+  if (cpp2::cpp2_default.is_active() && !(!((cpp2::impl::is<int>([]() -> decltype(auto) { return 0; })))) ) { cpp2::cpp2_default.report_violation(""); }
 
   return cpp2::i32{0}; 
 }

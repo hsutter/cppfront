@@ -1,5 +1,5 @@
 
-less_than: (value)  :(x) x < value$;
+less_than: (value) = :(x) = x < value$;
 
 main: () -> int
 = {

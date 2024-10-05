@@ -1,6 +1,7 @@
 
-print: (thing:_) =
+print: (thing:_) = {
     std::cout << ">> " << thing << "\n";
+}
 
 decorate_and_print: (inout thing:_) = {
     thing = "[" + thing + "]";
