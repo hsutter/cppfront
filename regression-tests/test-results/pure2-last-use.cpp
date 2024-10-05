@@ -79,8 +79,8 @@ class types;
 auto f_inout([[maybe_unused]] auto& unnamed_param_1) -> void;
 #line 2 "pure2-last-use.cpp2"
 auto f_copy([[maybe_unused]] auto ...unnamed_param_1) -> void;
-[[nodiscard]] auto pred([[maybe_unused]] auto const& ...unnamed_param_1) -> auto;
-[[nodiscard]] auto pred_copy([[maybe_unused]] auto ...unnamed_param_1) -> auto;
+[[nodiscard]] auto pred([[maybe_unused]] auto const& ...unnamed_param_1) -> decltype(auto);
+[[nodiscard]] auto pred_copy([[maybe_unused]] auto ...unnamed_param_1) -> decltype(auto);
 template<typename T> [[nodiscard]] constexpr auto identity(T&& x) -> decltype(auto)
 CPP2_REQUIRES (std::is_reference_v<T>) ;
 #line 6 "pure2-last-use.cpp2"
@@ -166,7 +166,7 @@ class issue_857 {
   //f: (move this, move that) = f_copy(this, that);
   //g: (move this) = f_copy(this.a);
   //g: (move this, move that) = f_copy(this.a, that.a);
-  public: auto h() & -> void;
+  public: [[nodiscard]] auto h() & -> decltype(auto);
   //i: (move this) = f_copy(a);
   //j: (move this) = f_copy(a);
   //k: (move this) = {
@@ -258,7 +258,7 @@ CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(a_), std::add_const_t<std::uni
 extern int gi;
 class issue_857_3 {
   public: std::add_lvalue_reference_t<int> i {gi}; 
-  public: auto f() && -> void;
+  public: [[nodiscard]] auto f() && -> decltype(auto);
   public: issue_857_3(auto&& i_)
 CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(i_), std::add_const_t<std::add_lvalue_reference_t<int>>&>) ;
 
@@ -269,7 +269,7 @@ public: issue_857_3();
 #line 265 "pure2-last-use.cpp2"
 };
 class issue_857_6 {
-  public: auto f() && -> void;
+  public: [[nodiscard]] auto f() && -> decltype(auto);
   public: std::add_lvalue_reference_t<int> i {gi}; 
   public: issue_857_6(auto&& i_)
 CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(i_), std::add_const_t<std::add_lvalue_reference_t<int>>&>) ;
@@ -346,7 +346,7 @@ CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(f_), std::add_const_t<std::add
 };
 
 class issue_857_5 {
-  public: auto f() && -> void;
+  public: [[nodiscard]] auto f() && -> decltype(auto);
   public: std::unique_ptr<int> a; 
   public: issue_857_5(auto&& a_)
 CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(a_), std::add_const_t<std::unique_ptr<int>>&>) ;
@@ -362,7 +362,7 @@ struct issue_857_7_A_as_base { std::add_lvalue_reference_t<int> A; };
 class issue_857_7: public issue_857_7_A_as_base, public std::monostate {
 
 #line 339 "pure2-last-use.cpp2"
-  public: auto F() && -> void;
+  public: [[nodiscard]] auto F() && -> decltype(auto);
   public: issue_857_7(auto&& A_)
 CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(A_), std::add_const_t<std::add_lvalue_reference_t<int>>&>) ;
 
@@ -386,13 +386,13 @@ class issue_857_9: public issue_857_8 {
   // <https://eel.is/c++draft/class.mfct.non.static#2.sentence-1>.
 //f0: (move this) = f_copy(a);
 //f1: (move this) = _ = b();
-  public: auto f2() && -> void;
+  public: [[nodiscard]] auto f2() && -> decltype(auto);
 //f3: (move this) = d();
 
   // OK: Explicit 'this' for base members, like in templates.
   //g0: (move this) = f_inout(this.a);  // error, can't pass rvalue to inout param
   //g1: (move this) = _ = this.b();
-  public: auto g2() && -> void;
+  public: [[nodiscard]] auto g2() && -> decltype(auto);
   //g3: (move this) = this.d();
 };
 
@@ -556,9 +556,9 @@ auto f_inout([[maybe_unused]] auto& unnamed_param_1) -> void{}
 #line 2 "pure2-last-use.cpp2"
 auto f_copy([[maybe_unused]] auto ...unnamed_param_1) -> void{}
 #line 3 "pure2-last-use.cpp2"
-[[nodiscard]] auto pred([[maybe_unused]] auto const& ...unnamed_param_1) -> auto { return true;  }
+[[nodiscard]] auto pred([[maybe_unused]] auto const& ...unnamed_param_1) -> decltype(auto) { return true; }
 #line 4 "pure2-last-use.cpp2"
-[[nodiscard]] auto pred_copy([[maybe_unused]] auto ...unnamed_param_1) -> auto { return true;  }
+[[nodiscard]] auto pred_copy([[maybe_unused]] auto ...unnamed_param_1) -> decltype(auto) { return true;  }
 #line 5 "pure2-last-use.cpp2"
 template<typename T> [[nodiscard]] constexpr auto identity(T&& x) -> decltype(auto)
 requires (std::is_reference_v<T>) {return CPP2_FORWARD(x); }
@@ -663,9 +663,9 @@ auto issue_683(auto const& args) -> void{
 
 #line 114 "pure2-last-use.cpp2"
 auto issue_825() -> void{
-  static_cast<void>([](std::unique_ptr<int> b) -> auto { return f_copy(std::move(cpp2::move(b)));  });
-  static_cast<void>([](std::unique_ptr<int>&& c) -> auto { return f_copy(std::move(cpp2::move(c)));  });
-  static_cast<void>([](auto&& d) -> auto { return f_copy(CPP2_FORWARD(d));  }(cpp2_new<int>(0)));
+  static_cast<void>([](std::unique_ptr<int> b) -> decltype(auto) { return f_copy(std::move(cpp2::move(b)));  });
+  static_cast<void>([](std::unique_ptr<int>&& c) -> decltype(auto) { return f_copy(std::move(cpp2::move(c)));  });
+  static_cast<void>([](auto&& d) -> decltype(auto) { return f_copy(CPP2_FORWARD(d));  }(cpp2_new<int>(0)));
 }
 
 #line 120 "pure2-last-use.cpp2"
@@ -731,7 +731,7 @@ auto issue_850() -> void{
                                        return *this; }
 
 #line 181 "pure2-last-use.cpp2"
-  auto issue_857::h() & -> void { f_inout(a);  }
+  [[nodiscard]] auto issue_857::h() & -> decltype(auto) { return f_inout(a);  }
 
   issue_857_2::issue_857_2(auto&& a_)
 requires (std::is_convertible_v<CPP2_TYPEOF(a_), std::add_const_t<std::unique_ptr<int>>&>) 
@@ -745,7 +745,7 @@ requires (std::is_convertible_v<CPP2_TYPEOF(a_), std::add_const_t<std::unique_pt
 int gi {0}; 
 
 #line 264 "pure2-last-use.cpp2"
-  auto issue_857_3::f() && -> void { f_inout(cpp2::move(*this).i);  }
+  [[nodiscard]] auto issue_857_3::f() && -> decltype(auto) { return f_inout(cpp2::move(*this).i);  }
 
   issue_857_3::issue_857_3(auto&& i_)
 requires (std::is_convertible_v<CPP2_TYPEOF(i_), std::add_const_t<std::add_lvalue_reference_t<int>>&>) 
@@ -760,7 +760,7 @@ issue_857_3::issue_857_3(){}
                                // OK: The implicit `this` is moved, not `i`.
 
 #line 267 "pure2-last-use.cpp2"
-  auto issue_857_6::f() && -> void { f_inout(cpp2::move(*this).i);  }
+  [[nodiscard]] auto issue_857_6::f() && -> decltype(auto) { return f_inout(cpp2::move(*this).i);  }
 
   issue_857_6::issue_857_6(auto&& i_)
 requires (std::is_convertible_v<CPP2_TYPEOF(i_), std::add_const_t<std::add_lvalue_reference_t<int>>&>) 
@@ -781,7 +781,7 @@ requires (std::is_convertible_v<CPP2_TYPEOF(f_), std::add_const_t<std::add_point
                                // OK: The implicit `this` is moved, not `i`.
 
 #line 332 "pure2-last-use.cpp2"
-  auto issue_857_5::f() && -> void { f_copy(std::move(cpp2::move(*this).a));  }
+  [[nodiscard]] auto issue_857_5::f() && -> decltype(auto) { return f_copy(std::move(cpp2::move(*this).a));  }
 
   issue_857_5::issue_857_5(auto&& a_)
 requires (std::is_convertible_v<CPP2_TYPEOF(a_), std::add_const_t<std::unique_ptr<int>>&>) 
@@ -792,7 +792,7 @@ requires (std::is_convertible_v<CPP2_TYPEOF(a_), std::add_const_t<std::unique_pt
                                                                             a = CPP2_FORWARD(a_);
                                                                             return *this;}
 #line 339 "pure2-last-use.cpp2"
-  auto issue_857_7::F() && -> void { f_inout(cpp2::move(*this).A);  }
+  [[nodiscard]] auto issue_857_7::F() && -> decltype(auto) { return f_inout(cpp2::move(*this).A);  }
 
   issue_857_7::issue_857_7(auto&& A_)
 requires (std::is_convertible_v<CPP2_TYPEOF(A_), std::add_const_t<std::add_lvalue_reference_t<int>>&>) 
@@ -809,10 +809,10 @@ requires (std::is_convertible_v<CPP2_TYPEOF(a_), std::add_const_t<std::unique_pt
                                                                                                                                                                                  , c{ CPP2_FORWARD(c_) }{}
 
 #line 355 "pure2-last-use.cpp2"
-  auto issue_857_9::f2() && -> void { f_inout(c);  }// OK: Happens to work, like non-'move' 'this' parameters.
+  [[nodiscard]] auto issue_857_9::f2() && -> decltype(auto) { return f_inout(c);  }// OK: Happens to work, like non-'move' 'this' parameters.
 
 #line 361 "pure2-last-use.cpp2"
-  auto issue_857_9::g2() && -> void { f_inout(cpp2::move((*this)).c);  }
+  [[nodiscard]] auto issue_857_9::g2() && -> decltype(auto) { return f_inout(cpp2::move((*this)).c);  }
 
 #line 366 "pure2-last-use.cpp2"
   issue_869_0::issue_869_0([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2){}
@@ -1430,7 +1430,7 @@ namespace captures {
 auto f() -> void{
   auto x {cpp2_new<int>(0)}; 
   f_copy(std::move(cpp2::move(x)));
-  auto id {[](auto const& x) -> decltype(auto) { return x;  }}; 
+  auto id {[](auto&& x) -> decltype(auto) { return CPP2_FORWARD(x);  }}; 
   auto y {cpp2_new<int>(0)}; 
   if (cpp2::cpp2_default.is_active() && !(&cpp2::move(id)(y) == &y) ) { cpp2::cpp2_default.report_violation(""); }
 }
@@ -1461,13 +1461,13 @@ auto g() -> void{
   static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     f_copy(std::move(cpp2::move(x)));
-    static_cast<void>([_0 = std::array<int,[](auto const& x) -> auto { return identity(x); }(0)>()]() mutable -> auto { return _0;  });// Fails on Clang 12 (lambda in unevaluated context).
+    static_cast<void>([_0 = std::array<int,[](auto const& x) -> decltype(auto) { return identity(x); }(0)>()]() mutable -> decltype(auto) { return _0;  });// Fails on Clang 12 (lambda in unevaluated context).
   });
 
   static_cast<void>([]() -> void{
     auto x {cpp2_new<int>(0)}; 
     f_inout(x);
-    static_cast<void>([_0 = ([_0 = cpp2::move(x)]() mutable -> auto { return *cpp2::impl::assert_not_null(_0); })]() mutable -> int { return _0();  });
+    static_cast<void>([_0 = ([_0 = cpp2::move(x)]() mutable -> decltype(auto) { return *cpp2::impl::assert_not_null(_0); })]() mutable -> int { return _0();  });
   });
 }
 

@@ -24,7 +24,7 @@ main: () -> int = {
 }
 
 WithOp : type = {
-    op_is: (this, x : int) x == 123;
+    op_is: (this, x : int) = x == 123;
 }
 
 WithGenOp : type = {

@@ -180,7 +180,7 @@ compiler_services: @polymorphic_base @copyable type =
         ) );
     }
 
-    is_active:(this) true;
+    is_active:(this) = true;
 }
 
 
@@ -1202,8 +1202,8 @@ basic_enum: (
         t.add_member( "    operator& : (       this, that ) -> (t.name())$  == _value &  that._value;");
         t.add_member( "    operator^ : (       this, that ) -> (t.name())$  == _value ^  that._value;");
         t.add_member( "    has       : (       this, that ) -> bool         == _value &  that._value;");
-        t.add_member( "    set       : ( inout this, that )                 == _value |= that._value;");
-        t.add_member( "    clear     : ( inout this, that )                 == _value &= that._value~;");
+        t.add_member( "    set       : ( inout this, that )                 == { _value |= that._value;  }");
+        t.add_member( "    clear     : ( inout this, that )                 == { _value &= that._value~; }");
     }
 
     //  Add the enumerators
@@ -1994,9 +1994,9 @@ parse_context: type =
         }
     }
 
-    next         : (inout this) next_impl(false, false);
-    next_in_class: (inout this) next_impl( true, false);
-    next_no_skip : (inout this) next_impl(false,  true);
+    next         : (inout this) = next_impl(false, false);
+    next_in_class: (inout this) = next_impl( true, false);
+    next_no_skip : (inout this) = next_impl(false,  true);
 
     next_n: (inout this, n: int) -> bool = {
         r := true;
@@ -2030,9 +2030,9 @@ parse_context: type =
         }
     }
 
-    grab_until: (inout this, in e: std::string, out r: std::string)        grab_until_impl(e, out r, false);
-    grab_until: (inout this, in e: char, out r: std::string)               grab_until_impl(std::string(1, e), out r, false);
-    grab_until_one_of: (inout this, in e: std::string, out r: std::string) grab_until_impl(e, out r, true);
+    grab_until: (inout this, in e: std::string, out r: std::string)        = grab_until_impl(e, out r, false);
+    grab_until: (inout this, in e: char, out r: std::string)               = grab_until_impl(std::string(1, e), out r, false);
+    grab_until_one_of: (inout this, in e: std::string, out r: std::string) = grab_until_impl(e, out r, true);
 
     grab_n: (inout this, in n: int, out r: std::string) -> bool = 
     {
@@ -2078,8 +2078,8 @@ parse_context: type =
         }
     }
 
-    peek         : (in this) peek_impl(false);
-    peek_in_class: (in this) peek_impl( true);
+    peek         : (in this) = peek_impl(false);
+    peek_in_class: (in this) = peek_impl( true);
 
 
     //  Parsing functions
@@ -2193,9 +2193,9 @@ parse_context: type =
 
     //  Misc functions
 
-    get_pos:   (this)                             pos;
-    get_range: (this, start: size_t, end: size_t) std::string(regex..substr(start, end - start + 1));
-    valid:     (this) -> bool                   = { return has_next() && !has_error; }
+    get_pos:   (this)                             = pos;
+    get_range: (this, start: size_t, end: size_t) = std::string(regex..substr(start, end - start + 1));
+    valid:     (this) -> bool                     = { return has_next() && !has_error; }
 
     error: (inout this, err: std::string) -> token_ptr = {
         has_error = true;
@@ -3686,15 +3686,18 @@ apply_metafunctions: (
     assert( n.is_type() );
 
     //  Check for _names reserved for the metafunction implementation
-    for  rtype.get_members()
-    do   (m)
+    if !n.metafunctions.empty()
     {
-        m.require( 
-            !m.name().starts_with("_") || m.name().ssize() == 1,
-            "a type that applies a metafunction cannot have a body that declares "
-            "a name that starts with '_' - those names are reserved for the "
-            "metafunction implementation"
-        );
+        for  rtype.get_members()
+        do   (m)
+        {
+            m.require( 
+                !m.name().starts_with("_") || m.name().ssize() == 1,
+                "a type that applies a metafunction cannot have a body that declares "
+                "a name that starts with '_' - those names are reserved for the "
+                "metafunction implementation"
+            );
+        }
     }
 
     //  For each metafunction, apply it

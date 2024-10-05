@@ -262,7 +262,7 @@ struct postfix_expression_node;
 
 struct prefix_expression_node
 {
-    std::vector<token const*> ops;
+    std::vector<token const*>                ops;
     std::unique_ptr<postfix_expression_node> expr;
 
     // Out-of-line definition of the dtor is necessary due to the forward-declared
@@ -294,6 +294,16 @@ struct prefix_expression_node
     {
         assert(expr);
         return expr.get();
+    }
+
+    auto get_if_only_a_postfix_expression_node() const
+        -> postfix_expression_node *
+    {
+        if (ops.empty()) {
+            return expr.get();
+        }
+        // Else
+        return {};
     }
 
     auto is_literal() const
@@ -424,6 +434,16 @@ struct binary_expression_node
     {
         assert(expr);
         return expr->get_postfix_expression_node();
+    }
+
+    auto get_if_only_a_postfix_expression_node() const
+        -> postfix_expression_node *
+    {
+        if (terms.empty()) {
+            return expr->get_if_only_a_postfix_expression_node();
+        }
+        // Else
+        return {};
     }
 
     //  Get first right-hand postfix-expression, if there is one
@@ -1608,6 +1628,16 @@ struct is_as_expression_node
         return expr->get_postfix_expression_node();
     }
 
+    auto get_if_only_a_postfix_expression_node() const
+        -> postfix_expression_node *
+    {
+        if (ops.empty()) {
+            return expr->get_if_only_a_postfix_expression_node();
+        }
+        // Else
+        return {};
+    }
+
     auto is_result_a_temporary_variable() const -> bool {
         if (ops.empty()) {
             assert(expr);
@@ -2529,6 +2559,15 @@ struct function_type_node
         return ret;
     }
 
+    auto set_default_return_type_to_forward_wildcard()
+        -> void
+    {
+        if (returns.index() == empty) {
+            returns = single_type_id{ std::make_unique<type_id_node>(), passing_style::forward };
+            assert(returns.index() == id);
+        }
+    }
+
     auto has_postconditions() const
         -> bool;
 
@@ -2946,7 +2985,6 @@ struct declaration_node
     source_position                      pos;
     bool                                 is_variadic = false;
     bool                                 is_constexpr = false;
-    bool                                 terse_no_equals = false;
     std::unique_ptr<unqualified_id_node> identifier;
     accessibility                        access = accessibility::default_;
 
@@ -3979,6 +4017,14 @@ public:
         }
         //  Else
         return {};
+    }
+
+    auto set_default_return_type_to_forward_wildcard()
+        -> void
+    {
+        if (type.index() == a_function) {
+            std::get<a_function>(type).get()->set_default_return_type_to_forward_wildcard();
+        }
     }
 
     //  Internals
@@ -8655,10 +8701,8 @@ private:
             pos = start_pos;    // backtrack no matter what, we're just peeking here
 
             if (at_an_expression) {
-                n->returns = function_type_node::single_type_id{ std::make_unique<type_id_node>() };
-                assert(n->returns.index() == function_type_node::id);
-                n->my_decl->terse_no_equals = true;
-                return n;
+                error("an '=' is now required before every function body, including when the body is an individual expression - for example, change 'f: () expr;' to 'f: () = expr;'");
+                return {};
             }
         }
 
@@ -9055,21 +9099,8 @@ private:
             return {};
         }
 
-        //  If we've already validated that this is a function where the parameter
-        //  list is followed by a valid expression-statement, parse that again
-        //  (requiring a semicolon as we validated when determining terse_no_equals)
-        if (n->terse_no_equals)
         {
-            n->equal_sign = curr().position();
-            n->initializer = statement(/*ignore semicolon_required*/ false, n->equal_sign);
-            if (!n->initializer) {
-                return {};
-            }
-        }
-
-        else
-        {
-            //  Next is optionally a requires clause (if not using the "-> expr;" syntax)
+            //  Next is optionally a requires clause
             if (curr() == "requires")
             {
                 if (
@@ -9225,6 +9256,19 @@ private:
 
         }
 
+        //  If this is a single-expression function, the default return type is '-> forward _ '
+        //  Except for 'main' and 'operator=', whose return types are defined by the language
+        if (auto is_main = !n->parent_declaration && n->has_name("main");
+            n->is_function()
+            && !is_main
+            && !n->has_name("operator=")
+            && n->initializer
+            && !n->initializer->is_compound()
+            )
+        {
+            n->set_default_return_type_to_forward_wildcard();
+        }
+
         //  If this is a non-local named function with a single-statement body,
         //  followed by a non-declaration statement, they probably forgot { }
         //  so give a nicer diagnostic
@@ -9243,7 +9287,7 @@ private:
             pos = start_pos;    // backtrack no matter what, we're just peeking here
 
             if (at_a_statement) {
-                error("in this scope, a single-statement function body cannot be immediately followed by a statement - did you forget to put { } braces around a multi-statement function body?", false);
+                error("in this scope, a single-expression function body cannot be immediately followed by a statement - did you forget to put { } braces around a multi-statement function body?", false);
                 return {};
             }
         }

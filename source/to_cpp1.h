@@ -2377,6 +2377,80 @@ public:
 
     //-----------------------------------------------------------------------
     //
+    auto check_return_expression_lifetime(expression_node const& n)
+        -> bool
+    {
+        assert(!current_functions.empty());
+        auto is_forward_return =
+            !function_returns.empty()
+            && (
+                function_returns.back().pass == passing_style::forward
+                || function_returns.back().pass == passing_style::forward_ref
+                )
+            ;
+
+        //  If we're doing a forward return of a single-token name
+        //  (the entire expression is a postfix-expression)
+        auto solo_postfix = n.expr->get_if_only_a_postfix_expression_node();
+        auto tok          = solo_postfix ? solo_postfix->expr->get_token() : nullptr;
+        if (
+            tok
+            && is_forward_return
+            )
+        {
+            //  Ensure we're not returning a local or an in/move parameter
+            auto is_parameter_name = current_functions.back().decl->has_parameter_named(*tok);
+            if (
+                is_parameter_name
+                && (
+                    current_functions.back().decl->has_in_parameter_named(*tok)
+                    || current_functions.back().decl->has_copy_parameter_named(*tok)
+                    || current_functions.back().decl->has_move_parameter_named(*tok)
+                    )
+                )
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "a 'forward' return type cannot return an 'in', 'copy', or 'move' parameter"
+                );
+                return false;
+            }
+            else if (
+                !is_parameter_name
+                && sema.get_declaration_of(*tok)
+                && !sema.is_captured(*tok)
+                )
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "a 'forward' return type cannot return a local variable"
+                );
+                return false;
+            }
+            
+            //  Deduced forward returns are okay because decltype(auto) can deduce a value
+            else if (
+                !function_returns.back().is_deduced
+                && (
+                    is_literal(tok->type()) 
+                    || n.expr->is_result_a_temporary_variable()
+                    )
+            )
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "a 'forward specific_type' return type must return an 'inout', 'out', or 'forward' parameter; it cannot return a complex expression -- for example: for a function that takes a stream object 'output`, instead of 'return output << data;' write 'output << data; return output;'"
+                );
+                return false;
+            }
+        }
+
+        return true;
+    };
+
+
+    //-----------------------------------------------------------------------
+    //
     auto emit(return_statement_node const& n)
         -> void
     {   STACKINSTR
@@ -2399,63 +2473,14 @@ public:
         //
         if (n.expression)
         {
-            assert(!current_functions.empty());
-            auto is_forward_return =
-                !function_returns.empty()
-                && (
-                    function_returns.back().pass == passing_style::forward
-                    || function_returns.back().pass == passing_style::forward_ref
-                    )
-                ;
+            if (!check_return_expression_lifetime(*n.expression)) {
+                return;
+            }
+
             auto is_deduced_return =
                 !function_returns.empty()
-                && function_returns.back().is_deduced;
-
-            //  If we're doing a forward return of a single-token name
-            if (auto tok = n.expression->expr->get_postfix_expression_node()->expr->get_token();
-                tok
-                && is_forward_return
-                )
-            {
-                //  Ensure we're not returning a local or an in/move parameter
-                auto is_parameter_name = current_functions.back().decl->has_parameter_named(*tok);
-                if (
-                    is_parameter_name
-                    && (
-                        current_functions.back().decl->has_in_parameter_named(*tok)
-                        || current_functions.back().decl->has_copy_parameter_named(*tok)
-                        || current_functions.back().decl->has_move_parameter_named(*tok)
-                        )
-                    )
-                {
-                    errors.emplace_back(
-                        n.position(),
-                        "a 'forward' return type cannot return an 'in', 'copy', or 'move' parameter"
-                    );
-                    return;
-                }
-                else if (
-                    !is_parameter_name
-                    && sema.get_declaration_of(*tok)
-                    && !sema.is_captured(*tok)
-                    )
-                {
-                    errors.emplace_back(
-                        n.position(),
-                        "a 'forward' return type cannot return a local variable"
-                    );
-                    return;
-                } else if (
-                    is_literal(tok->type()) || n.expression->expr->is_result_a_temporary_variable()
-                )
-                {
-                    errors.emplace_back(
-                        n.position(),
-                        "a 'forward' return type must return an 'inout', 'out', or 'forward' parameter; it cannot return a complex expression -- for example: for a function that takes a stream object 'output`, instead of 'return output << data;' write 'output << data; return output;'"
-                    );
-                    return;
-                }
-            }
+                && function_returns.back().is_deduced
+                ;
 
             //  If this expression is just a single expression-list, we can
             //  take over direct control of emitting it without needing to
@@ -4163,11 +4188,17 @@ public:
         assert(n.expr);
         auto generating_return = false;
 
-        if (function_body_start != source_position{}) {
+        if (function_body_start != source_position{})
+        {
             emit_prolog_mem_inits(function_prolog, n.position().colno);
             printer.print_cpp2(" { ", function_body_start);
             emit_prolog_statements(function_prolog, n.position().colno);
-            if (!function_void_ret) {
+
+            if (!function_void_ret)
+            {
+                if (!check_return_expression_lifetime(*n.expr)) {
+                    return;
+                }
                 printer.print_cpp2("return ", n.position());
                 generating_return = true;
             }

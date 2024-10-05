@@ -1,6 +1,6 @@
-f: (a, b, ) a + b;
+f: (a, b, ) = a + b;
 
-g: <T, U, > (a: T, b: U) a + b;
+g: <T, U, > (a: T, b: U) = a + b;
 
 doubler: (a: int,) -> (i : int,) = {
     i = a * 2;

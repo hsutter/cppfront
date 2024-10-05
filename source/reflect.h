@@ -106,7 +106,7 @@ class special_range_token;
 #line 3544 "reflect.h2"
 template<typename Error_out> class regex_generator;
 
-#line 3788 "reflect.h2"
+#line 3791 "reflect.h2"
 }
 
 }
@@ -186,7 +186,7 @@ using parse_statement_ret = std::unique_ptr<statement_node>;
     ) & -> parse_statement_ret;
 
 #line 141 "reflect.h2"
-    public: auto add_runtime_support_include(cpp2::impl::in<std::string_view> s) & -> void;
+    public: [[nodiscard]] auto add_runtime_support_include(cpp2::impl::in<std::string_view> s) & -> decltype(auto);
 
     public: [[nodiscard]] virtual auto position() const -> source_position;
 
@@ -204,7 +204,7 @@ using parse_statement_ret = std::unique_ptr<statement_node>;
     public: auto report_violation(auto const& msg) const& -> void;
 
 #line 183 "reflect.h2"
-    public: [[nodiscard]] auto is_active() const& -> auto;
+    public: [[nodiscard]] auto is_active() const& -> decltype(auto);
     public: virtual ~compiler_services() noexcept;
 public: compiler_services(compiler_services const& that);
 
@@ -251,9 +251,9 @@ class declaration
     public: [[nodiscard]] auto is_private() const& -> bool;
     public: [[nodiscard]] auto is_default_access() const& -> bool;
 
-    public: auto default_to_public() & -> void;
-    public: auto default_to_protected() & -> void;
-    public: auto default_to_private() & -> void;
+    public: [[nodiscard]] auto default_to_public() & -> decltype(auto);
+    public: [[nodiscard]] auto default_to_protected() & -> decltype(auto);
+    public: [[nodiscard]] auto default_to_private() & -> decltype(auto);
 
     public: [[nodiscard]] auto make_public() & -> bool;
     public: [[nodiscard]] auto make_protected() & -> bool;
@@ -364,7 +364,7 @@ class function_declaration
 #line 403 "reflect.h2"
     public: [[nodiscard]] auto is_binary_comparison_function() const& -> bool;
 
-    public: auto default_to_virtual() & -> void;
+    public: [[nodiscard]] auto default_to_virtual() & -> decltype(auto);
 
     public: [[nodiscard]] auto make_virtual() & -> bool;
 
@@ -446,10 +446,10 @@ struct query_declared_value_set_functions_ret { bool out_this_in_that; bool out_
     public: auto add_member(cpp2::impl::in<std::string_view> source) & -> void;
 
 #line 596 "reflect.h2"
-    public: auto remove_marked_members() & -> void;
-    public: auto remove_all_members() & -> void;
+    public: [[nodiscard]] auto remove_marked_members() & -> decltype(auto);
+    public: [[nodiscard]] auto remove_all_members() & -> decltype(auto);
 
-    public: auto disable_member_function_generation() & -> void;
+    public: [[nodiscard]] auto disable_member_function_generation() & -> decltype(auto);
     public: type_declaration(type_declaration const& that);
 
 #line 600 "reflect.h2"
@@ -556,9 +556,9 @@ class expression_flags
 private: cpp2::u8 _value; private: constexpr expression_flags(cpp2::impl::in<cpp2::i64> _val);
 
 private: constexpr auto operator=(cpp2::impl::in<cpp2::i64> _val) -> expression_flags& ;
-public: constexpr auto operator|=(expression_flags const& that) & -> void;
-public: constexpr auto operator&=(expression_flags const& that) & -> void;
-public: constexpr auto operator^=(expression_flags const& that) & -> void;
+public: constexpr auto operator|=(expression_flags const& that) & -> decltype(auto);
+public: constexpr auto operator&=(expression_flags const& that) & -> decltype(auto);
+public: constexpr auto operator^=(expression_flags const& that) & -> decltype(auto);
 public: [[nodiscard]] constexpr auto operator|(expression_flags const& that) const& -> expression_flags;
 public: [[nodiscard]] constexpr auto operator&(expression_flags const& that) const& -> expression_flags;
 public: [[nodiscard]] constexpr auto operator^(expression_flags const& that) const& -> expression_flags;
@@ -872,9 +872,9 @@ class parse_context
     private: [[nodiscard]] auto next_impl(cpp2::impl::in<bool> in_class, cpp2::impl::in<bool> no_skip) & -> bool;
 
 #line 1997 "reflect.h2"
-    public: [[nodiscard]] auto next() & -> auto;
-    public: [[nodiscard]] auto next_in_class() & -> auto;
-    public: [[nodiscard]] auto next_no_skip() & -> auto;
+    public: [[nodiscard]] auto next() & -> decltype(auto);
+    public: [[nodiscard]] auto next_in_class() & -> decltype(auto);
+    public: [[nodiscard]] auto next_no_skip() & -> decltype(auto);
 
     public: [[nodiscard]] auto next_n(cpp2::impl::in<int> n) & -> bool;
 
@@ -884,9 +884,9 @@ class parse_context
     private: [[nodiscard]] auto grab_until_impl(cpp2::impl::in<std::string> e, cpp2::impl::out<std::string> r, cpp2::impl::in<bool> any) & -> bool;
 
 #line 2033 "reflect.h2"
-    public: [[nodiscard]] auto grab_until(cpp2::impl::in<std::string> e, cpp2::impl::out<std::string> r) & -> auto;
-    public: [[nodiscard]] auto grab_until(cpp2::impl::in<char> e, cpp2::impl::out<std::string> r) & -> auto;
-    public: [[nodiscard]] auto grab_until_one_of(cpp2::impl::in<std::string> e, cpp2::impl::out<std::string> r) & -> auto;
+    public: [[nodiscard]] auto grab_until(cpp2::impl::in<std::string> e, cpp2::impl::out<std::string> r) & -> decltype(auto);
+    public: [[nodiscard]] auto grab_until(cpp2::impl::in<char> e, cpp2::impl::out<std::string> r) & -> decltype(auto);
+    public: [[nodiscard]] auto grab_until_one_of(cpp2::impl::in<std::string> e, cpp2::impl::out<std::string> r) & -> decltype(auto);
 
     public: [[nodiscard]] auto grab_n(cpp2::impl::in<int> n, cpp2::impl::out<std::string> r) & -> bool;
 
@@ -897,8 +897,8 @@ class parse_context
     private: [[nodiscard]] auto peek_impl(cpp2::impl::in<bool> in_class) const& -> char;
 
 #line 2081 "reflect.h2"
-    public: [[nodiscard]] auto peek() const& -> auto;
-    public: [[nodiscard]] auto peek_in_class() const& -> auto;
+    public: [[nodiscard]] auto peek() const& -> decltype(auto);
+    public: [[nodiscard]] auto peek_in_class() const& -> decltype(auto);
 
 #line 2085 "reflect.h2"
     //  Parsing functions
@@ -914,8 +914,8 @@ class parse_context
 #line 2194 "reflect.h2"
     //  Misc functions
 
-    public: [[nodiscard]] auto get_pos() const& -> auto;
-    public: [[nodiscard]] auto get_range(cpp2::impl::in<size_t> start, cpp2::impl::in<size_t> end) const& -> auto;
+    public: [[nodiscard]] auto get_pos() const& -> decltype(auto);
+    public: [[nodiscard]] auto get_range(cpp2::impl::in<size_t> start, cpp2::impl::in<size_t> end) const& -> decltype(auto);
     public: [[nodiscard]] auto valid() const& -> bool;
 
     public: [[nodiscard]] auto error(cpp2::impl::in<std::string> err) & -> token_ptr;
@@ -1418,7 +1418,7 @@ auto regex_gen(meta::type_declaration& t) -> void;
     auto const& error
     ) -> bool;
 
-#line 3788 "reflect.h2"
+#line 3791 "reflect.h2"
 }
 
 }
@@ -1558,7 +1558,7 @@ auto newline_pos{CPP2_UFCS(find)(source, '\n')};
     }
 
 #line 141 "reflect.h2"
-    auto compiler_services::add_runtime_support_include(cpp2::impl::in<std::string_view> s) & -> void { static_cast<void>(CPP2_UFCS(emplace)((*cpp2::impl::assert_not_null(includes)), s));  }
+    [[nodiscard]] auto compiler_services::add_runtime_support_include(cpp2::impl::in<std::string_view> s) & -> decltype(auto) { return static_cast<void>(CPP2_UFCS(emplace)((*cpp2::impl::assert_not_null(includes)), s));  }
 
 #line 143 "reflect.h2"
     [[nodiscard]] auto compiler_services::position() const -> source_position
@@ -1605,7 +1605,7 @@ auto newline_pos{CPP2_UFCS(find)(source, '\n')};
     }
 
 #line 183 "reflect.h2"
-    [[nodiscard]] auto compiler_services::is_active() const& -> auto { return true;  }
+    [[nodiscard]] auto compiler_services::is_active() const& -> decltype(auto) { return true;  }
 
     compiler_services::~compiler_services() noexcept{}
 compiler_services::compiler_services(compiler_services const& that)
@@ -1719,11 +1719,11 @@ declaration_base::declaration_base(declaration_base const& that)
     [[nodiscard]] auto declaration::is_default_access() const& -> bool { return CPP2_UFCS(is_default_access)((*cpp2::impl::assert_not_null(n)));  }
 
 #line 277 "reflect.h2"
-    auto declaration::default_to_public() & -> void { static_cast<void>(CPP2_UFCS(make_public)((*cpp2::impl::assert_not_null(n)))); }
+    [[nodiscard]] auto declaration::default_to_public() & -> decltype(auto) { return static_cast<void>(CPP2_UFCS(make_public)((*cpp2::impl::assert_not_null(n)))); }
 #line 278 "reflect.h2"
-    auto declaration::default_to_protected() & -> void { static_cast<void>(CPP2_UFCS(make_protected)((*cpp2::impl::assert_not_null(n))));  }
+    [[nodiscard]] auto declaration::default_to_protected() & -> decltype(auto) { return static_cast<void>(CPP2_UFCS(make_protected)((*cpp2::impl::assert_not_null(n))));  }
 #line 279 "reflect.h2"
-    auto declaration::default_to_private() & -> void { static_cast<void>(CPP2_UFCS(make_private)((*cpp2::impl::assert_not_null(n)))); }
+    [[nodiscard]] auto declaration::default_to_private() & -> decltype(auto) { return static_cast<void>(CPP2_UFCS(make_private)((*cpp2::impl::assert_not_null(n)))); }
 
 #line 281 "reflect.h2"
     [[nodiscard]] auto declaration::make_public() & -> bool { return CPP2_UFCS(make_public)((*cpp2::impl::assert_not_null(n))); }
@@ -1923,7 +1923,7 @@ declaration::declaration(declaration const& that)
     [[nodiscard]] auto function_declaration::is_binary_comparison_function() const& -> bool { return CPP2_UFCS(is_binary_comparison_function)((*cpp2::impl::assert_not_null(n)));  }
 
 #line 405 "reflect.h2"
-    auto function_declaration::default_to_virtual() & -> void { static_cast<void>(CPP2_UFCS(make_function_virtual)((*cpp2::impl::assert_not_null(n)))); }
+    [[nodiscard]] auto function_declaration::default_to_virtual() & -> decltype(auto) { return static_cast<void>(CPP2_UFCS(make_function_virtual)((*cpp2::impl::assert_not_null(n)))); }
 
 #line 407 "reflect.h2"
     [[nodiscard]] auto function_declaration::make_virtual() & -> bool { return CPP2_UFCS(make_function_virtual)((*cpp2::impl::assert_not_null(n))); }
@@ -2141,12 +2141,12 @@ declaration::declaration(declaration const& that)
     }
 
 #line 596 "reflect.h2"
-    auto type_declaration::remove_marked_members() & -> void { CPP2_UFCS(type_remove_marked_members)((*cpp2::impl::assert_not_null(n)));  }
+    [[nodiscard]] auto type_declaration::remove_marked_members() & -> decltype(auto) { return CPP2_UFCS(type_remove_marked_members)((*cpp2::impl::assert_not_null(n)));  }
 #line 597 "reflect.h2"
-    auto type_declaration::remove_all_members() & -> void { CPP2_UFCS(type_remove_all_members)((*cpp2::impl::assert_not_null(n))); }
+    [[nodiscard]] auto type_declaration::remove_all_members() & -> decltype(auto) { return CPP2_UFCS(type_remove_all_members)((*cpp2::impl::assert_not_null(n))); }
 
 #line 599 "reflect.h2"
-    auto type_declaration::disable_member_function_generation() & -> void { CPP2_UFCS(type_disable_member_function_generation)((*cpp2::impl::assert_not_null(n)));  }
+    [[nodiscard]] auto type_declaration::disable_member_function_generation() & -> decltype(auto) { return CPP2_UFCS(type_disable_member_function_generation)((*cpp2::impl::assert_not_null(n)));  }
 
     type_declaration::type_declaration(type_declaration const& that)
                                 : declaration{ static_cast<declaration const&>(that) }{}
@@ -2776,8 +2776,8 @@ std::string value{"-1"};
         CPP2_UFCS(add_member)(t, "    operator& : (       this, that ) -> " + cpp2::to_string(CPP2_UFCS(name)(t)) + "  == _value &  that._value;");
         CPP2_UFCS(add_member)(t, "    operator^ : (       this, that ) -> " + cpp2::to_string(CPP2_UFCS(name)(t)) + "  == _value ^  that._value;");
         CPP2_UFCS(add_member)(t, "    has       : (       this, that ) -> bool         == _value &  that._value;");
-        CPP2_UFCS(add_member)(t, "    set       : ( inout this, that )                 == _value |= that._value;");
-        CPP2_UFCS(add_member)(t, "    clear     : ( inout this, that )                 == _value &= that._value~;");
+        CPP2_UFCS(add_member)(t, "    set       : ( inout this, that )                 == { _value |= that._value;  }");
+        CPP2_UFCS(add_member)(t, "    clear     : ( inout this, that )                 == { _value &= that._value~; }");
     }
 
     //  Add the enumerators
@@ -3170,15 +3170,15 @@ constexpr expression_flags::expression_flags(cpp2::impl::in<cpp2::i64> _val)
 constexpr auto expression_flags::operator=(cpp2::impl::in<cpp2::i64> _val) -> expression_flags&  { 
                                                           _value = cpp2::unsafe_narrow<cpp2::u8>(_val);
                                                           return *this; }
-constexpr auto expression_flags::operator|=(expression_flags const& that) & -> void { _value |= that._value; }
-constexpr auto expression_flags::operator&=(expression_flags const& that) & -> void { _value &= that._value; }
-constexpr auto expression_flags::operator^=(expression_flags const& that) & -> void { _value ^= that._value; }
+constexpr auto expression_flags::operator|=(expression_flags const& that) & -> decltype(auto) { return _value |= that._value; }
+constexpr auto expression_flags::operator&=(expression_flags const& that) & -> decltype(auto) { return _value &= that._value; }
+constexpr auto expression_flags::operator^=(expression_flags const& that) & -> decltype(auto) { return _value ^= that._value; }
 [[nodiscard]] constexpr auto expression_flags::operator|(expression_flags const& that) const& -> expression_flags { return _value | that._value; }
 [[nodiscard]] constexpr auto expression_flags::operator&(expression_flags const& that) const& -> expression_flags { return _value & that._value; }
 [[nodiscard]] constexpr auto expression_flags::operator^(expression_flags const& that) const& -> expression_flags { return _value ^ that._value; }
 [[nodiscard]] constexpr auto expression_flags::has(expression_flags const& that) const& -> bool { return _value & that._value; }
-constexpr auto expression_flags::set(expression_flags const& that) & -> void { _value |= that._value; }
-constexpr auto expression_flags::clear(expression_flags const& that) & -> void { _value &= ~that._value; }
+constexpr auto expression_flags::set(expression_flags const& that) & -> void{_value |= that._value;}
+constexpr auto expression_flags::clear(expression_flags const& that) & -> void{_value &= ~that._value;}
 inline CPP2_CONSTEXPR expression_flags expression_flags::case_insensitive{ 1 };
 
 inline CPP2_CONSTEXPR expression_flags expression_flags::multiple_lines{ 2 };
@@ -3660,11 +3660,11 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
     }
 
 #line 1997 "reflect.h2"
-    [[nodiscard]] auto parse_context::next() & -> auto { return next_impl(false, false); }
+    [[nodiscard]] auto parse_context::next() & -> decltype(auto) { return next_impl(false, false); }
 #line 1998 "reflect.h2"
-    [[nodiscard]] auto parse_context::next_in_class() & -> auto { return next_impl(true, false);  }
+    [[nodiscard]] auto parse_context::next_in_class() & -> decltype(auto) { return next_impl(true, false);  }
 #line 1999 "reflect.h2"
-    [[nodiscard]] auto parse_context::next_no_skip() & -> auto { return next_impl(false, true); }
+    [[nodiscard]] auto parse_context::next_no_skip() & -> decltype(auto) { return next_impl(false, true); }
 
 #line 2001 "reflect.h2"
     [[nodiscard]] auto parse_context::next_n(cpp2::impl::in<int> n) & -> bool{
@@ -3702,11 +3702,11 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
     }
 
 #line 2033 "reflect.h2"
-    [[nodiscard]] auto parse_context::grab_until(cpp2::impl::in<std::string> e, cpp2::impl::out<std::string> r) & -> auto { return grab_until_impl(e, cpp2::impl::out(&r), false); }
+    [[nodiscard]] auto parse_context::grab_until(cpp2::impl::in<std::string> e, cpp2::impl::out<std::string> r) & -> decltype(auto) { return grab_until_impl(e, cpp2::impl::out(&r), false); }
 #line 2034 "reflect.h2"
-    [[nodiscard]] auto parse_context::grab_until(cpp2::impl::in<char> e, cpp2::impl::out<std::string> r) & -> auto { return grab_until_impl(std::string(1, e), cpp2::impl::out(&r), false); }
+    [[nodiscard]] auto parse_context::grab_until(cpp2::impl::in<char> e, cpp2::impl::out<std::string> r) & -> decltype(auto) { return grab_until_impl(std::string(1, e), cpp2::impl::out(&r), false); }
 #line 2035 "reflect.h2"
-    [[nodiscard]] auto parse_context::grab_until_one_of(cpp2::impl::in<std::string> e, cpp2::impl::out<std::string> r) & -> auto { return grab_until_impl(e, cpp2::impl::out(&r), true);  }
+    [[nodiscard]] auto parse_context::grab_until_one_of(cpp2::impl::in<std::string> e, cpp2::impl::out<std::string> r) & -> decltype(auto) { return grab_until_impl(e, cpp2::impl::out(&r), true);  }
 
 #line 2037 "reflect.h2"
     [[nodiscard]] auto parse_context::grab_n(cpp2::impl::in<int> n, cpp2::impl::out<std::string> r) & -> bool
@@ -3756,9 +3756,9 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
     }
 
 #line 2081 "reflect.h2"
-    [[nodiscard]] auto parse_context::peek() const& -> auto { return peek_impl(false); }
+    [[nodiscard]] auto parse_context::peek() const& -> decltype(auto) { return peek_impl(false); }
 #line 2082 "reflect.h2"
-    [[nodiscard]] auto parse_context::peek_in_class() const& -> auto { return peek_impl(true);  }
+    [[nodiscard]] auto parse_context::peek_in_class() const& -> decltype(auto) { return peek_impl(true);  }
 
 #line 2087 "reflect.h2"
     [[nodiscard]] auto parse_context::parser_group_modifiers(cpp2::impl::in<std::string> change_str, expression_flags& parser_modifiers) & -> bool
@@ -3871,9 +3871,9 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
     }
 
 #line 2196 "reflect.h2"
-    [[nodiscard]] auto parse_context::get_pos() const& -> auto { return pos; }
+    [[nodiscard]] auto parse_context::get_pos() const& -> decltype(auto) { return pos; }
 #line 2197 "reflect.h2"
-    [[nodiscard]] auto parse_context::get_range(cpp2::impl::in<size_t> start, cpp2::impl::in<size_t> end) const& -> auto { return std::string(regex.substr(start, end - start + 1));  }
+    [[nodiscard]] auto parse_context::get_range(cpp2::impl::in<size_t> start, cpp2::impl::in<size_t> end) const& -> decltype(auto) { return std::string(regex.substr(start, end - start + 1));  }
 #line 2198 "reflect.h2"
     [[nodiscard]] auto parse_context::valid() const& -> bool{return has_next() && !(has_error); }
 
@@ -5259,7 +5259,7 @@ auto regex_gen(meta::type_declaration& t) -> void
     CPP2_UFCS(remove_marked_members)(t);
 
     for ( auto const& expr : cpp2::move(expressions) ) {
-        auto regular_expression {generate_regex(expr.second, [_0 = t](auto const& message) mutable -> void { CPP2_UFCS(error)(_0, message);  })}; 
+        auto regular_expression {generate_regex(expr.second, [_0 = t](auto const& message) mutable -> decltype(auto) { return CPP2_UFCS(error)(_0, message);  })}; 
 
         if (!(regular_expression.empty())) {
             CPP2_UFCS(add_member)(t, "public " + cpp2::to_string(expr.first) + "_matcher: type = " + cpp2::to_string(cpp2::move(regular_expression)) + "");
@@ -5281,15 +5281,18 @@ auto regex_gen(meta::type_declaration& t) -> void
     if (cpp2::cpp2_default.is_active() && !(CPP2_UFCS(is_type)(n)) ) { cpp2::cpp2_default.report_violation(""); }
 
     //  Check for _names reserved for the metafunction implementation
-    for ( 
-          auto const& m : CPP2_UFCS(get_members)(rtype) ) 
+    if (!(CPP2_UFCS(empty)(n.metafunctions))) 
     {
-        CPP2_UFCS(require)(m, 
-            !(CPP2_UFCS(starts_with)(CPP2_UFCS(name)(m), "_")) || CPP2_UFCS(ssize)(CPP2_UFCS(name)(m)) == 1, 
-            "a type that applies a metafunction cannot have a body that declares "
-            "a name that starts with '_' - those names are reserved for the "
-            "metafunction implementation"
-        );
+        for ( 
+              auto const& m : CPP2_UFCS(get_members)(rtype) ) 
+        {
+            CPP2_UFCS(require)(m, 
+                !(CPP2_UFCS(starts_with)(CPP2_UFCS(name)(m), "_")) || CPP2_UFCS(ssize)(CPP2_UFCS(name)(m)) == 1, 
+                "a type that applies a metafunction cannot have a body that declares "
+                "a name that starts with '_' - those names are reserved for the "
+                "metafunction implementation"
+            );
+        }
     }
 
     //  For each metafunction, apply it
@@ -5379,7 +5382,7 @@ auto regex_gen(meta::type_declaration& t) -> void
     return true; 
 }
 
-#line 3788 "reflect.h2"
+#line 3791 "reflect.h2"
 }
 
 }

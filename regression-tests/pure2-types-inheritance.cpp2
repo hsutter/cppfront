@@ -22,14 +22,17 @@ Cyborg: type = {
         std::cout << "(name)$ checks in for the day's shift\n";
     }
 
-    speak: (override this) =
+    speak: (override this) = {
         std::cout << "(name)$ cracks a few jokes with a coworker\n";
+    }
 
-    work: (override this) =
+    work: (override this) = {
         std::cout << "(name)$ carries some half-tonne crates of Fe2O3 to cold storage\n";
+    }
 
-    print: (this) =
+    print: (this) = {
         std::cout << "printing: (name)$ lives at (address)$\n";
+    }
 
     operator=: (move this) =
         std::cout << "Tired but satisfied after another successful day, (name)$ checks out and goes home to their family\n";

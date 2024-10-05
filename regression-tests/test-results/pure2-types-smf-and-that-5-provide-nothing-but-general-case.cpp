@@ -56,7 +56,7 @@ class myclass {
         cpp2::impl::in<std::string_view> suffix
         ) const& -> void;
 
-#line 37 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
+#line 39 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
 };
 
 auto main() -> int;
@@ -121,10 +121,12 @@ auto main() -> int;
 
         cpp2::impl::in<std::string_view> prefix, 
         cpp2::impl::in<std::string_view> suffix
-        ) const& -> void { 
-    std::cout << prefix << "[ " + cpp2::to_string(name) + " | " + cpp2::to_string(addr) + " ]" << suffix;  }
+        ) const& -> void
+    {
+        std::cout << prefix << "[ " + cpp2::to_string(name) + " | " + cpp2::to_string(addr) + " ]" << suffix;
+    }
 
-#line 39 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
+#line 41 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
 auto main() -> int{
     std::cout << "Function invoked        Call syntax   Results\n";
     std::cout << "----------------------  ------------  ------------------------------------------------------\n";

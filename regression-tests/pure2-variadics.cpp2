@@ -9,7 +9,7 @@ x: <Ts...: type> type = {
 //  int pack expansion
 y: <Ts...: int> type = {
 
-    func: () ( 0 + ... + Ts);
+    func: () = ( 0 + ... + Ts);
 }
 
 // Discard type name pack expansion
@@ -36,9 +36,9 @@ all: <Args...: type> (args...: Args) -> bool =
     //  Unary left fold expression
     (... && args);
 
-make_string: <Args...> (forward args...: Args)  :std::string = args...;
+make_string: <Args...> (forward args...: Args) = :std::string = args...;
 
-make:     <T, Args...> (forward args...: Args)  :T = args...;
+make:     <T, Args...> (forward args...: Args) = :T = args...;
 
 main: ()
 = {

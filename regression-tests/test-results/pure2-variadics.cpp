@@ -47,7 +47,7 @@ template<typename ...Ts> class x {
 //  int pack expansion
 template<int ...Ts> class y {
 
-    public: [[nodiscard]] static auto func() -> auto;
+    public: [[nodiscard]] static auto func() -> decltype(auto);
     public: y() = default;
     public: y(y const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(y const&) -> void = delete;
@@ -76,9 +76,9 @@ template<typename ...Args> auto left_fold_print(std::ostream& out, Args const& .
 template<typename ...Args> [[nodiscard]] auto all(Args const& ...args) -> bool;
 
 #line 39 "pure2-variadics.cpp2"
-template     <typename ...Args> [[nodiscard]] auto make_string(Args&& ...args) -> auto;
+template<typename ...Args> [[nodiscard]] auto make_string(Args&& ...args) -> decltype(auto);
 
-template  <typename T, typename ...Args> [[nodiscard]] auto make(Args&& ...args) -> auto;
+template  <typename T, typename ...Args> [[nodiscard]] auto make(Args&& ...args) -> decltype(auto);
 
 auto main() -> int;
 
@@ -90,7 +90,7 @@ auto main() -> int;
     template <typename ...Ts> auto x<Ts...>::func() -> void{}
 
 #line 12 "pure2-variadics.cpp2"
-    template <int ...Ts> [[nodiscard]] auto y<Ts...>::func() -> auto { return (0 + ... + Ts);  }
+    template <int ...Ts> [[nodiscard]] auto y<Ts...>::func() -> decltype(auto) { return (0 + ... + Ts);  }
 
 #line 17 "pure2-variadics.cpp2"
   template <typename ...UnnamedTypeParam1_1> template<int UnnamedTypeParam1_3> [[nodiscard]] auto t0<UnnamedTypeParam1_1...>::f() -> cpp2::i32 { return 0;  }
@@ -113,10 +113,10 @@ template<typename ...Args> [[nodiscard]] auto all(Args const& ...args) -> bool {
     return (... && args);  }
 
 #line 39 "pure2-variadics.cpp2"
-template     <typename ...Args> [[nodiscard]] auto make_string(Args&& ...args) -> auto { return std::string{CPP2_FORWARD(args)...}; }
+template<typename ...Args> [[nodiscard]] auto make_string(Args&& ...args) -> decltype(auto) { return std::string{CPP2_FORWARD(args)...};  }
 
 #line 41 "pure2-variadics.cpp2"
-template  <typename T, typename ...Args> [[nodiscard]] auto make(Args&& ...args) -> auto { return T{CPP2_FORWARD(args)...}; }
+template  <typename T, typename ...Args> [[nodiscard]] auto make(Args&& ...args) -> decltype(auto) { return T{CPP2_FORWARD(args)...}; }
 
 #line 43 "pure2-variadics.cpp2"
 auto main() -> int

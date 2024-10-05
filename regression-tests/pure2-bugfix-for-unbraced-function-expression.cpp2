@@ -6,7 +6,7 @@ main: () -> int = {
   (x := t()) { x[:() -> _ = 0]; }
   (x := t()) { x[:() -> _ = 0;]; }
 
-  assert(!(:() 0; is int));
+  assert(!(:() = 0; is int));
 
   return :i32 = 0;
 }

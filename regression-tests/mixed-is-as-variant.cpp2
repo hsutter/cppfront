@@ -1,10 +1,10 @@
 test: (forward v) = {
     std::cout << "v is empty = (v is  void)$" << std::endl;
     std::cout << "v is std::monostate = (v is std::monostate)$" << std::endl;
-    std::cout << "v is X< 0> = (v is X< 0>)$,\t(v as X< 1>) = " << expect_no_throw(forward v, :(forward v) v as X<0>) << std::endl;
+    std::cout << "v is X< 0> = (v is X< 0>)$,\t(v as X< 1>) = " << expect_no_throw(forward v, :(forward v) = v as X<0>) << std::endl;
     std::cout << "v is X< 1> = (v is X< 1>)$,\t(v as X< 1>).to_string() = (expect_no_throw(forward v, :(forward v) -> std::string = { return (v as X< 1>).to_string();}))$" << std::endl;
     std::cout << "v is X<19> = (v is X<19>)$,\t(v as X<19>).to_string() = (expect_no_throw(forward v, :(forward v) -> std::string = { return (v as X<19>).to_string();}))$" << std::endl;
-    std::cout << "v is X<20> = (v is X<20>)$,\t(v as X<20>) = " << expect_no_throw(forward v, :(forward v) v as X<20>) << std::endl;
+    std::cout << "v is X<20> = (v is X<20>)$,\t(v as X<20>) = " << expect_no_throw(forward v, :(forward v) = v as X<20>) << std::endl;
     std::cout << std::endl;
 }
 
