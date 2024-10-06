@@ -723,7 +723,6 @@ struct expression_list_node
     token const* open_paren  = {};
     token const* close_paren = {};
     bool inside_initializer  = false;
-    bool default_initializer = false;
 
     struct term {
         passing_style                    pass = {};
@@ -5846,7 +5845,6 @@ class parser
     };
     mutable std::vector<function_body_extent> function_body_extents;
     mutable bool                              is_function_body_extents_sorted = false;
-    bool                                      is_inside_call_expr = false;
 
 public:
     auto is_within_function_body(source_position p) const
@@ -6213,8 +6211,6 @@ private:
                 expr_list->inside_initializer = false;
             }
             n->expression_list_is_fold_expression = expr_list->is_fold_expression();
-            expr_list->default_initializer =
-                is_inside_call_expr && std::empty(expr_list->expressions);
 
             n->expr = std::move(expr_list);
             return n;
@@ -6370,9 +6366,7 @@ private:
                 //  Next should be an expression-list followed by a ')'
                 //  If not, then this wasn't a call expression so backtrack to
                 //  the '(' which will be part of the next grammar production
-		        is_inside_call_expr = true;
-                term.expr_list = expression_list(term.op, lexeme::RightParen);
-		        is_inside_call_expr = false;
+                term.expr_list = expression_list(term.op, lexeme::RightParen, true);
 
                 if (
                     term.expr_list
@@ -6916,8 +6910,28 @@ private:
             return n;
         }
 
+        auto add_expression = [&](expression_list_node::term t) {
+            std::function<void(expression_list_node::term&)> mark_nested_inside_initializer{
+                [&](expression_list_node::term& u) {
+                    if (
+                        inside_initializer
+                        && u.expr->is_expression_list()
+                        )
+                    {
+                        auto l = const_cast<expression_list_node*>(u.expr->get_expression_list());
+                        l->inside_initializer = true;
+                        for (auto& e : l->expressions) {
+                            mark_nested_inside_initializer(e);
+                        }
+                    }
+                }
+            };
+            mark_nested_inside_initializer(t);
+            n->expressions.push_back(std::move(t));
+        };
+
         //  Otherwise remember the first expression
-        n->expressions.push_back( { pass, std::move(x) } );
+        add_expression( { pass, std::move(x) } );
         //  and see if there are more...
         while (curr().type() == lexeme::Comma) {
             next();
@@ -6933,7 +6947,7 @@ private:
                 error("invalid text in expression list", true, {}, true);
                 return {};
             }
-            n->expressions.push_back( { pass, std::move(expr) } );
+            add_expression( { pass, std::move(expr) } );
         }
 
         return n;
