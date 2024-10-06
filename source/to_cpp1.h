@@ -5736,10 +5736,11 @@ public:
             return;
         }
 
-        //  In phase 0, only need to consider namespaces and types
+        //  In phase 0, only need to consider alias, namespaces and types
 
         if (
             printer.get_phase() == printer.phase0_type_decls
+            && !n.is_alias()
             && !n.is_namespace()
             && !n.is_type()
             )
@@ -5769,13 +5770,13 @@ public:
             auto& a = std::get<declaration_node::an_alias>(n.type);
             assert(a);
 
-            //  Namespace-scope aliases are emitted in phase 1,
+            //  Namespace-scope aliases are emitted in phase 0,
             //  type-scope object aliases in both phases 1 and 2, and
             //  function-scope aliases in phase 2
             if (
                 (
                     !n.parent_is_function()
-                    && printer.get_phase() == printer.phase1_type_defs_func_decls
+                    && printer.get_phase() == printer.phase0_type_decls
                     )
                 ||
                 (
@@ -6107,7 +6108,7 @@ public:
 
         //  Now, emit our own template parameters
         if (
-            n.template_parameters
+            (n.template_parameters && !n.is_alias())
             && (
                 printer.get_phase() <  printer.phase2_func_defs
                 || n.is_object()
