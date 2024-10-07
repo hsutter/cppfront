@@ -1,0 +1,11 @@
+f0: <T...> () == :T...[0] = 32;
+// f1: <T...> () == :T...[0]::value_type = 4; // Pending #533.
+// 'V...[0]' needs to be made an _id-expression_.
+// f2: <V...: _> () == V...[0];
+// f3: <V...: _> () == V...[0].front();
+main: () = {
+  static_assert(f0<i64>() == 32);
+  // static_assert(f1<std::integral_constant<i16, 8>>() == 4);
+  // static_assert(f2<2>() == 2);
+  // static_assert(f3<(:std::array = (1))>() == 1);
+}
