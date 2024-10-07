@@ -3516,11 +3516,15 @@ public:
                 last_was_prefixed = false;
 
                 //  Enable subscript bounds checks
-                if (
+                auto checked_subscript =
                     flag_safe_subscripts
                     && i->op->type() == lexeme::LeftBracket
                     && std::ssize(i->expr_list->expressions) == 1
-                    )
+                    && (
+                        i+1 == n.ops.rend()
+                        || (i+1)->op->type() != lexeme::Ellipsis
+                        );
+                if (checked_subscript)
                 {
                     suffix.emplace_back( ")", i->op->position() );
                 }
@@ -3570,11 +3574,7 @@ public:
                 }
 
                 //  Enable subscript bounds checks
-                if (
-                    flag_safe_subscripts
-                    && i->op->type() == lexeme::LeftBracket
-                    && std::ssize(i->expr_list->expressions) == 1
-                    )
+                if (checked_subscript)
                 {
                     if (auto lit = i->expr_list->expressions.front().expr->get_literal();
                         lit

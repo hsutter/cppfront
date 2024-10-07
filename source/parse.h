@@ -7495,7 +7495,6 @@ private:
     //G id-expression:
     //G     qualified-id
     //G     unqualified-id
-    //GTODO identifier '...' '[' expression ']'  // C++26 pack indexing
     //G
     auto id_expression()
         -> std::unique_ptr<id_expression_node>
