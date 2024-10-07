@@ -12,7 +12,7 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Compiler name & version
         run: cl.exe
@@ -61,7 +61,7 @@ jobs:
       CXX: ${{ matrix.compiler }}
       CXXFLAGS: -std=${{ matrix.cxx-std }} -Wall -Wextra -Wold-style-cast -Wunused-parameter -Wpedantic -Werror -pthread -Wno-unknown-warning -Wno-unknown-warning-option
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Install compiler
       if: startsWith(matrix.runs-on, 'ubuntu')
       run: sudo apt-get install -y $CXX
