@@ -2290,12 +2290,12 @@ private:
 
 //-----------------------------------------------------------------------
 //
-//  An implementation of GSL's narrow_cast with a clearly 'unsafe' name
+//  An implementation of GSL's narrow_cast with a clearly 'unchecked' name
 //
 //-----------------------------------------------------------------------
 //
 template <typename C, typename X>
-constexpr auto unsafe_narrow( X x ) noexcept 
+constexpr auto unchecked_narrow( X x ) noexcept 
     -> decltype(auto)
     requires (
         impl::is_narrowing_v<C, X>
@@ -2310,7 +2310,7 @@ constexpr auto unsafe_narrow( X x ) noexcept
 
 
 template <typename C, typename X>
-constexpr auto unsafe_cast( X&& x ) noexcept 
+constexpr auto unchecked_cast( X&& x ) noexcept 
     -> decltype(auto)
 {
     return static_cast<C>(CPP2_FORWARD(x));
@@ -2364,7 +2364,7 @@ struct args
     constexpr auto end()    const -> iterator       { return iterator{ argc, argv, argc }; }
     constexpr auto cbegin() const -> iterator       { return begin(); }
     constexpr auto cend()   const -> iterator       { return end(); }
-    constexpr auto size()   const -> std::size_t    { return cpp2::unsafe_narrow<std::size_t>(ssize()); }
+    constexpr auto size()   const -> std::size_t    { return cpp2::unchecked_narrow<std::size_t>(ssize()); }
     constexpr auto ssize()  const -> std::ptrdiff_t { return argc; }
 
     constexpr auto operator[](int i) const {
@@ -2496,7 +2496,7 @@ public:
                     return curr;
                 }
                 else {
-                    return unsafe_narrow<T>(curr);
+                    return unchecked_narrow<T>(curr);
                 }
             }
             else { 
@@ -2518,7 +2518,7 @@ public:
                     return curr + i;
                 }
                 else {
-                    return unsafe_narrow<T>(curr + i);
+                    return unchecked_narrow<T>(curr + i);
                 }
             }
             else {
@@ -2548,7 +2548,7 @@ public:
     constexpr auto end()    const -> const_iterator { return iterator{ first, last, last }; }
     constexpr auto begin()        -> iterator       { return iterator{ first, last, first }; }
     constexpr auto end()          -> iterator       { return iterator{ first, last, last }; }
-    constexpr auto size()   const -> std::size_t    { return unsafe_narrow<std::size_t>(ssize()); }
+    constexpr auto size()   const -> std::size_t    { return unchecked_narrow<std::size_t>(ssize()); }
     constexpr auto ssize()  const -> std::ptrdiff_t { return last - first; }
     constexpr auto empty()  const -> bool           { return first == last; }
 
@@ -2558,7 +2558,7 @@ public:
             return first;
         }
         else {
-            return unsafe_narrow<T>(first);
+            return unchecked_narrow<T>(first);
         }
     }
 
@@ -2569,7 +2569,7 @@ public:
             return --ret;
         }
         else {
-            auto ret = unsafe_narrow<T>(last);
+            auto ret = unchecked_narrow<T>(last);
             return --ret;
         }
     }
@@ -2581,7 +2581,7 @@ public:
                 return first + i;
             }
             else {
-                return unsafe_narrow<T>(first + i);
+                return unchecked_narrow<T>(first + i);
             }
         }
         else { 
@@ -2745,7 +2745,7 @@ CPP2_FORCE_INLINE constexpr auto cmp_mixed_signedness_check() -> void
         //  static_assert to reject the comparison is the right way to go.
         static_assert(
             program_violates_type_safety_guarantee<T, U>,
-            "mixed signed/unsigned comparison is unsafe - prefer using .ssize() instead of .size(), consider using std::cmp_less instead, or consider explicitly casting one of the values to change signedness by using 'as' or 'cpp2::unsafe_narrow'"
+            "mixed signed/unsigned comparison is unsafe - prefer using .ssize() instead of .size(), consider using std::cmp_less instead, or consider explicitly casting one of the values to change signedness by using 'as' or 'cpp2::unchecked_narrow'"
             );
     }
 }
@@ -2842,14 +2842,14 @@ constexpr auto as_( auto&& x ) -> decltype(auto)
     if constexpr (is_narrowing_v<C, CPP2_TYPEOF(x)>) {
         static_assert(
             program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
-            "'as' does not allow unsafe possibly-lossy narrowing conversions - if you're sure you want this, use 'unsafe_narrow<T>' to explicitly force the conversion and possibly lose information"
+            "'as' does not allow unsafe possibly-lossy narrowing conversions - if you're sure you want this, use 'unchecked_narrow<T>' to explicitly force the conversion and possibly lose information"
         );
     }
     else if constexpr (is_unsafe_pointer_conversion_v<C, CPP2_TYPEOF(x)>)
     {
         static_assert(
             program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
-            "'as' does not allow unsafe pointer conversions - if you're sure you want this, use `unsafe_cast<T>()` to explicitly force the unsafe cast"
+            "'as' does not allow unsafe pointer conversions - if you're sure you want this, use `unchecked_cast<T>()` to explicitly force the cast"
             );
     }
     else if constexpr( std::is_same_v< CPP2_TYPEOF(as<C>(CPP2_FORWARD(x))), nonesuch_ > ) {
@@ -2869,7 +2869,7 @@ constexpr auto as_() -> decltype(auto)
         if constexpr( std::is_same_v< CPP2_TYPEOF((as<C, x>())), nonesuch_ > ) {
             static_assert(
                 program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
-                "'as' does not allow unsafe possibly-lossy narrowing conversions - if you're sure you want this, use `unsafe_narrow<T>()` to explicitly force the conversion and possibly lose information"
+                "'as' does not allow unsafe possibly-lossy narrowing conversions - if you're sure you want this, use `unchecked_narrow<T>()` to explicitly force the conversion and possibly lose information"
                 );
         }
     }

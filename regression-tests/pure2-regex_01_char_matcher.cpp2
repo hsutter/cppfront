@@ -84,7 +84,7 @@ create_result: (resultExpr: std::string, r) -> std::string = {
         
         if next* == '-'  || next* == '+' {
           i := 0;
-          while i < cpp2::unsafe_narrow<int>(r.group_number()) next i++ {
+          while i < cpp2::unchecked_narrow<int>(r.group_number()) next i++ {
             pos := 0;
             if next* == '-' {
               pos = r.group_start(i);

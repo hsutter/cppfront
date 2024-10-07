@@ -690,14 +690,14 @@ template <typename Iter> match_return<Iter>::match_return(){}
         if (cpp2::impl::cmp_greater_eq(group,max_groups) || !(CPP2_ASSERT_IN_BOUNDS(groups, group).matched)) {
             return 0; 
         }
-        return cpp2::unsafe_narrow<int>(std::distance(begin, CPP2_ASSERT_IN_BOUNDS(groups, group).end)); 
+        return cpp2::unchecked_narrow<int>(std::distance(begin, CPP2_ASSERT_IN_BOUNDS(groups, group).end)); 
     }
 #line 85 "cpp2regex.h2"
     template <typename CharT, typename Iter, int max_groups> [[nodiscard]] auto match_context<CharT,Iter,max_groups>::get_group_start(auto const& group) const& -> int{
         if (cpp2::impl::cmp_greater_eq(group,max_groups) || !(CPP2_ASSERT_IN_BOUNDS(groups, group).matched)) {
             return 0; 
         }
-        return cpp2::unsafe_narrow<int>(std::distance(begin, CPP2_ASSERT_IN_BOUNDS(groups, group).start)); 
+        return cpp2::unchecked_narrow<int>(std::distance(begin, CPP2_ASSERT_IN_BOUNDS(groups, group).start)); 
     }
 #line 91 "cpp2regex.h2"
     template <typename CharT, typename Iter, int max_groups> [[nodiscard]] auto match_context<CharT,Iter,max_groups>::get_group_string(auto const& group) const& -> std::string{
@@ -1109,7 +1109,7 @@ template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_mat
         template <typename CharT, typename matcher_wrapper> template <typename Iter> regular_expression<CharT,matcher_wrapper>::search_return<Iter>::search_return(cpp2::impl::in<bool> matched_, context<Iter> const& ctx_, Iter const& pos_)
             : matched{ matched_ }
             , ctx{ ctx_ }
-            , pos{ cpp2::unsafe_narrow<int>(std::distance(ctx_.begin, pos_)) }{
+            , pos{ cpp2::unchecked_narrow<int>(std::distance(ctx_.begin, pos_)) }{
 
 #line 693 "cpp2regex.h2"
         }

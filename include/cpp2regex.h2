@@ -80,13 +80,13 @@ match_context: <CharT, Iter, max_groups: int> type =
         if group >= max_groups || !groups[group].matched {
             return 0;
         }
-        return cpp2::unsafe_narrow<int>( std::distance(begin, groups[group].end) );
+        return cpp2::unchecked_narrow<int>( std::distance(begin, groups[group].end) );
     }
     get_group_start:  (in this, group) -> int = {
         if group >= max_groups || !groups[group].matched {
             return 0;
         }
-        return cpp2::unsafe_narrow<int>( std::distance(begin, groups[group].start) );
+        return cpp2::unchecked_narrow<int>( std::distance(begin, groups[group].start) );
     }
     get_group_string: (in this, group) -> std::string = {
         if group >= max_groups || !groups[group].matched {
@@ -689,7 +689,7 @@ regular_expression: <CharT, matcher_wrapper> type =
         operator=:(out this, matched_: bool, ctx_: context<Iter>, pos_: Iter) = {
             matched = matched_;
             ctx = ctx_;
-            pos = unsafe_narrow<int>(std::distance(ctx_.begin, pos_));
+            pos = unchecked_narrow<int>(std::distance(ctx_.begin, pos_));
         }
 
         group_number: (this)         = ctx..size();

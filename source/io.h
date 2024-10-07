@@ -455,7 +455,7 @@ public:
     }
 
     auto current_depth() const -> int {
-        return unsafe_narrow<int>(std::ssize(open_braces));
+        return unchecked_narrow<int>(std::ssize(open_braces));
     }
 
     //  --- Preprocessor matching functions - #if/#else/#endif
@@ -618,7 +618,7 @@ auto process_cpp_line(
                 return r;
             }
             in_raw_string_literal = false;
-            i = unsafe_narrow<int>(end_pos+raw_string_closing_seq.size()-1);
+            i = unchecked_narrow<int>(end_pos+raw_string_closing_seq.size()-1);
         }
         else {
             r.all_comment_line = false;
@@ -815,7 +815,7 @@ auto process_cpp2_line(
 
     if (in_char_literal) {
         errors.emplace_back(
-            source_position(lineno, unsafe_narrow<colno_t>(ssize(line))),
+            source_position(lineno, unchecked_narrow<colno_t>(ssize(line))),
             std::string("line ended before character literal was terminated")
         );
         return false;
@@ -907,11 +907,11 @@ public:
             {
                 switch (pre) {
                 break;case preprocessor_conditional::pre_if:
-                    braces.found_pre_if( cpp2::unsafe_narrow<lineno_t>(std::ssize(lines)) );
+                    braces.found_pre_if( cpp2::unchecked_narrow<lineno_t>(std::ssize(lines)) );
                 break;case preprocessor_conditional::pre_else:
-                    braces.found_pre_else( cpp2::unsafe_narrow<lineno_t>(std::ssize(lines)) );
+                    braces.found_pre_else( cpp2::unchecked_narrow<lineno_t>(std::ssize(lines)) );
                 break;case preprocessor_conditional::pre_endif:
-                    braces.found_pre_endif( cpp2::unsafe_narrow<lineno_t>(std::ssize(lines)) );
+                    braces.found_pre_endif( cpp2::unchecked_narrow<lineno_t>(std::ssize(lines)) );
                 break;default:
                     assert(false);
                 }
@@ -975,7 +975,7 @@ public:
                             lines.back().text,
                             in_comment,
                             braces,
-                            unsafe_narrow<lineno_t>(std::ssize(lines)-1),
+                            unchecked_narrow<lineno_t>(std::ssize(lines)-1),
                             errors
                         )
                         && in.getline(&buf[0], max_line_len)
@@ -1000,7 +1000,7 @@ public:
                             in_raw_string_literal,
                             raw_string_closing_seq,
                             braces,
-                            unsafe_narrow<lineno_t>(std::ssize(lines)-1)
+                            unchecked_narrow<lineno_t>(std::ssize(lines)-1)
                         );
                         if (stats.all_comment_line) {
                             lines.back().cat = source_line::category::comment;

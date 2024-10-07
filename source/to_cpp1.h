@@ -365,11 +365,11 @@ private:
             //  Now also adjust the colno
             if (last_newline != s.npos) {
                 //  If we found a newline, it's the distance from the last newline to EOL
-                curr_pos.colno = unsafe_narrow<colno_t>(s.length() - last_newline);
+                curr_pos.colno = unchecked_narrow<colno_t>(s.length() - last_newline);
             }
             else {
                 //  Else add the length of the string
-                curr_pos.colno += unsafe_narrow<colno_t>(s.length());
+                curr_pos.colno += unchecked_narrow<colno_t>(s.length());
             }
         }
     }
@@ -1649,8 +1649,8 @@ public:
                 || n == "finally"
                 || n == "cpp1_ref"
                 || n == "cpp1_rvalue_ref"
-                || n == "unsafe_narrow"
-                || n == "unsafe_cast"
+                || n == "unchecked_narrow"
+                || n == "unchecked_cast"
                 )
             )
         {
@@ -2556,7 +2556,7 @@ public:
                 assert(param->declaration->identifier);
 
                 printer.emit_to_string(&stmt);
-                emit(*param->declaration->identifier, cpp2::unsafe_narrow<int>(parameters.size()));
+                emit(*param->declaration->identifier, cpp2::unchecked_narrow<int>(parameters.size()));
                 printer.emit_to_string();
             }
 
@@ -2866,7 +2866,7 @@ public:
             return is_pointer_declaration(type_id_node->suspicious_initialization, deref_cnt, addr_cnt);
         }
 
-        return (unsafe_narrow<int>(pointer_declarators_cnt) + addr_cnt - deref_cnt) > 0;
+        return (unchecked_narrow<int>(pointer_declarators_cnt) + addr_cnt - deref_cnt) > 0;
     }
 
     auto is_pointer_declaration(
@@ -3681,10 +3681,17 @@ public:
                 }
                 else {
                     auto op_name = i->op->to_string();
+                    auto type_name = print_to_string(*i->type);
                     if (op_name == "as") {
+                        if (type_name == "void") {
+                            errors.emplace_back(
+                                n.position(),
+                                "'expression as void' is not allowed - use '_ = expression' instead to discard the result"
+                            );
+                        }
                         op_name = "as_";    // use the static_assert-checked 'as' by default...
                     }                       // we'll override this inside inspect-expressions
-                    prefix += "cpp2::impl::" + op_name + "<" + print_to_string(*i->type) + ">(";
+                    prefix += "cpp2::impl::" + op_name + "<" + type_name + ">(";
                     suffix = ")" + suffix;
                 }
             }

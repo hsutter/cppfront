@@ -1457,7 +1457,7 @@ namespace meta {
     )
         : errors{ errors_ }
         , includes{ includes_ }
-        , errors_original_size{ cpp2::unsafe_narrow<int>(std::ssize(*cpp2::impl::assert_not_null(errors))) }
+        , errors_original_size{ cpp2::unchecked_narrow<int>(std::ssize(*cpp2::impl::assert_not_null(errors))) }
         , generated_tokens{ generated_tokens_ }
         , parser{ *cpp2::impl::assert_not_null(errors), *cpp2::impl::assert_not_null(includes) }
 #line 55 "reflect.h2"
@@ -2765,7 +2765,7 @@ std::string value{"-1"};
     //  Generate all the private implementation
     CPP2_UFCS(add_member)(t, "    _value            : " + cpp2::to_string(underlying_type.value()) + ";");
     CPP2_UFCS(add_member)(t, "    private operator= : (implicit out this, _val: i64) == "
-                                            "_value = cpp2::unsafe_narrow<" + cpp2::to_string(underlying_type.value()) + ">(_val);");
+                                            "_value = cpp2::unchecked_narrow<" + cpp2::to_string(underlying_type.value()) + ">(_val);");
 
     //  Generate the bitwise operations
     if (bitwise) {
@@ -3165,10 +3165,10 @@ auto print(cpp2::impl::in<meta::type_declaration> t) -> void
 
 
 constexpr expression_flags::expression_flags(cpp2::impl::in<cpp2::i64> _val)
-                                                          : _value{ cpp2::unsafe_narrow<cpp2::u8>(_val) } {  }
+                                                          : _value{ cpp2::unchecked_narrow<cpp2::u8>(_val) } {  }
 
 constexpr auto expression_flags::operator=(cpp2::impl::in<cpp2::i64> _val) -> expression_flags&  { 
-                                                          _value = cpp2::unsafe_narrow<cpp2::u8>(_val);
+                                                          _value = cpp2::unchecked_narrow<cpp2::u8>(_val);
                                                           return *this; }
 constexpr auto expression_flags::operator|=(expression_flags const& that) & -> decltype(auto) { return _value |= that._value; }
 constexpr auto expression_flags::operator&=(expression_flags const& that) & -> decltype(auto) { return _value &= that._value; }
@@ -4511,7 +4511,7 @@ size_t i{0};
                 auto number {0}; 
                 if (!(string_util::string_to_int(group, number, 8))) {return ctx.error("Could not convert octal to int."); }
 
-                char number_as_char {cpp2::unsafe_narrow<char>(cpp2::move(number))}; 
+                char number_as_char {cpp2::unchecked_narrow<char>(cpp2::move(number))}; 
 
                 auto token {CPP2_UFCS_TEMPLATE(cpp2_new<char_token>)(cpp2::shared, number_as_char, ctx.get_modifiers().has(expression_flags::case_insensitive))}; 
                 (*cpp2::impl::assert_not_null(token)).set_string("\\" + cpp2::to_string(string_util::int_to_string<8>(cpp2::impl::as_<int>(cpp2::move(number_as_char)))) + "");
@@ -4831,7 +4831,7 @@ size_t i{0};
     if (!(string_util::string_to_int(cpp2::move(number_str), number, 16))) {return ctx.error("Could not convert hexadecimal to int."); }
 
     // TODO: Change for unicode.
-    char number_as_char {cpp2::unsafe_narrow<char>(cpp2::move(number))}; 
+    char number_as_char {cpp2::unchecked_narrow<char>(cpp2::move(number))}; 
 
     std::string syntax {string_util::int_to_string<16>(cpp2::impl::as_<int>(number_as_char))}; 
     if (cpp2::move(has_brackets)) {
@@ -4942,7 +4942,7 @@ size_t i{0};
     if (!(string_util::string_to_int(cpp2::move(number_str), number, 8))) {return ctx.error("Could not convert octal to int."); }
 
     // TODO: Change for unicode.
-    char number_as_char {cpp2::unsafe_narrow<char>(cpp2::move(number))}; 
+    char number_as_char {cpp2::unchecked_narrow<char>(cpp2::move(number))}; 
 
     std::string syntax {"\\o{" + cpp2::to_string(string_util::int_to_string<8>(cpp2::impl::as_<int>(number_as_char))) + "}"}; 
     auto r {CPP2_UFCS_TEMPLATE(cpp2_new<char_token>)(cpp2::shared, cpp2::move(number_as_char), ctx.get_modifiers().has(expression_flags::case_insensitive))}; 

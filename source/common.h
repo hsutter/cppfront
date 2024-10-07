@@ -82,7 +82,7 @@ struct source_line
         -> int
     {
         return
-            unsafe_narrow<int>(std::find_if_not( text.begin(), text.end(), &isspace )
+            unchecked_narrow<int>(std::find_if_not( text.begin(), text.end(), &isspace )
                                - text.begin());
     }
 
@@ -848,7 +848,7 @@ public:
         auto length = std::ssize(name);
         if (opt_out) { length += 3; }   // space to print "[-]"
         if (max_flag_length < length) {
-            max_flag_length = unsafe_narrow<int>(length);
+            max_flag_length = unchecked_narrow<int>(length);
         }
     }
     struct register_flag {
@@ -1084,7 +1084,7 @@ public:
     }
 
     auto ssize() const -> ptrdiff_t {
-        return unsafe_narrow<ptrdiff_t>(size());
+        return unchecked_narrow<ptrdiff_t>(size());
     }
 
     auto operator[](size_t idx) -> T& {

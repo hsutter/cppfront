@@ -186,20 +186,20 @@ Here are some `as` casts with their Cpp1 equivalents. In this table, uppercase n
 > Note: `as` unifies a variety of differently-named Cpp1 language and library casts and conversions under one syntax, and supports only the type-safe ones.
 
 
-### <a id="unsafe-casts"></a> Unsafe casts
+### <a id="unchecked-casts"></a> Unchecked (explicitly type-unsafe) casts
 
-Unsafe casts must always be explicit.
+Casts that are not known to be type-safe at compile time must always be explicit.
 
-To perform a numeric narrowing cast, such as `i32` to `i16` or `u32`, use `unsafe_narrow<To>(from)`. For example:
+To perform a numeric narrowing cast, such as `i32` to `i16` or `u32`, use `unchecked_narrow<To>(from)`. Otherwise, if you must perform any other type-unsafe cast, use `unchecked_cast<To>(from)`. For example:
 
-``` cpp title="Unsafe narrowing and casts must be explicit" hl_lines="2 3 6 7"
+``` cpp title="Type-unsafe narrowing and casts must be explicit" hl_lines="2 3 6 7"
 f: (i: i32, inout s: std::string) = {
     // j := i as i16;                     // error, maybe-lossy narrowing
-    j := unsafe_narrow<i16>(i);           // ok, 'unsafe' is explicit
+    j := unchecked_narrow<i16>(i);           // ok, 'unchecked' is explicit
 
     pv: *void = s&;
-    // pi := pv as *std::string;          // error, unsafe cast
-    pi := unsafe_cast<*std::string>(pv);  // ok, 'unsafe' is explicit
+    // pi := pv as *std::string;          // error, type-unsafe cast
+    pi := unchecked_cast<*std::string>(pv);  // ok, 'unchecked' is explicit
 }
 ```
 
@@ -383,4 +383,3 @@ std::cout << "now x+2 is (x+2)$\n";
 ```
 
 A string literal capture can include a `:suffix` where the suffix is a [standard C++ format specification](https://en.cppreference.com/w/cpp/utility/format/spec). For example, `#!cpp (x.price(): <10.2f)$` evaluates `x.price()` and converts the result to a string with 10-character width, 2 digits of precision, and left-justified.
-
