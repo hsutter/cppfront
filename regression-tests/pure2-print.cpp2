@@ -101,6 +101,9 @@ outer: @print type = {
         (... && args);
 
     y: (_: type_of(0)) = { }
+    y: (_: decltype(1LL)) = { }
+    y: (_: type_of(2 is int)::value_type) = { }
+    y: (_: decltype(new<long>(3))::element_type) = { }
 
 }
 

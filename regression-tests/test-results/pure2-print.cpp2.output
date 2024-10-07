@@ -150,6 +150,18 @@ outer:/* @print */ type =
     y:(in _: type_of(0), ) = 
     {
     }
+
+    y:(in _: decltype(1LL), ) = 
+    {
+    }
+
+    y:(in _: type_of(2 is int)::value_type, ) = 
+    {
+    }
+
+    y:(in _: decltype(new<long>(3))::element_type, ) = 
+    {
+    }
 }
  ok (all Cpp2, passes safety checks)
 

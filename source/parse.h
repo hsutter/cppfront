@@ -1293,11 +1293,73 @@ struct unqualified_id_node
 };
 
 
+struct computed_type_id_node
+{
+    token const* identifier                    = {};  // required
+    token const* ellipsis                      = {};
+    std::unique_ptr<expression_list_node> expr = {};  // required
+
+    auto to_string() const
+        -> std::string
+    {
+        assert (identifier);
+        auto ret = std::string{*identifier};
+
+        if (ellipsis) {
+            ret += *ellipsis;
+        }
+
+        assert (expr);
+        ret += expr->to_string();
+
+        return ret;
+    }
+
+    auto position() const
+        -> source_position
+    {
+        assert (identifier);
+        return identifier->position();
+    }
+
+    auto visit(auto& v, int depth)
+        -> void
+    {
+        v.start(*this, depth);
+
+        assert (identifier);
+        v.start(*identifier, depth+1);
+
+        if (ellipsis) {
+           v.start(*ellipsis, depth+1);
+        }
+
+        assert (expr);
+        v.start(*expr, depth+1);
+
+        v.end(*this, depth);
+    }
+};
+
+
 struct qualified_id_node
 {
     struct term {
         token const* scope_op;
-        std::unique_ptr<unqualified_id_node> id = {};
+        enum active : u8 { unqualified=0, computed };
+        std::variant<
+            std::unique_ptr<unqualified_id_node>,
+            std::unique_ptr<computed_type_id_node>
+        > id;
+
+        auto visit(auto& v, int depth)
+            -> void
+        {
+            v.start(*this, depth);
+            try_visit<unqualified>(id, v, depth);
+            try_visit<computed   >(id, v, depth);
+            v.end(*this, depth);
+        }
 
         term( token const* o ) : scope_op{o} { }
     };
@@ -1306,7 +1368,11 @@ struct qualified_id_node
     auto template_arguments() const
         -> std::vector<template_argument> const&
     {
-        return ids.back().id->template_arguments();
+        if (auto unqual = std::get_if<term::unqualified>(&ids.back().id)) {
+            return (*unqual)->template_arguments();
+        }
+        // else
+        return no_template_args;
     }
 
     auto get_token() const
@@ -1317,8 +1383,10 @@ struct qualified_id_node
             && !ids.front().scope_op
             )
         {
-            assert (ids.front().id);
-            return ids.front().id->get_token();
+            if (auto unqual = std::get_if<term::unqualified>(&ids.back().id)) {
+                assert (*unqual);
+                return (*unqual)->get_token();
+            }
         }
         // else
         return {};
@@ -1332,8 +1400,14 @@ struct qualified_id_node
             if (term.scope_op) {
                 ret += term.scope_op->as_string_view();
             }
-            assert (term.id);
-            ret += term.id->to_string();
+            if (auto unqual = std::get_if<term::unqualified>(&term.id)) {
+                assert (*unqual);
+                ret += (*unqual)->to_string();
+            }
+            else if (auto computed = std::get_if<term::computed>(&term.id)) {
+                assert (*computed);
+                ret += (*computed)->to_string();
+            }
         }
         return ret;
     }
@@ -1341,11 +1415,13 @@ struct qualified_id_node
     auto get_first_token() const
         -> token const*
     {
-        assert (
-            !ids.empty()
-            && ids.front().id
-        );
-        return ids.front().id->get_token();
+        assert (!ids.empty());
+        if (auto unqual = std::get_if<term::unqualified>(&ids.front().id)) {
+            assert (*unqual);
+            return (*unqual)->get_token();
+        }
+        // else
+        return {};
     }
 
     auto position() const
@@ -1355,22 +1431,27 @@ struct qualified_id_node
         if (ids.front().scope_op) {
             return ids.front().scope_op->position();
         }
-        else {
-            assert (ids.front().id);
-            return ids.front().id->position();
+        else if (auto unqual = std::get_if<term::unqualified>(&ids.front().id)) {
+            assert (*unqual);
+            return (*unqual)->position();
         }
+        else if (auto computed= std::get_if<term::computed>(&ids.front().id)) {
+            assert (*computed);
+            return (*computed)->position();
+        }
+        // else
+        return {};
     }
 
     auto visit(auto& v, int depth)
         -> void
     {
         v.start(*this, depth);
-        for (auto const& x : ids) {
+        for (auto& x : ids) {
             if (x.scope_op) {
                 x.scope_op->visit(v, depth+1);
             }
-            assert(x.id);
-            x.id->visit(v, depth+1);
+            x.visit(v, depth+1);
         }
         v.end(*this, depth);
     }
@@ -1389,10 +1470,10 @@ struct type_id_node
     int                       dereference_cnt           = {};
     token const*              suspicious_initialization = {};
 
-    enum active : u8 { empty=0, postfix, qualified, unqualified, function, keyword };
+    enum active : u8 { empty=0, computed, qualified, unqualified, function, keyword };
     std::variant<
         std::monostate,
-        std::unique_ptr<postfix_expression_node>,
+        std::unique_ptr<computed_type_id_node>,
         std::unique_ptr<qualified_id_node>,
         std::unique_ptr<unqualified_id_node>,
         std::unique_ptr<function_type_node>,
@@ -1444,11 +1525,11 @@ struct type_id_node
         if (id.index() == unqualified) {
             return std::get<unqualified>(id)->template_arguments();
         }
-        else if (id.index() != qualified) {
-            cpp2_default.report_violation("ICE: this type_id has no template arguments");
+        else if (id.index() == qualified) {
+            return std::get<qualified>(id)->template_arguments();
         }
         // else
-        return std::get<qualified>(id)->template_arguments();
+        return no_template_args;
     }
 
     auto to_string() const
@@ -1460,7 +1541,7 @@ struct type_id_node
         switch (id.index()) {
         break;case empty:
             return {};
-        break;case postfix:
+        break;case computed:
             return {};
         break;case qualified:
             return {};
@@ -1490,7 +1571,7 @@ struct type_id_node
         for (auto q : pc_qualifiers) {
             v.start(*q, depth+1);
         }
-        try_visit<postfix    >(id, v, depth);
+        try_visit<computed   >(id, v, depth);
         try_visit<qualified  >(id, v, depth);
         try_visit<unqualified>(id, v, depth);
         try_visit<function   >(id, v, depth);
@@ -2825,8 +2906,8 @@ auto type_id_node::to_string() const
     switch (id.index()) {
     break;case empty:
         ret += "_";
-    break;case postfix:
-        ret += std::get<postfix>(id)->to_string();
+    break;case computed:
+        ret += std::get<computed>(id)->to_string();
     break;case qualified:
         ret += std::get<qualified>(id)->to_string();
     break;case unqualified:
@@ -5130,6 +5211,23 @@ auto pretty_print_visualize(unqualified_id_node const& n, int indent)
 }
 
 
+auto pretty_print_visualize(computed_type_id_node const& n, int indent)
+    -> std::string
+{
+    assert(n.identifier);
+    auto ret = n.identifier->to_string();
+
+    if (n.ellipsis) {
+        ret += n.ellipsis->to_string();
+    }
+
+    assert(n.expr);
+    ret += pretty_print_visualize(*n.expr, indent);
+
+    return ret;
+}
+
+
 auto pretty_print_visualize(qualified_id_node const& n, int indent)
     -> std::string
 {
@@ -5137,8 +5235,14 @@ auto pretty_print_visualize(qualified_id_node const& n, int indent)
 
     for (auto& id : n.ids) {
         if (id.scope_op) { ret += id.scope_op->as_string_view(); }
-        assert (id.id);
-        ret += pretty_print_visualize(*id.id, indent);
+        if (auto unqual = std::get_if<qualified_id_node::term::unqualified>(&id.id)) {
+            assert (*unqual);
+            ret += pretty_print_visualize(**unqual, indent);
+        }
+        else if (auto computed = std::get_if<qualified_id_node::term::computed>(&id.id)) {
+            assert (*computed);
+            ret += pretty_print_visualize(**computed, indent);
+        }
     }
 
     return ret;
@@ -5157,7 +5261,7 @@ auto pretty_print_visualize(type_id_node const& n, int indent)
     }
 
     if (n.id.index() == type_id_node::empty) { ret += "_"; }
-    ret += try_pretty_print_visualize<type_id_node::postfix    >(n.id, indent);
+    ret += try_pretty_print_visualize<type_id_node::computed   >(n.id, indent);
     ret += try_pretty_print_visualize<type_id_node::qualified  >(n.id, indent);
     ret += try_pretty_print_visualize<type_id_node::unqualified>(n.id, indent);
     ret += try_pretty_print_visualize<type_id_node::function   >(n.id, indent);
@@ -6940,54 +7044,67 @@ private:
     }
 
 
-    //G computed-type-specifier:
+    //G computed-type-id:
     //G     'type_of'  '(' expression ')'
     //G     'decltype' '(' expression ')'
-    //GTODO unqualified-id '...' '[' expression ']'  // C++26 pack indexing
+    //G     identifier '...' '[' expression ']'
     //
-    auto computed_type_specifier()
-        -> std::unique_ptr<postfix_expression_node>
+    auto computed_type_id()
+        -> std::unique_ptr<computed_type_id_node>
     {
-        if (auto& c = curr();
-            c == "type_of"
-            || c == "decltype"
+        if (
+            curr().type() != lexeme::Identifier
+            && curr() != "decltype"
             )
         {
-            if (
-                c == "decltype"
-                && peek(1) && peek(1)->type() == lexeme::LeftParen
-                && peek(2) && *peek(2) == "auto"
-                && peek(3) && peek(3)->type() == lexeme::RightParen)
-            {
-                error(
-                    "decltype(auto) is not needed in Cpp2 - for return types, use '-> forward _' instead",
-                    false,
-                    c.position()
-                );
-                return {};
-            }
-            if (auto id = postfix_expression();
-                id
-                && id->ops.size() == 1
-                && id->ops[0].expr_list->expressions.size() == 1
-                && id->ops[0].expr_list->open_paren->type() == lexeme::LeftParen
-                )
-            {
-                return id;
-            }
-            else
-            {
-                error("'" + std::string{c} + "' must be followed by a single parenthesized expression", false, c.position());
+            return {};
+        }
+
+        auto n = std::make_unique<computed_type_id_node>();
+
+        //  Remember current position, because we may need to backtrack
+        auto start_pos = pos;
+
+        n->identifier = &curr();
+        next();
+
+        if (curr().type() == lexeme::Ellipsis)
+        {
+            n->ellipsis = &curr();
+            next();
+
+            if (curr().type() != lexeme::LeftBracket) {
+                pos = start_pos;
                 return {};
             }
         }
+        else if (
+            *n->identifier != "type_of"
+            && *n->identifier != "decltype"
+            )
+        {
+            pos = start_pos;
+            return {};
+        }
 
+        auto open_paren = &curr();
+        next();
+
+        if (auto e = expression_list(open_paren, close_paren_type(open_paren->type())))
+        {
+            e->close_paren = &curr();
+            next();
+
+            n->expr = std::move(e);
+            return n;
+        }
+        // else
         return {};
     }
 
     //G type-id:
-    //G     type-qualifier-seq? computed-type-specifier is-type-constraint?
     //G     type-qualifier-seq? qualified-id is-type-constraint?
+    //G     type-qualifier-seq? computed-type-id is-type-constraint?
     //G     type-qualifier-seq? unqualified-id is-type-constraint?
     //G     type-qualifier-seq? function-type is-type-constraint?
     //G
@@ -7029,15 +7146,15 @@ private:
             next();
         }
 
-        if (auto id = computed_type_specifier()) {
-            n->pos = id->position();
-            n->id  = std::move(id);
-            assert (n->id.index() == type_id_node::postfix);
-        }
-        else if (auto id = qualified_id()) {
+        if (auto id = qualified_id()) {
             n->pos = id->position();
             n->id  = std::move(id);
             assert (n->id.index() == type_id_node::qualified);
+        }
+        else if (auto id = computed_type_id()) {
+            n->pos = id->position();
+            n->id  = std::move(id);
+            assert (n->id.index() == type_id_node::computed);
         }
         else if (auto id = unqualified_id()) {
             n->pos = id->position();
@@ -7297,6 +7414,7 @@ private:
     //G
     //G nested-name-specifier:
     //G     '::'
+    //G     computed-type-id '::'
     //G     unqualified-id '::'
     //G
     //G member-name-specifier:
@@ -7318,21 +7436,27 @@ private:
         //  Remember current position, because we need to look ahead to the next ::
         auto start_pos = pos;
 
+        //  Reject "std" :: "move" / "forward"
+        auto first_uid_was_std = false;
+
+        if (auto computed = computed_type_id()) {
+            term.id = std::move(computed);
+        }
+        else if (auto unqual = unqualified_id()) {
+            assert (unqual->identifier);
+            first_uid_was_std = (*unqual->identifier == "std");
+            term.id = std::move(unqual);
+        }
         //  If we don't get a first id, or if we didn't have a leading :: and
         //  the next thing isn't :: or ., back out and report unsuccessful
-        term.id = unqualified_id();
-        if (
-            !term.id
-            || (!term.scope_op && curr().type() != lexeme::Scope)
-            )
-        {
+        else {
             pos = start_pos;    // backtrack
             return {};
         }
-
-        //  Reject "std" :: "move" / "forward"
-        assert (term.id->identifier);
-        auto first_uid_was_std = (*term.id->identifier == "std");
+        if (!term.scope_op && curr().type() != lexeme::Scope) {
+            pos = start_pos;    // backtrack
+            return {};
+        }
 
         n->ids.push_back( std::move(term) );
 
@@ -7344,22 +7468,23 @@ private:
         {
             auto term = qualified_id_node::term{ &curr() };
             next();
-            term.id = unqualified_id();
-            if (!term.id) {
+            auto unqual = unqualified_id();
+            if (!unqual) {
                 error("invalid text in qualified name", true, {}, true);
                 return {};
             }
-            assert (term.id->identifier);
+            assert (unqual->identifier);
             if (
                 first_time_through_loop
                 && first_uid_was_std
                 && term.scope_op->type() == lexeme::Scope
-                && *term.id->identifier == "forward"
+                && *unqual->identifier == "forward"
                 ) 
             {
                 error("std::forward is not needed in Cpp2 - use 'forward' parameters/arguments instead", false);
                 return {};
             }
+            term.id = std::move(unqual);
             n->ids.push_back( std::move(term) );
         }
 
@@ -7370,6 +7495,7 @@ private:
     //G id-expression:
     //G     qualified-id
     //G     unqualified-id
+    //GTODO identifier '...' '[' expression ']'  // C++26 pack indexing
     //G
     auto id_expression()
         -> std::unique_ptr<id_expression_node>
@@ -9935,6 +10061,11 @@ public:
     auto start(unqualified_id_node const&, int indent) -> void
     {
         o << pre(indent) << "unqualified-id\n";
+    }
+
+    auto start(computed_type_id_node const&, int indent) -> void
+    {
+        o << pre(indent) << "computed-type-id\n";
     }
 
     auto start(qualified_id_node const&, int indent) -> void
