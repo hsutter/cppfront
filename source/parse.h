@@ -6940,9 +6940,53 @@ private:
     }
 
 
+    //G computed-type-specifier:
+    //G     'type_of'  '(' expression ')'
+    //G     'decltype' '(' expression ')'
+    //GTODO unqualified-id '...' '[' expression ']'  // C++26 pack indexing
+    //
+    auto computed_type_specifier()
+        -> std::unique_ptr<postfix_expression_node>
+    {
+        if (auto& c = curr();
+            c == "type_of"
+            || c == "decltype"
+            )
+        {
+            if (
+                c == "decltype"
+                && peek(1) && peek(1)->type() == lexeme::LeftParen
+                && peek(2) && *peek(2) == "auto"
+                && peek(3) && peek(3)->type() == lexeme::RightParen)
+            {
+                error(
+                    "decltype(auto) is not needed in Cpp2 - for return types, use '-> forward _' instead",
+                    false,
+                    c.position()
+                );
+                return {};
+            }
+            if (auto id = postfix_expression();
+                id
+                && id->ops.size() == 1
+                && id->ops[0].expr_list->expressions.size() == 1
+                && id->ops[0].expr_list->open_paren->type() == lexeme::LeftParen
+                )
+            {
+                return id;
+            }
+            else
+            {
+                error("'" + std::string{c} + "' must be followed by a single parenthesized expression", false, c.position());
+                return {};
+            }
+        }
+
+        return {};
+    }
+
     //G type-id:
-    //G     type-qualifier-seq? 'type_of'  '(' expression ')' is-type-constraint?
-    //G     type-qualifier-seq? 'decltype' '(' expression ')' is-type-constraint?
+    //G     type-qualifier-seq? computed-type-specifier is-type-constraint?
     //G     type-qualifier-seq? qualified-id is-type-constraint?
     //G     type-qualifier-seq? unqualified-id is-type-constraint?
     //G     type-qualifier-seq? function-type is-type-constraint?
@@ -6985,39 +7029,10 @@ private:
             next();
         }
 
-        if (auto& c = curr();
-            c == "type_of"
-            || c == "decltype"
-            )
-        {
-            if (
-                c == "decltype"
-                && peek(1) && peek(1)->type() == lexeme::LeftParen
-                && peek(2) && *peek(2) == "auto"
-                && peek(3) && peek(3)->type() == lexeme::RightParen)
-            {
-                error(
-                    "decltype(auto) is not needed in Cpp2 - for return types, use '-> forward _' instead",
-                    false,
-                    c.position()
-                );
-            }
-            if (auto id = postfix_expression();
-                id
-                && id->ops.size() == 1
-                && id->ops[0].expr_list->expressions.size() == 1
-                && id->ops[0].expr_list->open_paren->type() == lexeme::LeftParen
-                )
-            {
-                n->pos = id->position();
-                n->id  = std::move(id);
-                assert (n->id.index() == type_id_node::postfix);
-            }
-            else
-            {
-                error("'" + std::string{c} + "' must be followed by a single parenthesized expression", false, c.position());
-                return {};
-            }
+        if (auto id = computed_type_specifier()) {
+            n->pos = id->position();
+            n->id  = std::move(id);
+            assert (n->id.index() == type_id_node::postfix);
         }
         else if (auto id = qualified_id()) {
             n->pos = id->position();
