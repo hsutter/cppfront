@@ -183,7 +183,7 @@ class CPPFRONTAPI compiler_services
     ) & -> auto;
 
 #line 184 "reflect.h2"
-    public: [[nodiscard]] auto add_runtime_support_include(cpp2::impl::in<std::string_view> s) & -> decltype(auto);
+    public: auto add_runtime_support_include(cpp2::impl::in<std::string_view> s) & -> void;
 
     public: [[nodiscard]] virtual auto position() const -> source_position;
 
@@ -207,7 +207,7 @@ class CPPFRONTAPI compiler_services
     public: auto report_violation(auto const& msg) const& -> void;
 
 #line 226 "reflect.h2"
-    public: [[nodiscard]] auto is_active() const& -> decltype(auto);
+    public: [[nodiscard]] auto is_active() const& -> bool;
     public: virtual ~compiler_services() noexcept;
 public: compiler_services(compiler_services const& that);
 
@@ -328,9 +328,9 @@ class CPPFRONTAPI declaration
     public: [[nodiscard]] auto is_private() const& -> bool;
     public: [[nodiscard]] auto is_default_access() const& -> bool;
 
-    public: [[nodiscard]] auto default_to_public() & -> decltype(auto);
-    public: [[nodiscard]] auto default_to_protected() & -> decltype(auto);
-    public: [[nodiscard]] auto default_to_private() & -> decltype(auto);
+    public: auto default_to_public() & -> void;
+    public: auto default_to_protected() & -> void;
+    public: auto default_to_private() & -> void;
 
     public: [[nodiscard]] auto make_public() & -> bool;
     public: [[nodiscard]] auto make_protected() & -> bool;
@@ -448,7 +448,7 @@ class CPPFRONTAPI function_declaration
 #line 465 "reflect.h2"
     public: [[nodiscard]] auto is_binary_comparison_function() const& -> bool;
 
-    public: [[nodiscard]] auto default_to_virtual() & -> decltype(auto);
+    public: auto default_to_virtual() & -> void;
 
     public: [[nodiscard]] auto make_virtual() & -> bool;
 
@@ -536,10 +536,10 @@ struct query_declared_value_set_functions_ret { bool out_this_in_that; bool out_
     public: auto add_member(cpp2::impl::in<std::string_view> source) & -> void;
 
 #line 658 "reflect.h2"
-    public: [[nodiscard]] auto remove_marked_members() & -> decltype(auto);
-    public: [[nodiscard]] auto remove_all_members() & -> decltype(auto);
+    public: auto remove_marked_members() & -> void;
+    public: auto remove_all_members() & -> void;
 
-    public: [[nodiscard]] auto disable_member_function_generation() & -> decltype(auto);
+    public: auto disable_member_function_generation() & -> void;
     public: type_declaration(type_declaration const& that);
 
 #line 662 "reflect.h2"

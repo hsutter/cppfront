@@ -246,7 +246,7 @@ auto newline_pos{CPP2_UFCS(find)(source, '\n')};
     }
 
 #line 184 "reflect.h2"
-    [[nodiscard]] auto compiler_services::add_runtime_support_include(cpp2::impl::in<std::string_view> s) & -> decltype(auto) { return static_cast<void>(CPP2_UFCS(emplace)((*cpp2::impl::assert_not_null(data().includes)), s));  }
+    auto compiler_services::add_runtime_support_include(cpp2::impl::in<std::string_view> s) & -> void{static_cast<void>(CPP2_UFCS(emplace)((*cpp2::impl::assert_not_null(data().includes)), s)); }
 
 #line 186 "reflect.h2"
     [[nodiscard]] auto compiler_services::position() const -> source_position
@@ -287,7 +287,7 @@ auto newline_pos{CPP2_UFCS(find)(source, '\n')};
     }
 
 #line 226 "reflect.h2"
-    [[nodiscard]] auto compiler_services::is_active() const& -> decltype(auto) { return true;  }
+    [[nodiscard]] auto compiler_services::is_active() const& -> bool { return true;  }
 
     compiler_services::~compiler_services() noexcept{}
 compiler_services::compiler_services(compiler_services const& that)
@@ -382,11 +382,11 @@ declaration_base::declaration_base(declaration_base const& that)
     [[nodiscard]] auto declaration::is_default_access() const& -> bool { return CPP2_UFCS(is_default_access)((*cpp2::impl::assert_not_null(n)));  }
 
 #line 336 "reflect.h2"
-    [[nodiscard]] auto declaration::default_to_public() & -> decltype(auto) { return static_cast<void>(CPP2_UFCS(make_public)((*cpp2::impl::assert_not_null(n)))); }
+    auto declaration::default_to_public() & -> void{static_cast<void>(CPP2_UFCS(make_public)((*cpp2::impl::assert_not_null(n))));}
 #line 337 "reflect.h2"
-    [[nodiscard]] auto declaration::default_to_protected() & -> decltype(auto) { return static_cast<void>(CPP2_UFCS(make_protected)((*cpp2::impl::assert_not_null(n))));  }
+    auto declaration::default_to_protected() & -> void{static_cast<void>(CPP2_UFCS(make_protected)((*cpp2::impl::assert_not_null(n)))); }
 #line 338 "reflect.h2"
-    [[nodiscard]] auto declaration::default_to_private() & -> decltype(auto) { return static_cast<void>(CPP2_UFCS(make_private)((*cpp2::impl::assert_not_null(n)))); }
+    auto declaration::default_to_private() & -> void{static_cast<void>(CPP2_UFCS(make_private)((*cpp2::impl::assert_not_null(n))));}
 
 #line 340 "reflect.h2"
     [[nodiscard]] auto declaration::make_public() & -> bool { return CPP2_UFCS(make_public)((*cpp2::impl::assert_not_null(n))); }
@@ -586,7 +586,7 @@ declaration::declaration(declaration const& that)
     [[nodiscard]] auto function_declaration::is_binary_comparison_function() const& -> bool { return CPP2_UFCS(is_binary_comparison_function)((*cpp2::impl::assert_not_null(n)));  }
 
 #line 467 "reflect.h2"
-    [[nodiscard]] auto function_declaration::default_to_virtual() & -> decltype(auto) { return static_cast<void>(CPP2_UFCS(make_function_virtual)((*cpp2::impl::assert_not_null(n)))); }
+    auto function_declaration::default_to_virtual() & -> void{static_cast<void>(CPP2_UFCS(make_function_virtual)((*cpp2::impl::assert_not_null(n))));}
 
 #line 469 "reflect.h2"
     [[nodiscard]] auto function_declaration::make_virtual() & -> bool { return CPP2_UFCS(make_function_virtual)((*cpp2::impl::assert_not_null(n))); }
@@ -794,12 +794,12 @@ declaration::declaration(declaration const& that)
     }
 
 #line 658 "reflect.h2"
-    [[nodiscard]] auto type_declaration::remove_marked_members() & -> decltype(auto) { return CPP2_UFCS(type_remove_marked_members)((*cpp2::impl::assert_not_null(n)));  }
+    auto type_declaration::remove_marked_members() & -> void{CPP2_UFCS(type_remove_marked_members)((*cpp2::impl::assert_not_null(n))); }
 #line 659 "reflect.h2"
-    [[nodiscard]] auto type_declaration::remove_all_members() & -> decltype(auto) { return CPP2_UFCS(type_remove_all_members)((*cpp2::impl::assert_not_null(n))); }
+    auto type_declaration::remove_all_members() & -> void{CPP2_UFCS(type_remove_all_members)((*cpp2::impl::assert_not_null(n)));}
 
 #line 661 "reflect.h2"
-    [[nodiscard]] auto type_declaration::disable_member_function_generation() & -> decltype(auto) { return CPP2_UFCS(type_disable_member_function_generation)((*cpp2::impl::assert_not_null(n)));  }
+    auto type_declaration::disable_member_function_generation() & -> void{CPP2_UFCS(type_disable_member_function_generation)((*cpp2::impl::assert_not_null(n))); }
 
     type_declaration::type_declaration(type_declaration const& that)
                                 : declaration{ static_cast<declaration const&>(that) }{}
