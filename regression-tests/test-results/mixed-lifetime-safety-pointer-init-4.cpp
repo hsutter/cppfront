@@ -19,7 +19,7 @@
 [[nodiscard]] auto main() -> int;
 
 #line 21 "mixed-lifetime-safety-pointer-init-4.cpp2"
-auto print_and_decorate(auto const& thing) -> void;
+auto print_and_decorate(auto const& x) -> void;
 #line 24 "mixed-lifetime-safety-pointer-init-4.cpp2"
 
 bool flip_a_coin() {
@@ -51,7 +51,7 @@ bool flip_a_coin() {
 }
 
 #line 21 "mixed-lifetime-safety-pointer-init-4.cpp2"
-auto print_and_decorate(auto const& thing) -> void{
-    std::cout << ">> " << thing << "\n";
+auto print_and_decorate(auto const& x) -> void{
+    std::cout << ">> " << x << "\n";
 }
 

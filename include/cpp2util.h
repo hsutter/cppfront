@@ -2601,7 +2601,7 @@ range(
 ) -> range<std::common_type_t<T, U>>;
 
 template<typename T>
-constexpr auto contains(range<T> const& r, T const& t)
+constexpr auto contains(range<T> const& r, auto const& t)
     -> bool
 {
     if (r.empty()) {
@@ -2711,6 +2711,64 @@ inline auto fopen( const char* filename, const char* mode ) {
 
 
 
+
+//-----------------------------------------------------------------------
+//
+//  "Unchecked" opt-outs for safety checks
+//
+//-----------------------------------------------------------------------
+//
+
+CPP2_FORCE_INLINE constexpr auto unchecked_cmp_less(auto&& t, auto&& u) 
+    -> decltype(auto)
+    requires requires {CPP2_FORWARD(t) < CPP2_FORWARD(u);}
+{
+    return CPP2_FORWARD(t) < CPP2_FORWARD(u);
+}
+
+CPP2_FORCE_INLINE constexpr auto unchecked_cmp_less_eq(auto&& t, auto&& u) 
+    -> decltype(auto)
+    requires requires {CPP2_FORWARD(t) <= CPP2_FORWARD(u);}
+{
+    return CPP2_FORWARD(t) <= CPP2_FORWARD(u);
+}
+
+CPP2_FORCE_INLINE constexpr auto unchecked_cmp_greater(auto&& t, auto&& u) 
+    -> decltype(auto)
+    requires requires {CPP2_FORWARD(t) > CPP2_FORWARD(u);}
+{
+    return CPP2_FORWARD(t) > CPP2_FORWARD(u);
+}
+
+CPP2_FORCE_INLINE constexpr auto unchecked_cmp_greater_eq(auto&& t, auto&& u) 
+    -> decltype(auto)
+    requires requires {CPP2_FORWARD(t) >= CPP2_FORWARD(u);}
+{
+    return CPP2_FORWARD(t) >= CPP2_FORWARD(u);
+}
+
+CPP2_FORCE_INLINE constexpr auto unchecked_div(auto&& t, auto&& u) 
+    -> decltype(auto)
+    requires requires {CPP2_FORWARD(t) / CPP2_FORWARD(u);}
+{
+    return CPP2_FORWARD(t) / CPP2_FORWARD(u);
+}
+
+CPP2_FORCE_INLINE constexpr auto unchecked_dereference(auto&& p) 
+-> decltype(auto)
+    requires requires {*CPP2_FORWARD(p);}
+{
+    return *CPP2_FORWARD(p);
+}
+
+CPP2_FORCE_INLINE constexpr auto unchecked_subscript(auto&& a, auto&& b) 
+    -> decltype(auto)
+    requires requires {CPP2_FORWARD(a)[b];}
+{
+    return CPP2_FORWARD(a)[b];
+}
+
+
 namespace impl {
 
 //-----------------------------------------------------------------------
@@ -2729,7 +2787,8 @@ CPP2_FORCE_INLINE constexpr auto cmp_mixed_signedness_check() -> void
     {
         static_assert(
             program_violates_type_safety_guarantee<T, U>,
-            "comparing bool values using < <= >= > is unsafe and not allowed - are you missing parentheses?");
+            "comparing bool values using < <= >= > is unsafe and not allowed - are you missing parentheses?"
+            );
     }
     else if constexpr (
         std::is_integral_v<T> &&
@@ -2745,20 +2804,22 @@ CPP2_FORCE_INLINE constexpr auto cmp_mixed_signedness_check() -> void
         //  static_assert to reject the comparison is the right way to go.
         static_assert(
             program_violates_type_safety_guarantee<T, U>,
-            "mixed signed/unsigned comparison is unsafe - prefer using .ssize() instead of .size(), consider using std::cmp_less instead, or consider explicitly casting one of the values to change signedness by using 'as' or 'cpp2::unchecked_narrow'"
+            "mixed signed/unsigned comparison is unsafe - prefer using .ssize() instead of .size(), consider using std::cmp_less or similar instead, or consider explicitly casting one of the values to change signedness by using 'as' or 'cpp2::unchecked_narrow'"
             );
     }
 }
 
 
-CPP2_FORCE_INLINE constexpr auto cmp_less(auto&& t, auto&& u) -> decltype(auto)
+CPP2_FORCE_INLINE constexpr auto cmp_less(auto&& t, auto&& u) 
+    -> decltype(auto)
     requires requires {CPP2_FORWARD(t) < CPP2_FORWARD(u);}
 {
     cmp_mixed_signedness_check<CPP2_TYPEOF(t), CPP2_TYPEOF(u)>();
     return CPP2_FORWARD(t) < CPP2_FORWARD(u);
 }
 
-CPP2_FORCE_INLINE constexpr auto cmp_less(auto&& t, auto&& u) -> decltype(auto)
+CPP2_FORCE_INLINE constexpr auto cmp_less(auto&& t, auto&& u) 
+    -> decltype(auto)
 {
     static_assert(
         program_violates_type_safety_guarantee<decltype(t), decltype(u)>,
@@ -2768,14 +2829,16 @@ CPP2_FORCE_INLINE constexpr auto cmp_less(auto&& t, auto&& u) -> decltype(auto)
 }
 
 
-CPP2_FORCE_INLINE constexpr auto cmp_less_eq(auto&& t, auto&& u) -> decltype(auto)
+CPP2_FORCE_INLINE constexpr auto cmp_less_eq(auto&& t, auto&& u) 
+    -> decltype(auto)
     requires requires {CPP2_FORWARD(t) <= CPP2_FORWARD(u);}
 {
     cmp_mixed_signedness_check<CPP2_TYPEOF(t), CPP2_TYPEOF(u)>();
     return CPP2_FORWARD(t) <= CPP2_FORWARD(u);
 }
 
-CPP2_FORCE_INLINE constexpr auto cmp_less_eq(auto&& t, auto&& u) -> decltype(auto)
+CPP2_FORCE_INLINE constexpr auto cmp_less_eq(auto&& t, auto&& u) 
+    -> decltype(auto)
 {
     static_assert(
         program_violates_type_safety_guarantee<decltype(t), decltype(u)>,
@@ -2785,14 +2848,16 @@ CPP2_FORCE_INLINE constexpr auto cmp_less_eq(auto&& t, auto&& u) -> decltype(aut
 }
 
 
-CPP2_FORCE_INLINE constexpr auto cmp_greater(auto&& t, auto&& u) -> decltype(auto)
+CPP2_FORCE_INLINE constexpr auto cmp_greater(auto&& t, auto&& u) 
+    -> decltype(auto)
     requires requires {CPP2_FORWARD(t) > CPP2_FORWARD(u);}
 {
     cmp_mixed_signedness_check<CPP2_TYPEOF(t), CPP2_TYPEOF(u)>();
     return CPP2_FORWARD(t) > CPP2_FORWARD(u);
 }
 
-CPP2_FORCE_INLINE constexpr auto cmp_greater(auto&& t, auto&& u) -> decltype(auto)
+CPP2_FORCE_INLINE constexpr auto cmp_greater(auto&& t, auto&& u) 
+    -> decltype(auto)
 {
     static_assert(
         program_violates_type_safety_guarantee<decltype(t), decltype(u)>,
@@ -2802,14 +2867,16 @@ CPP2_FORCE_INLINE constexpr auto cmp_greater(auto&& t, auto&& u) -> decltype(aut
 }
 
 
-CPP2_FORCE_INLINE constexpr auto cmp_greater_eq(auto&& t, auto&& u) -> decltype(auto)
+CPP2_FORCE_INLINE constexpr auto cmp_greater_eq(auto&& t, auto&& u) 
+    -> decltype(auto)
     requires requires {CPP2_FORWARD(t) >= CPP2_FORWARD(u);}
 {
     cmp_mixed_signedness_check<CPP2_TYPEOF(t), CPP2_TYPEOF(u)>();
     return CPP2_FORWARD(t) >= CPP2_FORWARD(u);
 }
 
-CPP2_FORCE_INLINE constexpr auto cmp_greater_eq(auto&& t, auto&& u) -> decltype(auto)
+CPP2_FORCE_INLINE constexpr auto cmp_greater_eq(auto&& t, auto&& u) 
+    -> decltype(auto)
 {
     static_assert(
         program_violates_type_safety_guarantee<decltype(t), decltype(u)>,

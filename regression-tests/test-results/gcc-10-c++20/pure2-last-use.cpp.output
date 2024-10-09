@@ -67,40 +67,40 @@ pure2-last-use.cpp2:983:43: error: expected ‘;’ at end of member declaration
 In file included from pure2-last-use.cpp:7:
 ../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
 pure2-last-use.cpp2:984:1: note: in expansion of macro ‘CPP2_REQUIRES_’
-pure2-last-use.cpp2:183:3: error: no declaration matches ‘issue_857_2::issue_857_2(auto:141&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(issue_857_2::__ct ::a_)>::type>::type, const std::add_const_t<std::unique_ptr<int, std::default_delete<int> > >&>’
+pure2-last-use.cpp2:183:3: error: no declaration matches ‘issue_857_2::issue_857_2(auto:152&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(issue_857_2::__ct ::a_)>::type>::type, const std::add_const_t<std::unique_ptr<int, std::default_delete<int> > >&>’
 pure2-last-use.cpp2:257:7: note: candidates are: ‘issue_857_2::issue_857_2(issue_857_2&&)’
 pure2-last-use.cpp2:257:7: note:                 ‘issue_857_2::issue_857_2(const issue_857_2&)’
-pure2-last-use.cpp2:259:11: note:                 ‘template<class auto:106> issue_857_2::issue_857_2(auto:106&&)’
+pure2-last-use.cpp2:259:11: note:                 ‘template<class auto:117> issue_857_2::issue_857_2(auto:117&&)’
 pure2-last-use.cpp2:257:7: note: ‘class issue_857_2’ defined here
 pure2-last-use.cpp2:185:100: error: expected unqualified-id before ‘{’ token
-pure2-last-use.cpp2:187:6: error: no declaration matches ‘issue_857_2& issue_857_2::operator=(auto:142&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(issue_857_2::operator=::a_)>::type>::type, const std::add_const_t<std::unique_ptr<int, std::default_delete<int> > >&>’
+pure2-last-use.cpp2:187:6: error: no declaration matches ‘issue_857_2& issue_857_2::operator=(auto:153&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(issue_857_2::operator=::a_)>::type>::type, const std::add_const_t<std::unique_ptr<int, std::default_delete<int> > >&>’
 pure2-last-use.cpp2:257:7: note: candidates are: ‘issue_857_2& issue_857_2::operator=(issue_857_2&&)’
 pure2-last-use.cpp2:257:7: note:                 ‘issue_857_2& issue_857_2::operator=(const issue_857_2&)’
-pure2-last-use.cpp2:262:14: note:                 ‘template<class auto:107> issue_857_2& issue_857_2::operator=(auto:107&&)’
+pure2-last-use.cpp2:262:14: note:                 ‘template<class auto:118> issue_857_2& issue_857_2::operator=(auto:118&&)’
 pure2-last-use.cpp2:257:7: note: ‘class issue_857_2’ defined here
-pure2-last-use.cpp2:266:3: error: no declaration matches ‘issue_857_3::issue_857_3(auto:143&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(issue_857_3::__ct ::i_)>::type>::type, int&>’
+pure2-last-use.cpp2:266:3: error: no declaration matches ‘issue_857_3::issue_857_3(auto:154&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(issue_857_3::__ct ::i_)>::type>::type, int&>’
 pure2-last-use.cpp2:262:7: note: candidates are: ‘constexpr issue_857_3::issue_857_3(issue_857_3&&)’
 pure2-last-use.cpp2:262:7: note:                 ‘constexpr issue_857_3::issue_857_3(const issue_857_3&)’
 pure2-last-use.cpp2:270:9: note:                 ‘issue_857_3::issue_857_3()’
-pure2-last-use.cpp2:265:11: note:                 ‘template<class auto:108> issue_857_3::issue_857_3(auto:108&&)’
+pure2-last-use.cpp2:265:11: note:                 ‘template<class auto:119> issue_857_3::issue_857_3(auto:119&&)’
 pure2-last-use.cpp2:262:7: note: ‘class issue_857_3’ defined here
 pure2-last-use.cpp2:268:112: error: expected unqualified-id before ‘{’ token
-pure2-last-use.cpp2:270:6: error: no declaration matches ‘issue_857_3& issue_857_3::operator=(auto:144&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(issue_857_3::operator=::i_)>::type>::type, int&>’
+pure2-last-use.cpp2:270:6: error: no declaration matches ‘issue_857_3& issue_857_3::operator=(auto:155&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(issue_857_3::operator=::i_)>::type>::type, int&>’
 pure2-last-use.cpp2:262:7: note: candidates are: ‘issue_857_3& issue_857_3::operator=(issue_857_3&&)’
 pure2-last-use.cpp2:262:7: note:                 ‘issue_857_3& issue_857_3::operator=(const issue_857_3&)’
-pure2-last-use.cpp2:268:14: note:                 ‘template<class auto:109> issue_857_3& issue_857_3::operator=(auto:109&&)’
+pure2-last-use.cpp2:268:14: note:                 ‘template<class auto:120> issue_857_3& issue_857_3::operator=(auto:120&&)’
 pure2-last-use.cpp2:262:7: note: ‘class issue_857_3’ defined here
-pure2-last-use.cpp2:269:3: error: no declaration matches ‘issue_857_6::issue_857_6(auto:145&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(issue_857_6::__ct ::i_)>::type>::type, int&>’
+pure2-last-use.cpp2:269:3: error: no declaration matches ‘issue_857_6::issue_857_6(auto:156&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(issue_857_6::__ct ::i_)>::type>::type, int&>’
 pure2-last-use.cpp2:266:7: note: candidates are: ‘constexpr issue_857_6::issue_857_6(issue_857_6&&)’
 pure2-last-use.cpp2:266:7: note:                 ‘constexpr issue_857_6::issue_857_6(const issue_857_6&)’
 pure2-last-use.cpp2:274:9: note:                 ‘issue_857_6::issue_857_6()’
-pure2-last-use.cpp2:269:11: note:                 ‘template<class auto:110> issue_857_6::issue_857_6(auto:110&&)’
+pure2-last-use.cpp2:269:11: note:                 ‘template<class auto:121> issue_857_6::issue_857_6(auto:121&&)’
 pure2-last-use.cpp2:266:7: note: ‘class issue_857_6’ defined here
 pure2-last-use.cpp2:271:112: error: expected unqualified-id before ‘{’ token
-pure2-last-use.cpp2:273:6: error: no declaration matches ‘issue_857_6& issue_857_6::operator=(auto:146&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(issue_857_6::operator=::i_)>::type>::type, int&>’
+pure2-last-use.cpp2:273:6: error: no declaration matches ‘issue_857_6& issue_857_6::operator=(auto:157&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(issue_857_6::operator=::i_)>::type>::type, int&>’
 pure2-last-use.cpp2:266:7: note: candidates are: ‘issue_857_6& issue_857_6::operator=(issue_857_6&&)’
 pure2-last-use.cpp2:266:7: note:                 ‘issue_857_6& issue_857_6::operator=(const issue_857_6&)’
-pure2-last-use.cpp2:272:14: note:                 ‘template<class auto:111> issue_857_6& issue_857_6::operator=(auto:111&&)’
+pure2-last-use.cpp2:272:14: note:                 ‘template<class auto:122> issue_857_6& issue_857_6::operator=(auto:122&&)’
 pure2-last-use.cpp2:266:7: note: ‘class issue_857_6’ defined here
 pure2-last-use.cpp2:279:272: error: ‘move_only_function’ is not a member of ‘std’
 pure2-last-use.cpp2:279:295: error: template argument 1 is invalid

@@ -1024,7 +1024,6 @@ class cppfront
     cpp2::sema   sema;
 
     bool source_loaded                  = true;
-    bool last_postfix_expr_was_pointer  = false;
     bool violates_bounds_safety         = false;
     bool violates_initialization_safety = false;
     bool suppress_move_from_last_use    = false;
@@ -1056,6 +1055,15 @@ class cppfront
 
     using source_order_name_lookup_res =
         std::optional<std::variant<declaration_node const*, active_using_declaration>>;
+
+    struct postfix_expression_info {
+        bool is_pointer  = false;
+
+        postfix_expression_info() = default;
+        postfix_expression_info(bool b) : is_pointer{b} { }
+    };
+    std::vector<postfix_expression_info> active_postfix_expressions = {};
+    bool last_postfix_expr_was_pointer = false;
 
     //  Stack of the currently active nested declarations we're inside
     std::vector<declaration_node const*> current_declarations = { {} };
@@ -1651,6 +1659,13 @@ public:
                 || n == "cpp1_rvalue_ref"
                 || n == "unchecked_narrow"
                 || n == "unchecked_cast"
+                || n == "unchecked_cmp_less"
+                || n == "unchecked_cmp_less_eq"
+                || n == "unchecked_cmp_greater"
+                || n == "unchecked_cmp_greater_eq"
+                || n == "unchecked_div"
+                || n == "unchecked_dereference"
+                || n == "unchecked_subscript"
                 )
             )
         {
@@ -3061,7 +3076,11 @@ public:
         }
 
         assert(n.expr);
-        last_postfix_expr_was_pointer = false;
+        active_postfix_expressions.emplace_back(false);
+        auto guard = finally([this]{ 
+            last_postfix_expr_was_pointer = active_postfix_expressions.back().is_pointer;
+            active_postfix_expressions.pop_back();
+            });
 
         //  For a 'move that' parameter, track the members we already moved from
         //  so we can diagnose attempts to move from the same member twice
@@ -3142,7 +3161,7 @@ public:
                 //        - we don't deduce pointer types from parameter_declaration_list_node
                 if ( is_pointer_declaration(unqual->identifier) ) {
                     if (n.ops.empty()) {
-                        last_postfix_expr_was_pointer = true;
+                        active_postfix_expressions.back().is_pointer = true;
                     }
                     else
                     {

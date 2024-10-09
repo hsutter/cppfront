@@ -19,7 +19,7 @@ f: () -> (i: int, s: std::string) = {
     return;
 }
 
-do_print: (name: std::string, value:_) = { 
+do_print: (name: std::string, value) = { 
     std::cout << name << " is " << value << "\n"; 
 }
 

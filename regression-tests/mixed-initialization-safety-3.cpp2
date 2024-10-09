@@ -23,7 +23,7 @@ fill: (
     x = value.substr(0, count);
 }
 
-print_decorated: (x:_) = { 
+print_decorated: (x) = { 
     std::cout << ">> [" << x << "]\n"; 
 }
 

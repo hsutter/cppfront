@@ -6,7 +6,7 @@ namespace my {
     using u16 = float;
 }
 
-test: (x:_) = {
+test: (x) = {
     std::cout
         << std::is_floating_point_v<CPP2_TYPEOF(x)> as std::string
         << "\n";

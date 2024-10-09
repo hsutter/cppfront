@@ -6,7 +6,7 @@ main: () -> int = {
     print_subrange(v, 1, 13);
 }
 
-print_subrange: (rng:_, start:int, end:int) = {
+print_subrange: (rng, start:int, end:int) = {
     assert<bounds_safety>( 0 <= start );
     assert<bounds_safety>( end <= rng.ssize() );
 

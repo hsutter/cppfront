@@ -8,9 +8,9 @@ main: () -> int = {
     }
 }
 
-decorate: (inout thing: _ ) -> int = {
-    thing = "[" + thing + "]";
-    return thing.ssize();
+decorate: (inout x) -> int = {
+    x = "[" + x + "]";
+    return x.ssize();
 }
 
 print_it: (x: _, len: _) = {

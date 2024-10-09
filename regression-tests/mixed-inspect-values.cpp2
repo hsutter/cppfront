@@ -28,7 +28,7 @@ main: ()->int = {
     test(3.14);
 }
 
-test: (x:_) = {
+test: (x) = {
     forty_two := 42;
     std::cout << inspect x -> std::string {
         is 0           = "zero";

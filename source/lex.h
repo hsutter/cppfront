@@ -1840,14 +1840,17 @@ auto lex_line(
                     if (tokens.back() == "static_cast") {
                         errors.emplace_back(
                             source_position(lineno, i),
-                            "'static_cast<T>(expr)' is not supported in Cpp2 - for casting to void use '_ = expr' instead to discard the value; otherwise use 'val as T' for safe conversions; otherwise if necessary 'cpp2::unchecked_narrow<T>(expr)' for a possibly-lossy narrowing conversion; otherwise if really necessary use 'cpp2::unchecked_cast<T>(expr)' for no checking at all"
+                            "'static_cast<T>(expr)' is not supported in Cpp2 - use 'expr as T' instead, which allows only type-safe conversions"
+                            "\n    note: to discard an expression's value, use '_ = expr' instead of a cast to void"
+                            "\n    note: to opt into possibly-lossy narrowing conversions, use 'unchecked_narrow<T>(expr)'"
+                            "\n    note: to opt into no checking at all, use 'unchecked_cast<T>(expr)' if necessary"
                         );
                         return {};
                     }
                     if (tokens.back() == "dynamic_cast") {
                         errors.emplace_back(
                             source_position(lineno, i),
-                            "'dynamic_cast<Derived*>(pBase)' is not supported in Cpp2 - use 'pBase as *Derived' for safe dynamic conversions instead"
+                            "'dynamic_cast<Derived*>(pBase)' is not supported in Cpp2 - use 'pBase as *Derived' instead for safe dynamic pointer conversions"
                         );
                         return {};
                     }
