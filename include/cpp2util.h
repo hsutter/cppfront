@@ -368,7 +368,7 @@ constexpr auto gcc_clang_msvc_min_versions(
 }
 
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(__clang_major__) && !defined(__GNUC__)
    // MSVC can't handle 'inline constexpr' variables yet in all cases
     #define CPP2_CONSTEXPR const
 #else
