@@ -1,0 +1,7 @@
+// https://youtu.be/CXn02MPkn8Y?t=2337
+negatable: <T> concept = requires(t: T)
+{
+  _ = -t is T; // Hopefully obviously wrong. Should be `{ -t } is T;`.
+};
+
+main: () = static_assert(negatable<char>);

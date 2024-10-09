@@ -1,0 +1,8 @@
+// https://youtu.be/CXn02MPkn8Y?t=2418
+int_sized: <T> concept = requires(t: T)
+{
+  _ = sizeof(T) == 4; // Hopefully obviously wrong. Should be `requires (sizeof(T) == 4);`.
+};
+// Could also be `int_sized: <T> concept = sizeof(T) == 4;`.
+
+main: () = static_assert(int_sized<char>);

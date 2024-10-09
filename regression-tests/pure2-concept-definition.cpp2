@@ -1,5 +1,29 @@
 arithmetic: <T> concept = std::integral<T> || std::floating_point<T>;
-main: ()                = {
-  assert<testing>( arithmetic<i32> );
-  assert<testing>( arithmetic<float> );
+
+number_difference_t: <T> type == std::type_identity_t<decltype(T() - T())>;
+number: <T> concept = std::regular<T> && requires(c: T)
+{
+  !requires std::iter_reference_t<T>;                   // Negative requirement.
+  {c + c} is std::common_with<T>;                       // Compound requirement.
+  number_difference_t<T>;                               // Type requirement.
+  _ = c - c;                                            // Expression requirement.
+  requires std::common_with<number_difference_t<T>, T>; // Nested requirement.
+};
+
+test_nonthrowing_requirements: <T> concept = requires
+{ // clang-format off
+  { T() } !throws;
+  { -T() } !throws, is std::same_as<T>;
+}; // clang-format on
+
+main: () = {
+  static_assert(arithmetic<i32>);
+  static_assert(arithmetic<float>);
+  static_assert(number<i32>);
+  static_assert(number<float>);
+  static_assert(number<std::chrono::seconds>);
+  static_assert(!number<* i32>);
+  static_assert(!number<std::reverse_iterator<* i32>>);
+  static_assert(test_nonthrowing_requirements<i32>);
+  static_assert(!test_nonthrowing_requirements<std::chrono::seconds>);
 }

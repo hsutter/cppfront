@@ -1,0 +1,7 @@
+// https://youtu.be/CXn02MPkn8Y?t=2455
+nothrow_incrementable: <T> concept = requires(inout t: T)
+{
+  _ = noexcept(t++); // Hopefully obviously wrong. Should be `requires noexcept(t++);` or `{ t++ } !throws;`.
+};
+
+main: () = { static_assert(nothrow_incrementable<char>); }

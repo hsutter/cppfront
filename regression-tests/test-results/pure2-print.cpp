@@ -55,30 +55,30 @@ CPP2_REQUIRES_ ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...)) ;
 
     public: static auto test() -> void;
 
-#line 92 "pure2-print.cpp2"
+#line 105 "pure2-print.cpp2"
     public: template<typename ...Ts> class x {
         private: std::tuple<Ts...> tup {}; 
         public: x() = default;
         public: x(x const&) = delete; /* No 'that' constructor, suppress copy */
         public: auto operator=(x const&) -> void = delete;
 
-#line 94 "pure2-print.cpp2"
+#line 107 "pure2-print.cpp2"
     };
 
     public: template<typename ...Args> static auto print(std::ostream& out, Args const& ...args) -> void
 CPP2_REQUIRES_ (cpp2::impl::cmp_greater_eq(sizeof...(Args),0u)) ;
 
-#line 100 "pure2-print.cpp2"
+#line 113 "pure2-print.cpp2"
     public: template<typename ...Args> [[nodiscard]] static auto all(Args const& ...args) -> bool;
 
-#line 103 "pure2-print.cpp2"
+#line 116 "pure2-print.cpp2"
     public: static auto y([[maybe_unused]] cpp2::impl::in<CPP2_TYPEOF(0)> unnamed_param_1) -> void;
     public: outer() = default;
     public: outer(outer const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(outer const&) -> void = delete;
 
 
-#line 105 "pure2-print.cpp2"
+#line 118 "pure2-print.cpp2"
 };
 
 auto main() -> int;
@@ -189,23 +189,36 @@ requires ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...)) {(std::cout << ..
             if (cpp2::impl::is(_expr, 43)) { if constexpr( requires{"forty-and-three";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("forty-and-three")),namespace_alias::string> ) return "forty-and-three"; else return namespace_alias::string{}; else return namespace_alias::string{}; }
             else return "default case"; }
         () << "\n";
+
+        static_cast<void>(
+          requires {typename std::vector<int>; 
+} + requires {0; 
+} + requires {
+              requires true;
+              requires !requires { typename std::vector<int>;  };
+              requires !requires { 0;  };
+              { 0 };
+              { 0 } noexcept;
+              { 0 } -> std::regular;
+              { 0 } noexcept -> std::regular;
+});
     }
 
-#line 96 "pure2-print.cpp2"
+#line 109 "pure2-print.cpp2"
     template<typename ...Args> auto outer::print(std::ostream& out, Args const& ...args) -> void
 requires (cpp2::impl::cmp_greater_eq(sizeof...(Args),0u)) {
-#line 97 "pure2-print.cpp2"
+#line 110 "pure2-print.cpp2"
         (out << ... << args);
     }
 
-#line 100 "pure2-print.cpp2"
+#line 113 "pure2-print.cpp2"
     template<typename ...Args> [[nodiscard]] auto outer::all(Args const& ...args) -> bool { 
         return (... && args);  }
 
-#line 103 "pure2-print.cpp2"
+#line 116 "pure2-print.cpp2"
     auto outer::y([[maybe_unused]] cpp2::impl::in<CPP2_TYPEOF(0)> unnamed_param_1) -> void{}
 
-#line 107 "pure2-print.cpp2"
+#line 120 "pure2-print.cpp2"
 auto main() -> int{
     outer::test();
 }

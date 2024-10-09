@@ -2188,6 +2188,97 @@ public:
 
     //-----------------------------------------------------------------------
     //
+    auto emit(
+        type_id_node const& n,
+        type_requirement_tag
+    )
+        -> void
+    {
+        printer.print_cpp2("typename ", n.position());
+        emit(n);
+        printer.print_cpp2(";", n.position());
+    }
+
+    auto emit(
+        expression_node const& n,
+        simple_requirement_tag
+    )
+        -> void
+    {
+        emit(n);
+        printer.print_cpp2(";", n.position());
+    }
+
+    auto emit(requires_expression_node::compound_requirement_node const& n)
+        -> void
+    {
+        assert(n.expression);
+        printer.print_cpp2("{ ", n.expression->position());
+        emit(*n.expression);
+        printer.print_cpp2(" }", n.expression->position());
+        if (!n.throws) {
+            printer.print_cpp2(" noexcept", n.expression->position());
+        }
+        if (n.type_constraint)
+        {
+            printer.print_cpp2(" -> ", n.expression->position());
+            emit(*n.type_constraint);
+        }
+        printer.print_cpp2(";", n.expression->position());
+    }
+
+    auto emit(
+        logical_or_expression_node const& n,
+        nested_requirement_tag
+    )
+        -> void
+    {
+        printer.print_cpp2("requires ", n.position());
+        emit(n);
+        printer.print_cpp2(";", n.position());
+    }
+
+    auto emit(
+        requires_expression_node::requirement_node const& n,
+        negative_requirement_tag
+        )
+        -> void
+    {
+        printer.print_cpp2("requires ", n.position());
+        printer.print_cpp2("!requires { ", n.position());
+        emit(n);
+        printer.print_cpp2(" };", n.position());
+    }
+
+    auto emit(requires_expression_node::requirement_node const& n)
+        -> void
+    {
+        try_emit<requires_expression_node::requirement_node::type      >(n.requirement, type_requirement_tag{});
+        try_emit<requires_expression_node::requirement_node::expression>(n.requirement, simple_requirement_tag{});
+        try_emit<requires_expression_node::requirement_node::compound  >(n.requirement);
+        try_emit<requires_expression_node::requirement_node::nested    >(n.requirement, nested_requirement_tag{});
+        try_emit<requires_expression_node::requirement_node::negative  >(n.requirement, negative_requirement_tag{});
+    }
+
+    auto emit(requires_expression_node const& n)
+        -> void
+    {
+        assert(n.identifier);
+        emit(*n.identifier);
+        if (n.parameters) {
+            emit(*n.parameters);
+        }
+        printer.print_cpp2(" {", n.position());
+        for (auto const& x : n.requirements) {
+            assert(x);
+            emit(*x);
+        }
+        printer.print_cpp2("\n}", n.position(), true);
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
     auto emit(selection_statement_node const& n)
         -> void
     {   STACKINSTR
@@ -2730,6 +2821,7 @@ public:
         try_emit<primary_expression_node::expression_list>(n.expr);
         try_emit<primary_expression_node::id_expression  >(n.expr);
         try_emit<primary_expression_node::inspect        >(n.expr, true);
+        try_emit<primary_expression_node::requires_      >(n.expr);
         try_emit<primary_expression_node::literal        >(n.expr);
 
         if (n.expr.index() == primary_expression_node::declaration)
