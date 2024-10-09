@@ -33,3 +33,25 @@ main: () = {
     myfunc2 :== myfunc;
     myfunc2();
 }
+
+myclass5: type == myclass4;
+
+myclass3: @struct type = {
+    // Defined inline.
+    i0 :== :std::array = (0);
+    i1 :== i0;
+    i3: _ == i0;
+    i7 :== :() = 0;
+
+    // Defined out of line.
+    o2: myclass3 == myclass3();
+    o4: myclass3 == o2;
+    o5: myclass4 == myclass4();
+    o6: myclass5 == myclass5();
+}
+
+myclass4: @struct type = { }
+
+myclass6: @struct <T: type> type = {
+    v: <U> _ requires true == 0;
+}
