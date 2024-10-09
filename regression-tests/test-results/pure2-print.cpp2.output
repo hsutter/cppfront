@@ -151,5 +151,11 @@ outer:/* @print */ type =
     {
     }
 }
+
+
+common_type:/* @struct @print */ specialize<outer, outer> type = 
+{
+    public type: type == outer;
+}
  ok (all Cpp2, passes safety checks)
 

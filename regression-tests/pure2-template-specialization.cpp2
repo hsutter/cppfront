@@ -1,0 +1,47 @@
+t: @cpp1_rule_of_zero <T> type = {
+  public a: i32 = 1;
+}
+t: @cpp1_rule_of_zero <T> specialize<T> type requires std::is_void_v<T> = {
+  public b: i32 = 2;
+}
+t: @cpp1_rule_of_zero specialize<i64> type = {
+  public c: i32 = 3;
+}
+t: @cpp1_rule_of_zero specialize<* i8> type = {
+  public f: () = 17;
+  public v: int == 29;
+}
+t: @cpp1_rule_of_zero <T> specialize<* T> type = {
+  public v: int == 17;
+  public f: () = 29;
+}
+u: @cpp1_rule_of_zero <T...> type = {
+  public a: i32 = 1;
+}
+u: @cpp1_rule_of_zero specialize<> type = {
+  public a: i32 = 2;
+}
+u: specialize<i16> type = { }
+v: <T> const i32 = 1;
+v: <> specialize<void> const i32 = 2;
+v: specialize<i64> const i32 = 3;
+v: specialize<i16> std::optional<i32> == 4;
+v: <> specialize<i8> std::optional<i8> == 5;
+v: <T> specialize<* T> std::optional<int> == 6;
+main: ()   = {
+  assert(t<i32>().a == 1);
+  assert(t<void>().b == 2);
+  assert(t<i64>().c == 3);
+  assert(t<* i8>::f() == 17);
+  assert(t<* i8>::v == 29);
+  assert(t<* i16>::v == 17);
+  assert(t<* i16>::f() == 29);
+  assert(u<i32>().a == 1);
+  assert(u<>().a == 1);
+  assert(v<i32> == 1);
+  assert(v<void> == 2);
+  assert(v<i64> == 3);
+  static_assert(v<i16> == 4);
+  static_assert(v<i8> == 5);
+  static_assert(v<* int> == 6);
+}
