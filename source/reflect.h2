@@ -181,7 +181,7 @@ compiler_services: @dll_visible @polymorphic_base @copyable type =
         return ret;
     }
 
-    add_runtime_support_include: (inout this, s: std::string_view) = _=data().includes*.emplace( s );
+    add_runtime_support_include: (inout this, s: std::string_view) = { _=data().includes*.emplace( s ); }
 
     position: (virtual this)
         -> source_position
@@ -223,7 +223,7 @@ compiler_services: @dll_visible @polymorphic_base @copyable type =
         ) );
     }
 
-    is_active:(this) = true;
+    is_active:(this) -> bool = true;
 }
 
 
@@ -333,9 +333,9 @@ declaration: @dll_visible @polymorphic_base @copyable type =
     is_private       : (this) -> bool = n*.is_private();
     is_default_access: (this) -> bool = n*.is_default_access();
 
-    default_to_public   : (inout this) = _ = n*.make_public();
-    default_to_protected: (inout this) = _ = n*.make_protected();
-    default_to_private  : (inout this) = _ = n*.make_private();
+    default_to_public   : (inout this) = { _ = n*.make_public(); }
+    default_to_protected: (inout this) = { _ = n*.make_protected(); }
+    default_to_private  : (inout this) = { _ = n*.make_private(); }
 
     make_public      : (inout this) -> bool = n*.make_public();
     make_protected   : (inout this) -> bool = n*.make_protected();
@@ -464,7 +464,7 @@ function_declaration: @dll_visible @copyable type =
 
     is_binary_comparison_function: (this) -> bool = n*.is_binary_comparison_function();
 
-    default_to_virtual           : (inout this) = _ = n*.make_function_virtual();
+    default_to_virtual           : (inout this) = { _ = n*.make_function_virtual(); }
 
     make_virtual                 : (inout this) -> bool = n*.make_function_virtual();
 
@@ -655,10 +655,10 @@ type_declaration: @dll_visible @copyable type =
                  std::string("unexpected error while attempting to add member:\n") + source );
     }
 
-    remove_marked_members: (inout this) = n*.type_remove_marked_members();
-    remove_all_members   : (inout this) = n*.type_remove_all_members();
+    remove_marked_members: (inout this) = { n*.type_remove_marked_members(); }
+    remove_all_members   : (inout this) = { n*.type_remove_all_members(); }
 
-    disable_member_function_generation: (inout this) = n*.type_disable_member_function_generation();
+    disable_member_function_generation: (inout this) = { n*.type_disable_member_function_generation(); }
 }
 
 
