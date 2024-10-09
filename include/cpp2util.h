@@ -375,6 +375,16 @@ constexpr auto gcc_clang_msvc_min_versions(
     #define CPP2_CONSTEXPR constexpr
 #endif
 
+
+#if defined(_WIN32)
+#define CPPFRONTAPI __declspec(dllexport)
+#else
+#define CPPFRONTAPI  __attribute__ ((visibility ("default")))
+#endif
+
+#define CPP2_C_API extern "C" CPPFRONTAPI
+
+
 namespace cpp2 {
 
 
@@ -2909,6 +2919,17 @@ using cpp2::cpp2_new;
 //  Restore clang signed-to-unsigned conversion warnings
 #ifdef __clang__
     #pragma clang diagnostic pop
+#endif
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4251)
+#endif
+
+#include "cpp2reflect.h"
+
+#ifdef _MSC_VER
+#pragma warning(pop)
 #endif
 
 #endif // CPP2_CPP2UTIL_H

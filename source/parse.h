@@ -19,6 +19,10 @@
 #define CPP2_PARSE_H
 
 #include "lex.h"
+#include <memory>
+#include <variant>
+#include <iostream>
+#include <span>
 
 
 namespace cpp2 {
@@ -689,33 +693,8 @@ auto binary_expression_node<Name, Term>::is_standalone_expression() const
 }
 
 
-enum class passing_style : u8 { in=0, in_ref, copy, inout, out, move, forward, forward_ref, invalid };
-auto to_passing_style(token const& t) -> passing_style {
-    if (t.type() == lexeme::Identifier) {
-        if (t == "in"     )     { return passing_style::in; }
-        if (t == "in_ref" )     { return passing_style::in_ref; }
-        if (t == "copy"   )     { return passing_style::copy; }
-        if (t == "inout"  )     { return passing_style::inout; }
-        if (t == "out"    )     { return passing_style::out; }
-        if (t == "move"   )     { return passing_style::move; }
-        if (t == "forward")     { return passing_style::forward; }
-        if (t == "forward_ref") { return passing_style::forward_ref; }
-    }
-    return passing_style::invalid;
-}
-auto to_string_view(passing_style pass) -> std::string_view {
-    switch (pass) {
-    break;case passing_style::in         : return "in";
-    break;case passing_style::in_ref     : return "in_ref";
-    break;case passing_style::copy       : return "copy";
-    break;case passing_style::inout      : return "inout";
-    break;case passing_style::out        : return "out";
-    break;case passing_style::move       : return "move";
-    break;case passing_style::forward    : return "forward";
-    break;case passing_style::forward_ref: return "forward_ref";
-    break;default                        : return "INVALID passing_style";
-    }
-}
+using meta::passing_style;
+using meta::to_passing_style;
 
 
 struct expression_list_node
@@ -726,7 +705,7 @@ struct expression_list_node
     bool default_initializer = false;
 
     struct term {
-        passing_style                    pass = {};
+        passing_style                    pass = passing_style{};
         std::unique_ptr<expression_node> expr;
 
         auto visit(auto& v, int depth) -> void
@@ -2549,7 +2528,7 @@ struct function_type_node
 
         if (auto t = std::get_if<id>(&returns)) {
             ret += " -> ";
-            ret += to_string_view(t->pass);
+            ret += t->pass.to_string();
             ret += " " + t->type->to_string();
         }
         else if (auto t = std::get_if<list>(&returns)) {
@@ -2626,6 +2605,12 @@ struct function_type_node
         -> bool;
 
     auto is_destructor() const
+        -> bool;
+
+    auto is_metafunction() const
+        -> bool;
+
+    auto is_const_metafunction() const
         -> bool;
 
     auto has_declared_return_type() const
@@ -2985,6 +2970,7 @@ struct declaration_node
     source_position                      pos;
     bool                                 is_variadic = false;
     bool                                 is_constexpr = false;
+    bool                                 is_dll_visible_ = false;
     std::unique_ptr<unqualified_id_node> identifier;
     accessibility                        access = accessibility::default_;
 
@@ -2998,6 +2984,7 @@ struct declaration_node
     > type;
 
     std::vector<std::unique_ptr<id_expression_node>> metafunctions;
+    std::vector<std::string>                         metafunction_lookup_checks;
     std::unique_ptr<parameter_declaration_list_node> template_parameters;
     source_position                                  requires_pos = {};
     std::unique_ptr<logical_or_expression_node>      requires_clause_expression;
@@ -3183,6 +3170,21 @@ public:
         return set_access( accessibility::private_ );
     }
 
+    auto is_dll_visible() const
+        -> bool
+    {
+        return is_dll_visible_;
+    }
+
+    auto make_dll_visible()
+        -> bool
+    {
+        if (!parent_is_namespace()) {
+            return false;
+        }
+        return is_dll_visible_ = true;
+    }
+
     auto has_name() const
         -> bool
     {
@@ -3209,6 +3211,23 @@ public:
             has_name()
             && *name() == s
             ;
+    }
+
+    auto fully_qualified_name() const
+        -> std::string
+    {
+        if (!has_name()) {
+            return {};
+        }
+
+        auto res = std::string{};
+        for (auto n = this; n; n = n->parent_declaration)
+        {
+            assert(n->identifier);
+            res.insert(0, n->identifier->to_string());
+            res.insert(0, "::");
+        }
+        return res;
     }
 
     auto has_initializer() const
@@ -3975,6 +3994,26 @@ public:
         return "";
     }
 
+    auto is_metafunction() const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->is_metafunction();
+        }
+        //  else
+        return false;
+    }
+
+    auto is_const_metafunction() const
+      -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->is_const_metafunction();
+        }
+        //  else
+        return false;
+    }
+
     auto is_binary_comparison_function() const
         -> bool
     {
@@ -4091,7 +4130,7 @@ auto parameter_declaration_node::to_string() const
         ;
     }
 
-    ret += to_string_view(pass) + declaration->to_string();
+    ret += pass.to_string() + declaration->to_string();
 
     return ret;
 }
@@ -4511,6 +4550,32 @@ auto function_type_node::is_destructor() const
 }
 
 
+auto function_type_node::is_metafunction() const
+    -> bool
+{
+    if (
+        (*parameters).ssize() == 1
+        && this->nth_parameter_type_name(1) == "cpp2::meta::type_declaration"
+        && (
+            (*parameters)[0]->direction() == passing_style::in
+            || (*parameters)[0]->direction() == passing_style::inout
+            )
+        )
+    {
+        return true;
+    }
+    return false;
+}
+
+
+auto function_type_node::is_const_metafunction() const
+    -> bool
+{
+    return is_metafunction()
+           && (*parameters)[0]->direction() == passing_style::in;
+}
+
+
 auto primary_expression_node::template_arguments() const
     -> std::vector<template_argument> const&
 {
@@ -4734,6 +4799,7 @@ auto parameter_declaration_node::visit(auto& v, int depth)
 
 struct translation_unit_node
 {
+    bool has_interface = false;
     std::vector< std::unique_ptr<declaration_node> > declarations;
 
     auto position() const -> source_position
@@ -5046,7 +5112,7 @@ auto pretty_print_visualize(expression_list_node const& n, int indent)
             || expr.pass == passing_style::forward
             )
         {
-            ret += to_string_view(expr.pass) + std::string{" "};
+            ret += expr.pass.to_string() + std::string{" "};
         }
         ret += pretty_print_visualize(*expr.expr, indent);
         if (++i < std::ssize(n.expressions)) {
@@ -5490,7 +5556,7 @@ auto pretty_print_visualize(parameter_declaration_node const& n, int indent, boo
         break;default: ; // none
         }
 
-        ret += to_string_view(n.pass);
+        ret += n.pass.to_string();
         ret += " ";
     }
 
@@ -5541,7 +5607,7 @@ auto pretty_print_visualize(function_type_node const& n, int indent)
         ret += try_pretty_print_visualize<function_type_node::list>(n.returns, indent+1);
         if (n.returns.index() == function_type_node::id) {
             auto& single = std::get<function_type_node::id>(n.returns);
-            ret += to_string_view(single.pass)
+            ret += single.pass.to_string()
                 + std::string{" "} + pretty_print_visualize(*single.type, indent+1);
         }
     }
@@ -5773,6 +5839,118 @@ auto pretty_print_visualize(translation_unit_node const& n)
 }
 
 
+// Consider moving these `stack` functions to `common.h` to enable more general use.
+
+template<typename T>
+auto stack_value(
+    T& var,
+    std::type_identity_t<T> const& value
+)
+    -> auto
+{
+    return finally([&var, old = std::exchange(var, value)]() {
+        var = old;
+    });
+}
+
+template<typename T>
+auto stack_element(
+    std::vector<T>& cont,
+    std::type_identity_t<T> const& value
+)
+    -> auto
+{
+    cont.push_back(value);
+    return finally([&]{ cont.pop_back(); });
+}
+
+template<typename T>
+auto stack_size(std::vector<T>& cont)
+    -> auto
+{
+    return finally([&, size = cont.size()]{ cont.resize(size); });
+}
+
+template<typename T>
+auto stack_size_if(
+    std::vector<T>& cont,
+    bool cond
+)
+    -> std::optional<decltype(stack_size(cont))>
+{
+    if (cond) {
+        return stack_size(cont);
+    }
+    return {};
+}
+
+
+struct active_using_declaration {
+    qualified_id_node const* id = {};
+
+    explicit active_using_declaration(using_statement_node const& n) {
+      if (auto id_ = get_if<id_expression_node::qualified>(&n.id->id)) {
+          id = &**id_;
+      }
+    }
+
+    auto introduced_identifier() const
+        -> std::string_view
+    {
+        if (id) {
+            return *id->ids.back().id->identifier;
+        }
+        // else
+        return {};
+    }
+
+    auto to_string() const
+        -> std::string
+    {
+        if (id) {
+            return id->to_string();
+        }
+        // else
+        return {};
+    }
+};
+
+using source_order_name_lookup_res =
+    std::optional<std::variant<declaration_node const*, active_using_declaration>>;
+
+using current_names_span = std::span<const source_order_name_lookup_res::value_type>;
+
+auto source_order_name_lookup(current_names_span current_names, std::string_view id)
+    -> source_order_name_lookup_res
+{
+    for (
+        auto first = current_names.rbegin(), last = current_names.rend() - 1;
+        first != last;
+        ++first
+        )
+    {
+        if (
+            auto decl = get_if<declaration_node const*>(&*first);
+            decl
+            && *decl
+            && (*decl)->has_name(id)
+            )
+        {
+            return *decl;
+        }
+        else if (
+            auto using_ = get_if<active_using_declaration>(&*first);
+            using_
+            && using_->introduced_identifier() == id
+            )
+        {
+            return *using_;
+        }
+    }
+
+    return {};
+}
+
 //-----------------------------------------------------------------------
 //
 //  parser: parses a section of Cpp2 code
@@ -5807,8 +5985,12 @@ class parser
         }
     };
 
-    //  Keep a stack of currently active declarations (still being parsed)
-    std::vector<declaration_node*> current_declarations = { nullptr };
+    //  Stack of the currently active nested declarations we're inside (still being parsed)
+    std::vector<declaration_node*> current_declarations = { {} };
+
+    //  Stack of the currently active names for source order name lookup:
+    //  Like 'current_declarations' + also parameters and using declarations
+    std::vector<source_order_name_lookup_res::value_type> current_names = { {} };
 
     struct current_declarations_stack_guard
     {
@@ -5909,18 +6091,24 @@ public:
     //
     parser( 
         std::vector<error_entry>& errors_,
-        std::set<std::string>&    includes_
+        std::set<std::string>&    includes_,
+        bool translation_unit_has_interface_
     )
         : errors{ errors_ }
         , includes{ includes_ }
         , parse_tree{std::make_unique<translation_unit_node>()}
-    { }
+    {
+        parse_tree->has_interface = translation_unit_has_interface_;
+    }
 
     parser( parser const& that )
         : errors{ that.errors }
         , includes{ that.includes }
         , parse_tree{std::make_unique<translation_unit_node>()}
     { }
+
+
+    auto translation_unit_has_interface() -> bool { return parse_tree->has_interface; }
 
 
     //-----------------------------------------------------------------------
@@ -8022,6 +8210,10 @@ private:
         }
         next();
 
+        if (!n->for_namespace()) {
+            current_names.push_back(active_using_declaration{*n});
+        }
+
         return n;
     }
 
@@ -8059,6 +8251,8 @@ private:
 
         auto n = std::make_unique<statement_node>(compound_parent);
 
+        auto guard_parameters = stack_size_if(current_names, /*bool(n->parameters)*/ true);
+
         //  If a parameter list is allowed here, try to parse one
         if (parameters_allowed) {
             n->parameters = parameter_declaration_list(false, true, false, true);
@@ -8075,6 +8269,9 @@ private:
                     }
                 }
             }
+        }
+        if (!n->parameters) {
+            guard_parameters.reset();
         }
 
         //  Now handle the rest of the statement
@@ -8396,20 +8593,25 @@ private:
             && n->pass != passing_style::copy
             )
         {
-            switch (n->pass) {
-            break;case passing_style::in:
+            if (n->pass == passing_style::in) {
                 error( "an 'in' parameter is always const, 'const' isn't needed and isn't allowed", false );
-            break;case passing_style::in_ref:
+            }
+            else if (n->pass == passing_style::in_ref) {
                 error( "an 'in_ref' parameter is always const, 'const' isn't needed and isn't allowed", false );
-            break;case passing_style::inout:
+            }
+            else if (n->pass == passing_style::inout) {
                 error( "an 'inout' parameter can't be const, if you do want it to be const then use 'in' instead", false );
-            break;case passing_style::out:
+            }
+            else if (n->pass == passing_style::out) {
                 error( "an 'out' parameter can't be const, otherwise it can't be initialized in the function body", false );
-            break;case passing_style::move:
+            }
+            else if (n->pass == passing_style::move) {
                 error( "a 'move' parameter can't be const, otherwise it can't be moved from in the function body", false );
-            break;case passing_style::forward:
+            }
+            else if (n->pass == passing_style::forward) {
                 error( "a 'forward' parameter shouldn't be const, because it passes along the argument's actual const-ness (and actual value category)", false );
-            break;default:
+            }
+            else {
                 assert (false && "ICE: missing case");
             }
             return {};
@@ -8435,6 +8637,7 @@ private:
             }
         }
 
+        current_names.push_back(&*n->declaration);
         return n;
     }
 
@@ -8746,7 +8949,7 @@ private:
                 }
                 else {
                     auto msg = std::string("'");
-                    msg += to_string_view(pass);
+                    msg += pass.to_string();
                     error(msg + "' must be followed by a type-id");
                     return {};
                 }
@@ -8820,6 +9023,8 @@ private:
 
 
     auto apply_type_metafunctions( declaration_node& decl )
+        -> bool;
+    auto apply_function_metafunctions( declaration_node& decl )
         -> bool;
 
 
@@ -8995,6 +9200,9 @@ private:
             n->template_parameters = std::move(template_parameters);
         }
 
+        current_names.push_back(&*n);
+        auto guard_function = stack_size_if(current_names, /*n->is_function()*/ true);
+
         //  Next is an an optional type
 
         auto deduced_type = false;
@@ -9027,18 +9235,16 @@ private:
         }
 
         //  Or a function type, declaring a function - and tell the function whether it's in a user-defined type
-        else if (auto t = function_type(n.get(), named))
+        else if (auto t = function_type(n.get(), named);
+                 t
+                 || (
+                     guard_function.reset(),
+                     false
+                     )
+                 )
         {
             n->type = std::move(t);
             assert (n->is_function());
-
-            if (!n->metafunctions.empty()) {
-                errors.emplace_back(
-                    n->metafunctions.front()->position(),
-                    "(temporary alpha limitation) metafunctions are currently not supported on functions, only on types"
-                );
-                return {};
-            }
         }
 
         //  Or a namespace
@@ -9333,6 +9539,16 @@ private:
                 );
                 return {};
             }
+        }
+        //  If this is a function with metafunctions, apply those
+        else if (n->is_function()) {
+          if (!apply_function_metafunctions(*n)) {
+            error(
+                  "error encountered while applying function metafunctions",
+                  false, {}, true
+                  );
+            return {};
+          }
         }
 
         if (
@@ -10013,7 +10229,7 @@ public:
         if (n.returns.index() == function_type_node::id) {
             auto& r = std::get<function_type_node::id>(n.returns);
             if (r.pass != passing_style::invalid) {
-                o << pre(indent+1) << "returns by: " << to_string_view(r.pass) << "\n";
+                o << pre(indent+1) << "returns by: " << r.pass.to_string() << "\n";
             }
         }
     }
@@ -10085,7 +10301,7 @@ public:
     {
         o << pre(indent) << "parameter-declaration\n";
 
-        o << pre(indent+1) << to_string_view(n.pass);
+        o << pre(indent+1) << n.pass.to_string();
 
         o << pre(indent+1);
         switch (n.mod) {

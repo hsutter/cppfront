@@ -14,7 +14,7 @@
 //  We want cppfront to build cleanly at very high warning levels, with warnings
 //  as errors -- so disable a handful that fire incorrectly due to compiler bugs
 #ifdef _MSC_VER
-    #pragma warning(disable: 4456 4706)
+    #pragma warning(disable: 4456 4706 4996)
 #endif
 #if defined(__GNUC__) && __GNUC__ >= 13 && !defined(__clang_major__)
     #pragma GCC diagnostic ignored "-Wdangling-reference"
@@ -103,28 +103,11 @@ struct source_line
 };
 
 
-using lineno_t = int32_t;
-using colno_t  = int32_t;   // not int16_t... encountered >80,000 char line during testing
-using index_t  = int32_t;
+using cpp2::meta::lineno_t;
+using cpp2::meta::colno_t;
+using cpp2::meta::index_t;
 
-struct source_position
-{
-    lineno_t    lineno;     // one-based offset into program source
-    colno_t     colno;      // one-based offset into line
-
-    source_position(lineno_t l = 1, colno_t  c = 1 )
-        : lineno{ l }, colno{ c }
-    {
-    }
-
-    auto operator<=>(source_position const&) const = default;
-
-    auto to_string() const
-        -> std::string
-    {
-        return "(" + std::to_string(lineno) + "," + std::to_string(colno) + ")";
-    }
-};
+using cpp2::meta::source_position;
 
 struct comment
 {
@@ -516,6 +499,36 @@ auto to_upper_and_underbar(std::string_view s)
     for (char& c : ret) {
         if (std::isalnum(c)) { c = to_upper(c); }
         else                 { c = '_'; }
+    }
+    return ret;
+}
+
+
+auto to_lower_and_collapsed_underbar(
+    std::string_view s,
+    bool prev_was_underbar = false,
+    bool drop_back_underbar = false
+    )
+    -> std::string
+{
+    auto ret = std::string{};
+    for (char c : s) {
+        if (std::isalnum(c)) {
+            ret.push_back(string_util::safe_tolower(c));
+            prev_was_underbar = false;
+        }
+        else if (!prev_was_underbar) {
+            ret.push_back('_');
+            prev_was_underbar = true;
+        }
+    }
+    if (
+        drop_back_underbar
+        && !ret.empty()
+        && ret.back() == '_'
+        )
+    {
+        ret.pop_back();
     }
     return ret;
 }

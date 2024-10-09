@@ -15,13 +15,62 @@
 //  Reflection and meta
 //===========================================================================
 
-#include "parse.h"
-#include "cpp2regex.h"
-using namespace cpp2::regex;
 
 cpp2: namespace = {
 
 meta: namespace = {
+
+
+lineno_t: type == std::int32_t;
+colno_t: type == std::int32_t;   // not int16_t... encountered >80,000 char line during testing
+index_t: type == std::int32_t;
+
+source_position: @dll_visible @value type =
+{
+    public lineno: lineno_t = 1;   // one-based offset into program source
+    public colno: colno_t = 1;     // one-based offset into line
+
+    operator=: (implicit out this) = { }
+    operator=: (implicit out this, l: lineno_t, c: colno_t = 1) =
+    {
+        lineno = l;
+        colno = c;
+    }
+
+    to_string: (this) -> std::string = "((lineno)$,(colno)$)";
+}
+
+
+passing_style: @dll_visible @enum type =
+{
+    in;
+    in_ref;
+    copy;
+    inout;
+    out;
+    move;
+    forward;
+    forward_ref;
+    invalid;
+}
+
+//  Not `passing_style::from_string`,
+//  as it will not return `invalid` (does this call for a `from_string_or`?),
+//  and to workaround #555.
+to_passing_style: (s: std::string_view) -> passing_style =
+{
+    return inspect s -> passing_style {
+        is (passing_style::in.to_string()) = passing_style::in;
+        is (passing_style::in_ref.to_string()) = passing_style::in_ref;
+        is (passing_style::copy.to_string()) = passing_style::copy;
+        is (passing_style::inout.to_string()) = passing_style::inout;
+        is (passing_style::out.to_string()) = passing_style::out;
+        is (passing_style::move.to_string()) = passing_style::move;
+        is (passing_style::forward.to_string()) = passing_style::forward;
+        is (passing_style::forward_ref.to_string()) = passing_style::forward_ref;
+        is _ = passing_style::invalid;
+    };
+}
 
 
 //-----------------------------------------------------------------------
@@ -31,65 +80,58 @@ meta: namespace = {
 //-----------------------------------------------------------------------
 //
 
-compiler_services: @polymorphic_base @copyable type =
+compiler_services: @dll_visible @polymorphic_base @copyable type =
 {
     //  Common data members
     //
-    errors               : *std::vector<error_entry>;
-    includes             : *std::set<std::string>;
-    errors_original_size : int;
-    generated_tokens     : *stable_vector<token>;
-    parser               : cpp2::parser;
-    metafunction_name    : std::string = ();
-    metafunction_args    : std::vector<std::string> = ();
-    metafunctions_used   : bool = false;
+    data_: std::any;
+    private data: (this) -> forward _ = std::any_cast<cpp1_ref<const compiler_services_data>>(data_);
+    private data: (inout this) -> forward _ = std::any_cast<cpp1_ref<compiler_services_data>>(data_);
 
     //  Constructor
     //
     operator=: (
         out this,
-        errors_          : *std::vector<error_entry>,
-        includes_        : *std::set<std::string>,
-        generated_tokens_: *stable_vector<token>
+        data_v: std::any
     )
     = {
-        errors               = errors_;
-        includes             = includes_;
-        errors_original_size = cpp2::unchecked_narrow<int>(std::ssize(errors*));
-        generated_tokens     = generated_tokens_;
-        parser               = (errors*, includes*);
+        data_ = data_v;
+        assert<type_safety>(
+            data_.type() == typeid(compiler_services_data),
+            "parameter 'data_v' must store a 'compiler_services_data'"
+        );
     }
 
     //  Common API
     //
     set_metafunction_name: (inout this, name: std::string_view, args: std::vector<std::string>) = {
-        metafunction_name  = name;
-        metafunction_args  = args;
-        metafunctions_used = args.empty();
+        data().metafunction_name  = name;
+        data().metafunction_args  = args;
+        data().metafunctions_used = args.empty();
     }
 
-    get_metafunction_name: (this) -> std::string_view = metafunction_name;
+    get_metafunction_name: (this) -> std::string_view = data().metafunction_name;
 
     get_argument: (inout this, index: int) -> std::string = {
-        metafunctions_used = true;
-        if (0 <= index < metafunction_args.ssize()) {
-            return metafunction_args[index];
+        data().metafunctions_used = true;
+        if (0 <= index < data().metafunction_args.ssize()) {
+            return data().metafunction_args[index];
         }
         return "";
     }
 
     get_arguments: (inout this) -> std::vector<std::string> = {
-        metafunctions_used = true;
-        return metafunction_args;
+        data().metafunctions_used = true;
+        return data().metafunction_args;
     }
 
-    arguments_were_used: (this) -> bool = metafunctions_used;
+    arguments_were_used: (this) -> bool = data().metafunctions_used;
 
     protected parse_statement: (
         inout this,
         copy source: std::string_view
     )
-        -> (ret: std::unique_ptr<statement_node>)
+        -> _
     = {
         original_source := source;
 
@@ -121,7 +163,7 @@ compiler_services: @polymorphic_base @copyable type =
         //  Now lex this source fragment to generate
         //  a single grammar_map entry, whose .second
         //  is the vector of tokens
-        _ = generated_lexers.emplace_back( errors* );
+        _ = generated_lexers.emplace_back( data().errors* );
         tokens := generated_lexers.back()&;
         tokens*.lex( lines*, true );
 
@@ -129,16 +171,17 @@ compiler_services: @polymorphic_base @copyable type =
 
         //  Now parse this single declaration from
         //  the lexed tokens
-        ret = parser.parse_one_declaration(
-                tokens*.get_map().begin()*.second,
-                generated_tokens*
-              );
+        ret := data().parser.parse_one_declaration(
+                 tokens*.get_map().begin()*.second,
+                 data().generated_tokens*
+               );
         if !ret {
             error( "parse failed - the source string is not a valid statement:\n(original_source)$");
         }
+        return ret;
     }
 
-    add_runtime_support_include: (inout this, s: std::string_view) = _=includes*.emplace( s );
+    add_runtime_support_include: (inout this, s: std::string_view) = _=data().includes*.emplace( s );
 
     position: (virtual this)
         -> source_position
@@ -163,10 +206,10 @@ compiler_services: @polymorphic_base @copyable type =
     error: (this, msg: std::string_view)
     = {
         message := msg as std::string;
-        if !metafunction_name.empty() {
-            message = "while applying @(metafunction_name)$ - (message)$";
+        if !data().metafunction_name.empty() {
+            message = "while applying @(data().metafunction_name)$ - (message)$";
         }
-        _ = errors*.emplace_back( position(), message);
+        _ = data().errors*.emplace_back( position(), message);
     }
 
     //  Enable custom contracts on this object, integrated with compiler output
@@ -175,7 +218,7 @@ compiler_services: @polymorphic_base @copyable type =
     report_violation: (this, msg) = {
         error(msg);
         throw( std::runtime_error(
-            "  ==> programming bug found in metafunction @(metafunction_name)$ "
+            "  ==> programming bug found in metafunction @(data().metafunction_name)$ "
             "- contract violation - see previous errors"
         ) );
     }
@@ -194,7 +237,7 @@ compiler_services: @polymorphic_base @copyable type =
 
 //  All type_ids are wrappers around a pointer to node
 //
-type_id: @polymorphic_base @copyable type =
+type_id: @dll_visible @polymorphic_base @copyable type =
 {
     this: compiler_services = ();
 
@@ -230,21 +273,37 @@ type_id: @polymorphic_base @copyable type =
 
 //  All declarations are wrappers around a pointer to node
 //
-declaration_base: @polymorphic_base @copyable type =
+declaration_base: @dll_visible @polymorphic_base @copyable type =
 {
     this: compiler_services = ();
 
-    protected n: *declaration_node;
+    node_pointer: @copyable type =
+    {
+        n: *void;
+
+        operator=: <T> (
+            implicit out this,
+            n_: T
+        )
+        = {
+            n = n_;
+            assert<null_safety>( n_, "a meta::declaration must point to a valid declaration_node, not null" );
+            static_assert( std::is_same_v<T, *declaration_node> );
+        }
+
+        operator*: (this) -> forward _ = unchecked_cast<*declaration_node>(n)*;
+    }
+
+    protected n: node_pointer;
 
     protected operator=: (
         out this,
-        n_: *declaration_node,
+        n_: node_pointer,
         s : compiler_services
     )
     = {
         compiler_services = s;
         n = n_;
-        assert( n, "a meta::declaration must point to a valid declaration_node, not null" );
     }
 
     position: (override this) -> source_position = n*.position();
@@ -256,13 +315,13 @@ declaration_base: @polymorphic_base @copyable type =
 //-----------------------------------------------------------------------
 //  All declarations
 //
-declaration: @polymorphic_base @copyable type =
+declaration: @dll_visible @polymorphic_base @copyable type =
 {
     this: declaration_base = ();
 
     operator=: (
         out this,
-        n_: *declaration_node,
+        n_: declaration_base::node_pointer,
         s : compiler_services
     )
     = {
@@ -281,6 +340,9 @@ declaration: @polymorphic_base @copyable type =
     make_public      : (inout this) -> bool = n*.make_public();
     make_protected   : (inout this) -> bool = n*.make_protected();
     make_private     : (inout this) -> bool = n*.make_private();
+
+    is_dll_visible   : (this)       -> bool = n*.is_dll_visible();
+    make_dll_visible : (inout this) -> bool = n*.make_dll_visible();
 
     has_name         : (this)                      -> bool = n*.has_name();
     has_name         : (this, s: std::string_view) -> bool = n*.has_name(s);
@@ -338,13 +400,13 @@ declaration: @polymorphic_base @copyable type =
 //-----------------------------------------------------------------------
 //  Function declarations
 //
-function_declaration: @copyable type =
+function_declaration: @dll_visible @copyable type =
 {
     this: declaration = ();
 
     operator=: (
         out this,
-        n_: *declaration_node,
+        n_: declaration_base::node_pointer,
         s : compiler_services
     ) =
     {
@@ -429,13 +491,13 @@ function_declaration: @copyable type =
 //-----------------------------------------------------------------------
 //  Object declarations
 //
-object_declaration: @copyable type =
+object_declaration: @dll_visible @copyable type =
 {
     this: declaration = ();
 
     operator=: (
         out this,
-        n_: *declaration_node,
+        n_: declaration_base::node_pointer,
         s : compiler_services
     ) =
     {
@@ -465,13 +527,13 @@ object_declaration: @copyable type =
 //-----------------------------------------------------------------------
 //  Type declarations
 //
-type_declaration: @copyable type =
+type_declaration: @dll_visible @copyable type =
 {
     this: declaration = ();
 
     operator=: (
         out this,
-        n_: *declaration_node,
+        n_: declaration_base::node_pointer,
         s : compiler_services
     ) =
     {
@@ -603,13 +665,13 @@ type_declaration: @copyable type =
 //-----------------------------------------------------------------------
 //  Alias declarations
 //
-alias_declaration: @copyable type =
+alias_declaration: @dll_visible @copyable type =
 {
     this: declaration = ();
 
     operator=: (
         out this,
-        n_: *declaration_node,
+        n_: declaration_base::node_pointer,
         s : compiler_services
     ) =
     {
@@ -649,7 +711,7 @@ add_virtual_destructor: (inout t: meta::type_declaration) =
 //
 //  an abstract base class having only pure virtual functions
 //
-interface: (inout t: meta::type_declaration) =
+interface: @dll_visible (inout t: meta::type_declaration) =
 {
     has_dtor := false;
 
@@ -695,7 +757,7 @@ interface: (inout t: meta::type_declaration) =
 //
 //  Unlike an interface, it can have nonpublic and nonvirtual functions.
 //
-polymorphic_base: (inout t: meta::type_declaration) =
+polymorphic_base: @dll_visible (inout t: meta::type_declaration) =
 {
     has_dtor := false;
 
@@ -769,7 +831,7 @@ ordered_impl: (
 //
 //  Note: the ordering that should be encouraged as default gets the nice name
 //
-ordered: (inout t: meta::type_declaration) =
+ordered: @dll_visible (inout t: meta::type_declaration) =
 {
     ordered_impl( t, "strong_ordering" );
 }
@@ -777,7 +839,7 @@ ordered: (inout t: meta::type_declaration) =
 //-----------------------------------------------------------------------
 //  weakly_ordered - a weakly ordered type
 //
-weakly_ordered: (inout t: meta::type_declaration) =
+weakly_ordered: @dll_visible (inout t: meta::type_declaration) =
 {
     ordered_impl( t, "weak_ordering" );
 }
@@ -785,7 +847,7 @@ weakly_ordered: (inout t: meta::type_declaration) =
 //-----------------------------------------------------------------------
 //  partially_ordered - a partially ordered type
 //
-partially_ordered: (inout t: meta::type_declaration) =
+partially_ordered: @dll_visible (inout t: meta::type_declaration) =
 {
     ordered_impl( t, "partial_ordering" );
 }
@@ -807,7 +869,7 @@ partially_ordered: (inout t: meta::type_declaration) =
 //
 //  A type with (copy and move) x (construction and assignment)
 //
-copyable: (inout t: meta::type_declaration) =
+copyable: @dll_visible (inout t: meta::type_declaration) =
 {
     //  If the user explicitly wrote any of the copy/move functions,
     //  they must also have written the most general one - we can't
@@ -873,7 +935,7 @@ hashable: (inout t: meta::type_declaration) =
 //  A regular type: copyable, plus has public default construction
 //  and no protected or virtual functions
 //
-basic_value: (inout t: meta::type_declaration) =
+basic_value: @dll_visible (inout t: meta::type_declaration) =
 {
     t.copyable();
 
@@ -901,19 +963,19 @@ basic_value: (inout t: meta::type_declaration) =
 //
 //  Note: the ordering that should be encouraged as default gets the nice name
 //
-value: (inout t: meta::type_declaration) =
+value: @dll_visible (inout t: meta::type_declaration) =
 {
     t.ordered();
     t.basic_value();
 }
 
-weakly_ordered_value: (inout t: meta::type_declaration) =
+weakly_ordered_value: @dll_visible (inout t: meta::type_declaration) =
 {
     t.weakly_ordered();
     t.basic_value();
 }
 
-partially_ordered_value: (inout t: meta::type_declaration) =
+partially_ordered_value: @dll_visible (inout t: meta::type_declaration) =
 {
     t.partially_ordered();
     t.basic_value();
@@ -984,7 +1046,7 @@ cpp1_rule_of_zero: (inout t: meta::type_declaration) =
 //  parameters instead of concrete forwarding parameters (mainly used
 //  for cppfront internal use, so cppfront builds under GCC 10)
 //
-struct: (inout t: meta::type_declaration) =
+struct: @dll_visible (inout t: meta::type_declaration) =
 {
     ctor_params: std::string = ();
     ctor_inits : std::string = ();
@@ -1323,7 +1385,7 @@ basic_enum: (
 //
 //          -- P0707R4, section 3
 //
-enum: (inout t: meta::type_declaration) =
+enum: @dll_visible (inout t: meta::type_declaration) =
 {
     //  Let basic_enum do its thing, with an incrementing value generator
     t.basic_enum(
@@ -1350,7 +1412,7 @@ enum: (inout t: meta::type_declaration) =
 //
 //          -- P0707R4, section 3
 //
-flag_enum: (inout t: meta::type_declaration) =
+flag_enum: @dll_visible (inout t: meta::type_declaration) =
 {
     //  Let basic_enum do its thing, with a power-of-two value generator
     t.basic_enum(
@@ -1396,7 +1458,7 @@ flag_enum: (inout t: meta::type_declaration) =
 //  a type that contains exactly one of a fixed set of values at a time
 //
 
-union: (inout t : meta::type_declaration)
+union: @dll_visible (inout t : meta::type_declaration)
 = {
     alternatives : std::vector<value_member_info> = ();
 
@@ -1547,7 +1609,7 @@ union: (inout t : meta::type_declaration)
 //
 //  print - output a pretty-printed visualization of t
 //
-print: (t: meta::type_declaration) =
+print: @dll_visible (t: meta::type_declaration) =
 {
     std::cout << t.print() << "\n";
 }
@@ -1555,2236 +1617,17 @@ print: (t: meta::type_declaration) =
 
 //-----------------------------------------------------------------------
 //
-//  regex - creates regular expressions from members
+//  dll_visible - makes t visible in a DLL
 //
-//  Each member that starts with `regex` is replaced by a regular expression
-//  of the initializer string. E.g.:
-//  ```
-//    regex := "ab";
-//  ```
-//  is replaced with
-//  ```
-//    regex := ::cpp2::regex::regular_expression<...>;
-//  ```
-//
-error_func: type == std::function< (x: std::string) -> void >;
-
-//  Possible modifiers for a regular expression.
-//
-expression_flags: @flag_enum<u8> type = 
+dll_visible: @dll_visible (inout t: meta::type_declaration) =
 {
-    case_insensitive;             // mod: i
-    multiple_lines;               // mod: m
-    single_line;                  // mod: s
-    no_group_captures;            // mod: n
-    perl_code_syntax;             // mod: x
-    perl_code_syntax_in_classes;  // mod: xx
+    t.require( t.make_dll_visible(),
+               "dll_visible can only be applied to a namespace-scope name");
 }
-
-
-//  Tokens for regular expressions.
-//
-
-// Basic class for a regex token.
-//
-regex_token: @polymorphic_base type = 
+dll_visible: @dll_visible (inout t: meta::function_declaration) =
 {
-    public string_rep: std::string;
-
-    operator=:(out this, str: std::string) = {
-        string_rep = str;
-    }
-
-    operator=:(out this) = {
-        string_rep = "";
-    }
-
-    //parse: (inout ctx: parse_context) -> token_ptr;
-    generate_code: (virtual this, inout _: generation_context);        // Generate the matching code.
-
-    add_groups: (virtual this, inout _: std::set<int>) = {}            // Adds all group indices to the set.
-    to_string: (this) -> std::string         = { return string_rep; }  // Create a string representation.
-    set_string: (inout this, s: std::string) = { string_rep = s; }     // Set the string representation.
-}
-
-token_ptr : type == std::shared_ptr<regex_token>;
-token_vec: type == std::vector<token_ptr>;
-
-
-//  Adds a check in code generation.
-//
-regex_token_check: @polymorphic_base type = 
-{
-    this: regex_token;
-
-    check: std::string;
-
-    operator=:(out this, str: std::string, check_: std::string) = {
-        regex_token = (str);
-        check = check_;
-    }
-
-    generate_code: (override this, inout ctx: generation_context) = {
-        ctx..add_check(check + "(" + ctx..match_parameters() + ")");
-    }
-}
-
-
-//  Adds code in code generation.
-//
-regex_token_code: @polymorphic_base type = 
-{
-    this: regex_token;
-
-    code: std::string;
-
-    operator=:(out this, str: std::string, code_: std::string) = {
-        regex_token = (str);
-        code = code_;
-    }
-
-    generate_code: (override this, inout ctx: generation_context) = {
-        ctx..add(code);
-    }
-}
-
-
-//  Token that does not influence the matching. E.g. comment.
-//
-regex_token_empty: @polymorphic_base type = 
-{
-    this: regex_token;
-
-    operator=:(out this, str: std::string) = {
-        regex_token = (str);
-    }
-
-    generate_code: (override this, inout _: generation_context) = {
-        // Nothing.
-    }
-}
-
-
-//  Represents a list of regex tokens as one token.
-//
-regex_token_list: @polymorphic_base type = 
-{
-    this: regex_token;
-
-    public tokens: token_vec;
-
-    operator=:(out this, t: token_vec) = {
-        regex_token = (gen_string(t));
-        tokens = t;
-    }
-
-    generate_code: (override this, inout ctx: generation_context) = {
-        for tokens do (token) {
-            token*..generate_code(ctx);
-        }
-    }
-
-    add_groups: (override this, inout groups: std::set<int>) = {
-        for tokens do (token) {
-            token*..add_groups(groups);
-        }
-    }
-
-    gen_string: (vec: token_vec) -> std::string = {
-        r : std::string = "";
-        for vec do (token) {
-            r += token*..to_string();
-        }
-        return r;
-    }
-}
-
-
-//
-//  Parse and generation context.
-//
-
-//  State of the current capturing group. See '(<pattern>)'
-//
-parse_context_group_state: @struct<noforward> type = 
-{    
-    cur_match_list:        token_vec = ();         // Current list of matchers.
-    alternate_match_lists: token_vec = ();         // List of alternate matcher lists. E.g. ab|cd|xy.
-    modifiers :            expression_flags = ();  // Current modifiers for the group/regular expression.
-
-    //  Start a new alternative.
-    next_alternative: (inout this) = {
-        new_list: token_vec = ();
-        std::swap(new_list, cur_match_list);
-        post_process_list(new_list);
-        _ = alternate_match_lists..insert(alternate_match_lists..end(), shared.new<regex_token_list>(new_list));
-    }
-
-    //  Swap this state with the other one. NOLINTNEXTLINE(performance-noexcept-swap)
-    swap: (inout this, inout t: parse_context_group_state) = { // NOLINT(performance-noexcept-swap)
-        std::swap(cur_match_list, t.cur_match_list);
-        std::swap(alternate_match_lists, t.alternate_match_lists);
-        std::swap(modifiers, t.modifiers);
-    }
-
-    //  Convert this state into a regex token.
-    get_as_token: (inout this) -> token_ptr = {
-        if alternate_match_lists..empty() {
-            post_process_list(cur_match_list);
-            return shared.new<regex_token_list>(cur_match_list);
-        }
-        else {
-            next_alternative();
-            return shared.new<alternative_token_gen>(alternate_match_lists);
-        }
-    }
-
-    //  Add a token to the current matcher list.
-    add: (inout this, token: token_ptr) = {
-        cur_match_list..push_back(token);
-    }
-
-    //  True if current matcher list is empty.
-    empty: (this) -> bool = cur_match_list..empty();
-
-    
-    //  Apply optimizations to the matcher list.
-    post_process_list: (inout list: token_vec) = {
-        // Merge all characters
-        merge_pos := list..begin();
-        while merge_pos != list..end() next (merge_pos++) {
-            if merge_pos** is char_token {
-                combine_pos := merge_pos + 1;
-                while combine_pos != list..end() && combine_pos** is char_token { // The erase advances combine_pos
-                    (merge_pos** as char_token)..append(combine_pos** as char_token);
-                    combine_pos = list..erase(combine_pos);
-                }
-            }
-        }
-    }
-}
-
-
-//  State for the branch reset. Takes care of the group numbering. See '(|<pattern>)'.
-//
-parse_context_branch_reset_state: @struct<noforward> type = 
-{
-    is_active : bool = false; // If we have a branch reset group.
-    cur_group : int  = 1;     // Next group identifier. 0 == global capture group.
-    max_group : int  = 1;     // Maximum group identifier generated.
-    from      : int  = 1;     // Starting identifier on new alternative branch.
-
-    //  Next group identifier.
-    next: (inout this) -> int = {
-        g := cur_group;
-        cur_group += 1;
-        max_group = max(max_group, cur_group);
-
-        return g;
-    }
-
-    //  Set next group identifier.
-    set_next: (inout this, g: int) = {
-        cur_group = g;
-        max_group = max(max_group, g);
-    }
-
-    //  Start a new alternative branch.
-    next_alternative: (inout this) = {
-        if is_active {
-            cur_group = from;
-        }
-    }
-
-    //  Initialize for a branch reset group.
-    set_active_reset: (inout this, restart: int) = {
-        is_active = true;
-        cur_group = restart;
-        from      = restart;
-        max_group = restart;
-    }
-}
-
-
-//  Context during parsing of the regular expressions.
-// 
-//  Keeps track of the distributed group identifiers, current parsed group and branch resets.
-//
-parse_context: type = 
-{
-    regex: std::string_view;   // Regular expression string.
-    pos:   size_t = 0;         // Current parsing position.
-    root:  token_ptr;          // Token representing the regular expression.
-
-    cur_group_state:        parse_context_group_state = ();
-    cur_branch_reset_state: parse_context_branch_reset_state = ();
-
-    
-    public named_groups:  std::map<std::string, int> = ();
-
-    error_out: error_func; // TODO: Declaring std::function<void(std::string)> fails for cpp2.
-    has_error: bool      = false;
-
-    operator=:(out this, r: std::string_view, e) = {
-        regex = r;
-        root = shared.new<regex_token_empty>("");
-        error_out = e;
-    }
-
-    //  State management functions
-    //
-
-    //  Returned group state needs to be stored and provided in `end_group`.
-    start_group: (inout this) -> parse_context_group_state = 
-    {
-        old_state: parse_context_group_state = ();
-        old_state..swap(cur_group_state);
-        cur_group_state.modifiers = old_state.modifiers;
-
-        return old_state;
-    }
-
-    //  `old_state` argument needs to be from start group.
-    end_group: (inout this, old_state: parse_context_group_state) -> token_ptr =
-    {
-        inner := cur_group_state..get_as_token();
-        cur_group_state = old_state;
-        return inner;
-    }
-
-    get_modifiers: (this) -> expression_flags = {
-        return cur_group_state.modifiers;
-    }
-
-    set_modifiers: (inout this, mod: expression_flags) = {
-        cur_group_state.modifiers = mod;
-    }
-
-    //  Branch reset management functions
-    //
-
-    branch_reset_new_state: (inout this) -> parse_context_branch_reset_state = 
-    {
-        old_state: parse_context_branch_reset_state = ();
-        std::swap(old_state, cur_branch_reset_state);
-
-        cur_branch_reset_state..set_active_reset(old_state.cur_group);
-        return old_state;
-    }
-
-    branch_reset_restore_state: (inout this, old_state: parse_context_branch_reset_state) = 
-    {
-        max_group := cur_branch_reset_state.max_group;
-        cur_branch_reset_state = old_state;
-        cur_branch_reset_state..set_next(max_group);
-    }
-
-    next_alternative: (inout this) = 
-    {
-        cur_group_state..next_alternative();
-        cur_branch_reset_state..next_alternative();
-    }
-
-    //  Regex token management
-    //
-    add_token: (inout this, token: token_ptr) = {
-        cur_group_state..add(token);
-    }
-
-    has_token: (this) -> bool = {
-        return !cur_group_state..empty();
-    }
-
-    pop_token: (inout this) -> token_ptr = 
-    {
-        r : token_ptr = nullptr;
-        if has_token() {
-            r = cur_group_state.cur_match_list..back();
-            cur_group_state.cur_match_list..pop_back();
-        }
-
-        return r;
-    }
-
-    get_as_token: (inout this) -> token_ptr = {
-        return root;
-    }
-
-    //  Group management
-    //
-    get_cur_group: (this) -> int = {
-        return cur_branch_reset_state.cur_group;
-    }
-
-    next_group: (inout this) -> int = {
-        return cur_branch_reset_state..next();
-    }
-
-    set_named_group: (inout this, name: std::string, id: int) = 
-    {
-        if !named_groups..contains(name) { // Redefinition of group name is not an error. The left most one is retained.
-            named_groups[name] = id;
-        }
-    }
-
-    get_named_group: (this, name: std::string) -> int = 
-    {
-        iter := named_groups..find(name);
-        if iter == named_groups..end() {
-             return -1;
-        }
-        else {
-            return iter*.second;
-        }
-    }
-    
-    //  Position management functions
-    //
-    current: (this) -> char = { return regex[pos]; }
-
-    //  Get the next token in the regex, skipping spaces according to the parameters. See `x` and `xx` modifiers.
-    private get_next_position: (in this, in_class: bool, no_skip: bool) -> size_t = 
-    {
-        perl_syntax := false;
-        if !no_skip {
-            if in_class {
-                perl_syntax = get_modifiers()..has(expression_flags::perl_code_syntax) && get_modifiers()..has(expression_flags::perl_code_syntax_in_classes);
-            }
-            else {
-                perl_syntax = get_modifiers()..has(expression_flags::perl_code_syntax);
-            }
-        }
-        cur := pos + 1;
-        if perl_syntax {
-            while cur < regex..size() next (cur += 1) {
-                n: = regex[cur];
-
-                if space_class<char>::includes(n) {
-                    continue;
-                }
-                else if !in_class && '#' == n {
-                    cur = regex..find('\n', cur);
-                    if std::string::npos == cur {
-                        // No new line, comment runs until the end of the pattern
-                        cur = regex..size();
-                    }
-                }
-                else { // None space none comment char
-                    break;
-                }
-            }
-        }
-
-        //  Check for end of file.
-        if cur > regex..size() {
-            cur = regex..size();
-        }
-        return cur;
-    }
-
-    //  Return true if next token is available.
-    private next_impl: (inout this, in_class: bool, no_skip: bool) -> bool = 
-    {
-        pos = get_next_position(in_class, no_skip);
-        if pos != regex..size() {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
-    next         : (inout this) = next_impl(false, false);
-    next_in_class: (inout this) = next_impl( true, false);
-    next_no_skip : (inout this) = next_impl(false,  true);
-
-    next_n: (inout this, n: int) -> bool = {
-        r := true;
-        cur := 0;
-        while r && cur < n next (r = next()) {
-            cur += 1;
-        }
-        return r;
-    }
-
-    has_next: (this) -> bool = { return pos < regex..size(); }
-
-    private grab_until_impl: (inout this, in e: std::string, out r: std::string, any: bool) -> bool = 
-    {
-        end:= pos; // NOLINT(clang-analyzer-deadcode.DeadStores)
-        if any {
-            end = regex..find_first_of(e, pos);
-        }
-        else {
-            end = regex..find(e, pos);
-        }
-
-        if end != std::string_view::npos {
-            r = regex..substr(pos, end - pos);
-            pos = end;
-            return true;
-        }
-        else {
-            r = "";
-            return false;
-        }
-    }
-
-    grab_until: (inout this, in e: std::string, out r: std::string)        = grab_until_impl(e, out r, false);
-    grab_until: (inout this, in e: char, out r: std::string)               = grab_until_impl(std::string(1, e), out r, false);
-    grab_until_one_of: (inout this, in e: std::string, out r: std::string) = grab_until_impl(e, out r, true);
-
-    grab_n: (inout this, in n: int, out r: std::string) -> bool = 
-    {
-        if pos + n as size_t <= regex..size() {
-            r = regex..substr(pos, n as size_t);
-            pos += (n as size_t) - 1;
-            return true;
-        }
-        else {
-            r = "";
-            return false;
-        }
-    }
-
-    grab_number: (inout this) -> std::string = 
-    {
-        start := pos;
-        start_search := pos;
-        if regex[start_search] == '-' {
-            start_search += 1;
-        }
-        end := regex..find_first_not_of("1234567890", start_search);
-
-        r : std::string;
-        if end != std::string::npos {
-            r = regex..substr(start, end - start);
-            pos = end - 1;
-        }
-        else {
-            r = regex..substr(start);
-            pos = regex..size() - 1;
-        }
-        return r;
-    }
-
-    private peek_impl: (in this, in_class: bool) -> char = {
-        next_pos := get_next_position(in_class, false);
-        if next_pos < regex..size() {
-            return regex[next_pos];
-        }
-        else {
-            return '\0';
-        }
-    }
-
-    peek         : (in this) = peek_impl(false);
-    peek_in_class: (in this) = peek_impl( true);
-
-
-    //  Parsing functions
-    //
-    parser_group_modifiers: (inout this, change_str: std::string, inout parser_modifiers: expression_flags) -> bool = 
-    {
-        is_negative := false;
-        is_reset    := false;
-
-        apply := :(flag: expression_flags) = {
-            if is_negative&$* {
-                parser_modifiers&$*..clear(flag);
-            }
-            else {
-                parser_modifiers&$*..set(flag);
-            }
-        };
-
-        iter := change_str..begin();
-        while iter != change_str..end() next (iter++) 
-        {
-            cur := iter*;
-            if cur == '^' {
-                is_reset = true;
-                parser_modifiers = expression_flags::none;
-            }
-            else if cur == '-' {
-                if is_reset { _= error("No negative modifier allowed."); return false; }
-                is_negative = true;
-            }
-            else if cur == 'i' { apply(expression_flags::case_insensitive); }
-            else if cur == 'm' { apply(expression_flags::multiple_lines); }
-            else if cur == 's' { apply(expression_flags::single_line); }
-            else if cur == 'n' { apply(expression_flags::no_group_captures); }
-            else if cur == 'x' {
-                if (iter + 1) == change_str..end() || (iter + 1)* != 'x' {
-                    // x modifier
-                    apply(expression_flags::perl_code_syntax);
-
-                    // Just x unsets xx and remove x also removes xx
-                    parser_modifiers..clear(expression_flags::perl_code_syntax_in_classes);
-                }
-                else { // xx modifier
-                    // xx also sets or unsets x
-                    apply(expression_flags::perl_code_syntax);
-                    apply(expression_flags::perl_code_syntax_in_classes);
-
-                    iter++; // Skip the second x
-                }
-            }
-            else {
-                _= error("Unknown modifier: (cur)$"); return false;
-            }
-        }
-
-        return true;
-    }
-
-    parse_until:(inout this, term: char) -> bool = {
-        cur_token: token_ptr = ();
-
-        while valid() next _ = next()
-        {
-            if term == current() { break; }
-
-            cur_token = nullptr;
-
-            if !cur_token && valid() { cur_token = alternative_token::parse(this); }
-            if !cur_token && valid() { cur_token = any_token::parse(this); }
-            if !cur_token && valid() { cur_token = class_token::parse(this); }
-            if !cur_token && valid() { cur_token = escape_token_parse(this); }
-            if !cur_token && valid() { cur_token = global_group_reset_token_parse(this); }
-            if !cur_token && valid() { cur_token = group_ref_token::parse(this); }
-            if !cur_token && valid() { cur_token = group_token::parse(this); }
-            if !cur_token && valid() { cur_token = hexadecimal_token_parse(this); }
-            if !cur_token && valid() { cur_token = line_end_token_parse(this); }
-            if !cur_token && valid() { cur_token = line_start_token_parse(this); }
-            if !cur_token && valid() { cur_token = named_class_token_parse(this); }
-            if !cur_token && valid() { cur_token = octal_token_parse(this); }
-            if !cur_token && valid() { cur_token = range_token::parse(this); }
-            if !cur_token && valid() { cur_token = special_range_token::parse(this); }
-            if !cur_token && valid() { cur_token = word_boundary_token_parse(this); }
-
-            // Everything else is matched as it is.
-            if !cur_token && valid() { cur_token = char_token::parse(this); }
-
-            if cur_token && valid() {
-                add_token(cur_token);
-            } else {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    parse: (inout this, modifiers: std::string) -> bool = 
-    {
-
-        flags : expression_flags = ();
-        if !parser_group_modifiers(modifiers, flags) { return false; }
-        set_modifiers(flags);
-
-        r := parse_until('\0');
-        if r {
-            root = cur_group_state..get_as_token();
-        }
-
-        return r;
-    }
-
-    //  Misc functions
-
-    get_pos:   (this)                             = pos;
-    get_range: (this, start: size_t, end: size_t) = std::string(regex..substr(start, end - start + 1));
-    valid:     (this) -> bool                     = { return has_next() && !has_error; }
-
-    error: (inout this, err: std::string) -> token_ptr = {
-        has_error = true;
-        error_out("Error during parsing of regex '(regex)$' at position '(pos)$': (err)$");
-        return nullptr;
-    }
-}
-
-
-//  Context for one function generation. Generation of functions can be interleaved,
-//  therefore we buffer the code for one function here.
-//
-generation_function_context: @struct<noforward> type = {
-    code: std::string = "";
-    tabs: std::string = "";
-
-    add_tabs: (inout this, c: int) = {
-        i: int = 0;
-        while i < c next i += 1 {
-            tabs += "  ";
-        }
-    }
-
-    remove_tabs: (inout this, c: int) = {
-        tabs = tabs..substr(0, (c as size_t) * 2);
-    }
-}
-
-
-//  Context for generating the state machine.
-generation_context: type = 
-{
-    gen_stack: std::vector<generation_function_context> = (1); // Element 0 contains all the code.
-
-    matcher_func: int         = 0;
-    reset_func:   int         = 0;
-    temp_name:    int         = 0;
-    entry_func:   std::string = "";
-
-    //  Generation helpers
-    //
-    match_parameters: (this) -> std::string = { return "r.pos, ctx"; }
-
-    //  Code generation.
-
-    //  Add code line.
-    add: (inout this, s: std::string) = {
-        cur := get_current();
-        cur*.code += "(cur*.tabs)$(s)$\n";
-    }
-
-    //  Add check for token. The check needs to be a function call that returns a boolean.
-    add_check: (inout this, check: std::string) = {
-        cur := get_current();
-        cur*.code += "(cur*.tabs)$if !cpp2::regex::(check)$ { r.matched = false; break; }\n";
-    }
-
-    //  Add a stateful check. The check needs to return a `match_return`.
-    add_statefull: (inout this, next_func: std::string, check: std::string) = 
-    {
-        end_func_statefull(check);
-
-        name := next_func..substr(0, next_func..size() - 2);
-        start_func_named(name);
-    }
-
-    protected start_func_named: (inout this, name: std::string) = 
-    {
-        cur := new_context();
-
-        cur*.code += "(cur*.tabs)$(name)$: @struct<noforward> type = {\n";
-        cur*.code += "(cur*.tabs)$  operator(): (this, cur: Iter, inout ctx: context, other) -> cpp2::regex::match_return<Iter> = {\n";
-        cur*.code += "(cur*.tabs)$    r := ctx..pass(cur);\n";
-        cur*.code += "(cur*.tabs)$    do {\n";
-        cur*..add_tabs(3);
-    }
-
-    protected start_func: (inout this) -> std::string = 
-    {
-        name := gen_func_name();
-        start_func_named(name);
-        return name + "()";
-    }
-
-    protected end_func_statefull: (inout this, s: std::string) = 
-    {
-        cur := get_current();
-        cur*..remove_tabs(3);
-        cur*.code += "\n";
-        cur*.code += "(cur*.tabs)$    } while false;\n";
-        cur*.code += "(cur*.tabs)$    if r.matched {\n";
-        cur*.code += "(cur*.tabs)$      r = (s)$;\n";
-        cur*.code += "(cur*.tabs)$    }\n";
-        cur*.code += "(cur*.tabs)$    else {\n";
-        cur*.code += "(cur*.tabs)$      r.pos = ctx.end;\n";
-        cur*.code += "(cur*.tabs)$    }\n";
-        cur*.code += "(cur*.tabs)$    return r;\n";
-        cur*.code += "(cur*.tabs)$  }\n";
-        cur*.code += "(cur*.tabs)$}\n";
-
-        finish_context();
-    }
-
-    //  Generate the function for a token.
-    generate_func: (inout this, token: token_ptr) -> std::string = 
-    {
-        name := start_func();
-        token*..generate_code(this);
-        end_func_statefull("other((match_parameters())$)");
-
-        return name;
-    }
-
-    //  Generate the reset for a list of group identifiers.
-    generate_reset: (inout this, groups: std::set<int>) -> std::string = 
-    {
-        if groups..empty() {
-            return "cpp2::regex::no_reset()";
-        }
-
-        name := gen_reset_func_name();
-        cur := new_context();
-
-        cur*.code += "(cur*.tabs)$(name)$: @struct<noforward> type = {\n";
-        cur*.code += "(cur*.tabs)$  operator(): (this, inout ctx) = {\n";
-        for groups do (g) {
-            cur*.code += "(cur*.tabs)$  ctx..set_group_invalid((g)$);\n";
-        }
-        cur*.code += "(cur*.tabs)$  }\n";
-        cur*.code += "(cur*.tabs)$}\n";
-
-        finish_context();
-
-        return name + "()";
-    }
-
-    //  Name generation
-    //
-    protected gen_func_name: (inout this) -> std::string = {
-        cur_id : = matcher_func;
-        matcher_func += 1;
-        return "func_(cur_id)$";
-    }
-
-    next_func_name: (inout this) -> std::string = {
-        return gen_func_name() + "()";
-    }
-
-    protected gen_reset_func_name: (inout this) -> std::string = {
-        cur_id : = reset_func;
-        reset_func += 1;
-        return "reset_(cur_id)$";
-    }
-
-    gen_temp: (inout this) -> std::string = {
-        cur_id := temp_name;
-        temp_name += 1;
-        return "tmp_(cur_id)$";
-    }
-
-    //  Context management
-    //
-    new_context: (inout this) -> *generation_function_context = {
-        gen_stack..push_back(generation_function_context());
-        cur := get_current();
-        cur*.tabs = "    ";
-
-        return cur;
-    }
-
-    finish_context: (inout this) = {
-        cur := get_current();
-        base := get_base();
-        base*.code += cur*.code;
-
-        gen_stack..pop_back();
-    }
-
-    //  Misc functions
-    //
-    private get_current: (inout this) -> *generation_function_context = {
-        return gen_stack..back()&;
-    }
-
-    private get_base: (inout this) -> *generation_function_context = {
-        return gen_stack[0]&;
-    }
-
-    get_entry_func: (this) -> std::string = {
-        return entry_func;
-    }
-
-    create_named_group_lookup: (this, named_groups: std::map<std::string, int>) -> std::string = 
-    {
-        res: std::string = "get_named_group_index: (name) -> int = {\n";
-
-        //  Generate if selection.
-        sep: std::string = "";
-        for named_groups do (cur) {
-            res += "(sep)$if name == \"(cur.first)$\" { return (cur.second)$; }";
-            sep = "else ";
-        }
-
-        //  Generate else branch or return if list is empty.
-        if named_groups..empty() {
-            res += "  _ = name;\n";
-            res += "  return -1;\n";
-        }
-        else {
-            res += "  else { return -1; }\n";
-        }
-        res += "}\n";
-        return res;
-    }
-
-
-    //  Run the generation for the token.
-    run: (inout this, token: token_ptr) -> std::string = {
-        entry_func = generate_func(token);
-
-        return get_base()*.code;
-    }
-}
-
-//  Regex syntax: |  Example: ab|ba
-//
-//  Non greedy implementation. First alternative that matches is chosen.
-//
-alternative_token: @polymorphic_base type = 
-{
-    this: regex_token_empty = ("");  // No code gen here. alternative_token_gen is created in the parse_context
-
-    operator=:(out this) = {}
-
-    parse: (inout ctx: parse_context) -> token_ptr = {
-        if ctx..current() != '|' { return nullptr; }
-
-        if !ctx..has_token() { return ctx..error("Alternative with no content."); }
-        ctx..next_alternative();
-        return shared.new<alternative_token>();
-    }
-}
-
-alternative_token_gen: @polymorphic_base type = 
-{
-    this: regex_token;
-
-    alternatives: token_vec;
-
-    operator=: (out this, a: token_vec) = {
-        regex_token = gen_string(a);
-        alternatives = a;
-    }
-
-    generate_code: (override this, inout ctx: generation_context) = 
-    {
-        functions: std::string = "";
-
-        for alternatives do (cur) {
-            groups: std::set<int> = ();
-            cur*..add_groups(groups);
-
-            functions += ", " + ctx..generate_func(cur);
-            functions += ", " + ctx..generate_reset(groups);
-        }
-
-        next_name := ctx..next_func_name();
-
-        ctx..add_statefull(next_name, "cpp2::regex::alternative_token_matcher<char>::match((ctx..match_parameters())$, other, (next_name)$ (functions)$)");
-    }
-
-    add_groups: (override this, inout groups: std::set<int>) = 
-    {
-        for alternatives do (cur) {
-            cur*..add_groups(groups);
-        }
-    }
-
-    gen_string: (a: token_vec) -> std::string = 
-    {
-        r: std::string = "";
-        sep: std::string = "";
-
-        for a do (cur) {
-            r += sep + cur*..to_string();
-            sep = "|";
-        }
-
-        return r;
-    }
-}
-
-
-//  Regex syntax: .
-//
-any_token: @polymorphic_base type = 
-{
-    this: regex_token_check = (".");
-
-    operator=:(out this, single_line: bool) = {
-        regex_token_check = (".", "any_token_matcher<char, (single_line)$>");
-    }
-
-    parse: (inout ctx: parse_context) -> token_ptr = {
-        if '.' != ctx..current() { return nullptr;}
-
-        return shared.new<any_token>(ctx..get_modifiers()..has(expression_flags::single_line));
-    }
-}
-
-
-//  Regex syntax: a
-//
-char_token: @polymorphic_base type = 
-{
-    this: regex_token;
-
-    token      : std::string;
-    ignore_case: bool;
-
-    operator=: (out this, t: char, ignore_case_: bool) = {
-        regex_token = (std::string(1, t));
-        token = t;
-        ignore_case = ignore_case_;
-    }
-
-    parse: (inout ctx: parse_context) -> token_ptr = {
-        return shared.new<char_token>(ctx..current(), ctx..get_modifiers()..has(expression_flags::case_insensitive));
-    }
-
-    generate_code: (override this, inout ctx: generation_context) = 
-    {
-        if ignore_case {
-            upper: std::string = token;
-            lower: std::string = token;
-
-            (copy i: size_t = 0) while i < token..size() next i += 1 {
-                lower[i] = string_util::safe_tolower(token[i]);
-                upper[i] = string_util::safe_toupper(token[i]);
-            }
-
-            if upper != lower {
-                gen_case_insensitive(lower, upper, ctx);
-            }
-            else {
-                gen_case_sensitive(ctx);
-            }
-        }
-        else {
-            gen_case_sensitive(ctx);
-        }
-    }
-
-    gen_case_insensitive: (this, lower: std::string, upper: std::string, inout ctx: generation_context) = 
-    {
-        name: std::string = "str_(ctx..gen_temp())$";
-        lower_name: std::string = "lower_(name)$";
-        upper_name: std::string = "upper_(name)$";
-        size := token..size();
-        ctx..add("(lower_name)$ : std::array<char, (size)$ + 1> = \"(add_escapes(lower))$\";"); // TODO: Add constexpr when Issue https://github.com/hsutter/cppfront/issues/1104 is resolved.
-        ctx..add("(upper_name)$ : std::array<char, (size)$ + 1> = \"(add_escapes(upper))$\";"); // TODO: Add constexpr when Issue https://github.com/hsutter/cppfront/issues/1104 is resolved.
-        ctx..add("if std::distance(r.pos, ctx.end) < (size)$ {");
-        ctx..add("    r.matched = false;");
-        ctx..add("    break;");
-        ctx..add("}");
-        ctx..add("");
-        ctx..add("(copy i : int = 0) while i < (size)$ next (i += 1) {");
-        ctx..add("    if !((lower_name)$[i] == r.pos[i] || (upper_name)$[i] == r.pos[i]) { r.matched = false; }");
-        ctx..add("}");
-        ctx..add("");
-        ctx..add("if r.matched { r.pos += (size)$; }");
-        ctx..add("else { break; }");
-    }
-
-    gen_case_sensitive: (this, inout ctx: generation_context) = 
-    {
-        name: std::string = "str_(ctx..gen_temp())$";
-        size := token..size();
-        ctx..add("(name)$ : std::array<char, (size)$ + 1> = \"(add_escapes(token))$\";"); // TODO: Add constexpr when Issue https://github.com/hsutter/cppfront/issues/1104 is resolved.
-        ctx..add("if std::distance(r.pos, ctx.end) < (size)$ {");
-        ctx..add("    r.matched = false;");
-        ctx..add("    break;");
-        ctx..add("}");
-        ctx..add("");
-        ctx..add("(copy i : int = 0) while i < (size)$ next (i += 1) {");
-        ctx..add("    if (name)$[i] != r.pos[i] { r.matched = false; }");
-        ctx..add("}");
-        ctx..add("");
-        ctx..add("if r.matched { r.pos += (size)$; }");
-        ctx..add("else { break; }");
-    }
-
-    add_escapes: (this, copy str: std::string) -> std::string = 
-    {
-        str = string_util::replace_all(str, "\\", "\\\\");
-        str = string_util::replace_all(str, "\a", "\\a");
-        str = string_util::replace_all(str, "\f", "\\f");
-        str = string_util::replace_all(str, "\x1b", "\" \"\\x1b\" \""); // Generate a separated string. This prevents
-                                                                        // situations like `\x1bblub` from generating
-                                                                        // wrong hex characters.
-        str = string_util::replace_all(str, "\n", "\\n");
-        str = string_util::replace_all(str, "\r", "\\r");
-        str = string_util::replace_all(str, "\t", "\\t");
-
-        return str;
-    }
-
-    append: (inout this, that) = {
-        this.token += that.token;
-        this.string_rep += that.string_rep;
-    }
-}
-
-
-//  Regex syntax: [<character classes>]  Example: [abcx-y[:digits:]]
-//
-class_token: @polymorphic_base type = 
-{
-    this            : regex_token = ();
-
-    negate          : bool;
-    case_insensitive: bool;
-    class_str       : std::string;
-
-    operator=: (out this, negate_: bool, case_insensitive_: bool, class_str_: std::string, str: std::string) = 
-    {
-        regex_token = str;
-        negate = negate_;
-        case_insensitive = case_insensitive_;
-        class_str = class_str_;
-    }
-
-    //  TODO: Rework class generation: Generate check functions for classes.
-    parse: (inout ctx: parse_context) -> token_ptr = 
-    {
-        if ctx..current() != '[' { return nullptr; }
-
-        start_pos := ctx..get_pos();
-
-        supported_classes: std::vector<std::string> = ("alnum", "alpha", "ascii", "blank", "cntrl", "digits", "graph",
-                                                       "lower", "print", "punct", "space", "upper", "word", "xdigit");
-
-        classes: std::vector<std::string> = ();
-
-        //  First step: parse until the end bracket and push single chars, ranges or groups on the class stack.
-        is_negate := false;
-        first     := true;
-        range     := false;
-        while ctx..next_in_class() && (ctx..current() != ']' || first) 
-        {
-            if ctx..current() == '^' 
-            {
-                is_negate = true;
-                continue; // Skip rest of the loop. Also the first update.
-            }
-
-            if ctx..current() == '[' && ctx..peek_in_class() == ':' 
-            {
-                //  We have a character class.
-                _ = ctx..next_n(2);  // Skip [:
-
-                name: std::string = "";
-                if !ctx..grab_until(":]", out name) { return ctx..error("Could not find end of character class."); }
-                if supported_classes..end() == std::find(supported_classes..begin(), supported_classes..end(), name) {
-                    return ctx..error("Unsupported character class. Supported ones are: (string_util::join(supported_classes))$");
-                }
-
-                classes..push_back("[:(name)$:]");
-
-                _ = ctx..next(); // Skip ':' pointing to the ending ']'.
-            }
-            else if ctx..current() == '\\' 
-            {
-                if ctx..next_no_skip()  && (ctx..current() != ']') 
-                {
-                    if  ' ' == ctx..current() 
-                        && ctx..get_modifiers()..has(expression_flags::perl_code_syntax) 
-                        && ctx..get_modifiers()..has(expression_flags::perl_code_syntax_in_classes) 
-                    {
-                        classes..push_back(std::string(1, ctx..current()));
-                    }
-                    else {
-                        name := "";
-                        if      'd' == ctx..current() { name = "short_digits"; }
-                        else if 'D' == ctx..current() { name = "short_not_digits"; }
-                        else if 'h' == ctx..current() { name = "short_hor_space"; }
-                        else if 'H' == ctx..current() { name = "short_not_hor_space"; }
-                        else if 's' == ctx..current() { name = "short_space"; }
-                        else if 'S' == ctx..current() { name = "short_not_space"; }
-                        else if 'v' == ctx..current() { name = "short_ver_space"; }
-                        else if 'V' == ctx..current() { name = "short_not_ver_space"; }
-                        else if 'w' == ctx..current() { name = "short_word"; }
-                        else if 'W' == ctx..current() { name = "short_not_word"; }
-                        else {
-                            return ctx..error("Unknown group escape.");
-                        }
-                        classes..push_back("[:(name)$:]");
-                    }
-                } else {
-                    return ctx..error("Escape without a following character.");
-                }
-            }
-            else if ctx..current() == '-' 
-            {
-                if first { // Literal if first entry.
-                    classes..push_back("(ctx..current())$");
-                } else {
-                    range = true;
-                }
-            }
-            else 
-            {
-                if range { // Modify last element to be a range.
-                    classes..back() += "-(ctx..current())$";
-                    range = false;
-                }
-                else {
-                    classes..push_back("(ctx..current())$");
-                }
-            }
-
-            first = false;
-        }
-
-        if ctx..current() != ']' {
-            return ctx..error("Error end of character class definition before terminating ']'.");
-        }
-        end_pos := ctx..get_pos();
-
-        if range { // If '-' is last entry treat it as a literal char.
-            classes..push_back("-");
-        }
-
-        // Second step: Wrap the item on the class stack with corresponding class implementation.
-        for classes do (inout cur) 
-        {
-            if cur..starts_with("[:") {
-                name := cur..substr(2, cur..size() - 4);
-                cur = create_matcher("(name)$_class", "");
-            }
-            else if 1 != cur..size() {
-                cur = create_matcher("range_class_entry", "'(cur[0])$', '(cur[2])$'");
-            }
-            else {
-                cur = create_matcher("single_class_entry", "'(cur)$'");
-            }
-        }
-
-        inner      := string_util::join(classes);
-        string_rep := ctx..get_range(start_pos, end_pos);
-        return shared.new<class_token>(
-            is_negate, 
-            ctx..get_modifiers()..has(expression_flags::case_insensitive), 
-            inner, 
-            string_rep
-            );
-    }
-
-    generate_code: (override this, inout ctx: generation_context) = 
-    {
-        ctx..add_check("class_token_matcher<char, (negate)$, (case_insensitive)$, (class_str)$>::match((ctx..match_parameters())$)");
-    }
-
-    private create_matcher: (name: std::string, template_arguments: std::string) -> std::string = 
-    {
-        sep := ", ";
-        if template_arguments..empty() { sep = ""; }
-
-        return "::cpp2::regex::(name)$<char(sep)$(template_arguments)$>";
-    }
-}
-
-
-//  Regex syntax: \a or \n or \[
-//
-escape_token_parse: (inout ctx: parse_context) -> token_ptr = 
-{
-    if ctx..current() != '\\' { return nullptr; }
-
-
-    if std::string::npos == std::string("afenrt^.[]()*{}?+|\\")..find(ctx..peek()) {
-        return nullptr;
-    }
-
-    _ = ctx..next(); // Skip escape
-
-    if std::string::npos != std::string("afenrt\\")..find(ctx..current()) 
-    {
-        // Escape of string special char
-        t : char = '\0';
-        if      'a' == ctx..current() { t = '\a'; }
-        else if 'f' == ctx..current() { t = '\f'; }
-        else if 'e' == ctx..current() { t = '\x1b'; }
-        else if 'n' == ctx..current() { t = '\n'; }
-        else if 'r' == ctx..current() { t = '\r'; }
-        else if 't' == ctx..current() { t = '\t'; }
-        else if '\\' == ctx..current() { t = '\\'; }
-        else { return ctx..error("Internal: missing switch case for special escape."); }
-
-        r: = shared.new<char_token>(t, false);
-        r*..set_string("\\(ctx..current())$");
-        return r;
-    } 
-    else 
-    {
-        // Escape of regex special char
-        r := shared.new<char_token>(ctx..current(), false);
-        r*..set_string("\\(ctx..current())$");
-        return r;
-    }
-
-}
-
-
-//  Regex syntax: \K Example: ab\Kcd
-//
-global_group_reset_token_parse: (inout ctx: parse_context) -> token_ptr = 
-{
-    if !(ctx..current() == '\\' && ctx..peek() == 'K') { return nullptr; }
-
-    _ = ctx..next(); // Skip escape.
-    return shared.new<regex_token_code>("\\K", "ctx..set_group_start(0, r.pos);");
-}
-
-
-//  Regex syntax: \<number>  Example: \1
-//                \g{name_or_number}
-//                \k{name_or_number}
-//                \k<name_or_number>
-//                \k'name_or_number'
-//
-group_ref_token: @polymorphic_base type = 
-{
-    this            : regex_token = ();
-
-    id              : int;
-    case_insensitive: bool;
-
-    operator=:(out this, id_: int, case_insensitive_: bool, str: std::string) = 
-    {
-        regex_token      = str;
-        id               = id_;
-        case_insensitive = case_insensitive_;
-    }
-
-    parse: (inout ctx: parse_context) -> token_ptr = 
-    {
-        if ctx..current() != '\\' { return nullptr; }
-
-        str : std::string = "\\";
-        group : std::string = "";
-
-        if '0' <= ctx..peek() <= '9' 
-        {
-            _ = ctx..next(); // Skip escape
-            group = ctx..grab_number();
-
-            if group..size() >= 3 as size_t 
-            {
-                // Octal syntax (\000) not a group ref matcher.
-                number := 0;
-                if !string_util::string_to_int(group, number, 8) { return ctx..error("Could not convert octal to int."); }
-
-                number_as_char : char = unchecked_narrow<char>(number);
-
-                token := shared.new<char_token>(number_as_char, ctx..get_modifiers()..has(expression_flags::case_insensitive));
-                token*..set_string("\\(string_util::int_to_string<8>(number_as_char as int))$");
-
-                return token;
-            }
-
-            str += group;
-            // Regular group ref
-        }
-        else if 'g' == ctx..peek() 
-        {
-            _ = ctx..next(); // Skip escape
-            if !ctx..next() { return ctx..error("Group escape without a following char."); } // Skip g
-
-            str += "g";
-
-            if ctx..current() == '{' {
-                str += "{";
-                if !(ctx..next() && ctx..grab_until('}', out group)) { return ctx..error("No ending bracket."); }
-
-                str += group + "}";
-            }
-            else {
-                group = ctx..grab_number();
-                str += group;
-            }
-        }
-        else if 'k' == ctx..peek() 
-        {
-            _ = ctx..next(); // Skip escape
-            if !ctx..next() { return ctx..error("Group escape without a following char."); } // Skip k
-
-            str += "k";
-
-            term_char := '\0';
-            if ctx..current() == '{' { term_char = '}'; }
-            else if ctx..current() == '<' { term_char = '>'; }
-            else if ctx..current() == '\'' { term_char = '\''; }
-            else {
-                return ctx..error("Group escape has wrong operator.");
-            }
-
-            str += ctx..current();
-
-            if !(ctx..next() && ctx..grab_until(term_char, out group)) { return ctx..error("No ending bracket."); }
-
-            str += group + term_char;
-        }
-        else 
-        {
-            // No group ref matcher
-            return nullptr;
-        }
-
-        // Parse the group
-        group = string_util::trim_copy(group);
-        group_id : int = 0;
-        if string_util::string_to_int(group, group_id) 
-        {
-            if group_id < 0 {
-                group_id = ctx..get_cur_group() + group_id;
-
-                if group_id < 1 { // Negative and zero are no valid groups.
-                    return ctx..error("Relative group reference does not reference a valid group. (Would be (group_id)$.)");
-                }
-            }
-
-            if group_id >= ctx..get_cur_group() {
-                return ctx..error("Group reference is used before the group is declared.");
-            }
-        }
-        else 
-        {
-            // Named group
-            group_id = ctx..get_named_group(group);
-            if -1 == group_id { return ctx..error("Group names does not exist. (Name is: (group)$)");}
-        }
-
-        return shared.new<group_ref_token>(group_id, ctx..get_modifiers()..has(expression_flags::case_insensitive), str);
-    }
-
-    generate_code: (override this, inout ctx: generation_context) = {
-        ctx..add_check("group_ref_token_matcher<char, (id)$, (case_insensitive)$>((ctx..match_parameters())$)");
-    }
-}
-
-
-//  Regex syntax: (<tokens>)      Example: (abc)
-//                (?<modifiers)            (?i)
-//                (?<modifiers>:<tokens>)  (?i:abc)
-//                (?<<name>>:<tokens>)     (?<start>:abc)
-//                (?#<comment>)            (#Step 1 finished)
-//                (?|<tokens>)             (?|(abc)|(cde))
-//                (?=<tokens>)             (?=abc)
-//                (?!<tokens>)             (?!abc)
-//                (*<name>:<tokens)        (*pla:abc)
-//
-group_token: @polymorphic_base type = 
-{
-    this: regex_token = ();
-
-    number: int      = -1;
-    inner: token_ptr = nullptr;
-
-    parse_lookahead: (inout ctx: parse_context, syntax: std::string, positive: bool) -> token_ptr = 
-    {
-        _ = ctx..next(); // Skip last token defining the syntax
-
-        r := shared.new<lookahead_token>(positive);
-
-        old_state := ctx..start_group();
-        if !ctx..parse_until(')') { return ctx..error("Lookahead without a closing bracket."); }
-        r*.inner = ctx..end_group(old_state);
-        r*..set_string("((syntax)$(r*.inner*..to_string())$)");
-
-        return r;
-    }
-
-    parse: (inout ctx: parse_context) -> token_ptr = 
-    {
-        if ctx..current() != '(' { return nullptr; }
-
-        has_id              :=  !ctx..get_modifiers()..has(expression_flags::no_group_captures);
-        has_pattern         := true;
-        group_name          : std::string = "";
-        group_name_brackets := true;
-        modifiers           : std::string = "";
-        modifiers_change_to : =  ctx..get_modifiers();
-
-        //  Skip the '('
-        if !ctx..next() { return ctx..error("Group without closing bracket."); }
-
-        if ctx..current() == '?' 
-        {
-            //  Special group
-            if !ctx..next_no_skip() { return ctx..error("Missing character after group opening.");  }
-
-            if ctx..current() == '<' || ctx..current() == '\'' 
-            {
-                //  Named group
-                end_char := ctx..current();
-                if end_char == '<' {
-                    end_char = '>';
-                } else {
-                    group_name_brackets = false;
-                }
-                has_id = true; // Force id for named groups.
-                if !ctx..next() /* skip '<' */ { return ctx..error("Missing ending bracket for named group.");  }
-                if !ctx..grab_until(end_char, out group_name) { return ctx..error("Missing ending bracket for named group.");  }
-                if !ctx..next() { return ctx..error("Group without closing bracket."); }
-            }
-            else if ctx..current() == '#' 
-            {
-                //  Comment
-                comment_str : std::string = "";
-                _ = ctx..next(); // Skip #
-                if !ctx..grab_until(")", out comment_str) { return ctx..error("Group without closing bracket."); }
-                //  Do not add comment. Has problems with ranges.
-
-                //  Pop token and add a list. This fixes comments between a token and a range
-                if ctx..has_token() {
-                    list : token_vec = ();
-                    list..push_back(ctx..pop_token());
-                    list..push_back(shared.new<regex_token_empty>("(?#(comment_str)$)"));
-
-                    return shared.new<regex_token_list>(list);
-                }
-                else {
-                    return shared.new<regex_token_empty>("(?#(comment_str)$)");
-                }
-            }
-            else if ctx..current() == '|' 
-            {
-                //  Branch reset group
-
-                if !ctx..next() /* skip '|' */ { return ctx..error("Missing ending bracket for named group.");  }
-
-                old_parser_state := ctx..start_group();
-                old_branch_state  := ctx..branch_reset_new_state();
-                if !ctx..parse_until(')') { return nullptr; }
-                ctx..branch_reset_restore_state(old_branch_state);
-                inner_ := ctx..end_group(old_parser_state);
-
-                list: token_vec = (shared.new<regex_token_empty>("(?|"), inner_, shared.new<regex_token_empty>(")"));
-                return shared.new<regex_token_list>(list);
-            }
-            else if ctx..current() == '=' || ctx..current() == '!' 
-            {
-                return parse_lookahead(ctx, "?(ctx..current())$", ctx..current() == '=');
-            }
-            else 
-            {
-                //  Simple modifier
-                has_id = false;
-                if !ctx..grab_until_one_of("):", out modifiers) { return ctx..error("Missing ending bracket for group."); }
-                if !ctx..parser_group_modifiers(modifiers, modifiers_change_to) {
-                     return nullptr;
-                }
-
-                if ')' == ctx..current() {
-                    has_pattern = false;
-                }
-                else {
-                    if !ctx..next() /* skip ':' */ { return ctx..error("Missing ending bracket for group.");  }
-                }
-            }
-        }
-        else if ctx..current() == '*' 
-        {
-            //  Named pattern
-            _ = ctx..next(); // Skip *.
-            name: std::string = "";
-            if !ctx..grab_until(':', out name) { return ctx..error("Missing colon for named pattern.");  }
-
-            if name == "pla" || name == "positive_lookahead" {
-                return parse_lookahead(ctx, "*(name)$:", true);
-            }
-            else if name == "nla" || name == "negative_lookahead" {
-                return parse_lookahead(ctx, "*(name)$:", false);
-            }
-            else {
-                return ctx..error("Unknown named group pattern: '(name)$'");
-            }
-        }
-
-        if has_pattern 
-        {
-            //  Regular group
-
-            r := shared.new<group_token>();
-            if has_id {
-                r*.number = ctx..next_group();
-
-                if 0 != group_name..size() {
-                    ctx..set_named_group(group_name, r*.number);
-                }
-            }
-
-            old_state := ctx..start_group();
-            ctx..set_modifiers(modifiers_change_to);
-            if !ctx..parse_until(')') { return nullptr; }
-            r*.inner = ctx..end_group(old_state);
-            r*..set_string(gen_string(group_name, group_name_brackets, !has_id, modifiers, r*.inner));
-
-            return r;
-        }
-        else 
-        {
-            //  Only a modifier
-            ctx..set_modifiers(modifiers_change_to);
-
-            return shared.new<regex_token_empty>("(?(modifiers)$)");
-        }
-    }
-
-    gen_string: (name: std::string, name_brackets: bool, has_modifier: bool, modifiers: std::string, inner_: token_ptr) -> std::string = 
-    {
-        start : std::string = "(";
-        if 0 != name..size() {
-            if name_brackets {
-                start += "?<(name..data())$>";
-            }
-            else {
-                start += "?'(name..data())$'";
-            }
-        }
-        else if has_modifier {
-            start += "?" + modifiers + ":";
-        }
-
-        return start + inner_*..to_string() + ")";
-    }
-
-    generate_code: (override this, inout ctx: generation_context) = 
-    {
-        if -1 != number {
-            ctx..add("ctx..set_group_start((number)$, r.pos);");
-        }
-
-        inner*..generate_code(ctx);
-        if -1 != number {
-            ctx..add("ctx..set_group_end((number)$, r.pos);");
-            tmp_name := ctx..gen_temp();
-            ctx..add("(tmp_name)$_func :=  :() = {");
-            ctx..add("  if !r&$*.matched {");
-            ctx..add("    ctx&$*..set_group_invalid((number)$);");
-            ctx..add("  }");
-            ctx..add("};");
-            ctx..add("(tmp_name)$ :=  cpp2::regex::make_on_return((tmp_name)$_func);");
-            ctx..add("_ = (tmp_name)$;"); // Logic is done in the destructor. Same behavior as for guard objects.
-        }
-    }
-
-    add_groups: (override this, inout groups: std::set<int>) = 
-    {
-        inner*..add_groups(groups);
-        if -1 != number {
-            _ = groups..insert(number);
-        }
-    }
-}
-
-
-//  Regex syntax: \x<number> or \x{<number>}  Example: \x{62}
-//
-hexadecimal_token_parse: (inout ctx: parse_context) -> token_ptr = 
-{
-    if !(ctx..current() == '\\' && ctx..peek() == 'x') { return nullptr; }
-
-    _ = ctx..next(); // Skip escape.
-
-    if !ctx..next() { return ctx..error("x escape without number.");}
-
-    has_brackets := false;
-    number_str: std::string = "";
-    if '{' == ctx..current() {
-        //  Bracketed
-        has_brackets = true;
-        _  = ctx..next(); // Skip '{'
-        if !ctx..grab_until('}', out number_str) { return ctx..error("No ending bracket for \\x"); }
-    }
-    else {
-        //  Grab two chars
-        if !ctx..grab_n(2, out number_str) { return ctx..error("Missing hexadecimal digits after \\x."); }
-    }
-
-    number := 0;
-    if !string_util::string_to_int(number_str, number, 16) { return ctx..error("Could not convert hexadecimal to int."); }
-
-    // TODO: Change for unicode.
-    number_as_char : char = unchecked_narrow<char>(number);
-
-    syntax: std::string = string_util::int_to_string<16>(number_as_char as int);
-    if has_brackets {
-        syntax = "{(syntax)$}";
-    }
-    syntax = "\\x(syntax)$";
-
-    r := shared.new<char_token>(number_as_char, ctx..get_modifiers()..has(expression_flags::case_insensitive));
-    r*..set_string(syntax);
-    return r;
-}
-
-
-//  Regex syntax: $  Example: aa$
-//
-line_end_token_parse: (inout ctx: parse_context) -> token_ptr = 
-{
-    if ctx..current() == '$' || (ctx..current() == '\\' && ctx..peek() == '$') {
-        if (ctx..current() == '\\') { _ = ctx..next(); } // Skip escape
-        return shared.new<regex_token_check>("$", "line_end_token_matcher<char, (ctx..get_modifiers()..has(expression_flags::multiple_lines))$, true>");
-    }
-    else if ctx..current() == '\\' && (ctx..peek() == 'z' || ctx..peek() == 'Z') {
-        _ = ctx..next(); // Skip escape
-
-        negate := ctx..current() == 'Z';
-        return shared.new<regex_token_check>("\\(ctx..current())$", "line_end_token_matcher<char, false, (negate)$>");
-    }
-    else {
-        return nullptr;
-    }
-}
-
-
-//  Regex syntax: ^  Example: ^aa
-//
-line_start_token_parse: (inout ctx: parse_context) -> token_ptr = 
-{
-    if ctx..current() != '^' && !(ctx..current() == '\\' && ctx..peek() == 'A') { return nullptr; }
-
-    if ctx..current() == '\\' {
-        _ = ctx..next();
-        return shared.new<regex_token_check>("\\A", "line_start_token_matcher<char, false>");
-    }
-    else {
-        return shared.new<regex_token_check>("^", "line_start_token_matcher<char, (ctx..get_modifiers()..has(expression_flags::multiple_lines))$>");
-    }
-}
-
-
-//  Regex syntax: (?=) or (?!) or (*pla), etc.  Example: (?=AA)
-//
-//  Parsed in group_token.
-//
-lookahead_token: @polymorphic_base type = 
-{
-    this: regex_token = ("");
-
-    protected positive: bool;
-    public    inner   : token_ptr = nullptr;
-
-    operator=: (out this, positive_: bool) = {
-        positive = positive_;
-    }
-
-    generate_code: (override this, inout ctx: generation_context) = {
-        inner_name := ctx..generate_func(inner);
-
-        ctx..add_check("lookahead_token_matcher<char, (positive)$>((ctx..match_parameters())$, (inner_name)$)");
-    }
-
-    add_groups: (override this, inout groups: std::set<int>) = {
-        inner*..add_groups(groups);
-    }
-}
-
-
-// Named character classes
-//
-named_class_token_parse: (inout ctx: parse_context) -> token_ptr = 
-{
-    if ctx..current() != '\\' { return nullptr; }
-
-    name := "";
-    c_next := ctx..peek();
-
-    if      'd' == c_next { name = "named_class_digits"; }
-    else if 'D' == c_next { name = "named_class_not_digits"; }
-    else if 'h' == c_next { name = "named_class_hor_space"; }
-    else if 'H' == c_next { name = "named_class_not_hor_space"; }
-    else if 'N' == c_next { name = "named_class_no_new_line"; }
-    else if 's' == c_next { name = "named_class_space"; }
-    else if 'S' == c_next { name = "named_class_not_space"; }
-    else if 'v' == c_next { name = "named_class_ver_space"; }
-    else if 'V' == c_next { name = "named_class_not_ver_space"; }
-    else if 'w' == c_next { name = "named_class_word"; }
-    else if 'W' == c_next { name = "named_class_not_word"; }
-    else                  { return nullptr; }
-
-    _ = ctx..next(); // Skip escape
-
-    return shared.new<regex_token_check>("\\(ctx..current())$", "(name)$<char, (ctx..get_modifiers()..has(expression_flags::case_insensitive))$>::match");
-}
-
-
-//  Regex syntax: \o{<number>}  Example: \o{142}
-//
-octal_token_parse: (inout ctx: parse_context) -> token_ptr = 
-{
-    if !(ctx..current() == '\\' && ctx..peek() == 'o') { return nullptr; }
-
-    _ = ctx..next(); // Skip escape.
-
-    if !ctx..next()          { return ctx..error("o escape without number.");}
-    if ctx..current() != '{' { return ctx..error("Missing opening bracket for \\o."); }
-
-    number_str: std::string = "";
-    _  = ctx..next(); // Skip '{'
-    if !ctx..grab_until('}', out number_str) { return ctx..error("No ending bracket for \\o"); }
-
-    number := 0;
-    if !string_util::string_to_int(number_str, number, 8) { return ctx..error("Could not convert octal to int."); }
-
-    // TODO: Change for unicode.
-    number_as_char : char = unchecked_narrow<char>(number);
-
-    syntax: std::string = "\\o{(string_util::int_to_string<8>(number_as_char as int))$}";
-    r := shared.new<char_token>(number_as_char, ctx..get_modifiers()..has(expression_flags::case_insensitive));
-    r*..set_string(syntax);
-    return r;
-}
-
-
-//  Regex syntax: <matcher>{min, max}  Example: a{2,4}
-//
-range_token: @polymorphic_base type = 
-{
-    this                 : regex_token = ("");
-
-    protected min_count  : int         = -1;
-    protected max_count  : int         = -1;
-    protected kind       : int         = range_flags::greedy;
-    protected inner_token: token_ptr   = nullptr;
-
-    operator=: (out this) = {}
-
-    parse: (inout ctx: parse_context) -> token_ptr = 
-    {
-        r := shared.new<range_token>();
-        if ctx..current() == '{' 
-        {
-            if !ctx..has_token() { return ctx..error("'{' without previous element."); }
-
-            inner: std::string = "";
-            if !ctx..grab_until('}', out inner) { return ctx..error("Missing closing bracket '}'."); }
-
-            inner = string_util::trim_copy(inner..substr(1)); // Remove '{' and white spaces.
-            if inner..empty() { return ctx..error("Empty range specifier. Either '{n}', '{n,}', '{,m}' '{n,m}'"); }
-
-            // Non-greedy or possessive
-            r*..parse_modifier(ctx);
-
-            // Get range arguments
-            min_count_str: std::string = "-1";
-            max_count_str: std::string = "-1";
-
-            sep: size_t = inner..find(',');
-            if sep == std::string::npos 
-            {
-                min_count_str = inner;
-                max_count_str = inner;
-                if !string_util::string_to_int(inner, r*.min_count) { return ctx..error("Could not convert range to number."); }
-                r*.max_count = r*.min_count;
-            }
-            else 
-            {
-                inner_first: std::string = string_util::trim_copy(inner..substr(0, sep));
-                inner_last: std::string = string_util::trim_copy(inner..substr(sep + 1));
-
-                if (inner_first..empty() && inner_last..empty()) {
-                    return ctx..error("Empty range specifier. Either '{n}', '{n,}', '{,m}' '{n,m}'");
-                }
-
-                if !inner_first..empty() {
-                    min_count_str = inner_first;
-                    if !string_util::string_to_int(inner_first, r*.min_count) { return ctx..error("Could not convert range to number."); }
-                }
-                if !inner_last..empty() {
-                    max_count_str = inner_last;
-                    if !string_util::string_to_int(inner_last, r*.max_count) { return ctx..error("Could not convert range to number."); }
-                }
-            }
-
-            // Check validity of the range.
-            if -1 != r*.min_count {
-                if !(0 <= r*.min_count) {
-                    return ctx..error("Min value in range is negative. Have (r*.min_count)$)");
-                }
-            }
-            if -1 != r*.max_count {
-                if !(0 <= r*.max_count) {
-                    return ctx..error("Max value in range is negative. Have (r*.max_count)$)");
-                }
-                if -1 != r*.min_count {
-                    if !(r*.min_count <= r*.max_count) {
-                        return ctx..error("Min and max values in range are wrong it should hold 0 <= min <= max. Have 0 <= (r*.min_count)$ <= (r*.max_count)$");
-                    }
-                }
-            }
-
-            r*.inner_token = ctx..pop_token();
-            r*.string_rep = r*.inner_token*..to_string() + r*..gen_range_string() + r*..gen_mod_string();
-
-            return r;
-        }
-
-        return nullptr;
-    }
-
-    parse_modifier: (inout this, inout ctx: parse_context) = 
-    {
-        if ctx..peek() == '?' {
-            kind = range_flags::not_greedy;
-            _ = ctx..next();
-        }
-        else if ctx..peek() == '+' {
-            kind = range_flags::possessive;
-            _ = ctx..next();
-        }
-    }
-
-    gen_mod_string: (this) -> std::string = 
-    {
-        if kind == range_flags::not_greedy {
-            return "?";
-        }
-        else if kind == range_flags::possessive {
-            return "+";
-        }
-        else {
-            return "";
-        }
-    }
-
-    gen_range_string: (this) -> std::string = 
-    {
-        r : std::string = "";
-        if min_count == max_count {
-            r += "{(min_count)$}";
-        }
-        else if min_count == -1 {
-            r += "{,(max_count)$}";
-        }
-        else if max_count == -1 {
-            r += "{(min_count)$,}";
-        }
-        else {
-            r += "{(min_count)$,(max_count)$}";
-        }
-
-        return r;
-    }
-
-    generate_code: (override this, inout ctx: generation_context) = 
-    {
-        inner_name := ctx..generate_func(inner_token);
-        groups: std::set<int> = ();
-        inner_token*..add_groups(groups);
-        reset_name := ctx..generate_reset(groups);
-
-        next_name := ctx..next_func_name();
-        ctx..add_statefull(next_name, "cpp2::regex::range_token_matcher<char, (min_count)$, (max_count)$, (kind)$>::match((ctx..match_parameters())$, (inner_name)$, (reset_name)$, other, (next_name)$)");
-    }
-
-    add_groups: (override this, inout groups: std::set<int>) = {
-        inner_token*..add_groups(groups);
-    }
-
-}
-
-
-//  Regex syntax: *, +, or ?  Example: aa*
-//
-special_range_token: @polymorphic_base type = 
-{
-    this : range_token = ();
-
-    parse: (inout ctx: parse_context) -> token_ptr = 
-    {
-        r := shared.new<special_range_token>();
-        symbol: char = '\0';
-        if ctx..current() == '*' {
-            r*.min_count = 0;
-            r*.max_count = -1;
-            symbol = '*';
-        }
-        else if ctx..current() == '+' {
-            r*.min_count = 1;
-            r*.max_count = -1;
-            symbol = '+';
-        } else if ctx..current() == '?' {
-            r*.min_count = 0;
-            r*.max_count = 1;
-            symbol = '?';
-        } else {
-            return nullptr;
-        }
-
-        if !ctx..has_token() { return ctx..error("'(ctx..current())$' without previous element."); }
-
-
-        r*..parse_modifier(ctx);
-
-        r*.inner_token = ctx..pop_token();
-        r*.string_rep = r*.inner_token*..to_string() + symbol + r*..gen_mod_string();
-        return r;
-    }
-}
-
-
-//  Regex syntax: \b or \B  Example: \bword\b
-//
-//  Matches the start end end of word boundaries.
-//
-word_boundary_token_parse: (inout ctx: parse_context) -> token_ptr = 
-{
-    if ctx..current() != '\\' { return nullptr; }
-
-    if ctx..peek() == 'b' {
-        _ = ctx..next();
-        return shared.new<regex_token_check>("\\b", "word_boundary_token_matcher<char, false>");
-    }
-    else if ctx..peek() == 'B' {
-        _ = ctx..next();
-        return shared.new<regex_token_check>("\\B", "word_boundary_token_matcher<char, true>");
-    }
-    else {
-        return nullptr;
-    }
-}
-
-
-//-----------------------------------------------------------------------
-//
-//  Parser for regular expression.
-//
-//-----------------------------------------------------------------------
-//
-
-//  Parser and generator for regular expressions.
-regex_generator: <Error_out> type = 
-{
-    regex:           std::string_view;
-    modifier:        std::string = "";
-    modifier_escape: std::string = "";
-
-    error_out:       Error_out;
-
-    source:          std::string = "";
-
-    operator=: (out this, r: std::string_view, e: Error_out) = {
-        regex = r;
-        error_out = e;
-    }
-
-    parse:(inout this) -> std::string = 
-    {
-        // Extract modifiers and adapt regex.
-        extract_modifiers();
-
-        parse_ctx: parse_context = (regex, error_out);
-        if !parse_ctx..parse(modifier) {
-            return "";
-        }
-
-        source += "{\n";
-        source += " wrap: <Iter, CharT> type = {\n"; // TODO: Remove wrapper when template template parameters are available.
-        source += "  context: type == cpp2::regex::match_context<CharT, Iter, (parse_ctx..get_cur_group())$>;";
-
-        gen_ctx: generation_context = ();
-        source += gen_ctx..run(parse_ctx..get_as_token());
-        source += "  entry: (cur: Iter, inout ctx: context) -> cpp2::regex::match_return<Iter> = {\n";
-        source += "    ctx..set_group_start(0, cur);\n";
-        source += "    r := (gen_ctx..get_entry_func())$(cur, ctx, cpp2::regex::true_end_func());\n";
-        source += "    if r.matched { ctx..set_group_end(0, r.pos); }\n";
-        source += "    return r;\n";
-        source += "  }\n";
-
-        source += gen_ctx..create_named_group_lookup(parse_ctx.named_groups);
-        source += "}\n";
-
-        string := parse_ctx..get_as_token()*..to_string();
-        source += "  to_string: () -> std::string = { return R\"((modifier_escape)$(string)$(modifier_escape)$(modifier)$)\"; }\n";
-        source += "}\n";
-
-        _ = parse_ctx;
-
-        return source;
-    }
-
-    private extract_modifiers: (inout this) = 
-    {
-        if regex..find_first_of("'/") == 0 {
-            mod_token: char = regex[0];
-
-            end_pos := regex..rfind(mod_token);
-            if end_pos != 0 {
-                // Found valid start end escape
-                modifier = regex..substr(end_pos + 1);
-                modifier_escape = mod_token;
-                regex = regex..substr(1, end_pos - 1);
-            }
-        }
-    }
-}
-
-generate_regex: <Err> (regex: std::string_view, err: Err) -> std::string = 
-{
-    parser: regex_generator<Err> = (regex, err);
-    r := parser..parse();
-    _ = parser;
-    return r;
-}
-
-
-
-regex_gen: (inout t: meta::type_declaration) =
-{
-    has_default := false;
-    exact_name  := "regex";
-    prefix      := "regex_";
-    expressions : std::map<std::string, std::string> = ();
-
-    for t.get_member_objects() do (inout m)
-    {
-        name: std::string = m.name();
-
-        if name.starts_with(prefix) || name == exact_name
-        {
-            if !m.has_initializer() {
-                t.error("Regular expression must have an initializer.");
-            }
-            m.mark_for_removal_from_enclosing_type();
-
-            if name == exact_name {
-                if has_default {
-                    t.error("Type can only contain one default named regular expression.");
-                }
-                has_default = true;
-            }
-
-            expr: std::string = m.initializer();
-            if expr.starts_with("R\"(") && expr.ends_with(")\"") {
-                expr = expr.substr(3, expr.size() - 5);
-            }
-            else if string_util::is_escaped(expr) {
-                expr = expr.substr(1, expr.size() - 2);
-            }
-            else {
-                t.error("Unknown string format '(expr)$'");
-            }
-
-            expressions[name] = expr;
-        }
-    }
-
-    t.remove_marked_members();
-
-    for expressions do (expr) {
-        regular_expression := generate_regex(expr.second, :(message) = t$.error(message););
-
-        if !regular_expression..empty() {
-            t.add_member("public (expr.first)$_matcher: type = (regular_expression)$");
-            t.add_member("public (expr.first)$: cpp2::regex::regular_expression<char, (expr.first)$_matcher> = ();");
-        }
-    }
-
-    t.add_runtime_support_include( "cpp2regex.h" );
-}
-
-
-//-----------------------------------------------------------------------
-//
-//  apply_metafunctions
-//
-apply_metafunctions: (
-    inout n     : declaration_node,
-    inout rtype : type_declaration,
-    error
-    )
-    -> bool
-= {
-    assert( n.is_type() );
-
-    //  Check for _names reserved for the metafunction implementation
-    if !n.metafunctions.empty()
-    {
-        for  rtype.get_members()
-        do   (m)
-        {
-            m.require( 
-                !m.name().starts_with("_") || m.name().ssize() == 1,
-                "a type that applies a metafunction cannot have a body that declares "
-                "a name that starts with '_' - those names are reserved for the "
-                "metafunction implementation"
-            );
-        }
-    }
-
-    //  For each metafunction, apply it
-    for n.metafunctions
-    do  (meta)
-    {
-        //  Convert the name and any template arguments to strings
-        //  and record that in rtype
-        name := meta*.to_string();
-        name = name.substr(0, name.find('<'));
-
-        args: std::vector<std::string> = ();
-        for meta*.template_arguments()
-        do  (arg)
-            args.push_back( arg.to_string() );
-
-        rtype.set_metafunction_name( name, args );
-
-        //  Dispatch
-        //
-        if name == "interface" {
-            interface( rtype );
-        }
-        else if name == "polymorphic_base" {
-            polymorphic_base( rtype );
-        }
-        else if name == "ordered" {
-            ordered( rtype );
-        }
-        else if name == "weakly_ordered" {
-            weakly_ordered( rtype );
-        }
-        else if name == "partially_ordered" {
-            partially_ordered( rtype );
-        }
-        else if name == "copyable" {
-            copyable( rtype );
-        }
-        else if name == "hashable" {
-            hashable( rtype );
-        }
-        else if name == "basic_value" {
-            basic_value( rtype );
-        }
-        else if name == "value" {
-            value( rtype );
-        }
-        else if name == "weakly_ordered_value" {
-            weakly_ordered_value( rtype );
-        }
-        else if name == "partially_ordered_value" {
-            partially_ordered_value( rtype );
-        }
-        else if name == "cpp1_rule_of_zero" {
-            cpp1_rule_of_zero( rtype );
-        }
-        else if name == "struct" {
-            cpp2_struct( rtype );
-        }
-        else if name == "enum" {
-            cpp2_enum( rtype );
-        }
-        else if name == "flag_enum" {
-            flag_enum( rtype );
-        }
-        else if name == "union" {
-            cpp2_union( rtype );
-        }
-        else if name == "print" {
-            print( rtype );
-        }
-        else if name == "regex" {
-            regex_gen( rtype );
-        }
-        else {
-            error( "unrecognized metafunction name: " + name );
-            error( 
-                "(temporary alpha limitation) currently the supported names are: "
-                "interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, "
-                "copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, "
-                "struct, enum, flag_enum, union, cpp1_rule_of_zero, regex, print"
-            );
-            return false;
-        }
-    }
-
-    return true;
+    t.require( t.make_dll_visible(),
+               "dll_visible can only be applied to a namespace-scope name");
 }
 
 

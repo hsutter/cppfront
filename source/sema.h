@@ -18,10 +18,106 @@
 #ifndef CPP2_SEMA_H
 #define CPP2_SEMA_H
 
-#include "reflect.h"
+#include "reflect_impl.h"
 
 
 namespace cpp2 {
+
+using current_declarations_span = std::span<declaration_node* const>;
+
+auto lookup_metafunction(
+    std::string const& name,
+    current_declarations_span current_declarations,
+    current_names_span current_names
+    )
+    -> meta::expected<meta::lookup_res>
+{
+    struct scope_t {
+        std::string fully_qualified_mangled_name;
+        current_names_span::pointer names_first;
+        current_names_span::pointer names_last = names_first;
+
+        current_names_span names() const { return {names_first, names_last}; }
+    };
+    std::vector<scope_t> scopes = { { {}, current_names.data() + current_names.size() } };
+
+    //  Build up 'scopes'
+    assert(current_declarations.back()->is_type());
+    for (
+        auto first = current_declarations.data() + current_declarations.size() - 2,
+             last = current_declarations.data();
+        first != last;
+        --first
+    )
+    {
+        assert(*first && (*first)->is_namespace());
+
+        //  TODO Handle unnamed namespace '_'
+        auto id = (*first)->name();
+        assert(id);
+        for (auto& scope : scopes)
+        {
+            scope.fully_qualified_mangled_name.insert(0u, *id);
+            scope.fully_qualified_mangled_name.insert(0u, "::");
+        }
+        do {
+            --scopes.back().names_first;
+        } while (
+            !get_if<declaration_node const*>(scopes.back().names_first)
+            || get<declaration_node const*>(*scopes.back().names_first) != *first
+        );
+        scopes.push_back( { {}, scopes.back().names_first } );
+    }
+    scopes.back().names_first = current_names.data();
+    for (auto& scope : scopes) {
+        scope.fully_qualified_mangled_name = meta::mangle(std::move(scope.fully_qualified_mangled_name));
+    }
+
+    //  Lookup the name
+    auto libraries = meta::this_execution::get_reachable_metafunction_symbols();
+    auto mangled_name = meta::mangle((name.starts_with("::") ? "" : "::") + name);
+    for (auto const& scope : scopes)
+    {
+        auto expected_symbol = scope.fully_qualified_mangled_name + mangled_name;
+        //  FIXME #470 or emit using statement only in
+        //  Phase 2 "Cpp2 type definitions and function declarations"
+        if (auto lookup = source_order_name_lookup(scope.names(), name)) {
+            if (auto using_ = get_if<active_using_declaration>(&*lookup)) {
+                //  TODO Handle relative qualified-id
+                expected_symbol = meta::mangle((name.starts_with("::") ? "" : "::") + using_->to_string());
+            }
+        }
+
+        //  Save a const overload
+        auto res = meta::lookup_res{};
+        for (auto&& lib: libraries)
+        {
+            for (auto&& sym: lib.symbols)
+            {
+                if (sym.without_prefix() == expected_symbol)
+                {
+                    res = {lib.name, &sym};
+                    //  Immediately return a non-const overload
+                    if (!sym.is_const_metafunction()) {
+                        return res;
+                    }
+                }
+            }
+        }
+
+        //  Return a const overload without a non-const overload
+        if (!res.library.empty()) {
+            return res;
+        }
+    }
+
+    return meta::diagnostic{
+        "metafunction '" + name + "' not found\n"
+        + "(temporary alpha limitation) lookup for a metafunction name is limited: "
+        + "it can be used unqualified from its declaring namespace or a nested namespace thereof, "
+        + "and otherwise requires full qualification"
+    };
+}
 
 auto parser::apply_type_metafunctions( declaration_node& n )
     -> bool
@@ -29,12 +125,53 @@ auto parser::apply_type_metafunctions( declaration_node& n )
     assert(n.is_type());
 
     //  Get the reflection state ready to pass to the function
-    auto cs = meta::compiler_services{ &errors, &includes, generated_tokens };
+    auto cs = meta::compiler_services{
+        meta::compiler_services_data::make( &errors, &includes, generated_tokens, translation_unit_has_interface() )
+    };
     auto rtype = meta::type_declaration{ &n, cs };
 
     return apply_metafunctions(
         n,
         rtype,
+        [&](std::string const& msg) { error( msg, false ); },
+        [&](std::string const& name) {
+            auto res = lookup_metafunction(name, current_declarations, current_names);
+
+            //  Save sanity check to ensure the Cpp1 lookup matches ours
+            if (
+                res.is_value()
+                && res.value().symbol->is_reachable()
+                )
+            {
+                auto check = std::string{};
+                check += "static_assert(";
+                check += meta::to_type_metafunction_cast(name, res.value().symbol->is_const_metafunction());
+                check += " == ";
+                check += res.value().symbol->view();
+                check += ", ";
+                check += "\"the metafunction name '" + name + "' must be ";
+                check += "reachable and equal to the one evaluated by cppfront\"";
+                check += ");\n";
+                n.metafunction_lookup_checks.push_back(check);
+            }
+
+            return res;
+        }
+    );
+}
+
+auto parser::apply_function_metafunctions( declaration_node& n )
+    -> bool
+{
+    assert(n.is_function());
+
+    //  Get the reflection state ready to pass to the function
+    auto cs = meta::compiler_services{meta::compiler_services_data::make( &errors, &includes, generated_tokens, false )};
+    auto rfunction = meta::function_declaration{ &n, cs };
+
+    return apply_metafunctions(
+        n,
+        rfunction,
         [&](std::string const& msg) { error( msg, false ); }
     );
 }
