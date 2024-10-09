@@ -104,6 +104,15 @@ outer: @print type = {
 
 }
 
+std: namespace = {
+    common_type: @struct @print specialize<outer, outer> type = {
+        type: type == outer;
+    }
+    numbers: namespace = {
+        pi_v: /*@print*/ specialize<outer> const double = pi_v<double>;
+    }
+}
+
 main: () = {
     outer::test();
 }
