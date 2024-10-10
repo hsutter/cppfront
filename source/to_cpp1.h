@@ -1699,7 +1699,11 @@ public:
         {
             printer.print_cpp2("cpp2_"+n.to_string(), pos);
         }
-        else if (n == "type_of") {
+        else if (
+            !is_qualified
+            && n == "type_of"
+            )
+        {
             printer.print_cpp2("CPP2_TYPEOF", pos);
         }
         else {
