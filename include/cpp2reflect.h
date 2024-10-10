@@ -688,7 +688,7 @@ CPPFRONTAPI auto copyable(meta::type_declaration& t) -> void;
 //
 //  A memberwise hashable type
 //
-auto hashable(meta::type_declaration& t) -> void;
+CPPFRONTAPI auto hashable(meta::type_declaration& t) -> void;
 
 #line 931 "reflect.h2"
 //-----------------------------------------------------------------------
@@ -742,7 +742,7 @@ CPPFRONTAPI auto partially_ordered_value(meta::type_declaration& t) -> void;
 //
 //  a type without declared copy/move/destructor functions
 //
-auto cpp1_rule_of_zero(meta::type_declaration& t) -> void;
+CPPFRONTAPI auto cpp1_rule_of_zero(meta::type_declaration& t) -> void;
 
 #line 1019 "reflect.h2"
 //-----------------------------------------------------------------------

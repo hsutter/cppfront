@@ -950,7 +950,7 @@ CPPFRONTAPI auto copyable(meta::type_declaration& t) -> void
 }
 
 #line 905 "reflect.h2"
-auto hashable(meta::type_declaration& t) -> void
+CPPFRONTAPI auto hashable(meta::type_declaration& t) -> void
 {
     CPP2_UFCS(require)(t, !(CPP2_UFCS(empty)(CPP2_UFCS(get_member_objects)(t))), 
                "a hashable type must have at least one data member");
@@ -1016,7 +1016,7 @@ CPPFRONTAPI auto partially_ordered_value(meta::type_declaration& t) -> void
 }
 
 #line 1007 "reflect.h2"
-auto cpp1_rule_of_zero(meta::type_declaration& t) -> void
+CPPFRONTAPI auto cpp1_rule_of_zero(meta::type_declaration& t) -> void
 {
     for ( auto& mf : CPP2_UFCS(get_member_functions)(t) ) 
     {
