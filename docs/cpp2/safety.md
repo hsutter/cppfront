@@ -67,7 +67,7 @@ cppfront myfile.cpp2 -no-div-zero-checks    # division by zero not checked
 
 ### <a id="null-dereference"></a> Null dereference (run-time checked)
 
-Dereferencing a null pointer is undefined behavior, and is rejected at run time by checking the pointer is nonzero.
+Dereferencing a null pointer is undefined behavior, and is rejected at run time by checking the pointer is not null.
 
 To disable this check at a specific place in your code, use `unchecked_dereference`. For example:
 
@@ -92,7 +92,7 @@ cppfront myfile.cpp2 -no-null-checks        # null dereferences not checked
 
 ### <a id="subscript-bounds"></a> Subscript bounds (run-time checked)
 
-Accessing an out of bounds subscript is undefined behavior, and is rejected at run time by checking the subscript is nonzero. For an expression `a[b]` where
+Accessing an out of bounds subscript is undefined behavior, and is rejected at run time by checking the subscript is in bounds. For an expression `a[b]` where
 
 - `a` is contiguous and supports `std::size(a)`, and
 - `b` is an integral value
