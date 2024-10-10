@@ -50,7 +50,10 @@ auto lookup_metafunction(
         --first
     )
     {
-        assert(*first && (*first)->is_namespace());
+        assert(*first);
+        if (!(*first)->is_namespace()) {
+            continue;
+        }
 
         //  TODO Handle unnamed namespace '_'
         auto id = (*first)->name();
