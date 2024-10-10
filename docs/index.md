@@ -18,6 +18,7 @@
 - [Types and inheritance](cpp2/types.md)
 - [Metafunctions and reflection](cpp2/metafunctions.md)
 - [Namespaces](cpp2/namespaces.md)
+- [Safety and "unchecked"](cpp2/safety.md)
 
 ## Cppfront reference
 
