@@ -6,14 +6,14 @@ pure2-trailing-commas.cpp2:13:42: error: expected ‘;’ at end of member decla
 In file included from pure2-trailing-commas.cpp:7:
 ../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
 pure2-trailing-commas.cpp2:14:1: note: in expansion of macro ‘CPP2_REQUIRES_’
-pure2-trailing-commas.cpp2:9:1: error: no declaration matches ‘vals::vals(auto:113&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(vals::__ct ::i_)>::type>::type, const std::add_const_t&>’
+pure2-trailing-commas.cpp2:9:1: error: no declaration matches ‘vals::vals(auto:116&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(vals::__ct ::i_)>::type>::type, const std::add_const_t&>’
 pure2-trailing-commas.cpp2:9:7: note: candidates are: ‘constexpr vals::vals(vals&&)’
 pure2-trailing-commas.cpp2:9:7: note:                 ‘constexpr vals::vals(const vals&)’
-pure2-trailing-commas.cpp2:10:9: note:                 ‘template<class auto:109> vals::vals(auto:109&&)’
+pure2-trailing-commas.cpp2:10:9: note:                 ‘template<class auto:112> vals::vals(auto:112&&)’
 pure2-trailing-commas.cpp2:9:7: note: ‘class vals’ defined here
 pure2-trailing-commas.cpp2:11:83: error: expected unqualified-id before ‘{’ token
-pure2-trailing-commas.cpp2:13:6: error: no declaration matches ‘vals& vals::operator=(auto:114&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(vals::operator=::i_)>::type>::type, const std::add_const_t&>’
+pure2-trailing-commas.cpp2:13:6: error: no declaration matches ‘vals& vals::operator=(auto:117&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(vals::operator=::i_)>::type>::type, const std::add_const_t&>’
 pure2-trailing-commas.cpp2:9:7: note: candidates are: ‘constexpr vals& vals::operator=(vals&&)’
 pure2-trailing-commas.cpp2:9:7: note:                 ‘constexpr vals& vals::operator=(const vals&)’
-pure2-trailing-commas.cpp2:13:14: note:                 ‘template<class auto:110> vals& vals::operator=(auto:110&&)’
+pure2-trailing-commas.cpp2:13:14: note:                 ‘template<class auto:113> vals& vals::operator=(auto:113&&)’
 pure2-trailing-commas.cpp2:9:7: note: ‘class vals’ defined here
