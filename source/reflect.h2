@@ -902,7 +902,7 @@ copyable: @dll_visible (inout t: meta::type_declaration) =
 //
 //  A memberwise hashable type
 //
-hashable: (inout t: meta::type_declaration) =
+hashable: @dll_visible (inout t: meta::type_declaration) =
 {
     t.require( !t.get_member_objects().empty(),
                "a hashable type must have at least one data member");
@@ -1004,7 +1004,7 @@ partially_ordered_value: @dll_visible (inout t: meta::type_declaration) =
 //
 //  a type without declared copy/move/destructor functions
 //
-cpp1_rule_of_zero: (inout t: meta::type_declaration) =
+cpp1_rule_of_zero: @dll_visible (inout t: meta::type_declaration) =
 {
     for t.get_member_functions() do (inout mf)
     {
