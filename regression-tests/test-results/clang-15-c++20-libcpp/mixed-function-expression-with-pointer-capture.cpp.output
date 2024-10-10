@@ -1,5 +1,5 @@
 mixed-function-expression-with-pointer-capture.cpp2:13:18: error: no member named 'for_each' in namespace 'std::ranges'
-    std::ranges::for_each(vec, [_0 = (&y)](auto const& x) mutable -> void { 
+    std::ranges::for_each(vec, [_0 = (&y)](auto const& x) mutable -> decltype(auto) { 
     ~~~~~~~~~~~~~^
 mixed-function-expression-with-pointer-capture.cpp2:18:18: error: no member named 'for_each' in namespace 'std::ranges'
     std::ranges::for_each(vec, cpp2::move(callback));
