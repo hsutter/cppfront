@@ -1,5 +1,4 @@
 
-cppfront compiler v0.8.0   Build 9A10:1540
-Copyright 2022-2024 Herb Sutter
-
-SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+cppfront compiler v0.8.0 Build 9A10:1540
+SPDX-License-Identifier  Apache-2.0 WITH LLVM-exception
+Copyright (c) 2022-2024  Herb Sutter
