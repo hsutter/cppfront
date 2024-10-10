@@ -1,14 +1,9 @@
 
-//  Copyright (c) Herb Sutter
-//  SPDX-License-Identifier: CC-BY-NC-ND-4.0
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
+//  Copyright 2022-2024 Herb Sutter
+//  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//  
+//  Part of the Cppfront Project, under the Apache License v2.0 with LLVM Exceptions.
+//  See https://github.com/hsutter/cppfront/blob/main/LICENSE for license information.
 
 
 //  We want cppfront to build cleanly at very high warning levels, with warnings
@@ -912,16 +907,11 @@ public:
         help_requested = true;
         print("\ncppfront compiler "
             #include "version.info"
-        "   Build "
+        " Build "
             #include "build.info"
         );
-        print("\nCopyright(c) Herb Sutter   All rights reserved\n");
-        print("\nSPDX-License-Identifier: CC-BY-NC-ND-4.0");
-        print("\n  No commercial use");
-        print("\n  No forks/derivatives");
-        print("\n  Note: This license emphasizes that this is a personal");
-        print("\n        experiment; it will be upgraded if that changes\n");
-        print("\nAbsolutely no warranty - try at your own risk\n");
+        print("\nSPDX-License-Identifier  Apache-2.0 WITH LLVM-exception");
+        print("\nCopyright (c) 2022-2024  Herb Sutter\n");
     }
 
 } cmdline;

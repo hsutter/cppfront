@@ -9,4 +9,4 @@ authors:
     family-names: Sutter
 repository-code: 'https://github.com/hsutter/cppfront'
 abstract: A personal experimental C++ Syntax 2 -> Syntax 1 compiler
-license: CC-BY-NC-ND-4.0
+license: Apache-2.0 WITH LLVM-exception
