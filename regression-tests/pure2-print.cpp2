@@ -87,6 +87,19 @@ outer: @print type = {
             is 43 = "forty-and-three";
             is _  = "default case";
         } << "\n";
+
+        _ =
+          requires { std::vector<int>; }
+          + requires { _ = 0; }
+          + requires {
+              requires true;
+              !requires std::vector<int>;
+              !requires _ = 0;
+              { 0 };
+              { 0 } !throws;
+              { 0 } is std::regular;
+              { 0 } !throws, is std::regular;
+            };
     }
 
     x: <Ts...: type> type = {

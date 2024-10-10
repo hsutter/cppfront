@@ -1130,7 +1130,7 @@ private:
 
         //  This warning is noisy until we fix a couple of bugs,
         //  so disable it at least temporarily
-        // 
+        //
         ////  If we arrived back at the declaration without finding a use
         ////  and this is a user-named object (not 'this', 'that', or '_')
         //if (
@@ -2253,7 +2253,7 @@ public:
 
         //  All the scope-local names stay active for lookup until the end of their scope
         while (
-            !current_declarations.empty() 
+            !current_declarations.empty()
             && current_declarations.back() != nullptr
             )
         {
@@ -2291,9 +2291,10 @@ public:
     {
         inside_parameter_list.push_back( true );
         if (
-            !n.in_function_typeid 
+            !n.in_function_typeid
             && !n.in_template_param_list
-            ) 
+            && !n.in_requires_expression
+            )
         {
             push_lifetime_scope();
         }
@@ -2615,7 +2616,7 @@ public:
                     //  PARTIAL SUCCESS: Record the location of 'this' and keep going
                     //
                     found_this = *i;
-                    prev_token_was_this = 
+                    prev_token_was_this =
                         *prev2_token == "this"
                         && (prev_token->type() == lexeme::Dot || prev_token->type() == lexeme::DotDot)
                         ;
