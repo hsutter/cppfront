@@ -1461,6 +1461,43 @@ public:
     //  Per-node sema rules
     //
 
+    auto check(computed_type_id_node const& n)
+    {
+        if (
+            (
+             *n.identifier == "decltype"
+             || *n.identifier == "type_of"
+             )
+            && (
+                n.ellipsis
+                || n.expr->expressions.size() != 1
+                || n.expr->open_paren->type() != lexeme::LeftParen
+                )
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                "'" + std::string{*n.identifier} + "' must be followed by a single parenthesized expression"
+            );
+            return false;
+        }
+
+        if (
+            *n.identifier == "decltype"
+            && n.expr->expressions.front().expr->to_string() == "auto"
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                "decltype(auto) is not needed in Cpp2 - for return types, use '-> forward _' instead"
+            );
+            return false;
+        }
+
+        return true;
+    }
+
+
     auto check(qualified_id_node const& n)
     {
         //  Check for some incorrect uses of .
@@ -2730,7 +2767,10 @@ public:
             && id
             )
         {
-            push_activation( identifier_sym( false, (*id)->ids.back().id->identifier, identifier_sym::using_declaration ) );
+            auto unqual = std::get_if<qualified_id_node::term::unqualified>(&(*id)->ids.back().id);
+            assert (unqual);
+            assert (*unqual);
+            push_activation( identifier_sym( false, (*unqual)->identifier, identifier_sym::using_declaration ) );
         }
     }
 
