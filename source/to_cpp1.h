@@ -5059,9 +5059,13 @@ public:
             auto req = std::string{"std::is_convertible_v<CPP2_TYPEOF("};
             req += identifier;
             req += "), std::add_const_t<";
-            // The call to 'print_to_string' just computed this.
-            // We could cache that so it's reused here.
-            if (is_dependent(type_id)) {
+            if (
+                get_if<type_id_node::qualified>(&type_id.id)
+                // The call to 'print_to_string' just computed this.
+                // We could cache that so it's reused here.
+                && is_dependent(type_id)
+                )
+            {
                 req += "typename ";
             }
             req += param_type;
