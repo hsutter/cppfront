@@ -9835,6 +9835,7 @@ private:
 
         //  Remember current position, because we need to look ahead
         auto start_pos = pos;
+        auto start_current_names_size = current_names.size();
 
         auto n = std::unique_ptr<declaration_node>{};
 
@@ -9989,6 +9990,7 @@ private:
             );
             if (!n) {
                 pos = start_pos;    // backtrack
+                current_names.resize(start_current_names_size);
                 return {};
             }
         }
