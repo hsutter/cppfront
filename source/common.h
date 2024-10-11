@@ -1004,6 +1004,7 @@ struct error_entry
 {
     source_position where;
     std::string     msg;
+    std::string     symbol = std::string("");
     bool            internal = false;
     bool            fallback = false;   // only emit this message if there was nothing better
 
@@ -1015,6 +1016,21 @@ struct error_entry
     )
         : where{w}
         , msg{m}
+        , internal{i}
+        , fallback{f}
+    { }
+
+    /// An overload allowing the passing in of the symbol associated with the error
+    error_entry(
+        source_position  w,
+        std::string_view m,
+        std::string_view s,
+        bool             i = false,
+        bool             f = false
+    )
+        : where{w}
+        , msg{m}
+        , symbol{s}
         , internal{i}
         , fallback{f}
     { }
@@ -1036,6 +1052,7 @@ struct error_entry
               << ", \"line\": " << where.lineno 
               << ", \"column\": " << where.colno
               << ", \"error\": \"" << msg << "\""
+              << ", \"symbol\": \"" << symbol << "\""
               << "}\n";
         }
         else {
