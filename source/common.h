@@ -986,6 +986,13 @@ static cmdline_processor::register_flag cmd_print_colon_errors(
     []{ flag_print_colon_errors = true; }
 );
 
+static auto flag_json_errors = false;
+static cmdline_processor::register_flag cmd_json_errors(
+    9,
+    "json-errors",
+    "Emit errors in json - for use in language server tools",
+    []{ flag_json_errors = true; }
+);
 
 //-----------------------------------------------------------------------
 //
@@ -1024,29 +1031,37 @@ struct error_entry
     auto print(auto& o, std::string const& file) const
         -> void
     {
-        o << file ;
-        if (where.lineno > 0) {
-            if (flag_print_colon_errors) {
-                o << ":" << (where.lineno);
-                if (where.colno >= 0) {
-                    o << ":" << where.colno;
+        if (flag_json_errors) {
+            o << "{ \"file\": \"" << file << "\""
+              << ", \"line\": " << where.lineno 
+              << ", \"column\": " << where.colno
+              << ", \"error\": \"" << msg << "\""
+              << "}\n";
+        }
+        else {
+            o << file ;
+            if (where.lineno > 0) {
+                if (flag_print_colon_errors) {
+                    o << ":" << (where.lineno);
+                    if (where.colno >= 0) {
+                        o << ":" << where.colno;
+                    }
+                }
+                else {
+                    o << "("<< (where.lineno);
+                    if (where.colno >= 0) {
+                        o << "," << where.colno;
+                    }
+                    o  << ")";
                 }
             }
-            else {
-                o << "("<< (where.lineno);
-                if (where.colno >= 0) {
-                    o << "," << where.colno;
-                }
-                o  << ")";
+            o << ":";
+            if (internal) {
+                o << " internal compiler";
             }
+            o << " error: " << msg << "\n";
         }
-        o << ":";
-        if (internal) {
-            o << " internal compiler";
-        }
-        o << " error: " << msg << "\n";
     }
-
 };
 
 
