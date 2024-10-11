@@ -19,14 +19,14 @@ class X;
 class Y;
     
 
-#line 55 "pure2-types-order-independence-and-nesting.cpp2"
+#line 56 "pure2-types-order-independence-and-nesting.cpp2"
 namespace M {
 
-#line 58 "pure2-types-order-independence-and-nesting.cpp2"
+#line 59 "pure2-types-order-independence-and-nesting.cpp2"
 template<typename T, typename U> class A;
     
 
-#line 64 "pure2-types-order-independence-and-nesting.cpp2"
+#line 65 "pure2-types-order-independence-and-nesting.cpp2"
 }
 
 }
@@ -73,7 +73,7 @@ class Y {
     public: auto operator=(Y const&) -> void = delete;
 
 
-#line 53 "pure2-types-order-independence-and-nesting.cpp2"
+#line 54 "pure2-types-order-independence-and-nesting.cpp2"
 };
 
 namespace M {
@@ -86,14 +86,14 @@ template<typename T, typename U> class A {
         public: B(B const&) = delete; /* No 'that' constructor, suppress copy */
         public: auto operator=(B const&) -> void = delete;
 
-#line 61 "pure2-types-order-independence-and-nesting.cpp2"
+#line 62 "pure2-types-order-independence-and-nesting.cpp2"
     };
 
     public: A() = default;
     public: A(A const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(A const&) -> void = delete;
 };
-#line 63 "pure2-types-order-independence-and-nesting.cpp2"
+#line 64 "pure2-types-order-independence-and-nesting.cpp2"
 
 }
 
@@ -150,7 +150,7 @@ namespace N {
 #line 35 "pure2-types-order-independence-and-nesting.cpp2"
     auto X::exx(cpp2::impl::in<int> count) const& -> void{
         //  Exercise '_' anonymous objects too while we're at it
-        cpp2::finally auto_1 {[&]() -> void { std::cout << "leaving call to 'why(" + cpp2::to_string(count) + ")'\n";  }}; 
+        cpp2::finally auto_1 {[&]() -> decltype(auto) { return std::cout << "leaving call to 'why(" + cpp2::to_string(count) + ")'\n";  }}; 
         if (cpp2::impl::cmp_less(count,5)) {
             CPP2_UFCS(why)((*cpp2::impl::assert_not_null(py)), count + 1);// use Y object from X
         }
@@ -158,28 +158,29 @@ namespace N {
 
 #line 49 "pure2-types-order-independence-and-nesting.cpp2"
     Y::Y(X* x)
-                                   : px{ x } {  }
+                                     : px{ x }{}
 #line 49 "pure2-types-order-independence-and-nesting.cpp2"
-    auto Y::operator=(X* x) -> Y&  { 
-                                   px = x;
-                                   return *this;  }
+    auto Y::operator=(X* x) -> Y& {
+                                     px = x;
+                                     return *this; }
 
 #line 51 "pure2-types-order-independence-and-nesting.cpp2"
-    auto Y::why(cpp2::impl::in<int> count) const& -> void { 
-        CPP2_UFCS(exx)((*cpp2::impl::assert_not_null(px)), count + 1);  }// use X object from Y
+    auto Y::why(cpp2::impl::in<int> count) const& -> void{
+        CPP2_UFCS(exx)((*cpp2::impl::assert_not_null(px)), count + 1);// use X object from Y
+    }
 
-#line 55 "pure2-types-order-independence-and-nesting.cpp2"
+#line 56 "pure2-types-order-independence-and-nesting.cpp2"
 namespace M {
 
-#line 60 "pure2-types-order-independence-and-nesting.cpp2"
-        template <typename T, typename U> template <int I> template<typename V, int J, typename W> auto A<T,U>::B<I>::f(W const& w) -> void { std::cout << "hallo " + cpp2::to_string(w) + "\n";  }
+#line 61 "pure2-types-order-independence-and-nesting.cpp2"
+        template <typename T, typename U> template <int I> template<typename V, int J, typename W> auto A<T,U>::B<I>::f(W const& w) -> void{std::cout << "hallo " + cpp2::to_string(w) + "\n"; }
 
-#line 64 "pure2-types-order-independence-and-nesting.cpp2"
+#line 65 "pure2-types-order-independence-and-nesting.cpp2"
 }
 
 }
 
-#line 70 "pure2-types-order-independence-and-nesting.cpp2"
+#line 71 "pure2-types-order-independence-and-nesting.cpp2"
 auto main() -> int
 {
     cpp2::impl::deferred_init<N::Y> y; // declare an uninitialized Y object

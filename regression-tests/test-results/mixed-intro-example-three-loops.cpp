@@ -5,13 +5,13 @@
 #include <span>
 #include <memory>
 
-auto print(auto const& thing) -> void { 
-    std::cout << ">> " << thing << "\n";
+auto print(auto const& x) -> void { 
+    std::cout << ">> " << x << "\n";
 }
 
-auto decorate_and_print(auto& thing) -> void { 
-    thing = "[" + thing + "]";
-    print(thing);
+auto decorate_and_print(auto& x) -> void { 
+    x = "[" + x + "]";
+    print(x);
 }
 
 auto main() -> int {

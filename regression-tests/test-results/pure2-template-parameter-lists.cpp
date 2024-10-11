@@ -14,10 +14,10 @@
 #line 1 "pure2-template-parameter-lists.cpp2"
 
 #line 2 "pure2-template-parameter-lists.cpp2"
-template<typename T, typename U> [[nodiscard]] auto f1(T const& t, U const& u) -> auto;
-template<typename T, typename U> [[nodiscard]] auto f2(T const& t, U const& u) -> auto;
-template<auto T, auto U> [[nodiscard]] auto f3() -> auto;
-template<cpp2::i8 T, cpp2::i16 U> [[nodiscard]] auto f4() -> auto;
+template<typename T, typename U> [[nodiscard]] auto f1(T const& t, U const& u) -> decltype(auto);
+template<typename T, typename U> [[nodiscard]] auto f2(T const& t, U const& u) -> decltype(auto);
+template<auto T, auto U> [[nodiscard]] auto f3() -> decltype(auto);
+template<cpp2::i8 T, cpp2::i16 U> [[nodiscard]] auto f4() -> decltype(auto);
 
 auto main() -> int;
 
@@ -26,13 +26,13 @@ auto main() -> int;
 #line 1 "pure2-template-parameter-lists.cpp2"
 
 #line 2 "pure2-template-parameter-lists.cpp2"
-template<typename T, typename U> [[nodiscard]] auto f1(T const& t, U const& u) -> auto { return t + u; }
+template<typename T, typename U> [[nodiscard]] auto f1(T const& t, U const& u) -> decltype(auto) { return t + u; }
 #line 3 "pure2-template-parameter-lists.cpp2"
-template<typename T, typename U> [[nodiscard]] auto f2(T const& t, U const& u) -> auto { return t + u; }
+template<typename T, typename U> [[nodiscard]] auto f2(T const& t, U const& u) -> decltype(auto) { return t + u;  }
 #line 4 "pure2-template-parameter-lists.cpp2"
-template<auto T, auto U> [[nodiscard]] auto f3() -> auto { return T + U; }
+template<auto T, auto U> [[nodiscard]] auto f3() -> decltype(auto) { return T + U; }
 #line 5 "pure2-template-parameter-lists.cpp2"
-template<cpp2::i8 T, cpp2::i16 U> [[nodiscard]] auto f4() -> auto { return T + U; }
+template<cpp2::i8 T, cpp2::i16 U> [[nodiscard]] auto f4() -> decltype(auto) { return T + U; }
 
 #line 7 "pure2-template-parameter-lists.cpp2"
 auto main() -> int{

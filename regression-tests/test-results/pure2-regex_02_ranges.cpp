@@ -1570,7 +1570,7 @@ auto main() -> int;
 
         if (*cpp2::impl::assert_not_null(next) == '-' || *cpp2::impl::assert_not_null(next) == '+') {
           auto i {0}; 
-          for( ; cpp2::impl::cmp_less(i,cpp2::unsafe_narrow<int>(CPP2_UFCS(group_number)(r))); ++i ) {
+          for( ; cpp2::impl::cmp_less(i,cpp2::unchecked_narrow<int>(CPP2_UFCS(group_number)(r))); ++i ) {
             auto pos {0}; 
             if (*cpp2::impl::assert_not_null(next) == '-') {
               pos = CPP2_UFCS(group_start)(r, i);

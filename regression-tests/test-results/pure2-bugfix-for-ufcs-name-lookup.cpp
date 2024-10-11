@@ -28,7 +28,7 @@ namespace ns {
 #line 1 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
 class identity {
 #line 2 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
-  public: [[nodiscard]] constexpr auto operator()(auto&& x) const& -> auto&&;
+  public: [[nodiscard]] constexpr auto operator()(auto&& x) const& -> decltype(auto);
 };
 
 class t {
@@ -53,7 +53,7 @@ auto main() -> int;
 #line 1 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
 
 #line 2 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
-  [[nodiscard]] constexpr auto identity::operator()(auto&& x) const& -> auto&& { return CPP2_FORWARD(x);  }
+  [[nodiscard]] constexpr auto identity::operator()(auto&& x) const& -> decltype(auto) { return CPP2_FORWARD(x);  }
 
 #line 6 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
   [[nodiscard]] constexpr auto t::f() const& -> int { return 0;  }

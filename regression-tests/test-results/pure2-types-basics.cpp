@@ -66,10 +66,10 @@ class myclass {
 #line 55 "pure2-types-basics.cpp2"
     };
 
-    public: template<typename T, typename U> [[nodiscard]] static auto f1(T const& t, U const& u) -> auto;
-    public: template<typename T, typename U> [[nodiscard]] static auto f2(T const& t, U const& u) -> auto;
-    public: template<auto T, auto U> [[nodiscard]] static auto f3() -> auto;
-    public: template<cpp2::i8 T, cpp2::i16 U> [[nodiscard]] static auto f4() -> auto;
+    public: template<typename T, typename U> [[nodiscard]] static auto f1(T const& t, U const& u) -> decltype(auto);
+    public: template<typename T, typename U> [[nodiscard]] static auto f2(T const& t, U const& u) -> decltype(auto);
+    public: template<auto T, auto U> [[nodiscard]] static auto f3() -> decltype(auto);
+    public: template<cpp2::i8 T, cpp2::i16 U> [[nodiscard]] static auto f4() -> decltype(auto);
     public: myclass(myclass const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(myclass const&) -> void = delete;
 
@@ -171,16 +171,16 @@ namespace N {
     }
 
 #line 54 "pure2-types-basics.cpp2"
-        auto myclass::nested::g() -> void { std::cout << "N::myclass::nested::g\n";  }
+        auto myclass::nested::g() -> void{std::cout << "N::myclass::nested::g\n"; }
 
 #line 57 "pure2-types-basics.cpp2"
-    template<typename T, typename U> [[nodiscard]] auto myclass::f1(T const& t, U const& u) -> auto { return t + u; }
+    template<typename T, typename U> [[nodiscard]] auto myclass::f1(T const& t, U const& u) -> decltype(auto) { return t + u; }
 #line 58 "pure2-types-basics.cpp2"
-    template<typename T, typename U> [[nodiscard]] auto myclass::f2(T const& t, U const& u) -> auto { return t + u; }
+    template<typename T, typename U> [[nodiscard]] auto myclass::f2(T const& t, U const& u) -> decltype(auto) { return t + u;  }
 #line 59 "pure2-types-basics.cpp2"
-    template<auto T, auto U> [[nodiscard]] auto myclass::f3() -> auto { return T + U; }
+    template<auto T, auto U> [[nodiscard]] auto myclass::f3() -> decltype(auto) { return T + U; }
 #line 60 "pure2-types-basics.cpp2"
-    template<cpp2::i8 T, cpp2::i16 U> [[nodiscard]] auto myclass::f4() -> auto { return T + U; }
+    template<cpp2::i8 T, cpp2::i16 U> [[nodiscard]] auto myclass::f4() -> decltype(auto) { return T + U; }
 
 #line 64 "pure2-types-basics.cpp2"
 }

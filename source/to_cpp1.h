@@ -365,11 +365,11 @@ private:
             //  Now also adjust the colno
             if (last_newline != s.npos) {
                 //  If we found a newline, it's the distance from the last newline to EOL
-                curr_pos.colno = unsafe_narrow<colno_t>(s.length() - last_newline);
+                curr_pos.colno = unchecked_narrow<colno_t>(s.length() - last_newline);
             }
             else {
                 //  Else add the length of the string
-                curr_pos.colno += unsafe_narrow<colno_t>(s.length());
+                curr_pos.colno += unchecked_narrow<colno_t>(s.length());
             }
         }
     }
@@ -1024,7 +1024,6 @@ class cppfront
     cpp2::sema   sema;
 
     bool source_loaded                  = true;
-    bool last_postfix_expr_was_pointer  = false;
     bool violates_bounds_safety         = false;
     bool violates_initialization_safety = false;
     bool suppress_move_from_last_use    = false;
@@ -1056,6 +1055,15 @@ class cppfront
 
     using source_order_name_lookup_res =
         std::optional<std::variant<declaration_node const*, active_using_declaration>>;
+
+    struct postfix_expression_info {
+        bool is_pointer  = false;
+
+        postfix_expression_info() = default;
+        postfix_expression_info(bool b) : is_pointer{b} { }
+    };
+    std::vector<postfix_expression_info> active_postfix_expressions = {};
+    bool last_postfix_expr_was_pointer = false;
 
     //  Stack of the currently active nested declarations we're inside
     std::vector<declaration_node const*> current_declarations = { {} };
@@ -1649,8 +1657,15 @@ public:
                 || n == "finally"
                 || n == "cpp1_ref"
                 || n == "cpp1_rvalue_ref"
-                || n == "unsafe_narrow"
-                || n == "unsafe_cast"
+                || n == "unchecked_narrow"
+                || n == "unchecked_cast"
+                || n == "unchecked_cmp_less"
+                || n == "unchecked_cmp_less_eq"
+                || n == "unchecked_cmp_greater"
+                || n == "unchecked_cmp_greater_eq"
+                || n == "unchecked_div"
+                || n == "unchecked_dereference"
+                || n == "unchecked_subscript"
                 )
             )
         {
@@ -1684,7 +1699,11 @@ public:
         {
             printer.print_cpp2("cpp2_"+n.to_string(), pos);
         }
-        else if (n == "type_of") {
+        else if (
+            !is_qualified
+            && n == "type_of"
+            )
+        {
             printer.print_cpp2("CPP2_TYPEOF", pos);
         }
         else {
@@ -1939,6 +1958,7 @@ public:
             printer.print_cpp2("auto", pos);
         }
         else {
+            try_emit<type_id_node::postfix    >(n.id);
             try_emit<type_id_node::unqualified>(n.id, 0, false);
             try_emit<type_id_node::qualified  >(n.id);
             try_emit<type_id_node::keyword    >(n.id);
@@ -2376,6 +2396,80 @@ public:
 
     //-----------------------------------------------------------------------
     //
+    auto check_return_expression_lifetime(expression_node const& n)
+        -> bool
+    {
+        assert(!current_functions.empty());
+        auto is_forward_return =
+            !function_returns.empty()
+            && (
+                function_returns.back().pass == passing_style::forward
+                || function_returns.back().pass == passing_style::forward_ref
+                )
+            ;
+
+        //  If we're doing a forward return of a single-token name
+        //  (the entire expression is a postfix-expression)
+        auto solo_postfix = n.expr->get_if_only_a_postfix_expression_node();
+        auto tok          = solo_postfix ? solo_postfix->expr->get_token() : nullptr;
+        if (
+            tok
+            && is_forward_return
+            )
+        {
+            //  Ensure we're not returning a local or an in/move parameter
+            auto is_parameter_name = current_functions.back().decl->has_parameter_named(*tok);
+            if (
+                is_parameter_name
+                && (
+                    current_functions.back().decl->has_in_parameter_named(*tok)
+                    || current_functions.back().decl->has_copy_parameter_named(*tok)
+                    || current_functions.back().decl->has_move_parameter_named(*tok)
+                    )
+                )
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "a 'forward' return type cannot return an 'in', 'copy', or 'move' parameter"
+                );
+                return false;
+            }
+            else if (
+                !is_parameter_name
+                && sema.get_declaration_of(*tok)
+                && !sema.is_captured(*tok)
+                )
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "a 'forward' return type cannot return a local variable"
+                );
+                return false;
+            }
+            
+            //  Deduced forward returns are okay because decltype(auto) can deduce a value
+            else if (
+                !function_returns.back().is_deduced
+                && (
+                    is_literal(tok->type()) 
+                    || n.expr->is_result_a_temporary_variable()
+                    )
+            )
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "a 'forward specific_type' return type must return an 'inout', 'out', or 'forward' parameter; it cannot return a complex expression -- for example: for a function that takes a stream object 'output`, instead of 'return output << data;' write 'output << data; return output;'"
+                );
+                return false;
+            }
+        }
+
+        return true;
+    };
+
+
+    //-----------------------------------------------------------------------
+    //
     auto emit(return_statement_node const& n)
         -> void
     {   STACKINSTR
@@ -2398,59 +2492,14 @@ public:
         //
         if (n.expression)
         {
-            assert(!current_functions.empty());
-            auto is_forward_return =
-                !function_returns.empty()
-                && function_returns.back().pass == passing_style::forward;
+            if (!check_return_expression_lifetime(*n.expression)) {
+                return;
+            }
+
             auto is_deduced_return =
                 !function_returns.empty()
-                && function_returns.back().is_deduced;
-
-            //  If we're doing a forward return of a single-token name
-            if (auto tok = n.expression->expr->get_postfix_expression_node()->expr->get_token();
-                tok
-                && is_forward_return
-                )
-            {
-                //  Ensure we're not returning a local or an in/move parameter
-                auto is_parameter_name = current_functions.back().decl->has_parameter_named(*tok);
-                if (
-                    is_parameter_name
-                    && (
-                        current_functions.back().decl->has_in_parameter_named(*tok)
-                        || current_functions.back().decl->has_copy_parameter_named(*tok)
-                        || current_functions.back().decl->has_move_parameter_named(*tok)
-                        )
-                    )
-                {
-                    errors.emplace_back(
-                        n.position(),
-                        "a 'forward' return type cannot return an 'in', 'copy', or 'move' parameter"
-                    );
-                    return;
-                }
-                else if (
-                    !is_parameter_name
-                    && sema.get_declaration_of(*tok)
-                    && !sema.is_captured(*tok)
-                    )
-                {
-                    errors.emplace_back(
-                        n.position(),
-                        "a 'forward' return type cannot return a local variable"
-                    );
-                    return;
-                } else if (
-                    is_literal(tok->type()) || n.expression->expr->is_result_a_temporary_variable()
-                )
-                {
-                    errors.emplace_back(
-                        n.position(),
-                        "a 'forward' return type must return an 'inout', 'out', or 'forward' parameter; it cannot return a complex expression -- for example: for a function that takes a stream object 'output`, instead of 'return output << data;' write 'output << data; return output;'"
-                    );
-                    return;
-                }
-            }
+                && function_returns.back().is_deduced
+                ;
 
             //  If this expression is just a single expression-list, we can
             //  take over direct control of emitting it without needing to
@@ -2526,7 +2575,7 @@ public:
                 assert(param->declaration->identifier);
 
                 printer.emit_to_string(&stmt);
-                emit(*param->declaration->identifier, cpp2::unsafe_narrow<int>(parameters.size()));
+                emit(*param->declaration->identifier, cpp2::unchecked_narrow<int>(parameters.size()));
                 printer.emit_to_string();
             }
 
@@ -2836,7 +2885,7 @@ public:
             return is_pointer_declaration(type_id_node->suspicious_initialization, deref_cnt, addr_cnt);
         }
 
-        return (unsafe_narrow<int>(pointer_declarators_cnt) + addr_cnt - deref_cnt) > 0;
+        return (unchecked_narrow<int>(pointer_declarators_cnt) + addr_cnt - deref_cnt) > 0;
     }
 
     auto is_pointer_declaration(
@@ -3031,7 +3080,11 @@ public:
         }
 
         assert(n.expr);
-        last_postfix_expr_was_pointer = false;
+        active_postfix_expressions.emplace_back(false);
+        auto guard = finally([this]{ 
+            last_postfix_expr_was_pointer = active_postfix_expressions.back().is_pointer;
+            active_postfix_expressions.pop_back();
+            });
 
         //  For a 'move that' parameter, track the members we already moved from
         //  so we can diagnose attempts to move from the same member twice
@@ -3112,7 +3165,7 @@ public:
                 //        - we don't deduce pointer types from parameter_declaration_list_node
                 if ( is_pointer_declaration(unqual->identifier) ) {
                     if (n.ops.empty()) {
-                        last_postfix_expr_was_pointer = true;
+                        active_postfix_expressions.back().is_pointer = true;
                     }
                     else
                     {
@@ -3651,10 +3704,17 @@ public:
                 }
                 else {
                     auto op_name = i->op->to_string();
+                    auto type_name = print_to_string(*i->type);
                     if (op_name == "as") {
+                        if (type_name == "void") {
+                            errors.emplace_back(
+                                n.position(),
+                                "'expression as void' is not allowed - use '_ = expression' instead to discard the result"
+                            );
+                        }
                         op_name = "as_";    // use the static_assert-checked 'as' by default...
                     }                       // we'll override this inside inspect-expressions
-                    prefix += "cpp2::impl::" + op_name + "<" + print_to_string(*i->type) + ">(";
+                    prefix += "cpp2::impl::" + op_name + "<" + type_name + ">(";
                     suffix = ")" + suffix;
                 }
             }
@@ -4093,7 +4153,11 @@ public:
             first = false;
             auto is_out = false;
 
-            if (x.pass != passing_style::in) {
+            if (
+                x.pass != passing_style::in
+                && x.pass != passing_style::in_ref
+                ) 
+            {
                 assert(
                     x.pass == passing_style::out
                     || x.pass == passing_style::move
@@ -4154,11 +4218,17 @@ public:
         assert(n.expr);
         auto generating_return = false;
 
-        if (function_body_start != source_position{}) {
+        if (function_body_start != source_position{})
+        {
             emit_prolog_mem_inits(function_prolog, n.position().colno);
             printer.print_cpp2(" { ", function_body_start);
             emit_prolog_statements(function_prolog, n.position().colno);
-            if (!function_void_ret) {
+
+            if (!function_void_ret)
+            {
+                if (!check_return_expression_lifetime(*n.expr)) {
+                    return;
+                }
                 printer.print_cpp2("return ", n.position());
                 generating_return = true;
             }
@@ -4658,7 +4728,8 @@ public:
             }
 
             switch (n.pass) {
-            break;case passing_style::in     : printer.print_cpp2( name+" const&", n.position() );
+            break;case passing_style::in     : 
+                  case passing_style::in_ref : printer.print_cpp2( name+" const&", n.position() );
             break;case passing_style::copy   : printer.print_cpp2( name,           n.position() );
             break;case passing_style::inout  : printer.print_cpp2( name+"&",       n.position() );
 
@@ -4717,12 +4788,13 @@ public:
             )
         {
             switch (n.pass) {
-            break;case passing_style::in     : printer.print_cpp2( ">",  n.position() );
-            break;case passing_style::copy   : printer.print_cpp2( "",   n.position() );
-            break;case passing_style::inout  : printer.print_cpp2( "&",  n.position() );
-            break;case passing_style::out    : printer.print_cpp2( ">",  n.position() );
-            break;case passing_style::move   : printer.print_cpp2( "&&", n.position() );
-            break;case passing_style::forward: printer.print_cpp2( "&&", n.position() );
+            break;case passing_style::in     : printer.print_cpp2( ">",       n.position() );
+            break;case passing_style::in_ref : printer.print_cpp2( " const&", n.position() );
+            break;case passing_style::copy   : printer.print_cpp2( "",        n.position() );
+            break;case passing_style::inout  : printer.print_cpp2( "&",       n.position() );
+            break;case passing_style::out    : printer.print_cpp2( ">",       n.position() );
+            break;case passing_style::move   : printer.print_cpp2( "&&",      n.position() );
+            break;case passing_style::forward: printer.print_cpp2( "&&",      n.position() );
             break;default: ;
             }
         }
@@ -4954,9 +5026,18 @@ public:
 
             auto return_type = print_to_string(*r.type);
 
-            if (r.pass == passing_style::forward) {
+            if (
+                r.pass == passing_style::forward
+                || r.pass == passing_style::forward_ref
+                )
+            {
                 if (r.type->is_wildcard()) {
-                    printer.print_cpp2( "auto&&", n.position() );
+                    if (r.pass == passing_style::forward) {
+                        printer.print_cpp2( "decltype(auto)", n.position() );
+                    }
+                    else {
+                        printer.print_cpp2( "auto&&", n.position() );
+                    }
                 }
                 else {
                     printer.print_cpp2( return_type, n.position() );
@@ -6437,7 +6518,9 @@ public:
                     //  We shouldn't be able to get into a state where these values
                     //  exist here, if we did it's our compiler bug
                     break;case passing_style::copy:
+                          case passing_style::in_ref:
                           case passing_style::forward:
+                          case passing_style::forward_ref:
                           default:
                         errors.emplace_back( n.position(), "ICE: invalid parameter passing style, should have been rejected", true);
                     }

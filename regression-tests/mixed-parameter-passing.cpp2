@@ -37,4 +37,21 @@ parameter_styles: (
 
 }
 
-main: () -> int = { }
+min: (in_ref a, in_ref b) -> forward_ref _
+    = { if b < a { return b; } else { return a; } }
+
+container: <T> type = {
+    buf: std::array<T, 10> = ();
+    operator[]: (      this, idx: i32) -> forward T = buf[idx];
+    operator[]: (inout this, idx: i32) -> forward T = buf[idx];
+}
+
+main: () = {
+    x := 456;
+    y := 123;
+    std::cout << min(x, y) << '\n';
+
+    v: container<int> = ();
+    std::cout << v[0] << '\n';
+}
+

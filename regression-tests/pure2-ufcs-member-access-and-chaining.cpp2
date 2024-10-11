@@ -37,7 +37,7 @@ fun: () -> (i:int) = {
     return;
 }
 
-get_i: (r:_) -> int = {
+get_i: (r) -> int = {
     return r;
 }
 

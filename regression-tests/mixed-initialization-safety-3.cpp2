@@ -23,7 +23,9 @@ fill: (
     x = value.substr(0, count);
 }
 
-print_decorated: (x:_) = std::cout << ">> [" << x << "]\n";
+print_decorated: (x) = { 
+    std::cout << ">> [" << x << "]\n"; 
+}
 
 // for test determinism, force "xyzzy" branch
 // the standard mandates that std::mt19937()() == 3499211612

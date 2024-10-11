@@ -33,7 +33,7 @@ auto insert_at(cpp2::impl::in<int> where, cpp2::impl::in<int> val) -> void;
             "hello", "2022"}; 
 
     std::string y {"\n"}; 
-    auto callback {[_0 = (&y)](auto const& x) mutable -> void { std::cout << x << *cpp2::impl::assert_not_null(_0);  }}; 
+    auto callback {[_0 = (&y)](auto const& x) mutable -> decltype(auto) { return std::cout << x << *cpp2::impl::assert_not_null(_0);  }}; 
 
     std::ranges::for_each(vec, callback);
     y = "-ish\n";

@@ -7,7 +7,7 @@ main: () -> int = {
         std::cout << i << "\n";
 }
 
-add_42_to_subrange: (inout rng:_, start:int, end:int)
+add_42_to_subrange: (inout rng, start:int, end:int)
 = {
     assert<bounds_safety>( 0 <= start );
     assert<bounds_safety>( end <= rng.ssize() );

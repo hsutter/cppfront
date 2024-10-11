@@ -18,6 +18,7 @@ main: () -> int = {
     print_and_decorate( x );
 }
 
-print_and_decorate: (thing) =
-    std::cout << ">> " << thing << "\n";
+print_and_decorate: (x) = {
+    std::cout << ">> " << x << "\n";
+}
 

@@ -172,7 +172,7 @@ namespace ns {
   auto A::f() const& -> void{}
 
 #line 70 "pure2-bugfix-for-ufcs-arguments.cpp2"
-  auto B::f() const& -> void { CPP2_UFCS(f)(m);  }
+  auto B::f() const& -> void{CPP2_UFCS(f)(m); }
 
   B::B(auto&& m_)
 requires (std::is_convertible_v<CPP2_TYPEOF(m_), std::add_const_t<A>&>) 

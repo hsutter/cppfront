@@ -32,7 +32,9 @@ myclass : type = {
         prefix: std::string_view,
         suffix: std::string_view
         )
-    = std::cout << prefix << "[ (name)$ | (addr)$ ]" << suffix;
+    = {
+        std::cout << prefix << "[ (name)$ | (addr)$ ]" << suffix;
+    }
 
 }
 

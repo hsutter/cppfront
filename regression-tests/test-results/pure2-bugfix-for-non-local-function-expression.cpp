@@ -22,9 +22,9 @@ class t;
 #line 5 "pure2-bugfix-for-non-local-function-expression.cpp2"
 template<typename T> concept v = []() -> bool { return true;  }(); 
 
-using u = std::type_identity_t<decltype([]() -> void{})>;
+using u = decltype([]() -> void{});
 
-class t: public std::type_identity_t<decltype([]() -> void{})> {
+class t: public decltype([]() -> void{}) {
 
 };
 

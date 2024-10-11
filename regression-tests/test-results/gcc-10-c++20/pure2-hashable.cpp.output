@@ -10,21 +10,21 @@ pure2-hashable.cpp2:10:53: error: expected ‘;’ at end of member declaration
 In file included from pure2-hashable.cpp:7:
 ../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
 pure2-hashable.cpp2:11:1: note: in expansion of macro ‘CPP2_REQUIRES_’
-pure2-hashable.cpp2:3:1: error: no declaration matches ‘base::base(auto:101&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(base::__ct ::h_)>::type>::type, const std::add_const_t&>’
+pure2-hashable.cpp2:3:1: error: no declaration matches ‘base::base(auto:115&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(base::__ct ::h_)>::type>::type, const std::add_const_t&>’
 pure2-hashable.cpp2:1:7: note: candidates are: ‘constexpr base::base(base&&)’
 pure2-hashable.cpp2:1:7: note:                 ‘constexpr base::base(const base&)’
-pure2-hashable.cpp2:3:13: note:                 ‘template<class auto:96> base::base(auto:96&&)’
+pure2-hashable.cpp2:3:13: note:                 ‘template<class auto:110> base::base(auto:110&&)’
 pure2-hashable.cpp2:1:7: note: ‘class base’ defined here
 pure2-hashable.cpp2:5:83: error: expected unqualified-id before ‘{’ token
-pure2-hashable.cpp2:6:6: error: no declaration matches ‘base& base::operator=(auto:102&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(base::operator=::h_)>::type>::type, const std::add_const_t&>’
+pure2-hashable.cpp2:6:6: error: no declaration matches ‘base& base::operator=(auto:116&&) requires  is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(base::operator=::h_)>::type>::type, const std::add_const_t&>’
 pure2-hashable.cpp2:1:7: note: candidates are: ‘constexpr base& base::operator=(base&&)’
 pure2-hashable.cpp2:1:7: note:                 ‘constexpr base& base::operator=(const base&)’
-pure2-hashable.cpp2:6:14: note:                 ‘template<class auto:97> base& base::operator=(auto:97&&)’
+pure2-hashable.cpp2:6:14: note:                 ‘template<class auto:111> base& base::operator=(auto:111&&)’
 pure2-hashable.cpp2:1:7: note: ‘class base’ defined here
-pure2-hashable.cpp2:17:1: error: no declaration matches ‘mystruct::mystruct(auto:103&&, auto:104&&, auto:105&&) requires (is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(mystruct::__ct ::i_)>::type>::type, const std::add_const_t&>) && (is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(mystruct::__ct ::j_)>::type>::type, const std::__cxx11::add_const_t<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >&>) && (is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(mystruct::__ct ::k_)>::type>::type, const std::add_const_t&>)’
+pure2-hashable.cpp2:17:1: error: no declaration matches ‘mystruct::mystruct(auto:117&&, auto:118&&, auto:119&&) requires (is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(mystruct::__ct ::i_)>::type>::type, const std::add_const_t&>) && (is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(mystruct::__ct ::j_)>::type>::type, const std::__cxx11::add_const_t<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >&>) && (is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(mystruct::__ct ::k_)>::type>::type, const std::add_const_t&>)’
 pure2-hashable.cpp2:5:7: note: candidates are: ‘mystruct::mystruct(mystruct&&)’
 pure2-hashable.cpp2:5:7: note:                 ‘mystruct::mystruct(const mystruct&)’
-pure2-hashable.cpp2:10:13: note:                 ‘template<class auto:98, class auto:99, class auto:100> mystruct::mystruct(auto:98&&, auto:99&&, auto:100&&)’
+pure2-hashable.cpp2:10:13: note:                 ‘template<class auto:112, class auto:113, class auto:114> mystruct::mystruct(auto:112&&, auto:113&&, auto:114&&)’
 pure2-hashable.cpp2:5:7: note: ‘class mystruct’ defined here
 pure2-hashable.cpp2:20:104: error: mixing declarations and function-definitions is forbidden
 pure2-hashable.cpp2:20:107: error: expected constructor, destructor, or type conversion before ‘{’ token

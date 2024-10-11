@@ -27,6 +27,7 @@ auto fill(
 
 #line 28 "mixed-initialization-safety-3-contract-violation.cpp2"
 auto print_decorated(auto const& x) -> void;
+#line 31 "mixed-initialization-safety-3-contract-violation.cpp2"
 
 // for test determinism, force "fill" branch
 bool flip_a_coin() {
@@ -68,5 +69,7 @@ auto fill(
 }
 
 #line 28 "mixed-initialization-safety-3-contract-violation.cpp2"
-auto print_decorated(auto const& x) -> void { std::cout << ">> [" << x << "]\n";  }
+auto print_decorated(auto const& x) -> void{
+    std::cout << ">> [" << x << "]\n";
+}
 

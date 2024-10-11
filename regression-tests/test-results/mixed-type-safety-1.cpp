@@ -24,7 +24,7 @@ class Square : public Shape { };
 #line 12 "mixed-type-safety-1.cpp2"
 template<typename T> auto print(cpp2::impl::in<std::string> msg, T const& x) -> void;
 
-#line 15 "mixed-type-safety-1.cpp2"
+#line 16 "mixed-type-safety-1.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -32,10 +32,11 @@ template<typename T> auto print(cpp2::impl::in<std::string> msg, T const& x) -> 
 #line 1 "mixed-type-safety-1.cpp2"
 
 #line 12 "mixed-type-safety-1.cpp2"
-template<typename T> auto print(cpp2::impl::in<std::string> msg, T const& x) -> void { 
-    std::cout << "" + cpp2::to_string(msg) + " " + cpp2::to_string(x) + "\n";  }
+template<typename T> auto print(cpp2::impl::in<std::string> msg, T const& x) -> void{
+    std::cout << "" + cpp2::to_string(msg) + " " + cpp2::to_string(x) + "\n";
+}
 
-#line 15 "mixed-type-safety-1.cpp2"
+#line 16 "mixed-type-safety-1.cpp2"
 [[nodiscard]] auto main() -> int
 {
     // Full qualification is necessary to avoid ambiguity in C++23

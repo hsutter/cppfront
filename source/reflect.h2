@@ -55,7 +55,7 @@ compiler_services: @polymorphic_base @copyable type =
     = {
         errors               = errors_;
         includes             = includes_;
-        errors_original_size = cpp2::unsafe_narrow<int>(std::ssize(errors*));
+        errors_original_size = cpp2::unchecked_narrow<int>(std::ssize(errors*));
         generated_tokens     = generated_tokens_;
         parser               = (errors*, includes*);
     }
@@ -180,7 +180,7 @@ compiler_services: @polymorphic_base @copyable type =
         ) );
     }
 
-    is_active:(this) true;
+    is_active:(this) = true;
 }
 
 
@@ -355,6 +355,7 @@ function_declaration: @copyable type =
     index_of_parameter_named     : (this, s: std::string_view) -> int  = n*.index_of_parameter_named(s);
     has_parameter_named          : (this, s: std::string_view) -> bool = n*.has_parameter_named(s);
     has_in_parameter_named       : (this, s: std::string_view) -> bool = n*.has_in_parameter_named(s);
+    has_in_ref_parameter_named   : (this, s: std::string_view) -> bool = n*.has_in_ref_parameter_named(s);
     has_copy_parameter_named     : (this, s: std::string_view) -> bool = n*.has_copy_parameter_named(s);
     has_inout_parameter_named    : (this, s: std::string_view) -> bool = n*.has_inout_parameter_named(s);
     has_out_parameter_named      : (this, s: std::string_view) -> bool = n*.has_out_parameter_named(s);
@@ -1190,7 +1191,7 @@ basic_enum: (
     //  Generate all the private implementation
     t.add_member( "    _value            : (underlying_type)$;");
     t.add_member( "    private operator= : (implicit out this, _val: i64) == "
-                                            "_value = cpp2::unsafe_narrow<(underlying_type)$>(_val);");
+                                            "_value = cpp2::unchecked_narrow<(underlying_type)$>(_val);");
 
     //  Generate the bitwise operations
     if bitwise {
@@ -1201,8 +1202,8 @@ basic_enum: (
         t.add_member( "    operator& : (       this, that ) -> (t.name())$  == _value &  that._value;");
         t.add_member( "    operator^ : (       this, that ) -> (t.name())$  == _value ^  that._value;");
         t.add_member( "    has       : (       this, that ) -> bool         == _value &  that._value;");
-        t.add_member( "    set       : ( inout this, that )                 == _value |= that._value;");
-        t.add_member( "    clear     : ( inout this, that )                 == _value &= that._value~;");
+        t.add_member( "    set       : ( inout this, that )                 == { _value |= that._value;  }");
+        t.add_member( "    clear     : ( inout this, that )                 == { _value &= that._value~; }");
     }
 
     //  Add the enumerators
@@ -1993,9 +1994,9 @@ parse_context: type =
         }
     }
 
-    next         : (inout this) next_impl(false, false);
-    next_in_class: (inout this) next_impl( true, false);
-    next_no_skip : (inout this) next_impl(false,  true);
+    next         : (inout this) = next_impl(false, false);
+    next_in_class: (inout this) = next_impl( true, false);
+    next_no_skip : (inout this) = next_impl(false,  true);
 
     next_n: (inout this, n: int) -> bool = {
         r := true;
@@ -2029,9 +2030,9 @@ parse_context: type =
         }
     }
 
-    grab_until: (inout this, in e: std::string, out r: std::string)        grab_until_impl(e, out r, false);
-    grab_until: (inout this, in e: char, out r: std::string)               grab_until_impl(std::string(1, e), out r, false);
-    grab_until_one_of: (inout this, in e: std::string, out r: std::string) grab_until_impl(e, out r, true);
+    grab_until: (inout this, in e: std::string, out r: std::string)        = grab_until_impl(e, out r, false);
+    grab_until: (inout this, in e: char, out r: std::string)               = grab_until_impl(std::string(1, e), out r, false);
+    grab_until_one_of: (inout this, in e: std::string, out r: std::string) = grab_until_impl(e, out r, true);
 
     grab_n: (inout this, in n: int, out r: std::string) -> bool = 
     {
@@ -2077,8 +2078,8 @@ parse_context: type =
         }
     }
 
-    peek         : (in this) peek_impl(false);
-    peek_in_class: (in this) peek_impl( true);
+    peek         : (in this) = peek_impl(false);
+    peek_in_class: (in this) = peek_impl( true);
 
 
     //  Parsing functions
@@ -2192,9 +2193,9 @@ parse_context: type =
 
     //  Misc functions
 
-    get_pos:   (this)                             pos;
-    get_range: (this, start: size_t, end: size_t) std::string(regex..substr(start, end - start + 1));
-    valid:     (this) -> bool                   = { return has_next() && !has_error; }
+    get_pos:   (this)                             = pos;
+    get_range: (this, start: size_t, end: size_t) = std::string(regex..substr(start, end - start + 1));
+    valid:     (this) -> bool                     = { return has_next() && !has_error; }
 
     error: (inout this, err: std::string) -> token_ptr = {
         has_error = true;
@@ -2858,7 +2859,7 @@ group_ref_token: @polymorphic_base type =
                 number := 0;
                 if !string_util::string_to_int(group, number, 8) { return ctx..error("Could not convert octal to int."); }
 
-                number_as_char : char = unsafe_narrow<char>(number);
+                number_as_char : char = unchecked_narrow<char>(number);
 
                 token := shared.new<char_token>(number_as_char, ctx..get_modifiers()..has(expression_flags::case_insensitive));
                 token*..set_string("\\(string_util::int_to_string<8>(number_as_char as int))$");
@@ -3190,7 +3191,7 @@ hexadecimal_token_parse: (inout ctx: parse_context) -> token_ptr =
     if !string_util::string_to_int(number_str, number, 16) { return ctx..error("Could not convert hexadecimal to int."); }
 
     // TODO: Change for unicode.
-    number_as_char : char = unsafe_narrow<char>(number);
+    number_as_char : char = unchecked_narrow<char>(number);
 
     syntax: std::string = string_util::int_to_string<16>(number_as_char as int);
     if has_brackets {
@@ -3314,7 +3315,7 @@ octal_token_parse: (inout ctx: parse_context) -> token_ptr =
     if !string_util::string_to_int(number_str, number, 8) { return ctx..error("Could not convert octal to int."); }
 
     // TODO: Change for unicode.
-    number_as_char : char = unsafe_narrow<char>(number);
+    number_as_char : char = unchecked_narrow<char>(number);
 
     syntax: std::string = "\\o{(string_util::int_to_string<8>(number_as_char as int))$}";
     r := shared.new<char_token>(number_as_char, ctx..get_modifiers()..has(expression_flags::case_insensitive));
@@ -3685,15 +3686,18 @@ apply_metafunctions: (
     assert( n.is_type() );
 
     //  Check for _names reserved for the metafunction implementation
-    for  rtype.get_members()
-    do   (m)
+    if !n.metafunctions.empty()
     {
-        m.require( 
-            !m.name().starts_with("_") || m.name().ssize() == 1,
-            "a type that applies a metafunction cannot have a body that declares "
-            "a name that starts with '_' - those names are reserved for the "
-            "metafunction implementation"
-        );
+        for  rtype.get_members()
+        do   (m)
+        {
+            m.require( 
+                !m.name().starts_with("_") || m.name().ssize() == 1,
+                "a type that applies a metafunction cannot have a body that declares "
+                "a name that starts with '_' - those names are reserved for the "
+                "metafunction implementation"
+            );
+        }
     }
 
     //  For each metafunction, apply it

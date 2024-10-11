@@ -1,0 +1,13 @@
+
+f: () = std::cout << "hi";
+
+g2: () -> void = { }
+g: () = g2();
+
+h: () = 2 > 0;
+
+main: () = {
+    f() << " ho";
+    static_assert( std::is_same_v<decltype(g()), void> );
+    if h() { std::cout << " hum"; }
+}

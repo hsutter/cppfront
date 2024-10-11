@@ -32,7 +32,7 @@ main: () -> int =
 
 //  Print! A one-expression function body...
 //
-print_decorated: (x:_) = std::cout << ">> [" << x << "]\n";
+print_decorated: (x) = std::cout << ">> [" << x << "]\n";
 
 //  Flip a coin! Exercise <mutex> <cstdlib> <ctime> and 'as'...
 //

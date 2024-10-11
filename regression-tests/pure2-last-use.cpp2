@@ -1,7 +1,7 @@
-f_inout: (inout _) = { }
-f_copy: (copy _...) = { }
-pred: (_...) true;
-pred_copy: (copy _...) true;
+f_inout  : (inout _)   = { }
+f_copy   : (copy _...) = { }
+pred     : (_...)      = true;
+pred_copy: (copy _...) = true;
 identity: <T> (forward x: T) -> forward _ requires std::is_reference_v<T> == { return x; }
 identity_copy: (copy x) -> _ requires  std::copyable<decltype(x)> = x;
 identity_copy: (move x) -> _ requires !std::copyable<decltype(x)> = (move x);
@@ -42,7 +42,7 @@ issue_313: () = {
     _ = e is (e);
 
     f := new<int>(0);
-    _ = f is std::type_identity_t<decltype(f)>; // OK?
+    _ = f is decltype(f); // OK?
 
     g := new<int>(0);
     for (identity(g)* + identity(g)*)
@@ -112,9 +112,9 @@ issue_683: (args) = {
 }
 
 issue_825: () = {
-  _ = :(copy b: std::unique_ptr<int>) f_copy(move b);
-  _ = :(move c: std::unique_ptr<int>) f_copy(move c);
-  _ = :(forward d) f_copy(d);(new<int>(0));
+  _ = :(copy b: std::unique_ptr<int>) = f_copy(move b);
+  _ = :(move c: std::unique_ptr<int>) = f_copy(move c);
+  _ = :(forward d) = f_copy(d);(new<int>(0));
 }
 
 issue_832: () = {
@@ -122,7 +122,7 @@ issue_832: () = {
   while i { }
 }
 
-make_copy: (copy x) x;
+make_copy: (copy x) -> _ = x;
 
 issue_847_4: (copy v: std::vector<int>) = {
   for v.make_copy()
@@ -159,7 +159,7 @@ issue_850: () = {
     v: std::vector = ( 1, 2, 3, 4, 5 );
 
     //  Definite last use of v => move-capture v into f's closure
-    f := :() -> forward _ = { return v$; };
+    f := :() -> forward_ref _ = { return v$; };
 
     //  Now we can access the vector captured inside f()...
     f().push_back(6);
@@ -909,7 +909,7 @@ captures: namespace = {
 f: () = {
   x := new<int>(0);
   f_copy(move x);
-  id := :(x) -> forward _ = x;
+  id := :(forward x) = x;
   y := new<int>(0);
   assert(id(y)& == y&);
 }
@@ -935,13 +935,13 @@ g: () = {
   _ = :() = {
     x := new<int>(0);
     f_copy(move x);
-    _ = :() std::array<int, :(x) identity(x);(0)>()$; // Fails on Clang 12 (lambda in unevaluated context).
+    _ = :() = std::array<int, :(x) = identity(x);(0)>()$; // Fails on Clang 12 (lambda in unevaluated context).
   };
 
   _ = :() = {
     x := new<int>(0);
     f_inout(x);
-    _ = :() -> int = (:() x$*)$();
+    _ = :() -> int = (:() = x$*)$();
   };
 }
 
@@ -951,7 +951,7 @@ loops_and_captures: () = {
   _ = :() = {
     x := new<int>(0);
     f_copy(move x);
-    for (:(x) x)
+    for (:(x) -> _ = x)
     do (_)
     { }
   };

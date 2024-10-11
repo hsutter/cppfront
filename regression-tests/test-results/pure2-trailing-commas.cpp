@@ -15,10 +15,10 @@ class vals;
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "pure2-trailing-commas.cpp2"
-[[nodiscard]] auto f(auto const& a, auto const& b) -> auto;
+[[nodiscard]] auto f(auto const& a, auto const& b) -> decltype(auto);
 
 #line 3 "pure2-trailing-commas.cpp2"
-template<typename T, typename U> [[nodiscard]] auto g(T const& a, U const& b) -> auto;
+template<typename T, typename U> [[nodiscard]] auto g(T const& a, U const& b) -> decltype(auto);
 using doubler_ret = int;
 
 
@@ -41,10 +41,10 @@ auto main() -> int;
 //=== Cpp2 function definitions =================================================
 
 #line 1 "pure2-trailing-commas.cpp2"
-[[nodiscard]] auto f(auto const& a, auto const& b) -> auto { return a + b;  }
+[[nodiscard]] auto f(auto const& a, auto const& b) -> decltype(auto) { return a + b;  }
 
 #line 3 "pure2-trailing-commas.cpp2"
-template<typename T, typename U> [[nodiscard]] auto g(T const& a, U const& b) -> auto { return a + b;  }
+template<typename T, typename U> [[nodiscard]] auto g(T const& a, U const& b) -> decltype(auto) { return a + b;  }
 
 #line 5 "pure2-trailing-commas.cpp2"
 [[nodiscard]] auto doubler(cpp2::impl::in<int> a) -> doubler_ret{

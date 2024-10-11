@@ -74,19 +74,19 @@ match_context: <CharT, Iter, max_groups: int> type =
 
     //  Getter and setter for groups
     //
-    get_group: (in this, group) groups[group];
+    get_group: (in this, group) = groups[group];
 
     get_group_end:    (in this, group) -> int = {
         if group >= max_groups || !groups[group].matched {
             return 0;
         }
-        return cpp2::unsafe_narrow<int>( std::distance(begin, groups[group].end) );
+        return cpp2::unchecked_narrow<int>( std::distance(begin, groups[group].end) );
     }
     get_group_start:  (in this, group) -> int = {
         if group >= max_groups || !groups[group].matched {
             return 0;
         }
-        return cpp2::unsafe_narrow<int>( std::distance(begin, groups[group].start) );
+        return cpp2::unchecked_narrow<int>( std::distance(begin, groups[group].start) );
     }
     get_group_string: (in this, group) -> std::string = {
         if group >= max_groups || !groups[group].matched {
@@ -108,12 +108,12 @@ match_context: <CharT, Iter, max_groups: int> type =
         groups[group].start = pos;
     }
 
-    size: (in this) max_groups;
+    size: (in this) = max_groups;
 
     //  Misc functions
     //
-    fail: (in this)            match_return<Iter>(false, end);
-    pass: (in this, cur: Iter) match_return<Iter>(true, cur);
+    fail: (in this)            = match_return<Iter>(false, end);
+    pass: (in this, cur: Iter) = match_return<Iter>(true, cur);
 }
 
 
@@ -121,7 +121,7 @@ match_context: <CharT, Iter, max_groups: int> type =
 //
 true_end_func: @struct<noforward> type = 
 {
-    operator(): (in this, cur, inout ctx) ctx..pass(cur);
+    operator(): (in this, cur, inout ctx) = ctx..pass(cur);
 }
 
 
@@ -149,7 +149,7 @@ on_return: <Func> type =
 
 
 //  Helper for auto deduction of the Func type.
-make_on_return: <Func> (func: Func) on_return<Func>(func);
+make_on_return: <Func> (func: Func) = on_return<Func>(func);
 
 
 //-----------------------------------------------------------------------
@@ -163,8 +163,8 @@ make_on_return: <Func> (func: Func) on_return<Func>(func);
 //
 single_class_entry: <CharT, C: CharT> type =
 {
-    includes : (c: CharT) c == C;
-    to_string: ()         bstring<CharT>(1, C);
+    includes : (c: CharT) = c == C;
+    to_string: ()         = bstring<CharT>(1, C);
 }
 
 
@@ -172,8 +172,8 @@ single_class_entry: <CharT, C: CharT> type =
 //
 range_class_entry: <CharT, Start: CharT, End: CharT> type =
 {
-    includes : (c: CharT) Start <= c <= End;
-    to_string: ()         "(Start)$-(End)$";
+    includes : (c: CharT) = Start <= c <= End;
+    to_string: ()         = "(Start)$-(End)$";
 }
 
 
@@ -181,8 +181,8 @@ range_class_entry: <CharT, Start: CharT, End: CharT> type =
 //
 combined_class_entry: <CharT, List ...> type = 
 {
-    includes : (c: CharT) (false || ... || List::includes(c));
-    to_string: ()         (bstring<CharT>() + ... + List::to_string());
+    includes : (c: CharT) = (false || ... || List::includes(c));
+    to_string: ()         = (bstring<CharT>() + ... + List::to_string());
 }
 
 
@@ -190,8 +190,8 @@ combined_class_entry: <CharT, List ...> type =
 //
 list_class_entry: <CharT, List ... : CharT> type = 
 {
-    includes : (c: CharT) (false || ... || (List == c));
-    to_string: ()         (bstring<CharT>() + ... + List);
+    includes : (c: CharT) = (false || ... || (List == c));
+    to_string: ()         = (bstring<CharT>() + ... + List);
 }
 
 
@@ -199,15 +199,15 @@ list_class_entry: <CharT, List ... : CharT> type =
 //
 named_class_entry: <CharT, Name: string_util::fixed_string, Inner> type = 
 {
-    includes : (c: CharT) Inner::includes(c);
-    to_string: ()         "[:(Name..data())$:]";
+    includes : (c: CharT) = Inner::includes(c);
+    to_string: ()         = "[:(Name..data())$:]";
 }
 
 
 negated_class_entry: <CharT, Inner> type = 
 {
     this    : Inner      = ();
-    includes: (c: CharT) !Inner::includes(c);
+    includes: (c: CharT) = !Inner::includes(c);
 }
 
 
@@ -215,8 +215,8 @@ negated_class_entry: <CharT, Inner> type =
 //
 shorthand_class_entry: <CharT, Name: string_util::fixed_string, Inner> type = 
 {
-    includes : (c: CharT) Inner::includes(c);
-    to_string: ()         Name..str();
+    includes : (c: CharT) = Inner::includes(c);
+    to_string: ()         = Name..str();
 }
 
 
@@ -689,17 +689,17 @@ regular_expression: <CharT, matcher_wrapper> type =
         operator=:(out this, matched_: bool, ctx_: context<Iter>, pos_: Iter) = {
             matched = matched_;
             ctx = ctx_;
-            pos = unsafe_narrow<int>(std::distance(ctx_.begin, pos_));
+            pos = unchecked_narrow<int>(std::distance(ctx_.begin, pos_));
         }
 
-        group_number: (this) ctx..size();
-        group:        (this, g: int) ctx..get_group_string(g);
-        group_start:  (this, g: int) ctx..get_group_start(g);
-        group_end:    (this, g: int) ctx..get_group_end(g);
+        group_number: (this)         = ctx..size();
+        group:        (this, g: int) = ctx..get_group_string(g);
+        group_start:  (this, g: int) = ctx..get_group_start(g);
+        group_end:    (this, g: int) = ctx..get_group_end(g);
 
-        group:        (this, g: bstring<CharT>) group(get_group_id(g));
-        group_start:  (this, g: bstring<CharT>) group_start(get_group_id(g));
-        group_end:    (this, g: bstring<CharT>) group_end(get_group_id(g));
+        group:        (this, g: bstring<CharT>) = group(get_group_id(g));
+        group_start:  (this, g: bstring<CharT>) = group_start(get_group_id(g));
+        group_end:    (this, g: bstring<CharT>) = group_end(get_group_id(g));
 
         private get_group_id: (this, g: bstring<CharT>) -> _ = {
             group_id := matcher<Iter>::get_named_group_index(g);
@@ -710,9 +710,9 @@ regular_expression: <CharT, matcher_wrapper> type =
         }
     }
 
-    match: (in this, str: bview<CharT>)                 match(str..begin(), str..end());
-    match: (in this, str: bview<CharT>, start)          match(get_iter(str, start), str..end());
-    match: (in this, str: bview<CharT>, start, length)  match(get_iter(str, start), get_iter(str, start + length));
+    match: (in this, str: bview<CharT>)                = match(str..begin(), str..end());
+    match: (in this, str: bview<CharT>, start)         = match(get_iter(str, start), str..end());
+    match: (in this, str: bview<CharT>, start, length) = match(get_iter(str, start), get_iter(str, start + length));
     match: <Iter> (in this, start: Iter, end: Iter) -> search_return<Iter> = 
     {
         ctx: context<Iter> = (start, end);
@@ -721,9 +721,9 @@ regular_expression: <CharT, matcher_wrapper> type =
         return search_return<Iter>(r.matched && r.pos == end, ctx, r.pos);
     }
 
-    search: (in this, str: bview<CharT>)                 search(str..begin(), str..end());
-    search: (in this, str: bview<CharT>, start)          search(get_iter(str, start), str..end());
-    search: (in this, str: bview<CharT>, start, length)  search(get_iter(str, start), get_iter(str, start + length));
+    search: (in this, str: bview<CharT>)                = search(str..begin(), str..end());
+    search: (in this, str: bview<CharT>, start)         = search(get_iter(str, start), str..end());
+    search: (in this, str: bview<CharT>, start, length) = search(get_iter(str, start), get_iter(str, start + length));
     search: <Iter> (in this, start: Iter, end: Iter) -> search_return<Iter> = 
     {
         ctx: context<Iter> = (start, end);
@@ -744,7 +744,7 @@ regular_expression: <CharT, matcher_wrapper> type =
         return search_return<Iter>(r.matched, ctx, r.pos);
     }
 
-    to_string: (in this) matcher_wrapper::to_string();
+    to_string: (in this) = matcher_wrapper::to_string();
 
     //  Helper functions
     //

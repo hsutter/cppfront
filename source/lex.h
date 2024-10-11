@@ -231,7 +231,7 @@ public:
         source_position pos,
         lexeme          type
     )
-      : sv      {start, unsafe_narrow<ulong>(count)}
+      : sv      {start, unchecked_narrow<ulong>(count)}
       , pos     {pos}
       , lex_type{type}
     {
@@ -293,7 +293,7 @@ public:
 
     auto position() const -> source_position { return pos;                           }
 
-    auto length  () const -> int             { return unsafe_narrow<int>(sv.size()); }
+    auto length  () const -> int             { return unchecked_narrow<int>(sv.size()); }
 
     auto type    () const -> lexeme          { return lex_type;                      }
 
@@ -314,7 +314,7 @@ public:
             )
         {
             sv.remove_prefix(prefix.size());
-            pos.colno += unsafe_narrow<colno_t>(prefix.size());
+            pos.colno += unchecked_narrow<colno_t>(prefix.size());
         }
     }
 
@@ -898,7 +898,7 @@ auto lex_line(
             source_position(lineno, i + 1),
             type
             });
-        i += unsafe_narrow<int>(num-1);
+        i += unchecked_narrow<int>(num-1);
 
         merge_cpp1_multi_token_fundamental_type_names();
         merge_operator_function_names();
@@ -1212,7 +1212,7 @@ auto lex_line(
         auto parts = expand_raw_string_literal(opening_seq, closing_seq, closing_strategy, part, errors, source_position(lineno, pos_to_replace + 1));
         auto new_part = parts.generate();
         mutable_line.replace( pos_to_replace, size_to_replace, new_part );
-        i += unsafe_narrow<colno_t>(std::ssize(new_part)-1);
+        i += unchecked_narrow<colno_t>(std::ssize(new_part)-1);
 
         if (parts.is_expanded()) {
             // raw string was expanded and we need to repeat the processing of this line
@@ -1270,7 +1270,7 @@ auto lex_line(
                 auto closing_strategy = end_pos == line.npos ? string_parts::no_ends : string_parts::on_the_end;
                 auto size_to_replace  = end_pos == line.npos ? std::ssize(line) - i  : end_pos - i + std::ssize(rsm.closing_seq);
 
-                if (interpolate_raw_string(rsm.opening_seq, rsm.closing_seq, closing_strategy, part, i, unsafe_narrow<int>(size_to_replace) ) ) {
+                if (interpolate_raw_string(rsm.opening_seq, rsm.closing_seq, closing_strategy, part, i, unchecked_narrow<int>(size_to_replace) ) ) {
                     continue;
                 }
             }
@@ -1287,7 +1287,7 @@ auto lex_line(
             raw_string_multiline.value().text += raw_string_multiline.value().closing_seq;
 
             // and position where multiline_raw_string ends (needed for reseting line parsing)
-            i = unsafe_narrow<colno_t>(end_pos+std::ssize(raw_string_multiline.value().closing_seq)-1);
+            i = unchecked_narrow<colno_t>(end_pos+std::ssize(raw_string_multiline.value().closing_seq)-1);
 
             const auto& text = raw_string_multiline.value().should_interpolate ? raw_string_multiline.value().text.substr(1) : raw_string_multiline.value().text;
             multiline_raw_strings.emplace_back(multiline_raw_string{ text, {lineno, i} });
@@ -1507,7 +1507,7 @@ auto lex_line(
                                     string_parts::on_both_ends,
                                     std::string_view(&line[paren_pos+1], closing_pos-paren_pos-1),
                                     i,
-                                    unsafe_narrow<int>(closing_pos-i+std::ssize(closing_seq)))
+                                    unchecked_narrow<int>(closing_pos-i+std::ssize(closing_seq)))
                             ) {
                                 continue;
                             }
@@ -1527,12 +1527,12 @@ auto lex_line(
                                     string_parts::on_the_beginning,
                                     std::string_view(&line[paren_pos+1], std::ssize(line)-(paren_pos+1)),
                                     i,
-                                    unsafe_narrow<int>(std::ssize(line)-i))
+                                    unchecked_narrow<int>(std::ssize(line)-i))
                             ) {
                                 continue;
                             }
                             // skip entire raw string opening sequence R"
-                            i = unsafe_narrow<int>(paren_pos);
+                            i = unchecked_narrow<int>(paren_pos);
 
                             // if we are on the end of the line we need to add new line char
                             if (i+1 == std::ssize(line)) {
@@ -1726,7 +1726,7 @@ auto lex_line(
                             } else {
                                 raw_string_multiline.emplace(raw_string{source_position{lineno, i}, opening_seq, opening_seq, closing_seq });
                                 // skip entire raw string opening sequence R"
-                                i = unsafe_narrow<int>(paren_pos);
+                                i = unchecked_narrow<int>(paren_pos);
 
                                 // if we are on the end of the line we need to add new line char
                                 if (i+1 == std::ssize(line)) {
@@ -1840,14 +1840,17 @@ auto lex_line(
                     if (tokens.back() == "static_cast") {
                         errors.emplace_back(
                             source_position(lineno, i),
-                            "'static_cast<T>(val)' is not supported in Cpp2 - use 'val as T' for safe conversions instead, or if necessary cpp2::unsafe_narrow<T>(val) for a possibly-lossy narrowing conversion"
+                            "'static_cast<T>(expr)' is not supported in Cpp2 - use 'expr as T' instead, which allows only type-safe conversions"
+                            "\n    note: to discard an expression's value, use '_ = expr' instead of a cast to void"
+                            "\n    note: to opt into possibly-lossy narrowing conversions, use 'unchecked_narrow<T>(expr)'"
+                            "\n    note: to opt into no checking at all, use 'unchecked_cast<T>(expr)' if necessary"
                         );
                         return {};
                     }
                     if (tokens.back() == "dynamic_cast") {
                         errors.emplace_back(
                             source_position(lineno, i),
-                            "'dynamic_cast<Derived*>(pBase)' is not supported in Cpp2 - use 'pBase as *Derived' for safe dynamic conversions instead"
+                            "'dynamic_cast<Derived*>(pBase)' is not supported in Cpp2 - use 'pBase as *Derived' instead for safe dynamic pointer conversions"
                         );
                         return {};
                     }
@@ -1984,7 +1987,7 @@ public:
 
             //  Create new map entry for the section starting at this line,
             //  and populate its tokens with the tokens in this section
-            auto lineno = unsafe_narrow<lineno_t>(std::distance(std::begin(lines), line));
+            auto lineno = unchecked_narrow<lineno_t>(std::distance(std::begin(lines), line));
 
             //  If this is generated code, use negative line numbers to
             //  inform and assist the printer

@@ -85,9 +85,9 @@ class file_attributes {
 private: cpp2::u8 _value; private: constexpr file_attributes(cpp2::impl::in<cpp2::i64> _val);
 
 private: constexpr auto operator=(cpp2::impl::in<cpp2::i64> _val) -> file_attributes& ;
-public: constexpr auto operator|=(file_attributes const& that) & -> void;
-public: constexpr auto operator&=(file_attributes const& that) & -> void;
-public: constexpr auto operator^=(file_attributes const& that) & -> void;
+public: constexpr auto operator|=(file_attributes const& that) & -> decltype(auto);
+public: constexpr auto operator&=(file_attributes const& that) & -> decltype(auto);
+public: constexpr auto operator^=(file_attributes const& that) & -> decltype(auto);
 public: [[nodiscard]] constexpr auto operator|(file_attributes const& that) const& -> file_attributes;
 public: [[nodiscard]] constexpr auto operator&(file_attributes const& that) const& -> file_attributes;
 public: [[nodiscard]] constexpr auto operator^(file_attributes const& that) const& -> file_attributes;
@@ -129,9 +129,9 @@ auto main() -> int;
 #line 1 "pure2-enum.cpp2"
 
 constexpr skat_game::skat_game(cpp2::impl::in<cpp2::i64> _val)
-                                                          : _value{ cpp2::unsafe_narrow<cpp2::i8>(_val) } {  }
+                                                          : _value{ cpp2::unchecked_narrow<cpp2::i8>(_val) } {  }
 constexpr auto skat_game::operator=(cpp2::impl::in<cpp2::i64> _val) -> skat_game&  { 
-                                                          _value = cpp2::unsafe_narrow<cpp2::i8>(_val);
+                                                          _value = cpp2::unchecked_narrow<cpp2::i8>(_val);
                                                           return *this; }
 inline CPP2_CONSTEXPR skat_game skat_game::diamonds{ 9 };
 
@@ -198,10 +198,10 @@ std::string str {s}; return from_string(cpp2::string_util::replace_all(cpp2::mov
 
 
     constexpr janus::janus(cpp2::impl::in<cpp2::i64> _val)
-                                                          : _value{ cpp2::unsafe_narrow<cpp2::i8>(_val) } {  }
+                                                          : _value{ cpp2::unchecked_narrow<cpp2::i8>(_val) } {  }
 
 constexpr auto janus::operator=(cpp2::impl::in<cpp2::i64> _val) -> janus&  { 
-                                                          _value = cpp2::unsafe_narrow<cpp2::i8>(_val);
+                                                          _value = cpp2::unchecked_narrow<cpp2::i8>(_val);
                                                           return *this; }
 inline CPP2_CONSTEXPR janus janus::past{ 0 };
 
@@ -245,20 +245,20 @@ return past;
 std::string str {s}; return from_string(cpp2::string_util::replace_all(cpp2::move(str), "janus::", "")); }
 
 constexpr file_attributes::file_attributes(cpp2::impl::in<cpp2::i64> _val)
-                                                          : _value{ cpp2::unsafe_narrow<cpp2::u8>(_val) } {  }
+                                                          : _value{ cpp2::unchecked_narrow<cpp2::u8>(_val) } {  }
 
 constexpr auto file_attributes::operator=(cpp2::impl::in<cpp2::i64> _val) -> file_attributes&  { 
-                                                          _value = cpp2::unsafe_narrow<cpp2::u8>(_val);
+                                                          _value = cpp2::unchecked_narrow<cpp2::u8>(_val);
                                                           return *this; }
-constexpr auto file_attributes::operator|=(file_attributes const& that) & -> void { _value |= that._value; }
-constexpr auto file_attributes::operator&=(file_attributes const& that) & -> void { _value &= that._value; }
-constexpr auto file_attributes::operator^=(file_attributes const& that) & -> void { _value ^= that._value; }
+constexpr auto file_attributes::operator|=(file_attributes const& that) & -> decltype(auto) { return _value |= that._value; }
+constexpr auto file_attributes::operator&=(file_attributes const& that) & -> decltype(auto) { return _value &= that._value; }
+constexpr auto file_attributes::operator^=(file_attributes const& that) & -> decltype(auto) { return _value ^= that._value; }
 [[nodiscard]] constexpr auto file_attributes::operator|(file_attributes const& that) const& -> file_attributes { return _value | that._value; }
 [[nodiscard]] constexpr auto file_attributes::operator&(file_attributes const& that) const& -> file_attributes { return _value & that._value; }
 [[nodiscard]] constexpr auto file_attributes::operator^(file_attributes const& that) const& -> file_attributes { return _value ^ that._value; }
 [[nodiscard]] constexpr auto file_attributes::has(file_attributes const& that) const& -> bool { return _value & that._value; }
-constexpr auto file_attributes::set(file_attributes const& that) & -> void { _value |= that._value; }
-constexpr auto file_attributes::clear(file_attributes const& that) & -> void { _value &= ~that._value; }
+constexpr auto file_attributes::set(file_attributes const& that) & -> void{_value |= that._value;}
+constexpr auto file_attributes::clear(file_attributes const& that) & -> void{_value &= ~that._value;}
 inline CPP2_CONSTEXPR file_attributes file_attributes::cached{ 1 };
 
 inline CPP2_CONSTEXPR file_attributes file_attributes::current{ 2 };

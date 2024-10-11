@@ -17,8 +17,8 @@
 [[nodiscard]] auto main() -> int;
 
 #line 15 "pure2-bounds-safety-span.cpp2"
-auto print_and_decorate(auto const& thing) -> void;
-#line 17 "pure2-bounds-safety-span.cpp2"
+auto print_and_decorate(auto const& x) -> void;
+#line 18 "pure2-bounds-safety-span.cpp2"
 
 #line 1 "pure2-bounds-safety-span.cpp2"
 
@@ -41,6 +41,7 @@ auto print_and_decorate(auto const& thing) -> void;
 }
 
 #line 15 "pure2-bounds-safety-span.cpp2"
-auto print_and_decorate(auto const& thing) -> void { 
-    std::cout << ">> " << thing << "\n";  }
+auto print_and_decorate(auto const& x) -> void{
+    std::cout << ">> " << x << "\n";
+}
 

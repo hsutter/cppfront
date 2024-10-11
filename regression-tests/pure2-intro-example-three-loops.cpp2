@@ -1,10 +1,11 @@
 
-print: (thing:_) =
-    std::cout << ">> " << thing << "\n";
+print: (x) = {
+    std::cout << ">> " << x << "\n";
+}
 
-decorate_and_print: (inout thing:_) = {
-    thing = "[" + thing + "]";
-    print(thing);
+decorate_and_print: (inout x) = {
+    x = "[" + x + "]";
+    print(x);
 }
 
 main: () -> int = {

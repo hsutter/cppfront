@@ -157,6 +157,11 @@ A `struct` is a type with only public bases, objects, and functions, with no vir
 - there is a user-written `operator=`
 
 
+#### `hashable`
+
+A `hashable` type provides a `hash: (this) -> size_t` function that performs a memberwise hash of its data members using `std::hash`.
+
+
 ### For polymorphic types (interfaces, base classes)
 
 
@@ -332,7 +337,7 @@ Unlike C `#!cpp union`, this `@union` is safe to use because it always ensures o
 
 Unlike C++11 `std::variant`, this `@union` is easier to use because its alternatives are anonymous, and safer to use because each union type is a distinct type. [^variant]
 
-Each `@union` type has its own type-safe name, has clear and unambiguous named members, and safely encapsulates a discriminator to rule them all. Sure, it uses unsafe casts in the implementation, but they are fully encapsulated, where they can be tested once and be safe in all uses.
+Each `@union` type has its own type-safe name, has clear and unambiguous named members, and safely encapsulates a discriminator to rule them all. It uses type-unsafe casts in the implementation, but they are fully encapsulated, where they can be tested once and be safe in all uses.
 
 Because a `@union type` is still a `type`, it can naturally have other things normal types can have, such as template parameter lists and member functions:
 

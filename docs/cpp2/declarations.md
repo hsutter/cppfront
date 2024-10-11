@@ -46,11 +46,11 @@ We can illustrate this in two directions. First, let's start with a full functio
 ``` cpp title="Start with a full function, and successively omit optional parts if unused" hl_lines="1 5 9 13"
 // Full named function
 f:(x: int = init) = { /*...*/ }     // x is a parameter to the function
-f:(x: int = init) = statement;      // same, { } is implicit
+f:(x: int = init) = statement;      // same, except return type is deduced
 
 // Omit name => anonymous function (aka 'lambda')
  :(x: int = init) = { /*...*/ }     // x is a parameter to the function
- :(x: int = init) = statement;      // same, { } is implicit
+ :(x: int = init) = statement;      // same, except return type is deduced
 
 // Omit declaration => local and immediate (aka 'let' in other languages)
   (x: int = init)   { /*...*/ }     // x is a parameter to this
@@ -74,11 +74,11 @@ Conversely, we can start with an ordinary block or statement, and successively b
 
 // Add declaration => treat the code as a callable object
  :(x: int = init) = { /*...*/ }     // x is a parameter to the function
- :(x: int = init) = statement;      // same, { } is implicit
+ :(x: int = init) = statement;      // same, except return type is deduced
 
 // Add name => full named function
 f:(x: int = init) = { /*...*/ }     // x is a parameter to the function
-f:(x: int = init) = statement;      // same, { } is implicit
+f:(x: int = init) = statement;      // same, except return type is deduced
 
 ```
 
@@ -166,7 +166,7 @@ n: namespace
         //  deduced from its body, defined as a single-expression body
         //  (equivalent to '= { return points.ssize(); }' but omitting
         //  syntax where we're using the language defaults)
-        count: (this) = points.ssize();
+        count: (this) -> _ = points.ssize();
 
         //  ...
     }

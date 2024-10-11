@@ -64,6 +64,7 @@ nav:
     - 'Types and inheritance': cpp2/types.md
     - 'Metafunctions and reflection': cpp2/metafunctions.md
     - 'Namespaces': cpp2/namespaces.md
+    - 'Safety and "unchecked"': cpp2/safety.md
     # - 'Modules': cpp2/modules.md
   - 'Cppfront reference':
     - 'Using Cpp1 (today''s syntax) and Cpp2 in the same source file': cppfront/mixed.md

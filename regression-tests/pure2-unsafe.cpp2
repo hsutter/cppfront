@@ -1,11 +1,11 @@
 
 f: (i: i32, inout s: std::string) = {
     // j := i as i16;                     // error, maybe-lossy narrowing
-    j := unsafe_narrow<i16>(i);           // ok, 'unsafe' is explicit
+    j := unchecked_narrow<i16>(i);           // ok, 'unchecked' is explicit
 
     pv: *void = s&;
     // pi := pv as *std::string;          // error, unsafe cast
-    ps := unsafe_cast<*std::string>(pv);  // ok, 'unsafe' is explicit
+    ps := unchecked_cast<*std::string>(pv);  // ok, 'unchecked' is explicit
     ps* = "plugh";
 }
 

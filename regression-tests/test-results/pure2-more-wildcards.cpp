@@ -14,7 +14,7 @@
 #line 1 "pure2-more-wildcards.cpp2"
 
 #line 2 "pure2-more-wildcards.cpp2"
-[[nodiscard]] auto less_than(auto const& value) -> auto;
+[[nodiscard]] auto less_than(auto const& value) -> decltype(auto);
 
 [[nodiscard]] auto main() -> int;
 
@@ -23,7 +23,7 @@
 #line 1 "pure2-more-wildcards.cpp2"
 
 #line 2 "pure2-more-wildcards.cpp2"
-[[nodiscard]] auto less_than(auto const& value) -> auto { return [_0 = value](auto const& x) mutable -> auto { return cpp2::impl::cmp_less(x,_0); }; }
+[[nodiscard]] auto less_than(auto const& value) -> decltype(auto) { return [_0 = value](auto const& x) mutable -> decltype(auto) { return cpp2::impl::cmp_less(x,_0);  };  }
 
 #line 4 "pure2-more-wildcards.cpp2"
 [[nodiscard]] auto main() -> int

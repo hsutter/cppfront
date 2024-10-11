@@ -19,8 +19,8 @@
 [[nodiscard]] auto main() -> int;
 
 #line 21 "mixed-lifetime-safety-pointer-init-4.cpp2"
-auto print_and_decorate(auto const& thing) -> void;
-#line 23 "mixed-lifetime-safety-pointer-init-4.cpp2"
+auto print_and_decorate(auto const& x) -> void;
+#line 24 "mixed-lifetime-safety-pointer-init-4.cpp2"
 
 bool flip_a_coin() {
     // Change std::mt19937 to std::random_device for non-deterministic PRNG
@@ -51,6 +51,7 @@ bool flip_a_coin() {
 }
 
 #line 21 "mixed-lifetime-safety-pointer-init-4.cpp2"
-auto print_and_decorate(auto const& thing) -> void { 
-    std::cout << ">> " << thing << "\n";  }
+auto print_and_decorate(auto const& x) -> void{
+    std::cout << ">> " << x << "\n";
+}
 

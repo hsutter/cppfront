@@ -1,7 +1,7 @@
 
 call: (_, _, _, _, _) = { }
 
-test: (a:_) -> std::string = {
+test: (a) -> std::string = {
     return call( a,
         a.b(a.c)*++, "hello", /* polite
                           greeting

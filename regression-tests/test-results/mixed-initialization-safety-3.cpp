@@ -28,6 +28,7 @@ auto fill(
 #line 26 "mixed-initialization-safety-3.cpp2"
 auto print_decorated(auto const& x) -> void;
 
+#line 30 "mixed-initialization-safety-3.cpp2"
 // for test determinism, force "xyzzy" branch
 // the standard mandates that std::mt19937()() == 3499211612
 [[nodiscard]] auto flip_a_coin() -> bool;
@@ -62,8 +63,10 @@ auto fill(
 }
 
 #line 26 "mixed-initialization-safety-3.cpp2"
-auto print_decorated(auto const& x) -> void { std::cout << ">> [" << x << "]\n";  }
+auto print_decorated(auto const& x) -> void{
+    std::cout << ">> [" << x << "]\n";
+}
 
-#line 30 "mixed-initialization-safety-3.cpp2"
+#line 32 "mixed-initialization-safety-3.cpp2"
 [[nodiscard]] auto flip_a_coin() -> bool { return std::mt19937()() % 2 == 0;  }
 

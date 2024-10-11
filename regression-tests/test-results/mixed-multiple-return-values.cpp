@@ -23,7 +23,7 @@ struct f_ret { int i; std::string s; };
 
 #line 22 "mixed-multiple-return-values.cpp2"
 auto do_print(cpp2::impl::in<std::string> name, auto const& value) -> void;
-#line 24 "mixed-multiple-return-values.cpp2"
+#line 25 "mixed-multiple-return-values.cpp2"
 
 int main() {
     auto [a,b] = f();
@@ -63,6 +63,7 @@ bool flip_a_coin() {
 }
 
 #line 22 "mixed-multiple-return-values.cpp2"
-auto do_print(cpp2::impl::in<std::string> name, auto const& value) -> void { 
-    std::cout << name << " is " << value << "\n";  }
+auto do_print(cpp2::impl::in<std::string> name, auto const& value) -> void{
+    std::cout << name << " is " << value << "\n";
+}
 

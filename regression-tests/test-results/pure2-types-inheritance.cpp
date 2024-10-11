@@ -63,27 +63,27 @@ class Cyborg: public Cyborg_name_as_base, public Human, public Cyborg_address_as
 #line 25 "pure2-types-inheritance.cpp2"
     public: auto speak() const -> void override;
 
-#line 28 "pure2-types-inheritance.cpp2"
+#line 29 "pure2-types-inheritance.cpp2"
     public: auto work() const -> void override;
 
-#line 31 "pure2-types-inheritance.cpp2"
+#line 33 "pure2-types-inheritance.cpp2"
     public: auto print() const& -> void;
 
-#line 34 "pure2-types-inheritance.cpp2"
+#line 37 "pure2-types-inheritance.cpp2"
     public: ~Cyborg() noexcept;
     public: Cyborg(Cyborg const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(Cyborg const&) -> void = delete;
 
 
-#line 36 "pure2-types-inheritance.cpp2"
+#line 39 "pure2-types-inheritance.cpp2"
 };
 
 auto make_speak(cpp2::impl::in<Human> h) -> void;
 
-#line 43 "pure2-types-inheritance.cpp2"
+#line 46 "pure2-types-inheritance.cpp2"
 auto do_work(cpp2::impl::in<N::Machine<99>> m) -> void;
 
-#line 48 "pure2-types-inheritance.cpp2"
+#line 51 "pure2-types-inheritance.cpp2"
 auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -115,34 +115,37 @@ namespace N {
     }
 
 #line 25 "pure2-types-inheritance.cpp2"
-    auto Cyborg::speak() const -> void { 
-        std::cout << "" + cpp2::to_string(name) + " cracks a few jokes with a coworker\n";  }
+    auto Cyborg::speak() const -> void{
+        std::cout << "" + cpp2::to_string(name) + " cracks a few jokes with a coworker\n";
+    }
 
-#line 28 "pure2-types-inheritance.cpp2"
-    auto Cyborg::work() const -> void { 
-        std::cout << "" + cpp2::to_string(name) + " carries some half-tonne crates of Fe2O3 to cold storage\n";  }
+#line 29 "pure2-types-inheritance.cpp2"
+    auto Cyborg::work() const -> void{
+        std::cout << "" + cpp2::to_string(name) + " carries some half-tonne crates of Fe2O3 to cold storage\n";
+    }
 
-#line 31 "pure2-types-inheritance.cpp2"
-    auto Cyborg::print() const& -> void { 
-        std::cout << "printing: " + cpp2::to_string(name) + " lives at " + cpp2::to_string(address) + "\n";  }
+#line 33 "pure2-types-inheritance.cpp2"
+    auto Cyborg::print() const& -> void{
+        std::cout << "printing: " + cpp2::to_string(name) + " lives at " + cpp2::to_string(address) + "\n";
+    }
 
-#line 34 "pure2-types-inheritance.cpp2"
+#line 37 "pure2-types-inheritance.cpp2"
     Cyborg::~Cyborg() noexcept { 
         std::cout << "Tired but satisfied after another successful day, " + cpp2::to_string(cpp2::move(*this).name) + " checks out and goes home to their family\n";  }
 
-#line 38 "pure2-types-inheritance.cpp2"
+#line 41 "pure2-types-inheritance.cpp2"
 auto make_speak(cpp2::impl::in<Human> h) -> void{
     std::cout << "-> [vcall: make_speak] ";
     CPP2_UFCS(speak)(h);
 }
 
-#line 43 "pure2-types-inheritance.cpp2"
+#line 46 "pure2-types-inheritance.cpp2"
 auto do_work(cpp2::impl::in<N::Machine<99>> m) -> void{
     std::cout << "-> [vcall: do_work] ";
     CPP2_UFCS(work)(m);
 }
 
-#line 48 "pure2-types-inheritance.cpp2"
+#line 51 "pure2-types-inheritance.cpp2"
 auto main() -> int{
     Cyborg c {"Parsnip"}; 
     CPP2_UFCS(print)(c);

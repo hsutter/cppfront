@@ -727,7 +727,7 @@ public:
         //-----------------------------------------------------------------------
         //  Function logic: For each entry in the table...
         //
-        for (auto sympos = unsafe_narrow<int>(std::ssize(symbols) - 1); sympos >= 0; --sympos)
+        for (auto sympos = unchecked_narrow<int>(std::ssize(symbols) - 1); sympos >= 0; --sympos)
         {
             //  If this is an uninitialized local variable,
             //  ensure it is definitely initialized and tag those initializations
@@ -2153,8 +2153,8 @@ public:
     auto push(std::vector<std::pair<int, int>>& uses) -> void
     {
         uses.emplace_back(
-            unsafe_narrow<int>(std::ssize(indices_of_uses_per_scope) - 1),
-            unsafe_narrow<int>(std::ssize(indices_of_uses_per_scope.back()))
+            unchecked_narrow<int>(std::ssize(indices_of_uses_per_scope) - 1),
+            unchecked_narrow<int>(std::ssize(indices_of_uses_per_scope.back()))
         );
     }
 
@@ -2207,7 +2207,7 @@ public:
         assert(sym.is_use());
         assert(sym.identifier);
 
-        indices_of_uses_per_scope.back().push_back(cpp2::unsafe_narrow<int>(std::ssize(symbols)));
+        indices_of_uses_per_scope.back().push_back(cpp2::unchecked_narrow<int>(std::ssize(symbols)));
         symbols.emplace_back(scope_depth, sym);
     }
 
@@ -2221,7 +2221,7 @@ public:
             && *decl.identifier != "_"
             )
         {
-            indices_of_activations_per_scope.back().push_back(cpp2::unsafe_narrow<int>(std::ssize(symbols)));
+            indices_of_activations_per_scope.back().push_back(cpp2::unchecked_narrow<int>(std::ssize(symbols)));
         }
         symbols.emplace_back(scope_depth, decl);
     }
@@ -2232,7 +2232,7 @@ public:
         assert(sym.is_using_declaration());
         assert(sym.identifier);
 
-        indices_of_activations_per_scope.back().push_back(cpp2::unsafe_narrow<int>(std::ssize(symbols)));
+        indices_of_activations_per_scope.back().push_back(cpp2::unchecked_narrow<int>(std::ssize(symbols)));
         symbols.emplace_back(scope_depth, sym);
     }
 
