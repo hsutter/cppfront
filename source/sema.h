@@ -1264,7 +1264,8 @@ private:
                             errors.emplace_back(
                                 sym.identifier->position(),
                                 "local variable " + name
-                                    + " is used before it was initialized");
+                                    + " is used before it was initialized",
+                                name );
                         }
                         return sym.standalone_assignment_to;
                     }

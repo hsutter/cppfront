@@ -5293,6 +5293,7 @@ public:
             //  so write it once to keep the guidance consistent
             assert (n.parent_declaration && n.parent_declaration->name());
             auto error_msg = "an operator= body must start with a series of 'member = value;' initialization statements for each of the type-scope objects in the same order they are declared, or the member must have a default initializer (in type '" + n.parent_declaration->name()->to_string() + "')";
+            auto error_symbol = n.parent_declaration->name()->to_string();
 
             //  If this constructor's type has data members, handle their initialization
             //      - objects is the list of this type's declarations
@@ -5441,7 +5442,8 @@ public:
                     );
                     errors.emplace_back(
                         stmt_pos,
-                        error_msg
+                        error_msg,
+                        error_symbol
                     );
                     return;
                 }
@@ -5570,7 +5572,8 @@ public:
                 );
                 errors.emplace_back(
                     (*object)->position(),
-                    error_msg
+                    error_msg,
+                    error_symbol
                 );
                 return;
             }
