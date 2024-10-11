@@ -6069,6 +6069,8 @@ private:
         auto m = std::string{msg};
         auto i = done() ? -1 : 0;
         assert (peek(i));
+        auto s = peek(i)->to_string();
+
         if (include_curr_token) {
             m += std::string(" (at '") + peek(i)->to_string() + "')";
         }
@@ -6077,7 +6079,7 @@ private:
         ) {
             err_pos = peek(i)->position();
         }
-        errors.emplace_back( err_pos, m, false, fallback );
+        errors.emplace_back( err_pos, m, s, false, fallback );
     }
 
     auto error(
