@@ -6072,7 +6072,7 @@ private:
         auto s = peek(i)->to_string();
 
         if (include_curr_token) {
-            m += std::string(" (at '") + peek(i)->to_string() + "')";
+            m += std::string(" (at '") + s + "')";
         }
         if (
             err_pos == source_position{}
