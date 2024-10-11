@@ -1004,7 +1004,7 @@ struct error_entry
 {
     source_position where;
     std::string     msg;
-    std::string     symbol = std::string("");
+    std::string     symbol;
     bool            internal = false;
     bool            fallback = false;   // only emit this message if there was nothing better
 
