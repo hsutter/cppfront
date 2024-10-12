@@ -1,0 +1,96 @@
+identity: <T> type == T;
+
+f: <T> (inout _: T::value_type) = { }
+f: <T> (move _: T::value_type) = { }
+f: <T, V: T::value_type> (x: T::value_type) -> T::value_type = {
+  assert(x is T::value_type);
+  y: T::value_type;
+  y = x;
+  z: type == T::value_type;
+  return (:T::value_type = x);
+
+  // Dependent *template-id*s.
+  _ = :identity<T>::value_type = ();      // First identifier.
+  _ = :std::optional<T>::value_type = (); // Non-first identifier.
+  _ = :std::array<i32, T::value>::value_type = ();
+  _ = :std::array<i32, T::value + T::value>::value_type = ();
+
+  // Emitted `template`.
+  ptr: type  == * T; // Also test lookup through type aliases.
+  nptr: type == * i32;
+  _ = :std::pointer_traits<ptr>::rebind<ptr> = ();   // Type-only context.
+  _ = :std::pointer_traits<nptr>::rebind<nptr> = (); // Non-dependent.
+  _ = :std::pointer_traits<nptr>::rebind<ptr> = ();  // Dependent on the nested template.
+  _ = :std::pointer_traits<ptr>::rebind<nptr> = ();  // Dependent on the outer template.
+  // _ = :identity<typename std::pointer_traits<ptr>::rebind<ptr>> = (); // Non type-only context. Blocked on #727.
+
+  // Aliases.
+  w: type == T;
+  _ = :w::value_type = x;
+  v: type == w;
+  _ = :v::value_type = x;
+  a: type == T::type;
+  _ = :a::value_type = x;
+
+  {
+    // Test that there's no prefixed `typename` to....
+    _ = std::integral_constant<i32, T::value>(); // `T::value`.
+    _ = :std::type_identity_t<T> = ();           // `std::type_identity_t<T>`.
+
+    // Test that non-dependent names aren't emitted with `typename`.
+    a: type == std::integral_constant<i32, 0>;
+    b: type == a;
+    c: type == b;
+    _ = :b::value_type = x;
+    _ = :c::value_type = x;
+  }
+}
+
+t: @cpp1_rule_of_zero <T: type> type = {
+  u: type = {
+    x: T::value_type = ();
+    this: T::type    = ();
+    // Test that there's no `typename` in the member initializer list.
+    operator=: (out this, that) = { }
+  }
+  x: T::value_type = 0;
+}
+
+main: () = {
+  zero: type == std::integral_constant<i32, 0>;
+  _ = f<zero, 0>(0);
+
+  _ = : ::t<zero> = ();
+
+  // Emitted `template` (noop, taken care of by the UFCS macro).
+  _ = :(move f) = _ = f.operator()<i32>();(:<T> () = {});
+
+  // Nesting is not relevant to lookup.
+  _ = :<T> () = { _ = :T::value_type = (); };
+  _ = :() = { _ = :<T> () = { _ = :T::value_type = (); }; };
+  _ = :() = { _ = :() = { _ = :<T> () = { _ = :T::value_type = (); }; }; };
+  _ = :() = { _ = :() = { _ = :() = { _ = :<T> () = { _ = :T::value_type = (); }; }; }; };
+  _ = :() = { _ = :() = { _ = :<T> () = { _ = :() = { _ = :T::value_type = (); }; }; }; };
+  _ = :() = { _ = :<T> () = { _ = :() = { _ = :() = { _ = :T::value_type = (); }; }; }; };
+  _ = :<T> () = { _ = :() = { _ = :() = { _ = :() = { _ = :T::value_type = (); }; }; }; };
+  _ = :<T> () = { _ = :() = { _ = :() = { _ = :(_: T::value_type) = {}; }; }; };
+  _ = :<T> () = { _ = :() = { _ = :(_: T::value_type) = { _ = :() = {}; }; }; };
+  _ = :<T> () = { _ = :(_: T::value_type) = { _ = :() = { _ = :() = {}; }; }; };
+  _ = :<T> (_: T::value_type) = { _ = :() = { _ = :() = { _ = :() = {}; }; }; };
+
+  // Lookup.
+  {
+    alias: type == std::integral_constant<i32, 0>;
+    _ = :alias::value_type = 0; // Non-dependent.
+  }
+  _ = :<T> (_: T) = {
+    alias: type == std::integral_constant<T, 0>;
+    _ = :alias::value_type = 0; // Dependent.
+    {
+      alias: type == std::integral_constant<i32, 0>;
+      _ = :alias::value_type = 0; // Non-dependent.
+    }
+  }(0);
+
+  _ = :(r) -> std::type_identity_t<decltype(begin(r)*)> = r[0];(std::vector<int>(1));
+}
