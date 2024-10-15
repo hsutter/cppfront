@@ -1,0 +1,3 @@
+pure2-namespace-2-error.cpp2...
+pure2-namespace-2-error.cpp2(1,15): error: 'requires' is not allowed on a namespace alias (at 'requires')
+

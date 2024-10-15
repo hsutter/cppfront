@@ -217,7 +217,7 @@ struct literal_node {
             if (
                 !std::exchange(first, false)
                 && p->as_string_view().starts_with("\"")
-                ) 
+                )
             {
                 ret += " ";
             }
@@ -2426,7 +2426,7 @@ struct parameter_declaration_list_node
 
     std::vector<std::unique_ptr<parameter_declaration_node>> parameters;
 
-    parameter_declaration_list_node(bool f = false, bool t = false, bool s = false) 
+    parameter_declaration_list_node(bool f = false, bool t = false, bool s = false)
         : in_function_typeid{f}
         , in_template_param_list{t}
         , in_statement_param_list{s}
@@ -2542,7 +2542,7 @@ struct function_type_node
         assert (parameters);
 
         auto ret = parameters->to_string();
-        
+
         if (throws) {
             ret += " throws";
         }
@@ -2999,6 +2999,7 @@ struct declaration_node
 
     std::vector<std::unique_ptr<id_expression_node>> metafunctions;
     std::unique_ptr<parameter_declaration_list_node> template_parameters;
+    std::unique_ptr<unqualified_id_node>             specialization_template_arguments;
     source_position                                  requires_pos = {};
     std::unique_ptr<logical_or_expression_node>      requires_clause_expression;
 
@@ -3347,6 +3348,8 @@ public:
 
     auto is_function_expression () const -> bool
         { return is_function() && !identifier;  }
+    auto is_specialization() const -> bool
+        { return specialization_template_arguments != nullptr;    }
 
     auto is_polymorphic() const // has base types or virtual functions
         -> bool
@@ -5607,6 +5610,11 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
         template_params += " " + pretty_print_visualize(*n.template_parameters, indent + 1, true);
     }
 
+    auto specialization_args = std::string{};
+    if (n.specialization_template_arguments) {
+        specialization_args += " " + pretty_print_visualize(*n.specialization_template_arguments, indent + 1);
+    }
+
     auto requires_clause = std::string{};
     if (n.requires_clause_expression) {
         requires_clause += " requires (" + pretty_print_visualize(*n.requires_clause_expression, indent) + ")";
@@ -5695,6 +5703,7 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
         assert(type_id);
         ret += metafunctions
             + template_params
+            + specialization_args
             + " " + pretty_print_visualize(*type_id, indent)
             + requires_clause
             + initializer;
@@ -5704,6 +5713,7 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
         assert(t);
         ret += metafunctions
             + template_params
+            + specialization_args
             + " " + pretty_print_visualize(*t)
             + initializer;
     }
@@ -5722,7 +5732,8 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
             object_type_id += " " + pretty_print_visualize(*a->type_id, indent);
         }
 
-        ret += template_params;
+        ret += template_params
+            + specialization_args;
         if (a->is_type_alias()) {
             auto& t = std::get<alias_node::a_type>(a->initializer);
             ret += " type"
@@ -5907,7 +5918,7 @@ public:
     //
     //  errors      error list
     //
-    parser( 
+    parser(
         std::vector<error_entry>& errors_,
         std::set<std::string>&    includes_
     )
@@ -6370,9 +6381,9 @@ private:
                 //  Next should be an expression-list followed by a ')'
                 //  If not, then this wasn't a call expression so backtrack to
                 //  the '(' which will be part of the next grammar production
-		        is_inside_call_expr = true;
+            is_inside_call_expr = true;
                 term.expr_list = expression_list(term.op, lexeme::RightParen);
-		        is_inside_call_expr = false;
+            is_inside_call_expr = false;
 
                 if (
                     term.expr_list
@@ -6401,7 +6412,7 @@ private:
                 }
             }
             else if (
-                ( 
+                (
                     term.op->type() == lexeme::EllipsisLess
                     || term.op->type() == lexeme::EllipsisEqual
                     )
@@ -7160,6 +7171,7 @@ private:
     //G
     //G template-arguments:
     //G     template-arguments ',' template-argument
+    //G     template-argument
     //G
     //G template-argument:
     //G     # note: < > << >> are not allowed in expressions until new ( is opened
@@ -7321,7 +7333,7 @@ private:
 
         n->ids.push_back( std::move(term) );
 
-        for ( 
+        for (
             auto first_time_through_loop = true;
             curr().type() == lexeme::Scope;
             first_time_through_loop = false
@@ -7340,7 +7352,7 @@ private:
                 && first_uid_was_std
                 && term.scope_op->type() == lexeme::Scope
                 && *term.id->identifier == "forward"
-                ) 
+                )
             {
                 error("std::forward is not needed in Cpp2 - use 'forward' parameters/arguments instead", false);
                 return {};
@@ -7993,7 +8005,7 @@ private:
         }
 
         if (
-            peek(1) 
+            peek(1)
             && *peek(1) == "namespace"
             )
         {
@@ -8826,9 +8838,9 @@ private:
     //G unnamed-declaration:
     //G     ':' meta-functions? template-parameters? function-type requires-clause? '=' statement
     //G     ':' meta-functions? template-parameters? function-type statement
-    //G     ':' meta-functions? template-parameters? type-id? requires-clause? '=' statement
+    //G     ':' meta-functions? template-parameters? specialization-arguments? type-id? requires-clause? '=' statement
     //G     ':' meta-functions? template-parameters? type-id
-    //G     ':' meta-functions? template-parameters? 'final'? 'type' requires-clause? '=' statement
+    //G     ':' meta-functions? template-parameters? specialization-arguments? 'final'? 'type' requires-clause? '=' statement
     //G     ':' 'namespace' '=' statement
     //G
     //G meta-functions:
@@ -8841,6 +8853,9 @@ private:
     //G
     //G template-parameters:
     //G     '<' parameter-declaration-seq '>'
+    //G
+    //G specialization-arguments:
+    //G     'specialize' '<' template-arguments '>'
     //G
     auto unnamed_declaration(
         source_position                      start,
@@ -8993,6 +9008,21 @@ private:
                 return {};
             }
             n->template_parameters = std::move(template_parameters);
+        }
+
+        //  Next is an optional template specialization argument list
+        if (
+            curr() == "specialize"
+            && peek(1)
+            && peek(1)->type() == lexeme::Less
+            )
+        {
+            auto specialization_template_arguments = unqualified_id();
+            if (!specialization_template_arguments) {
+              error("invalid template specialization argument list");
+              return {};
+            }
+            n->specialization_template_arguments = std::move(specialization_template_arguments);
         }
 
         //  Next is an an optional type
@@ -9408,7 +9438,7 @@ private:
     //G alias:
     //G     ':' template-parameters? 'type' requires-clause? '==' type-id ';'
     //G     ':' 'namespace' '==' id-expression ';'
-    //G     ':' template-parameters? type-id? requires-clause? '==' expression ';'
+    //G     ':' template-parameters? specialization-arguments? type-id? requires-clause? '==' expression ';'
     //G
     //GT     ':' function-type '==' expression ';'
     //GT        # See commit 63efa6ed21c4d4f4f136a7a73e9f6b2c110c81d7 comment
@@ -9435,6 +9465,21 @@ private:
                 return {};
             }
             n->template_parameters = std::move(template_parameters);
+        }
+
+        //  Next is an optional template specialization argument list
+        if (
+            curr() == "specialize"
+            && peek(1)
+            && peek(1)->type() == lexeme::Less
+            )
+        {
+            auto specialization_template_arguments = unqualified_id();
+            if (!specialization_template_arguments) {
+              pos = start_pos;    // backtrack
+              return {};
+            }
+            n->specialization_template_arguments = std::move(specialization_template_arguments);
         }
 
         auto a = std::make_unique<alias_node>( &curr() );
@@ -9468,7 +9513,7 @@ private:
         if (curr() == "requires")
         {
             if (
-                n->is_type_alias()
+                *a->type == "type"
                 && !n->template_parameters
                 )
             {
@@ -9476,7 +9521,7 @@ private:
                 return {};
             }
 
-            if (n->is_namespace_alias())
+            if (*a->type == "namespace")
             {
                 error("'requires' is not allowed on a namespace alias");
                 return {};
@@ -9496,6 +9541,22 @@ private:
 
         if (curr().type() == lexeme::EqualComparison) {
             next();
+            if (n->is_specialization()) {
+                if (*a->type == "type") {
+                    errors.emplace_back(
+                        a->type->position(),
+                        "a type alias cannot be specialized"
+                    );
+                    return {};
+                }
+                if (*a->type == "namespace") {
+                    errors.emplace_back(
+                        a->type->position(),
+                        "a namespace alias cannot be specialized"
+                    );
+                    return {};
+                }
+            }
         }
         else {
             if (a->type->type() != lexeme::EqualComparison) {
@@ -9593,6 +9654,11 @@ private:
 
         n->type = std::move(a);
 
+        assert(
+            n->is_type_alias()
+            || n->is_object_alias()
+            || n->is_namespace_alias()
+            );
         return n;
     }
 

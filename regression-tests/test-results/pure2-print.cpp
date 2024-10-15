@@ -11,6 +11,15 @@
 #line 6 "pure2-print.cpp2"
 class outer;
 
+#line 107 "pure2-print.cpp2"
+namespace std {
+
+#line 111 "pure2-print.cpp2"
+    namespace numbers {
+
+    }
+}
+
 
 //=== Cpp2 type definitions and function declarations ===========================
 
@@ -80,6 +89,15 @@ CPP2_REQUIRES_ (cpp2::impl::cmp_greater_eq(sizeof...(Args),0u)) ;
 
 #line 105 "pure2-print.cpp2"
 };
+
+namespace std {
+    template<> class common_type<outer,outer> {
+        public: using type = outer;
+    };
+    namespace numbers {
+              /*@print*/
+    }
+}
 
 auto main() -> int;
 
@@ -206,6 +224,15 @@ requires (cpp2::impl::cmp_greater_eq(sizeof...(Args),0u)) {
     auto outer::y([[maybe_unused]] cpp2::impl::in<CPP2_TYPEOF(0)> unnamed_param_1) -> void{}
 
 #line 107 "pure2-print.cpp2"
+namespace std {
+
+#line 111 "pure2-print.cpp2"
+    namespace numbers {
+        template<> double const pi_v<outer> {pi_v<double>}; 
+    }
+}
+
+#line 116 "pure2-print.cpp2"
 auto main() -> int{
     outer::test();
 }
