@@ -2336,6 +2336,10 @@ struct args
     class iterator {
     public:
         constexpr iterator(int c, char** v, int start) : argc{c}, argv{v}, curr{start} {}
+        constexpr iterator() = default;
+
+        using difference_type = std::ptrdiff_t;
+        using value_type      = std::string_view;
 
         constexpr auto operator*() const {
             if (curr < argc) { return std::string_view{ argv[curr] }; }
@@ -2355,9 +2359,9 @@ struct args
         constexpr auto operator<=>(iterator const&) const = default;
 
     private:
-        int    argc;
-        char** argv;
-        int    curr;
+        int    argc = 0;
+        char** argv = nullptr;
+        int    curr = 0;
     };
 
     constexpr auto begin()  const -> iterator       { return iterator{ argc, argv, 0    }; }
