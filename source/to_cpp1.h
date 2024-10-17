@@ -1497,6 +1497,13 @@ public:
         //
         if (!source.has_cpp2()) {
             assert(ret.cpp2_lines == 0);
+            if (
+                cpp1_filename.back() == 'h' 
+                && (flag_import_std || flag_include_std)
+                )
+            {
+                printer.print_extra( "\n#endif" );
+            }
             return ret;
         }
 
