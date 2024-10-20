@@ -1,9 +1,10 @@
 
-This is the contributor license agreement. If you are looking for the usage license, see here: [usage license](https://github.com/hsutter/cppfront/blob/main/LICENSE)
+## Contributing
 
-## cppfront Contributor License Agreement
+This project welcomes contributions and suggestions. Most contributions require you to agree to a Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant  the rights to use your contribution. A sample of the CLA is below.
 
-By contributing content to cppfront (i.e., submitting a pull request for inclusion in this repository):
-- You warrant that your material is original, or you have the right to contribute it.
-- With respect to the material that you own, you grant a worldwide, non-exclusive, irrevocable, transferable, and royalty-free license to your contributed material to Herb Sutter to display, reproduce, perform, distribute, and create derivative works of that material for commercial or non-commercial use.
-- With respect to any other material you contribute, such material must be under a worldwide, non-exclusive, irrevocable, transferable, and royalty-free license sufficient to allow Herb Sutter to display, reproduce, perform, distribute, and create derivative works of that material for commercial or non-commercial use.
+When you submit a pull request, a CLA bot or human will automatically determine whether you need to provide a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions provided. You will only need to do this once for all your contributions to cppfront.
+
+## Cppfront Contribution License Agreement (Sample)
+
+A sample can be found here: [Cppfront CLA 2024-10 - sample.pdf](docs/Cppfront CLA 2024-10 - sample.pdf)
