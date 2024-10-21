@@ -73,12 +73,15 @@ CPP2_REQUIRES_ (cpp2::impl::cmp_greater_eq(sizeof...(Args),0u)) ;
 
 #line 103 "pure2-print.cpp2"
     public: static auto y([[maybe_unused]] cpp2::impl::in<CPP2_TYPEOF(0)> unnamed_param_1) -> void;
+    public: static auto y([[maybe_unused]] cpp2::impl::in<decltype(1LL)> unnamed_param_1) -> void;
+    public: static auto y([[maybe_unused]] cpp2::impl::in<CPP2_TYPEOF(cpp2::impl::is<int>(2))::value_type> unnamed_param_1) -> void;
+    public: static auto y([[maybe_unused]] cpp2::impl::in<decltype(cpp2_new<long>(3))::element_type> unnamed_param_1) -> void;
     public: outer() = default;
     public: outer(outer const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(outer const&) -> void = delete;
 
 
-#line 105 "pure2-print.cpp2"
+#line 108 "pure2-print.cpp2"
 };
 
 auto main() -> int;
@@ -204,8 +207,14 @@ requires (cpp2::impl::cmp_greater_eq(sizeof...(Args),0u)) {
 
 #line 103 "pure2-print.cpp2"
     auto outer::y([[maybe_unused]] cpp2::impl::in<CPP2_TYPEOF(0)> unnamed_param_1) -> void{}
+#line 104 "pure2-print.cpp2"
+    auto outer::y([[maybe_unused]] cpp2::impl::in<decltype(1LL)> unnamed_param_1) -> void{}
+#line 105 "pure2-print.cpp2"
+    auto outer::y([[maybe_unused]] cpp2::impl::in<CPP2_TYPEOF(cpp2::impl::is<int>(2))::value_type> unnamed_param_1) -> void{}
+#line 106 "pure2-print.cpp2"
+    auto outer::y([[maybe_unused]] cpp2::impl::in<decltype(cpp2_new<long>(3))::element_type> unnamed_param_1) -> void{}
 
-#line 107 "pure2-print.cpp2"
+#line 110 "pure2-print.cpp2"
 auto main() -> int{
     outer::test();
 }

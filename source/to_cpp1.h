@@ -1043,7 +1043,10 @@ class cppfront
 
         explicit active_using_declaration(using_statement_node const& n) {
           if (auto id = get_if<id_expression_node::qualified>(&n.id->id)) {
-              identifier = (*id)->ids.back().id->identifier;
+              if (auto unqual = std::get_if<qualified_id_node::term::unqualified>(&(*id)->ids.back().id)) {
+                  assert (*unqual);
+                  identifier = (*unqual)->identifier;
+              }
           }
         }
     };
@@ -1894,6 +1897,27 @@ public:
 
     //-----------------------------------------------------------------------
     //
+    auto emit(computed_type_id_node const& n)
+        -> void
+    {   STACKINSTR
+        if (!sema.check(n)) {
+            return;
+        }
+
+        assert(n.identifier);
+        emit(*n.identifier);
+
+        if (n.ellipsis) {
+            emit(*n.ellipsis);
+        }
+
+        assert(n.expr);
+        emit(*n.expr);
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
     auto emit(
         qualified_id_node const& n,
         bool include_unqualified_id = true
@@ -1912,7 +1936,14 @@ public:
             if (id.scope_op) {
                 emit(*id.scope_op);
             }
-            emit(*id.id, 0, true, true);    // inform the unqualified-id that it's qualified
+            if (auto unqual = std::get_if<qualified_id_node::term::unqualified>(&id.id)) {
+                assert (*unqual);
+                emit(**unqual, 0, true, true);    // inform the unqualified-id that it's qualified
+            }
+            else if (auto computed = std::get_if<qualified_id_node::term::computed>(&id.id)) {
+                assert (*computed);
+                emit(**computed);
+            }
         }
 
         printer.emit_to_string();
@@ -1953,7 +1984,7 @@ public:
             printer.print_cpp2("auto", pos);
         }
         else {
-            try_emit<type_id_node::postfix    >(n.id);
+            try_emit<type_id_node::computed   >(n.id);
             try_emit<type_id_node::unqualified>(n.id, 0, false);
             try_emit<type_id_node::qualified  >(n.id);
             try_emit<type_id_node::keyword    >(n.id);
@@ -3345,7 +3376,14 @@ public:
                             "("
                             + print_to_string(id, false)
                             + "::),"
-                            + print_to_string(*cpp2::impl::assert_not_null(id.ids.back().id), 0, true, true);
+                            + print_to_string(
+                                  *cpp2::impl::assert_not_null(
+                                        std::get<qualified_id_node::term::unqualified>(id.ids.back().id)
+                                  ),
+                                  0,
+                                  true,
+                                  true
+                              );
                     }
                     ufcs_string += "_TEMPLATE";
                 }
@@ -3496,11 +3534,15 @@ public:
                 last_was_prefixed = false;
 
                 //  Enable subscript bounds checks
-                if (
+                auto checked_subscript =
                     flag_safe_subscripts
                     && i->op->type() == lexeme::LeftBracket
                     && std::ssize(i->expr_list->expressions) == 1
-                    )
+                    && (
+                        i+1 == n.ops.rend()
+                        || (i+1)->op->type() != lexeme::Ellipsis
+                        );
+                if (checked_subscript)
                 {
                     suffix.emplace_back( ")", i->op->position() );
                 }
@@ -3550,11 +3592,7 @@ public:
                 }
 
                 //  Enable subscript bounds checks
-                if (
-                    flag_safe_subscripts
-                    && i->op->type() == lexeme::LeftBracket
-                    && std::ssize(i->expr_list->expressions) == 1
-                    )
+                if (checked_subscript)
                 {
                     if (auto lit = i->expr_list->expressions.front().expr->get_literal();
                         lit
