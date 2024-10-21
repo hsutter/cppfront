@@ -1,11 +1,4 @@
 
-cppfront compiler v0.8.0   Build 9A10:0946
-Copyright(c) Herb Sutter   All rights reserved
-
-SPDX-License-Identifier: CC-BY-NC-ND-4.0
-  No commercial use
-  No forks/derivatives
-  Note: This license emphasizes that this is a personal
-        experiment; it will be upgraded if that changes
-
-Absolutely no warranty - try at your own risk
+cppfront compiler v0.8.0 Build 9A10:1540
+SPDX-License-Identifier  Apache-2.0 WITH LLVM-exception
+Copyright (c) 2022-2024  Herb Sutter
