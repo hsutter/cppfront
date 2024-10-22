@@ -1237,6 +1237,11 @@ public:
         }
     }
 
+    //-----------------------------------------------------------------------
+    //  process_cpp2
+    //
+    //  Runs the lexer and parser on the loaded source code
+    //
     auto process_cpp2() -> void
     {
         //  Tokenize
