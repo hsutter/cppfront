@@ -1202,37 +1202,73 @@ public:
 
         else
         {
-            //  Tokenize
-            //
-            tokens.lex(source.get_lines());
+            process_cpp2();
+        }
+    }
 
-            //  Parse
-            //
-            try
-            {
-                for (auto const& [line, entry] : tokens.get_map()) {
-                    if (!parser.parse(entry, tokens.get_generated())) {
-                        errors.emplace_back(
-                            source_position(line, 0),
-                            "parse failed for section starting here",
-                            false,
-                            true    // a noisy fallback error message
-                        );
-                    }
-                }
-
-                //  Sema
-                parser.visit(sema);
-                if (!sema.apply_local_rules()) {
-                    violates_initialization_safety = true;
-                }
-            }
-            catch (std::runtime_error& e) {
+    //-----------------------------------------------------------------------
+    //  Constructor
+    //
+    //  source_stream    the contents of a source file to be processed
+    //
+    cppfront(std::istream& source_stream)
+        : sourcefile{ "stdin.cpp2" }
+        , source    { errors }
+        , tokens    { errors }
+        , parser    { errors, includes }
+        , sema      { errors }
+    {
+        //  Load the program file into memory
+        //
+        if (!source.load(source_stream))
+        {
+            if (errors.empty()) {
                 errors.emplace_back(
                     source_position(-1, -1),
-                    e.what()
+                    "error reading source content from stdin"
                 );
             }
+            source_loaded = false;
+        }
+
+        else
+        {
+            process_cpp2();
+        }
+    }
+
+    auto process_cpp2() -> void
+    {
+        //  Tokenize
+        //
+        tokens.lex(source.get_lines());
+
+        //  Parse
+        //
+        try
+        {
+            for (auto const& [line, entry] : tokens.get_map()) {
+                if (!parser.parse(entry, tokens.get_generated())) {
+                    errors.emplace_back(
+                        source_position(line, 0),
+                        "parse failed for section starting here",
+                        false,
+                        true    // a noisy fallback error message
+                    );
+                }
+            }
+
+            //  Sema
+            parser.visit(sema);
+            if (!sema.apply_local_rules()) {
+                violates_initialization_safety = true;
+            }
+        }
+        catch (std::runtime_error& e) {
+            errors.emplace_back(
+                source_position(-1, -1),
+                e.what()
+            );
         }
     }
 

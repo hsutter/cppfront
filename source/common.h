@@ -799,7 +799,9 @@ public:
             [](auto& a, auto& b){ return a.group < b.group || (a.group == b.group && a.name < b.name); }
         );
 
-        print("\nUsage: cppfront [options] file ...\n\nOptions:\n");
+        print("\nUsage: cppfront [options] file ...\n");
+        print("\nfile - The source file(s) to compile (can be 'stdin' to read text directly) \n");
+        print("\nOptions: \n");
         int last_group = -1;
         for (auto& flag : flags) {
             //  Skip hidden flags

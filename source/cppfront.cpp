@@ -84,7 +84,12 @@ auto main(
         }
 
         //  Load + lex + parse + sema
-        cppfront c(arg.text);
+        cppfront c = [&]() -> cppfront {
+            if (arg.text == "stdin") 
+                return cppfront(std::cin);
+            else
+                return cppfront(arg.text);
+        }();
 
         //  Generate Cpp1 (this may catch additional late errors)
         auto count = c.lower_to_cpp1();

@@ -887,6 +887,20 @@ public:
             return false;
         }
 
+        return load(in);
+    }
+
+    //-----------------------------------------------------------------------
+    //  load: Read a line-by-line view of a source file, preserving line breaks
+    //
+    //  in                      the loaded source file
+    //  source                  program textual representation
+    //
+    auto load(
+        std::istream&  in
+    )
+        -> bool
+    {
         auto in_comment            = false;
         auto in_string_literal     = false;
         auto in_raw_string_literal = false;
