@@ -882,6 +882,8 @@ public:
     )
         -> bool
     {
+        //  If filename is stdin, we read from stdin, otherwise we try to read the file
+        //
         std::ifstream fss{ filename };
         std::istream& in = filename == "stdin" ? std::cin : fss;
         if (filename != "stdin" && !fss.is_open())
