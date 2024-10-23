@@ -884,10 +884,14 @@ public:
     {
         //  If filename is stdin, we read from stdin, otherwise we try to read the file
         //
-        std::ifstream fss{ filename };
-        std::istream& in = filename == "stdin" ? std::cin : fss;
-        if (filename != "stdin" && !fss.is_open())
-            return false;
+        auto is_stdin = filename == "stdin";
+        std::ifstream fss;
+        if (is_stdin) 
+        {
+            fss.open(filename);
+            if( !fss.is_open()) { return false; }
+        }
+        std::istream& in = is_stdin ? std::cin : fss;
     
         auto in_comment            = false;
         auto in_string_literal     = false;
