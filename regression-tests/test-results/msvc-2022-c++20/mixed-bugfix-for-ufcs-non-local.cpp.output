@@ -1,1 +1,24 @@
 mixed-bugfix-for-ufcs-non-local.cpp
+mixed-bugfix-for-ufcs-non-local.cpp2(42): error C2338: static_assert failed: 'this function call syntax tries 'obj.func(...)', then 'func(obj,...);', but both failed - if this function call is passing a local variable that will be modified by the function, but that variable is never used again in the function so the new value is never used, that's likely the problem - if that's what you intended, add another line '_ = obj;' afterward to explicitly discard the new value of the object'
+mixed-bugfix-for-ufcs-non-local.cpp2(42): note: the template instantiation context (the oldest one first) is
+mixed-bugfix-for-ufcs-non-local.cpp2(42): note: while compiling class template member function 'decltype(auto) ns::u::<lambda_15>::operator ()(_T1 &&) const'
+mixed-bugfix-for-ufcs-non-local.cpp2(42): note: see reference to function template instantiation 'decltype(auto) ns::<lambda_16_>::operator ()<const ns::t<true>&,,true>(Obj) noexcept(false) const' being compiled
+        with
+        [
+            Obj=const ns::t<true> &
+        ]
+mixed-bugfix-for-ufcs-non-local.cpp2(42): error C2672: 'forward': no matching overloaded function found
+C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.41.34120\include\type_traits(1540): note: could be '_Ty &&std::forward(remove_reference<_Ty>::type &&) noexcept'
+mixed-bugfix-for-ufcs-non-local.cpp2(42): note: Failed to specialize function template '_Ty &&std::forward(remove_reference<_Ty>::type &&) noexcept'
+mixed-bugfix-for-ufcs-non-local.cpp2(42): note: With the following template arguments:
+mixed-bugfix-for-ufcs-non-local.cpp2(42): note: '_Ty=unknown-type &&'
+C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.41.34120\include\type_traits(1535): note: or       '_Ty &&std::forward(remove_reference<_Ty>::type &) noexcept'
+mixed-bugfix-for-ufcs-non-local.cpp2(42): note: Failed to specialize function template '_Ty &&std::forward(remove_reference<_Ty>::type &) noexcept'
+mixed-bugfix-for-ufcs-non-local.cpp2(42): note: With the following template arguments:
+mixed-bugfix-for-ufcs-non-local.cpp2(42): note: '_Ty=unknown-type &&'
+mixed-bugfix-for-ufcs-non-local.cpp2(42): error C3889: call to object of class type 'ns::u::<lambda_15>': no matching call operator found
+mixed-bugfix-for-ufcs-non-local.cpp2(42): note: could be 'decltype(auto) ns::u::<lambda_15>::operator ()(_T1 &&) const'
+mixed-bugfix-for-ufcs-non-local.cpp2(42): note: Failed to specialize function template 'decltype(auto) ns::u::<lambda_15>::operator ()(_T1 &&) const'
+mixed-bugfix-for-ufcs-non-local.cpp2(42): note: With the following template arguments:
+mixed-bugfix-for-ufcs-non-local.cpp2(42): note: '_T1=bool'
+mixed-bugfix-for-ufcs-non-local.cpp2(42): note: the associated constraints are not satisfied
