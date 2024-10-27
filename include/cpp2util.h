@@ -370,8 +370,50 @@ constexpr auto gcc_clang_msvc_min_versions(
     #define CPP2_CONSTEXPR constexpr
 #endif
 
-namespace cpp2 {
 
+// Workaround <https://github.com/llvm/llvm-project/issues/70556>.
+#define CPP2_FORCE_INLINE_LAMBDA_CLANG /* empty */
+
+#if defined(_MSC_VER) && !defined(__clang_major__)
+    #define CPP2_FORCE_INLINE              __forceinline
+    #define CPP2_FORCE_INLINE_LAMBDA       [[msvc::forceinline]]
+    #define CPP2_LAMBDA_NO_DISCARD
+#else
+    #define CPP2_FORCE_INLINE              __attribute__((always_inline))
+    #if defined(__clang__)
+        #define CPP2_FORCE_INLINE_LAMBDA       /* empty */
+        #undef CPP2_FORCE_INLINE_LAMBDA_CLANG
+        #define CPP2_FORCE_INLINE_LAMBDA_CLANG __attribute__((always_inline))
+    #else
+        #define CPP2_FORCE_INLINE_LAMBDA       __attribute__((always_inline))
+    #endif
+
+    #if defined(__clang_major__)
+        //  Also check __cplusplus, only to satisfy Clang -pedantic-errors
+        #if __cplusplus >= 202302L && (__clang_major__ > 13 || (__clang_major__ == 13 && __clang_minor__ >= 2))
+            #define CPP2_LAMBDA_NO_DISCARD   [[nodiscard]]
+        #else
+            #define CPP2_LAMBDA_NO_DISCARD
+        #endif
+    #elif defined(__GNUC__)
+        #if __GNUC__ >= 9
+            #define CPP2_LAMBDA_NO_DISCARD   [[nodiscard]]
+        #else
+            #define CPP2_LAMBDA_NO_DISCARD
+        #endif
+        #if ((__GNUC__ * 100) + __GNUC_MINOR__) < 1003
+            //  GCC 10.2 doesn't support this feature (10.3 is fine)
+            #undef  CPP2_FORCE_INLINE_LAMBDA
+            #define CPP2_FORCE_INLINE_LAMBDA
+        #endif
+    #else
+        #define CPP2_LAMBDA_NO_DISCARD
+    #endif
+#endif
+
+
+
+namespace cpp2 {
 
 //-----------------------------------------------------------------------
 //
@@ -970,6 +1012,9 @@ auto inline testing = contract_group(
 
 namespace impl {
 
+template <class T> struct dependent_false : std::false_type {};
+
+
 //-----------------------------------------------------------------------
 // 
 //  Invalid/null dereference checking - cases that would result in UB.
@@ -1443,151 +1488,6 @@ public:
     }
 };
 
-
-//  Stabilize line numbers for UFCS code that we know will generate
-//  errors for some compilers, to keep regression test outputs cleaner
-#line 1999
-
-//-----------------------------------------------------------------------
-//
-//  CPP2_UFCS: Variadic macro generating a variadic lambda, oh my...
-//
-//-----------------------------------------------------------------------
-//
-// Workaround <https://github.com/llvm/llvm-project/issues/70556>.
-#define CPP2_FORCE_INLINE_LAMBDA_CLANG /* empty */
-
-#if defined(_MSC_VER) && !defined(__clang_major__)
-    #define CPP2_FORCE_INLINE              __forceinline
-    #define CPP2_FORCE_INLINE_LAMBDA       [[msvc::forceinline]]
-    #define CPP2_LAMBDA_NO_DISCARD
-#else
-    #define CPP2_FORCE_INLINE              __attribute__((always_inline))
-    #if defined(__clang__)
-        #define CPP2_FORCE_INLINE_LAMBDA       /* empty */
-        #undef CPP2_FORCE_INLINE_LAMBDA_CLANG
-        #define CPP2_FORCE_INLINE_LAMBDA_CLANG __attribute__((always_inline))
-    #else
-        #define CPP2_FORCE_INLINE_LAMBDA       __attribute__((always_inline))
-    #endif
-
-    #if defined(__clang_major__)
-        //  Also check __cplusplus, only to satisfy Clang -pedantic-errors
-        #if __cplusplus >= 202302L && (__clang_major__ > 13 || (__clang_major__ == 13 && __clang_minor__ >= 2))
-            #define CPP2_LAMBDA_NO_DISCARD   [[nodiscard]]
-        #else
-            #define CPP2_LAMBDA_NO_DISCARD
-        #endif
-    #elif defined(__GNUC__)
-        #if __GNUC__ >= 9
-            #define CPP2_LAMBDA_NO_DISCARD   [[nodiscard]]
-        #else
-            #define CPP2_LAMBDA_NO_DISCARD
-        #endif
-        #if ((__GNUC__ * 100) + __GNUC_MINOR__) < 1003
-            //  GCC 10.2 doesn't support this feature (10.3 is fine)
-            #undef  CPP2_FORCE_INLINE_LAMBDA
-            #define CPP2_FORCE_INLINE_LAMBDA
-        #endif
-    #else
-        #define CPP2_LAMBDA_NO_DISCARD
-    #endif
-#endif
-
-#define CPP2_UFCS_EMPTY(...)
-#define CPP2_UFCS_IDENTITY(...)  __VA_ARGS__
-#define CPP2_UFCS_REMPARENS(...) __VA_ARGS__
-
-// Ideally, the expression `CPP2_UFCS_IS_NOTHROW` expands to
-// is in the _noexcept-specifier_ of the UFCS lambda, but without 'std::declval'.
-// To workaround [GCC bug 101043](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101043),
-// we instead make it a template parameter of the UFCS lambda.
-// But using a template parameter, Clang also ICEs on an application.
-// So we use these `NOTHROW` macros to fall back to the ideal for when not using GCC.
-#define CPP2_UFCS_IS_NOTHROW(MVFWD,QUALID,TEMPKW,...) \
-   requires { requires  requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); }; \
-              requires    noexcept(std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...)); } \
-|| requires { requires !requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); }; \
-              requires noexcept(MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(std::declval<Obj>(), std::declval<Params>()...)); }
-#define CPP2_UFCS_IS_NOTHROW_PARAM(...)                     /*empty*/
-#define CPP2_UFCS_IS_NOTHROW_ARG(MVFWD,QUALID,TEMPKW,...)   CPP2_UFCS_IS_NOTHROW(MVFWD,QUALID,TEMPKW,__VA_ARGS__)
-#if defined(__GNUC__) && !defined(__clang__)
-    #undef  CPP2_UFCS_IS_NOTHROW_PARAM
-    #undef  CPP2_UFCS_IS_NOTHROW_ARG
-    #define CPP2_UFCS_IS_NOTHROW_PARAM(MVFWD,QUALID,TEMPKW,...) , bool IsNothrow = CPP2_UFCS_IS_NOTHROW(MVFWD,QUALID,TEMPKW,__VA_ARGS__)
-    #define CPP2_UFCS_IS_NOTHROW_ARG(...)                       IsNothrow
-    #if __GNUC__ < 11
-        #undef  CPP2_UFCS_IS_NOTHROW_PARAM
-        #undef  CPP2_UFCS_IS_NOTHROW_ARG
-        #define CPP2_UFCS_IS_NOTHROW_PARAM(...)    /*empty*/
-        #define CPP2_UFCS_IS_NOTHROW_ARG(...)      false // GCC 10 UFCS is always potentially-throwing.
-    #endif
-#endif
-
-// Ideally, the expression `CPP2_UFCS_CONSTRAINT_ARG` expands to
-// is in the _requires-clause_ of the UFCS lambda.
-// To workaround an MSVC bug within a member function 'F' where UFCS is also for 'F'
-// (<https://github.com/hsutter/cppfront/pull/506#issuecomment-1826086952>),
-// we instead make it a template parameter of the UFCS lambda.
-// But using a template parameter, Clang also ICEs and GCC rejects a local 'F'.
-// Also, Clang rejects the SFINAE test case when using 'std::declval'.
-// So we use these `CONSTRAINT` macros to fall back to the ideal for when not using MSVC.
-#define CPP2_UFCS_CONSTRAINT_PARAM(...)                   /*empty*/
-#define CPP2_UFCS_CONSTRAINT_ARG(MVFWD,QUALID,TEMPKW,...) \
-   requires { CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); } \
-|| requires { MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); }
-#if defined(_MSC_VER)
-    #undef  CPP2_UFCS_CONSTRAINT_PARAM
-    #undef  CPP2_UFCS_CONSTRAINT_ARG
-    #define CPP2_UFCS_CONSTRAINT_PARAM(MVFWD,QUALID,TEMPKW,...) , bool IsViable = \
-   requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); } \
-|| requires { MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(std::declval<Obj>(), std::declval<Params>()...); }
-    #define CPP2_UFCS_CONSTRAINT_ARG(...)                 IsViable
-#endif
-
-template <class T> struct dependent_false : std::false_type {};
-
-#define CPP2_UFCS_(LAMBDADEFCAPT,SFINAE,MVFWD,QUALID,TEMPKW,...) \
-[LAMBDADEFCAPT]< \
-    typename Obj, typename... Params \
-    CPP2_UFCS_IS_NOTHROW_PARAM(MVFWD,QUALID,TEMPKW,__VA_ARGS__) \
-    CPP2_UFCS_CONSTRAINT_PARAM(MVFWD,QUALID,TEMPKW,__VA_ARGS__) \
-  > \
-  CPP2_LAMBDA_NO_DISCARD (Obj&& obj, Params&& ...params) CPP2_FORCE_INLINE_LAMBDA_CLANG \
-  noexcept(CPP2_UFCS_IS_NOTHROW_ARG(MVFWD,QUALID,TEMPKW,__VA_ARGS__)) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) \
-    SFINAE( requires CPP2_UFCS_CONSTRAINT_ARG(MVFWD,QUALID,TEMPKW,__VA_ARGS__) ) \
-  { \
-    if constexpr      (requires{ CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); }) { \
-        return                   CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
-    } \
-    else if constexpr (requires{ MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); }) { \
-        return                   MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
-    } \
-    else if constexpr (requires{ obj.CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); }) { \
-        static_assert( cpp2::impl::dependent_false<Obj>::value, "error: implicit discard of an object's modified value is not allowed - this function call modifies 'obj', but 'obj' is never used again in the function so the new value is never used - if that's what you intended, add another line '_ = obj;' afterward to explicitly discard the new value of the object" ); \
-        CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
-        MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
-    } \
-    else if constexpr (requires{ MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(obj, CPP2_FORWARD(params)...); }) { \
-        static_assert( cpp2::impl::dependent_false<Obj>::value, "error: implicit discard of an object's modified value is not allowed - this function call modifies 'obj', but 'obj' is never used again in the function so the new value is never used - if that's what you intended, add another line '_ = obj;' afterward to explicitly discard the new value of the object" ); \
-        CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
-        MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
-    } \
-    else { \
-        static_assert( cpp2::impl::dependent_false<Obj>::value, "this function call syntax tries 'obj.func(...)', then 'func(obj,...);', but both failed - if this function call is passing a local variable that will be modified by the function, but that variable is never used again in the function so the new value is never used, that's likely the problem - if that's what you intended, add another line '_ = obj;' afterward to explicitly discard the new value of the object" ); \
-        CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
-        MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
-    } \
-  }
-
-#define CPP2_UFCS(...)                                    CPP2_UFCS_(&,CPP2_UFCS_EMPTY,CPP2_UFCS_IDENTITY,(),,__VA_ARGS__)
-#define CPP2_UFCS_MOVE(...)                               CPP2_UFCS_(&,CPP2_UFCS_EMPTY,std::move,(),,__VA_ARGS__)
-#define CPP2_UFCS_FORWARD(...)                            CPP2_UFCS_(&,CPP2_UFCS_EMPTY,CPP2_FORWARD,(),,__VA_ARGS__)
-#define CPP2_UFCS_TEMPLATE(...)                           CPP2_UFCS_(&,CPP2_UFCS_EMPTY,CPP2_UFCS_IDENTITY,(),template,__VA_ARGS__)
-#define CPP2_UFCS_QUALIFIED_TEMPLATE(QUALID,...)          CPP2_UFCS_(&,CPP2_UFCS_EMPTY,CPP2_UFCS_IDENTITY,QUALID,template,__VA_ARGS__)
-#define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,CPP2_UFCS_IDENTITY,CPP2_UFCS_IDENTITY,(),,__VA_ARGS__)
-#define CPP2_UFCS_TEMPLATE_NONLOCAL(...)                  CPP2_UFCS_(,CPP2_UFCS_IDENTITY,CPP2_UFCS_IDENTITY,(),template,__VA_ARGS__)
-#define CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL(QUALID,...) CPP2_UFCS_(,CPP2_UFCS_IDENTITY,CPP2_UFCS_IDENTITY,QUALID,template,__VA_ARGS__)
 
 } // impl
 
@@ -2953,9 +2853,110 @@ constexpr auto as_() -> decltype(auto)
 using cpp2::cpp2_new;
 
 
-//  Stabilize line numbers for "compatibility" static assertions that we know
-//  will fire for some compilers, to keep regression test outputs cleaner
+//  Stabilize line numbers for "compatibility" static assertions
+//  and UFCS error output to keep regression test outputs cleaner
 #line 9999
+
+//-----------------------------------------------------------------------
+//
+//  CPP2_UFCS: Variadic macro generating a variadic lambda, oh my...
+//
+//-----------------------------------------------------------------------
+//
+
+#define CPP2_UFCS_EMPTY(...)
+#define CPP2_UFCS_IDENTITY(...)  __VA_ARGS__
+#define CPP2_UFCS_REMPARENS(...) __VA_ARGS__
+
+// Ideally, the expression `CPP2_UFCS_IS_NOTHROW` expands to
+// is in the _noexcept-specifier_ of the UFCS lambda, but without 'std::declval'.
+// To workaround [GCC bug 101043](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101043),
+// we instead make it a template parameter of the UFCS lambda.
+// But using a template parameter, Clang also ICEs on an application.
+// So we use these `NOTHROW` macros to fall back to the ideal for when not using GCC.
+#define CPP2_UFCS_IS_NOTHROW(MVFWD,QUALID,TEMPKW,...) \
+   requires { requires  requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); }; \
+              requires    noexcept(std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...)); } \
+|| requires { requires !requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); }; \
+              requires noexcept(MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(std::declval<Obj>(), std::declval<Params>()...)); }
+#define CPP2_UFCS_IS_NOTHROW_PARAM(...)                     /*empty*/
+#define CPP2_UFCS_IS_NOTHROW_ARG(MVFWD,QUALID,TEMPKW,...)   CPP2_UFCS_IS_NOTHROW(MVFWD,QUALID,TEMPKW,__VA_ARGS__)
+#if defined(__GNUC__) && !defined(__clang__)
+    #undef  CPP2_UFCS_IS_NOTHROW_PARAM
+    #undef  CPP2_UFCS_IS_NOTHROW_ARG
+    #define CPP2_UFCS_IS_NOTHROW_PARAM(MVFWD,QUALID,TEMPKW,...) , bool IsNothrow = CPP2_UFCS_IS_NOTHROW(MVFWD,QUALID,TEMPKW,__VA_ARGS__)
+    #define CPP2_UFCS_IS_NOTHROW_ARG(...)                       IsNothrow
+    #if __GNUC__ < 11
+        #undef  CPP2_UFCS_IS_NOTHROW_PARAM
+        #undef  CPP2_UFCS_IS_NOTHROW_ARG
+        #define CPP2_UFCS_IS_NOTHROW_PARAM(...)    /*empty*/
+        #define CPP2_UFCS_IS_NOTHROW_ARG(...)      false // GCC 10 UFCS is always potentially-throwing.
+    #endif
+#endif
+
+// Ideally, the expression `CPP2_UFCS_CONSTRAINT_ARG` expands to
+// is in the _requires-clause_ of the UFCS lambda.
+// To workaround an MSVC bug within a member function 'F' where UFCS is also for 'F'
+// (<https://github.com/hsutter/cppfront/pull/506#issuecomment-1826086952>),
+// we instead make it a template parameter of the UFCS lambda.
+// But using a template parameter, Clang also ICEs and GCC rejects a local 'F'.
+// Also, Clang rejects the SFINAE test case when using 'std::declval'.
+// So we use these `CONSTRAINT` macros to fall back to the ideal for when not using MSVC.
+#define CPP2_UFCS_CONSTRAINT_PARAM(...)                   /*empty*/
+#define CPP2_UFCS_CONSTRAINT_ARG(MVFWD,QUALID,TEMPKW,...) \
+   requires { CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); } \
+|| requires { MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); }
+#if defined(_MSC_VER)
+    #undef  CPP2_UFCS_CONSTRAINT_PARAM
+    #undef  CPP2_UFCS_CONSTRAINT_ARG
+    #define CPP2_UFCS_CONSTRAINT_PARAM(MVFWD,QUALID,TEMPKW,...) , bool IsViable = \
+   requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); } \
+|| requires { MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(std::declval<Obj>(), std::declval<Params>()...); }
+    #define CPP2_UFCS_CONSTRAINT_ARG(...)                 IsViable
+#endif
+
+#define CPP2_UFCS_(LAMBDADEFCAPT,SFINAE,MVFWD,QUALID,TEMPKW,...) \
+[LAMBDADEFCAPT]< \
+    typename Obj, typename... Params \
+    CPP2_UFCS_IS_NOTHROW_PARAM(MVFWD,QUALID,TEMPKW,__VA_ARGS__) \
+    CPP2_UFCS_CONSTRAINT_PARAM(MVFWD,QUALID,TEMPKW,__VA_ARGS__) \
+  > \
+  CPP2_LAMBDA_NO_DISCARD (Obj&& obj, Params&& ...params) CPP2_FORCE_INLINE_LAMBDA_CLANG \
+  noexcept(CPP2_UFCS_IS_NOTHROW_ARG(MVFWD,QUALID,TEMPKW,__VA_ARGS__)) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) \
+    SFINAE( requires CPP2_UFCS_CONSTRAINT_ARG(MVFWD,QUALID,TEMPKW,__VA_ARGS__) ) \
+  { \
+    if constexpr      (requires{ CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); }) { \
+        return                   CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
+    } \
+    else if constexpr (requires{ MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); }) { \
+        return                   MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
+    } \
+    else if constexpr (requires{ obj.CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); }) { \
+        static_assert( cpp2::impl::dependent_false<Obj>::value, "error: implicit discard of an object's modified value is not allowed - this function call modifies 'obj', but 'obj' is never used again in the function so the new value is never used - if that's what you intended, add another line '_ = obj;' afterward to explicitly discard the new value of the object" ); \
+        CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
+        MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
+    } \
+    else if constexpr (requires{ MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(obj, CPP2_FORWARD(params)...); }) { \
+        static_assert( cpp2::impl::dependent_false<Obj>::value, "error: implicit discard of an object's modified value is not allowed - this function call modifies 'obj', but 'obj' is never used again in the function so the new value is never used - if that's what you intended, add another line '_ = obj;' afterward to explicitly discard the new value of the object" ); \
+        CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
+        MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
+    } \
+    else { \
+        static_assert( cpp2::impl::dependent_false<Obj>::value, "this function call syntax tries 'obj.func(...)', then 'func(obj,...);', but both failed - if this function call is passing a local variable that will be modified by the function, but that variable is never used again in the function so the new value is never used, that's likely the problem - if that's what you intended, add another line '_ = obj;' afterward to explicitly discard the new value of the object" ); \
+        CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
+        MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
+    } \
+  }
+
+#define CPP2_UFCS(...)                                    CPP2_UFCS_(&,CPP2_UFCS_EMPTY,CPP2_UFCS_IDENTITY,(),,__VA_ARGS__)
+#define CPP2_UFCS_MOVE(...)                               CPP2_UFCS_(&,CPP2_UFCS_EMPTY,std::move,(),,__VA_ARGS__)
+#define CPP2_UFCS_FORWARD(...)                            CPP2_UFCS_(&,CPP2_UFCS_EMPTY,CPP2_FORWARD,(),,__VA_ARGS__)
+#define CPP2_UFCS_TEMPLATE(...)                           CPP2_UFCS_(&,CPP2_UFCS_EMPTY,CPP2_UFCS_IDENTITY,(),template,__VA_ARGS__)
+#define CPP2_UFCS_QUALIFIED_TEMPLATE(QUALID,...)          CPP2_UFCS_(&,CPP2_UFCS_EMPTY,CPP2_UFCS_IDENTITY,QUALID,template,__VA_ARGS__)
+#define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,CPP2_UFCS_IDENTITY,CPP2_UFCS_IDENTITY,(),,__VA_ARGS__)
+#define CPP2_UFCS_TEMPLATE_NONLOCAL(...)                  CPP2_UFCS_(,CPP2_UFCS_IDENTITY,CPP2_UFCS_IDENTITY,(),template,__VA_ARGS__)
+#define CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL(QUALID,...) CPP2_UFCS_(,CPP2_UFCS_IDENTITY,CPP2_UFCS_IDENTITY,QUALID,template,__VA_ARGS__)
+
 
 //  GCC 10 doesn't support 'requires' in forward declarations in some cases
 //  Workaround: Disable the requires clause where that gets reasonable behavior
