@@ -14,7 +14,7 @@ namespace ns {
 class u;
   
 
-#line 45 "mixed-bugfix-for-ufcs-non-local.cpp2"
+#line 46 "mixed-bugfix-for-ufcs-non-local.cpp2"
 }
 
 
@@ -62,6 +62,7 @@ auto inline constexpr d{ t<CPP2_UFCS_NONLOCAL(f)(o)>() };// Fails on Clang 12 (l
 
 class u {
   public: static const bool b;
+  // UFCS used in the decltype in the line below causes all compilers to report error/crash
   public: static const bool c;
   public: static auto g(auto const& s, auto const& sz) -> void;
 };
@@ -95,16 +96,17 @@ auto g() -> void{
 
 #line 40 "mixed-bugfix-for-ufcs-non-local.cpp2"
   inline CPP2_CONSTEXPR bool u::b{ CPP2_UFCS_NONLOCAL(f)(o) };
+  
   inline CPP2_CONSTEXPR bool u::c{ [](auto&& x) -> decltype(auto)// Fails on Clang 12 (lambda in unevaluated context).
-#line 42 "mixed-bugfix-for-ufcs-non-local.cpp2"
-  requires (std::is_convertible_v<CPP2_TYPEOF(x), std::add_const_t<decltype(CPP2_UFCS_NONLOCAL(f)(o))>&>)  { return CPP2_FORWARD(x); }(true) };
-#line 42 "mixed-bugfix-for-ufcs-non-local.cpp2"
+#line 43 "mixed-bugfix-for-ufcs-non-local.cpp2"
+  requires (std::is_convertible_v<CPP2_TYPEOF(x), std::add_const_t<decltype(f(o))>&>)  { return CPP2_FORWARD(x); }(true) };
+#line 43 "mixed-bugfix-for-ufcs-non-local.cpp2"
   auto u::g(auto const& s, auto const& sz) -> void{
                                   if (cpp2::cpp2_default.is_active() && !(CPP2_UFCS(sz)(s) != 0) ) { cpp2::cpp2_default.report_violation(""); }}
 
-#line 45 "mixed-bugfix-for-ufcs-non-local.cpp2"
+#line 46 "mixed-bugfix-for-ufcs-non-local.cpp2"
 }
 
-#line 47 "mixed-bugfix-for-ufcs-non-local.cpp2"
+#line 48 "mixed-bugfix-for-ufcs-non-local.cpp2"
 auto main() -> int{}
 

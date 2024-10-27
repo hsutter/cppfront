@@ -38,7 +38,8 @@ d: _ == t<o.f()>(); // Fails on Clang 12 (lambda in unevaluated context).
 
 u: @struct type = {
   b: bool == o.f();
-  c: bool == :(forward x: decltype(o.f())) = x;(true); // Fails on Clang 12 (lambda in unevaluated context).
+  // UFCS used in the decltype in the line below causes all compilers to report error/crash
+  c: bool == :(forward x: decltype(f(o))) = x;(true); // Fails on Clang 12 (lambda in unevaluated context).
   g: (s, sz) pre(s.sz() != 0) = { }
 }
 
