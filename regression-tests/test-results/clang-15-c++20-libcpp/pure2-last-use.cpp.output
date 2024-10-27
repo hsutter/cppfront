@@ -13,7 +13,7 @@ pure2-last-use.cpp2:344:16: error: no template named 'move_only_function' in nam
 pure2-last-use.cpp2:348:161: error: no member named 'move_only_function' in namespace 'std'
 CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(a_), std::add_const_t<std::unique_ptr<int>>&> && std::is_convertible_v<CPP2_TYPEOF(b_), std::add_const_t<std::move_only_function<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(c_), std::add_const_t<std::add_lvalue_reference_t<int>>&>) ;
                                                                                                                                                            ~~~~~^
-../../../include/cpp2util.h:10008:43: note: expanded from macro 'CPP2_REQUIRES_'
+../../../include/cpp2util.h:10109:43: note: expanded from macro 'CPP2_REQUIRES_'
     #define CPP2_REQUIRES_(...) requires (__VA_ARGS__)
                                           ^~~~~~~~~~~
 pure2-last-use.cpp2:348:188: error: expected expression
