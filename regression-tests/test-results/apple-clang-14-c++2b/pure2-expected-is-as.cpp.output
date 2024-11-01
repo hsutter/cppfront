@@ -35,7 +35,7 @@ pure2-expected-is-as.cpp2:25:46: error: use of undeclared identifier 'ex1'; did 
     if (cpp2::impl::is<std::unexpected<int>>(ex1)) {
                                              ^~~
                                              exp
-/Library/Developer/CommandLineTools/SDKs/MacOSX13.sdk/usr/include/c++/v1/math.h:895:1: note: 'exp' declared here
+/Applications/Xcode_14.3.1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/math.h:895:1: note: 'exp' declared here
 exp(_A1 __lcpp_x) _NOEXCEPT {return ::exp((double)__lcpp_x);}
 ^
 pure2-expected-is-as.cpp2:30:24: error: use of undeclared identifier 'ex1'
