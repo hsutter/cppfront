@@ -1,0 +1,63 @@
+pure2-expected-is-as.cpp2:7:10: error: no member named 'expected' in namespace 'std'
+    std::expected<int,int> ex1 {123}; 
+    ~~~~~^
+pure2-expected-is-as.cpp2:7:22: error: expected '(' for function-style cast or type construction
+    std::expected<int,int> ex1 {123}; 
+                  ~~~^
+pure2-expected-is-as.cpp2:8:10: error: no member named 'expected' in namespace 'std'
+    std::expected<int,int> ex2 {std::unexpected(-1)}; 
+    ~~~~~^
+pure2-expected-is-as.cpp2:8:22: error: expected '(' for function-style cast or type construction
+    std::expected<int,int> ex2 {std::unexpected(-1)}; 
+                  ~~~^
+pure2-expected-is-as.cpp2:9:10: error: no member named 'expected' in namespace 'std'
+    std::expected<std::string,size_t> ex3 {"Expect the unexpected"}; 
+    ~~~~~^
+pure2-expected-is-as.cpp2:9:30: error: expected '(' for function-style cast or type construction
+    std::expected<std::string,size_t> ex3 {"Expect the unexpected"}; 
+                  ~~~~~~~~~~~^
+pure2-expected-is-as.cpp2:11:29: error: use of undeclared identifier 'ex1'
+    if (cpp2::impl::is<int>(ex1)) {
+                            ^
+pure2-expected-is-as.cpp2:15:30: error: use of undeclared identifier 'ex1'
+    if (cpp2::impl::is<bool>(ex1)) {
+                             ^
+pure2-expected-is-as.cpp2:20:30: error: use of undeclared identifier 'ex1'
+    if (cpp2::impl::is<void>(ex1)) {
+                             ^
+pure2-expected-is-as.cpp2:25:29: error: no member named 'unexpected' in namespace 'std'
+    if (cpp2::impl::is<std::unexpected<int>>(ex1)) {
+                       ~~~~~^
+pure2-expected-is-as.cpp2:25:43: error: expected '(' for function-style cast or type construction
+    if (cpp2::impl::is<std::unexpected<int>>(ex1)) {
+                                       ~~~^
+pure2-expected-is-as.cpp2:25:46: error: use of undeclared identifier 'ex1'; did you mean 'exp'?
+    if (cpp2::impl::is<std::unexpected<int>>(ex1)) {
+                                             ^~~
+                                             exp
+/usr/lib/llvm-15/bin/../include/c++/v1/math.h:895:1: note: 'exp' declared here
+exp(_A1 __lcpp_x) _NOEXCEPT {return ::exp((double)__lcpp_x);}
+^
+pure2-expected-is-as.cpp2:30:24: error: use of undeclared identifier 'ex1'
+    if (cpp2::impl::is(ex1, 123)) {
+                       ^
+pure2-expected-is-as.cpp2:34:24: error: use of undeclared identifier 'ex1'
+    if (cpp2::impl::is(ex1, 100)) {
+                       ^
+pure2-expected-is-as.cpp2:39:37: error: use of undeclared identifier 'ex1'
+    auto val1 {cpp2::impl::as_<int>(ex1)}; 
+                                    ^
+pure2-expected-is-as.cpp2:42:29: error: use of undeclared identifier 'ex2'
+    if (cpp2::impl::is<int>(ex2)) {
+                            ^
+pure2-expected-is-as.cpp2:47:30: error: use of undeclared identifier 'ex2'
+    if (cpp2::impl::is<bool>(ex2)) {
+                             ^
+pure2-expected-is-as.cpp2:52:24: error: use of undeclared identifier 'ex2'
+    if (cpp2::impl::is(ex2, 123)) {
+                       ^
+pure2-expected-is-as.cpp2:57:29: error: no member named 'unexpected' in namespace 'std'
+    if (cpp2::impl::is<std::unexpected<int>>(ex2)) {
+                       ~~~~~^
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+20 errors generated.
