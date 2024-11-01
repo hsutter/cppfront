@@ -2078,6 +2078,93 @@ constexpr auto as( X&& x ) -> decltype(auto) {
 }
 
 
+
+//-------------------------------------------------------------------------------------------------------------
+//  std::expected is and as
+//
+#ifdef __cpp_lib_expected
+
+//  is Type
+//
+template<typename T, typename X>
+    requires std::is_same_v<X, std::expected<T, typename X::error_type>>
+constexpr auto is(X const& x) -> bool
+{
+    return x.has_value();
+}
+
+template<typename T, typename U, typename V>
+    requires std::is_same_v<T, empty>
+constexpr auto is(std::expected<U, V> const& x) -> bool
+{
+    return !x.has_value();
+}
+
+//  is std::unexpected<T> Type
+//
+template<typename T, typename X>
+    requires (
+        std::is_same_v<T, std::unexpected<typename X::error_type>>
+        && std::is_same_v<X, std::expected<typename X::value_type, typename X::error_type>>
+    )
+constexpr auto is(X const& x) -> bool
+{
+    return !x.has_value();
+}
+
+
+//  is Value
+//
+template<typename T, typename U>
+constexpr auto is(std::expected<T, U> const& x, auto&& value) -> bool
+{
+    //  Predicate case
+    if constexpr (requires{ bool{ value(x) }; }) {
+        return value(x);
+    }
+    else if constexpr (std::is_function_v<decltype(value)> || requires{ &value.operator(); }) {
+        return false;
+    }
+
+    //  Value case
+    else if constexpr (requires{ bool{ x.value() == value }; }) {
+        return x.has_value() && x.value() == value;
+    }
+    else {
+        return false;
+    }
+}
+
+
+//  as
+//
+template<typename T, typename X>
+    requires std::is_same_v<X, std::expected<T, typename X::error_type>>
+constexpr auto as(X const& x) -> decltype(auto)
+{
+    return x.value();
+}
+
+//  as std::unexpected<T>
+//
+template<typename T, typename X>
+    requires (
+        std::is_same_v<T, std::unexpected<typename X::error_type>>
+        && std::is_same_v<X, std::expected<typename X::value_type, typename X::error_type>>
+    )
+constexpr auto as(X const& x) -> decltype(auto)
+{
+    // It's UB to call `error` if `has_value` is true.
+    if (x.has_value()) {
+        Throw(
+            std::runtime_error("Cannot cast 'expected' to 'unexpected' because it has a value"),
+            "Cannot cast 'expected' to 'unexpected' because it has a value");
+    }
+
+    return std::unexpected<typename X::error_type>(x.error());
+}
+#endif
+
 } // impl
 
 

@@ -1,0 +1,67 @@
+pure2-expected-is-as.cpp
+pure2-expected-is-as.cpp2(7): error C2039: 'expected': is not a member of 'std'
+predefined C++ types (compiler internal)(346): note: see declaration of 'std'
+pure2-expected-is-as.cpp2(7): error C2062: type 'int' unexpected
+pure2-expected-is-as.cpp2(7): error C2143: syntax error: missing ';' before '{'
+pure2-expected-is-as.cpp2(7): error C2143: syntax error: missing ';' before '}'
+pure2-expected-is-as.cpp2(8): error C2039: 'expected': is not a member of 'std'
+predefined C++ types (compiler internal)(346): note: see declaration of 'std'
+pure2-expected-is-as.cpp2(8): error C2062: type 'int' unexpected
+pure2-expected-is-as.cpp2(8): error C2143: syntax error: missing ';' before '{'
+pure2-expected-is-as.cpp2(8): error C2039: 'unexpected': is not a member of 'std'
+predefined C++ types (compiler internal)(346): note: see declaration of 'std'
+pure2-expected-is-as.cpp2(8): error C2660: 'unexpected': function does not take 1 arguments
+C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.41.34120\include\eh.h(33): note: see declaration of 'unexpected'
+pure2-expected-is-as.cpp2(8): note: while trying to match the argument list '(int)'
+pure2-expected-is-as.cpp2(8): error C2143: syntax error: missing ';' before '}'
+pure2-expected-is-as.cpp2(9): error C2039: 'expected': is not a member of 'std'
+predefined C++ types (compiler internal)(346): note: see declaration of 'std'
+pure2-expected-is-as.cpp2(9): error C2275: 'std::string': expected an expression instead of a type
+pure2-expected-is-as.cpp2(9): error C2065: 'ex3': undeclared identifier
+pure2-expected-is-as.cpp2(9): error C2275: 'size_t': expected an expression instead of a type
+pure2-expected-is-as.cpp2(11): error C2065: 'ex1': undeclared identifier
+pure2-expected-is-as.cpp2(15): error C2065: 'ex1': undeclared identifier
+pure2-expected-is-as.cpp2(20): error C2065: 'ex1': undeclared identifier
+pure2-expected-is-as.cpp2(25): error C2039: 'unexpected': is not a member of 'std'
+predefined C++ types (compiler internal)(346): note: see declaration of 'std'
+pure2-expected-is-as.cpp2(25): error C2062: type 'int' unexpected
+pure2-expected-is-as.cpp2(25): error C2059: syntax error: '>'
+pure2-expected-is-as.cpp2(25): error C2143: syntax error: missing ';' before '{'
+pure2-expected-is-as.cpp2(30): error C2065: 'ex1': undeclared identifier
+pure2-expected-is-as.cpp2(34): error C2065: 'ex1': undeclared identifier
+pure2-expected-is-as.cpp2(39): error C2065: 'ex1': undeclared identifier
+pure2-expected-is-as.cpp2(39): error C2119: 'val1': the type for 'auto' cannot be deduced from an empty initializer
+pure2-expected-is-as.cpp2(42): error C2065: 'ex2': undeclared identifier
+pure2-expected-is-as.cpp2(47): error C2065: 'ex2': undeclared identifier
+pure2-expected-is-as.cpp2(52): error C2065: 'ex2': undeclared identifier
+pure2-expected-is-as.cpp2(57): error C2039: 'unexpected': is not a member of 'std'
+predefined C++ types (compiler internal)(346): note: see declaration of 'std'
+pure2-expected-is-as.cpp2(57): error C2062: type 'int' unexpected
+pure2-expected-is-as.cpp2(57): error C2059: syntax error: '>'
+pure2-expected-is-as.cpp2(57): error C2143: syntax error: missing ';' before '{'
+pure2-expected-is-as.cpp2(58): error C2065: 'ex2': undeclared identifier
+pure2-expected-is-as.cpp2(61): error C2065: 'ex2': undeclared identifier
+pure2-expected-is-as.cpp2(62): error C2065: 'ex2': undeclared identifier
+pure2-expected-is-as.cpp2(65): error C2039: 'unexpected': is not a member of 'std'
+predefined C++ types (compiler internal)(346): note: see declaration of 'std'
+pure2-expected-is-as.cpp2(65): error C2062: type 'int' unexpected
+pure2-expected-is-as.cpp2(65): error C2062: type 'unknown-type' unexpected
+pure2-expected-is-as.cpp2(65): error C2143: syntax error: missing ';' before '}'
+pure2-expected-is-as.cpp2(66): error C2143: syntax error: missing ';' before '<<'
+pure2-expected-is-as.cpp2(66): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+pure2-expected-is-as.cpp2(66): error C2371: 'std::cout': redefinition; different basic types
+C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.41.34120\include\iostream(39): note: see declaration of 'std::cout'
+pure2-expected-is-as.cpp2(66): error C2059: syntax error: '<<'
+pure2-expected-is-as.cpp2(66): error C2143: syntax error: missing ';' before '{'
+pure2-expected-is-as.cpp2(66): error C2447: '{': missing function header (old-style formal list?)
+pure2-expected-is-as.cpp2(66): error C2059: syntax error: '||'
+pure2-expected-is-as.cpp2(66): error C2065: 'Obj': undeclared identifier
+pure2-expected-is-as.cpp2(66): error C2065: 'Params': undeclared identifier
+pure2-expected-is-as.cpp2(66): error C2059: syntax error: '}'
+pure2-expected-is-as.cpp2(66): error C2143: syntax error: missing ')' before ';'
+pure2-expected-is-as.cpp2(66): error C2059: syntax error: 'requires'
+pure2-expected-is-as.cpp2(66): error C2059: syntax error: ')'
+pure2-expected-is-as.cpp2(66): error C2065: 'obj': undeclared identifier
+pure2-expected-is-as.cpp2(66): error C3553: decltype expects an expression not a type
+pure2-expected-is-as.cpp2(66): error C2065: 'params': undeclared identifier
+pure2-expected-is-as.cpp2(66): fatal error C1003: error count exceeds 100; stopping compilation
