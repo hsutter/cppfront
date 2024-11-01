@@ -1764,6 +1764,7 @@ public:
         //  Otherwise we'll use cpp2::move
         bool add_move =
             !add_forward
+            && !n.identifier->as_string_view().starts_with("guard")
             && (
                 !last_use
                 || last_use->safe_to_move

@@ -388,9 +388,11 @@ In a function body, a **definite last use** of a local name is a single use of t
 
 For each definite last use:
 
-- If the name is a local object or a `copy` or `move` parameter, we know the object will not be used again before being destroyed, and so the object is automatically treated as an rvalue (move candidate). If the expression that contains the last use is able to move from the rvalue, the move will happen automatically.
+- If the name is a `copy` or `move` parameter or is a local object whose name does not start with `guard`, we know the object will not be used again before being destroyed, and so the object is automatically treated as an rvalue (move candidate). If the expression that contains the last use is able to move from the rvalue, the move will happen automatically.
 
 - If the name is a `forward` parameter, the object is automatically forwarded to preserve its constness and value category (`std::forward`-ed).
+
+> Note: This gives language meaning to a naming convention of `guard` as a name prefix for "guard" stack objects, such as local `std::scoped_lock` objects, whose destructors are always the object's real last use.
 
 For example:
 
