@@ -1258,14 +1258,18 @@ public:
         }
 
         //  Now we'll open the Cpp1 file
-        auto cpp1_filename = sourcefile.substr(0, std::ssize(sourcefile) - 1);
+        //  Default to stdout if input is stdin
+        auto cpp1_filename = std::string{"stdout"};
+        if (sourcefile != "stdin") {
+            assert(sourcefile.ends_with("2"));
+            cpp1_filename = sourcefile.substr(0, std::ssize(sourcefile) - 1);
+        }
         
-        //  Use explicit filename override if present,
-        //  otherwise strip leading path
+        //  Use explicit filename override if present, otherwise strip leading path
         if (!flag_cpp1_filename.empty()) {
             cpp1_filename = flag_cpp1_filename;
         }
-        else {
+        else if (cpp1_filename != "stdout") {
             cpp1_filename = std::filesystem::path(cpp1_filename).filename().string();
         }
 

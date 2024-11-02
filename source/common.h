@@ -800,7 +800,7 @@ public:
         );
 
         print("\nUsage: cppfront [options] file ...\n");
-        print("\nfile - The source file(s) to compile (can be 'stdin' to read text directly) \n");
+        print("\n  file                    source file(s) (can be 'stdin')\n");
         print("\nOptions: \n");
         int last_group = -1;
         for (auto& flag : flags) {

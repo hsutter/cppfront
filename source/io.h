@@ -886,7 +886,7 @@ public:
         //
         auto is_stdin = filename == "stdin";
         std::ifstream fss;
-        if (is_stdin) 
+        if (!is_stdin) 
         {
             fss.open(filename);
             if( !fss.is_open()) { return false; }
