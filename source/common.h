@@ -883,7 +883,7 @@ public:
 
     //  This is used only by the owner of the 'main' branch
     //  to generate stable build version strings
-    auto gen_version()
+    auto gen_build()
         -> void
     {
         help_requested = true;
@@ -945,11 +945,11 @@ static cmdline_processor::register_flag cmd_version(
     []{ cmdline.print_version(); }
 );
 
-static cmdline_processor::register_flag cmd_gen_version(
+static cmdline_processor::register_flag cmd_gen_build(
     0,
-    "_gen_version",
-    "Generate version information",
-    []{ cmdline.gen_version(); }
+    "_gen_build",
+    "Generate build information",
+    []{ cmdline.gen_build(); }
 );
 
 static auto flag_verbose = false;
