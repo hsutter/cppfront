@@ -1,0 +1,13 @@
+pure2-bugfix-for-dependent-types-recursion.cpp2:2:13: error: unknown type name 'b'
+  using a = b;
+            ^
+pure2-bugfix-for-dependent-types-recursion.cpp2:3:13: error: unknown type name 'a'
+  using b = a;
+            ^
+pure2-bugfix-for-dependent-types-recursion.cpp2:4:21: error: use of undeclared identifier 'a'
+  static_cast<void>(a::t);
+                    ^
+pure2-bugfix-for-dependent-types-recursion.cpp2:5:21: error: use of undeclared identifier 'b'
+  static_cast<void>(b::t);
+                    ^
+4 errors generated.

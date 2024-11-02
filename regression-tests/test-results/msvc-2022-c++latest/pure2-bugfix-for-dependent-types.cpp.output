@@ -1,0 +1,2 @@
+pure2-bugfix-for-dependent-types.cpp
+pure2-bugfix-for-dependent-types.cpp2(66): fatal error C1202: recursive type or function dependency context too complex

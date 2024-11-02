@@ -1,0 +1,7 @@
+pure2-bugfix-for-dependent-types-recursion.cpp
+pure2-bugfix-for-dependent-types-recursion.cpp2(2): error C2061: syntax error: identifier 'b'
+pure2-bugfix-for-dependent-types-recursion.cpp2(3): error C2061: syntax error: identifier 'a'
+pure2-bugfix-for-dependent-types-recursion.cpp2(4): error C2653: 'a': is not a class or namespace name
+pure2-bugfix-for-dependent-types-recursion.cpp2(4): error C2065: 't': undeclared identifier
+pure2-bugfix-for-dependent-types-recursion.cpp2(5): error C2653: 'b': is not a class or namespace name
+pure2-bugfix-for-dependent-types-recursion.cpp2(5): error C2065: 't': undeclared identifier

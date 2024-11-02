@@ -1,0 +1,2 @@
+pure2-bugfix-for-dependent-types.cpp2: In function ‘typename T::value_type f(cpp2::impl::in<typename T::value_type>) [with T = std::integral_constant<int, 0>; typename T::value_type V = 0]’:
+pure2-bugfix-for-dependent-types.cpp2:47:1: warning: control reaches end of non-void function [-Wreturn-type]

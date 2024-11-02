@@ -1,0 +1,29 @@
+pure2-bugfix-for-dependent-types.cpp2:5:22: error: missing 'typename' prior to dependent type name 'T::value_type'
+template<typename T, T::value_type V> [[nodiscard]] auto f(cpp2::impl::in<typename T::value_type> x) -> T::value_type;
+                     ^~~~~~~~~~~~~
+                     typename 
+pure2-bugfix-for-dependent-types.cpp2:5:105: error: missing 'typename' prior to dependent type name 'T::value_type'
+template<typename T, T::value_type V> [[nodiscard]] auto f(cpp2::impl::in<typename T::value_type> x) -> T::value_type;
+                                                                                                        ^~~~~~~~~~~~~
+                                                                                                        typename 
+pure2-bugfix-for-dependent-types.cpp2:56:12: error: missing 'typename' prior to dependent type name 'T::value_type'
+  private: T::value_type x {0}; 
+           ^~~~~~~~~~~~~
+           typename 
+pure2-bugfix-for-dependent-types.cpp2:5:22: error: missing 'typename' prior to dependent type name 'T::value_type'
+template<typename T, T::value_type V> [[nodiscard]] auto f(cpp2::impl::in<typename T::value_type> x) -> T::value_type{
+                     ^~~~~~~~~~~~~
+                     typename 
+pure2-bugfix-for-dependent-types.cpp2:5:105: error: missing 'typename' prior to dependent type name 'T::value_type'
+template<typename T, T::value_type V> [[nodiscard]] auto f(cpp2::impl::in<typename T::value_type> x) -> T::value_type{
+                                                                                                        ^~~~~~~~~~~~~
+                                                                                                        typename 
+pure2-bugfix-for-dependent-types.cpp2:9:13: error: missing 'typename' prior to dependent type name 'T::value_type'
+  using z = T::value_type;
+            ^~~~~~~~~~~~~
+            typename 
+pure2-bugfix-for-dependent-types.cpp2:32:13: error: missing 'typename' prior to dependent type name 'T::type'
+  using a = T::type;
+            ^~~~~~~
+            typename 
+7 errors generated.
