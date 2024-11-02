@@ -79,7 +79,12 @@ auto main(
 
         auto& out = flag_cpp1_filename != "stdout" ? std::cout : std::cerr;
 
-        if (!flag_quiet) {
+        if (
+            !flag_quiet
+            && arg.text != "stdin"
+            && flag_cpp1_filename != "stdout"
+            ) 
+        {
             out << arg.text << "...";
         }
 
@@ -92,7 +97,10 @@ auto main(
         //  If there were no errors, say so and generate Cpp1
         if (c.had_no_errors())
         {
-            if (!flag_quiet)
+            if (
+                !flag_quiet
+                && flag_cpp1_filename != "stdout"
+                )
             {
                 if (!c.has_cpp1()) {
                     out << " ok (all Cpp2, passes safety checks)\n";
