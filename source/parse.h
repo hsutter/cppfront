@@ -3616,6 +3616,15 @@ public:
         return ret;
     }
 
+    auto is_function_with_compound_body() const
+        -> bool
+    {
+        return 
+            initializer 
+            && initializer->is_compound()
+            ;
+    }
+
     auto is_function_with_this() const
         -> bool
     {

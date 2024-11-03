@@ -179,67 +179,28 @@ compiler_services: @polymorphic_base @copyable type =
 }
 
 
-/*
 //-----------------------------------------------------------------------
 //
-//  Type IDs
+//  All reflection types are wrappers around a pointer to node
 //
 //-----------------------------------------------------------------------
 //
 
-//  All type_ids are wrappers around a pointer to node
-//
-type_id: @polymorphic_base @copyable type =
+reflection_base: @polymorphic_base @copyable <T> type =
 {
     this: compiler_services = ();
 
-    n: *type_id_node;
+    protected n: *T;
 
     protected operator=: (
         out this,
-        n_: *type_id_node,
+        n_: *T,
         s : compiler_services
     )
     = {
         compiler_services = s;
         n = n_;
-        assert( n, "a meta::type_id must point to a valid type_id_node, not null" );
-    }
-
-    is_wildcard         : (this) -> bool        = n*.is_wildcard();
-    is_pointer_qualified: (this) -> bool        = n*.is_pointer_qualified();
-    template_args_count : (this) -> int         = n*.template_arguments().ssize();
-    to_string           : (this) -> std::string = n*.to_string();
-
-    position: (override this) -> source_position = n*.position();
-}
-*/
-
-
-//-----------------------------------------------------------------------
-//
-//  Declarations
-//
-//-----------------------------------------------------------------------
-//
-
-//  All declarations are wrappers around a pointer to node
-//
-declaration_base: @polymorphic_base @copyable type =
-{
-    this: compiler_services = ();
-
-    protected n: *declaration_node;
-
-    protected operator=: (
-        out this,
-        n_: *declaration_node,
-        s : compiler_services
-    )
-    = {
-        compiler_services = s;
-        n = n_;
-        assert( n, "a meta::declaration must point to a valid declaration_node, not null" );
+        assert( n, "a meta:: reflection must point to a valid node, not null" );
     }
 
     position: (override this) -> source_position = n*.position();
@@ -249,11 +210,18 @@ declaration_base: @polymorphic_base @copyable type =
 
 
 //-----------------------------------------------------------------------
+//
+//  Declarations
+//
+//-----------------------------------------------------------------------
+//
+
+//-----------------------------------------------------------------------
 //  All declarations
 //
 declaration: @polymorphic_base @copyable type =
 {
-    this: declaration_base = ();
+    this: reflection_base<declaration_node> = ();
 
     operator=: (
         out this,
@@ -261,7 +229,7 @@ declaration: @polymorphic_base @copyable type =
         s : compiler_services
     )
     = {
-        declaration_base = (n_, s);
+        reflection_base<declaration_node> = (n_, s);
     }
 
     is_public        : (this) -> bool = n*.is_public();
@@ -382,8 +350,11 @@ function_declaration: @copyable type =
     has_deduced_return_type      : (this) -> bool = n*.has_deduced_return_type();
     has_bool_return_type         : (this) -> bool = n*.has_bool_return_type();
     has_non_void_return_type     : (this) -> bool = n*.has_non_void_return_type();
+    has_compound_body            : (this) -> bool = n*.is_function_with_compound_body();
 
     unnamed_return_type          : (this) -> std::string = n*.unnamed_return_type_to_string();
+
+    is_binary_comparison_function: (this) -> bool = n*.is_binary_comparison_function();
 
     get_parameters: (this)
         -> std::vector<object_declaration>
@@ -395,8 +366,18 @@ function_declaration: @copyable type =
         return ret;
     }
 
-    is_binary_comparison_function: (this) -> bool = n*.is_binary_comparison_function();
+    //get_statements: (this)
+    //    -> std::vector<statement>
+    //= {
+    //    ret: std::vector<statement> = ();
+    //    for n*.get_initializer_statements() do (stmt) {
+    //        _ = ret.emplace_back( stmt, this );
+    //    }
+    //    return ret;
+    //}
 
+    //  Modifying operations
+    //
     default_to_virtual           : (inout this) = _ = n*.make_function_virtual();
 
     make_virtual                 : (inout this) -> bool = n*.make_function_virtual();
@@ -405,11 +386,6 @@ function_declaration: @copyable type =
         pre<this> (!has_initializer(), "cannot add an initializer to a function that already has one")
         pre<this> (parent_is_type(),   "cannot add an initializer to a function that isn't in a type scope")
     = {
-        //require( !has_initializer(),
-        //         "cannot add an initializer to a function that already has one");
-        //require( parent_is_type(),
-        //         "cannot add an initializer to a function that isn't in a type scope");
-
         stmt := parse_statement(source);
         if !(stmt as bool) {
             error( "cannot add an initializer that is not a valid statement");
@@ -612,6 +588,11 @@ alias_declaration: @copyable type =
         assert( n*.is_alias() );
     }
 }
+
+
+//-----------------------------------------------------------------------
+//  Statements
+//
 
 
 //-----------------------------------------------------------------------
