@@ -149,7 +149,7 @@ template<typename CharT, typename Iter, int max_groups> class match_context
 
     private: std::array<match_group<Iter>,max_groups> groups {}; 
 
-    public: explicit match_context(Iter const& begin_, Iter const& end_);
+    public: match_context(Iter const& begin_, Iter const& end_);
 
 #line 68 "cpp2regex.h2"
     public: match_context(match_context const& that);
@@ -212,7 +212,7 @@ template<typename Func> class on_return
  {
     private: Func func; 
 
-    public: explicit on_return(Func const& f);
+    public: on_return(Func const& f);
 #line 136 "cpp2regex.h2"
     public: auto operator=(Func const& f) -> on_return& ;
 
@@ -577,7 +577,7 @@ template<typename CharT, typename matcher_wrapper> class regular_expression
         public: context<Iter> ctx; 
         public: int pos; 
 
-        public: explicit search_return(cpp2::impl::in<bool> matched_, context<Iter> const& ctx_, Iter const& pos_);
+        public: search_return(cpp2::impl::in<bool> matched_, context<Iter> const& ctx_, Iter const& pos_);
 
 #line 690 "cpp2regex.h2"
         public: [[nodiscard]] auto group_number() const& -> decltype(auto);

@@ -397,7 +397,7 @@ class issue_857_9: public issue_857_8 {
 };
 
 class issue_869_0 {
-  public: explicit issue_869_0([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2);
+  public: issue_869_0([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2);
 #line 366 "pure2-last-use.cpp2"
   public: auto operator=([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2) -> issue_869_0& ;
   public: [[nodiscard]] auto operator<=>([[maybe_unused]] issue_869_0 const& that) const& -> std::strong_ordering = default;

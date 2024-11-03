@@ -21,7 +21,7 @@ class widget final
  {
     private: int v; 
 
-    public: explicit widget(cpp2::impl::in<int> value);
+    public: widget(cpp2::impl::in<int> value);
 #line 6 "pure2-defaulted-comparisons-and-final-types.cpp2"
     public: auto operator=(cpp2::impl::in<int> value) -> widget& ;
 

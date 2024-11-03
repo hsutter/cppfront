@@ -31,7 +31,7 @@ class mystruct;
 #line 2 "pure2-types-ordering-via-meta-functions.cpp2"
 class my_integer {
     private: int v; 
-    public: explicit my_integer(cpp2::impl::in<int> val);
+    public: my_integer(cpp2::impl::in<int> val);
 #line 4 "pure2-types-ordering-via-meta-functions.cpp2"
     public: auto operator=(cpp2::impl::in<int> val) -> my_integer& ;
     public: [[nodiscard]] auto operator<=>(my_integer const& that) const& -> std::strong_ordering = default;
@@ -44,7 +44,7 @@ class my_integer {
 
 class case_insensitive_string {
     private: std::string v; // case insensitive
-    public: explicit case_insensitive_string(cpp2::impl::in<std::string> val);
+    public: case_insensitive_string(cpp2::impl::in<std::string> val);
 #line 9 "pure2-types-ordering-via-meta-functions.cpp2"
     public: auto operator=(cpp2::impl::in<std::string> val) -> case_insensitive_string& ;
     public: [[nodiscard]] auto operator<=>(case_insensitive_string const& that) const& -> std::weak_ordering = default;
@@ -57,7 +57,7 @@ class case_insensitive_string {
 
 class person_in_family_tree {
     private: int dummy_data; 
-    public: explicit person_in_family_tree(cpp2::impl::in<int> parents);
+    public: person_in_family_tree(cpp2::impl::in<int> parents);
 #line 14 "pure2-types-ordering-via-meta-functions.cpp2"
     public: auto operator=(cpp2::impl::in<int> parents) -> person_in_family_tree& ;
     public: [[nodiscard]] auto operator<=>(person_in_family_tree const& that) const& -> std::partial_ordering = default;

@@ -31,7 +31,7 @@ class myclass {
     public: auto operator=(myclass&& that) noexcept -> myclass& ;
 
 #line 22 "pure2-types-smf-and-that-1-provide-everything.cpp2"
-    public: explicit myclass(cpp2::impl::in<std::string> x);
+    public: myclass(cpp2::impl::in<std::string> x);
 #line 22 "pure2-types-smf-and-that-1-provide-everything.cpp2"
     public: auto operator=(cpp2::impl::in<std::string> x) -> myclass& ;
 

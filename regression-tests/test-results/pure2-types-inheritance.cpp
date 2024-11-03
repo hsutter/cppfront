@@ -41,7 +41,7 @@ class Human {
 
 namespace N {
     template<int I> class Machine {
-        public: explicit Machine([[maybe_unused]] cpp2::impl::in<std::string> unnamed_param_2);
+        public: Machine([[maybe_unused]] cpp2::impl::in<std::string> unnamed_param_2);
         public: virtual auto work() const -> void = 0;
         public: virtual ~Machine() noexcept;
 
@@ -58,7 +58,7 @@ struct Cyborg_address_as_base { std::string address; };
 class Cyborg: public Cyborg_name_as_base, public Human, public Cyborg_address_as_base, public N::Machine<99> {
 
 #line 19 "pure2-types-inheritance.cpp2"
-    public: explicit Cyborg(cpp2::impl::in<std::string> n);
+    public: Cyborg(cpp2::impl::in<std::string> n);
 
 #line 25 "pure2-types-inheritance.cpp2"
     public: auto speak() const -> void override;

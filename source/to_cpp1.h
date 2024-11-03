@@ -6544,6 +6544,7 @@ public:
                                 func->is_constructor()
                                 && !func->is_constructor_with_that()
                                 && generating_assignment_from != &n
+                                && func->parameter_count() < 2
                                 )
                             {
                                 prefix += "explicit ";

@@ -34,7 +34,7 @@ class myclass {
     //     std::cout << "assign - move        ";
     // }
 
-    public: explicit myclass(cpp2::impl::in<std::string> x);
+    public: myclass(cpp2::impl::in<std::string> x);
 #line 22 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
     public: auto operator=(cpp2::impl::in<std::string> x) -> myclass& ;
 

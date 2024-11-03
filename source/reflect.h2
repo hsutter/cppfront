@@ -270,10 +270,10 @@ declaration: @polymorphic_base @copyable type =
 
     is_function_expression : (this) -> bool = n*.is_function_expression();
 
-    as_function : (this) -> function_declaration = function_declaration(n, this);
-    as_object   : (this) -> object_declaration   = object_declaration(n, this);
-    as_type     : (this) -> type_declaration     = type_declaration(n, this);
-    as_alias    : (this) -> alias_declaration    = alias_declaration(n, this);
+    as_function : (this) -> function_declaration = (n, this);
+    as_object   : (this) -> object_declaration   = (n, this);
+    as_type     : (this) -> type_declaration     = (n, this);
+    as_alias    : (this) -> alias_declaration    = (n, this);
 
     get_parent  : (this) -> declaration          = declaration(n*.parent_declaration, this);
 
@@ -361,20 +361,10 @@ function_declaration: @copyable type =
     = {
         ret: std::vector<object_declaration> = ();
         for n*.get_function_parameters() do (param) {
-            _ = ret.emplace_back( param*.declaration*&, this );
+            _ = ret.emplace_back( param*.declaration.get(), this );
         }
         return ret;
     }
-
-    //get_statements: (this)
-    //    -> std::vector<statement>
-    //= {
-    //    ret: std::vector<statement> = ();
-    //    for n*.get_initializer_statements() do (stmt) {
-    //        _ = ret.emplace_back( stmt, this );
-    //    }
-    //    return ret;
-    //}
 
     //  Modifying operations
     //
@@ -591,8 +581,80 @@ alias_declaration: @copyable type =
 
 
 //-----------------------------------------------------------------------
+// 
 //  Statements
 //
+//-----------------------------------------------------------------------
+//
+
+//-----------------------------------------------------------------------
+//  General statement
+//
+statement: @polymorphic_base @copyable type =
+{
+    this: reflection_base<statement_node> = ();
+
+    operator=: (
+        out this,
+        n_: *statement_node,
+        s : compiler_services
+    )
+    = {
+        reflection_base<statement_node> = (n_, s);
+    }
+
+    is_expression_statement : (this) -> bool = n*.is_expression();
+    is_compound_statement   : (this) -> bool = n*.is_compound();
+    is_selection_statement  : (this) -> bool = n*.is_selection();
+    is_declaration_statement: (this) -> bool = n*.is_declaration();
+    is_return_statement     : (this) -> bool = n*.is_return();
+    is_iteration_statement  : (this) -> bool = n*.is_iteration();
+    is_using_statement      : (this) -> bool = n*.is_using();
+    is_contract             : (this) -> bool = n*.is_contract();
+    is_inspect_expression   : (this) -> bool = n*.is_inspect();
+    is_jump_statement       : (this) -> bool = n*.is_jump();
+
+    //as_expression_statement : (this) -> expression_statement  = expression_statement (n*.get_if<expression_statement_node>(), this);
+    as_compound_statement   : (this) -> compound_statement    = (n*.get_if<compound_statement_node>(), this);
+    //as_selection_statement  : (this) -> selection_statement   = selection_statement  (n*.get_if<selection_statement_node>(), this);
+    //as_declaration_statement: (this) -> declaration_statement = declaration_statement(n*.get_if<declaration_statement_node>(), this);
+    //as_return_statement     : (this) -> return_statement      = return_statement     (n*.get_if<return_statement_node>(), this);
+    //as_iteration_statement  : (this) -> iteration_statement   = iteration_statement  (n*.get_if<iteration_statement_node>(), this);
+    //as_using_statement      : (this) -> using_statement       = using_statement      (n*.get_if<using_statement_node>(), this);
+    //as_contract             : (this) -> contract              = contract             (n*.get_if<contract_node>(), this);
+    //as_inspect_expression   : (this) -> inspect_expression    = inspect_expression   (n*.get_if<inspect_expression_node>(), this);
+    //as_jump_statement       : (this) -> jump_statement        = jump_statement       (n*.get_if<jump_statement_node>(), this);
+
+    to_string     : (this) -> std::string = n*.to_string();
+}
+
+
+//-----------------------------------------------------------------------
+//  Compound statements
+//
+compound_statement: @copyable type =
+{
+    this: reflection_base<compound_statement_node> = ();
+
+    operator=: (
+        out this,
+        n_: *compound_statement_node,
+        s : compiler_services
+    )
+    = {
+        reflection_base<compound_statement_node> = (n_, s);
+    }
+
+    get_statements: (this)
+        -> std::vector<statement>
+    = {
+        ret: std::vector<statement> = ();
+        for n*.get_statements() do (stmt) {
+            _ = ret.emplace_back( stmt, this );
+        }
+        return ret;
+    }
+}
 
 
 //-----------------------------------------------------------------------

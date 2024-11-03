@@ -17,7 +17,7 @@ class quantity;
 class quantity {
 #line 2 "pure2-bugfix-for-discard-precedence.cpp2"
   private: cpp2::i32 number; 
-  public: explicit quantity(cpp2::impl::in<cpp2::i32> x);
+  public: quantity(cpp2::impl::in<cpp2::i32> x);
 #line 3 "pure2-bugfix-for-discard-precedence.cpp2"
   public: auto operator=(cpp2::impl::in<cpp2::i32> x) -> quantity& ;
   public: [[nodiscard]] auto operator+(quantity const& that) & -> quantity;

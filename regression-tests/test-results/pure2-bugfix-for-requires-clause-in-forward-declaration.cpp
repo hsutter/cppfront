@@ -17,7 +17,7 @@ class element;
 class element {
 #line 2 "pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2"
   private: std::string name; 
-  public: explicit element(auto&& n)
+  public: element(auto&& n)
 CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(n), std::add_const_t<std::string>&>) ;
 #line 3 "pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2"
   public: auto operator=(auto&& n) -> element& 

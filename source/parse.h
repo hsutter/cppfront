@@ -1897,6 +1897,16 @@ struct compound_statement_node
 
     compound_statement_node(source_position o = source_position{});
 
+    auto get_statements()
+        -> std::vector<statement_node*>
+    {
+        auto ret = std::vector<statement_node*>{};
+        for (auto const& stmt : statements) {
+            ret.push_back( stmt.get() );
+        }
+        return ret;
+    }
+
     auto position() const
         -> source_position
     {
