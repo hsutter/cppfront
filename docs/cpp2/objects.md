@@ -14,7 +14,7 @@ Its declaration is written using the same **name `:` kind `=` value** [declarati
 For example:
 
 ``` cpp title="Declaring some objects" hl_lines="3 4 7-9 12 13"
-//  numbers is an object of type std::vector<point2d>,
+//  numbers is an object of type std::vector<int>,
 //  defined as having the initial contents 1, 2, 3
 numbers: std::vector<int> = (1, 2, 3);
 numbers: std::vector = (1, 2, 3);       // same, deducing the vector's type
