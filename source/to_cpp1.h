@@ -1341,6 +1341,75 @@ public:
         auto map_iter = tokens.get_map().cbegin();
         auto hpp_includes = std::string{};
 
+        //---------------------------------------------------------------------
+        //  Do cpp1 type declaration and function declarations
+        printer.print_extra( "\n//=== Cpp1 type definitions and function declarations ====================================================\n\n" );
+        printer.reset_line_to(1, true);
+        for (
+            lineno_t curr_lineno = 0;
+            auto const& line : source.get_lines()
+            )
+        {
+            //  Skip dummy line we added to make 0-vs-1-based offsets readable
+            if (curr_lineno != 0)
+            {
+                //  If it's a Cpp1 line, emit it
+                if (line.cat != source_line::category::cpp2)
+                {
+                    if (
+                        source.has_cpp2()
+                        && line.cat != source_line::category::preprocessor
+                        )
+                    {
+                        ++ret.cpp2_lines;
+                    }
+                    else
+                    {
+                        ++ret.cpp1_lines;
+                    }
+
+                    if (
+                        flag_cpp2_only
+                        && !line.text.empty()
+                        && line.cat != source_line::category::comment
+                        && line.cat != source_line::category::import
+                        )
+                    {
+                        if (line.cat == source_line::category::preprocessor) {
+                            if (!line.text.ends_with(".h2\"")) {
+                                errors.emplace_back(
+                                    source_position(curr_lineno, 1),
+                                    "pure-cpp2 switch disables the preprocessor, including #include (except of .h2 files) - use import instead (note: 'import std;' is implicit in -pure-cpp2)"
+                                );
+                                return {};
+                            }
+                        }
+                        else {
+                            errors.emplace_back(
+                                source_position(curr_lineno, 1),
+                                "pure-cpp2 switch disables Cpp1 syntax"
+                            );
+                            return {};
+                        }
+                    }
+
+                    if (
+                        line.cat == source_line::category::preprocessor
+                        && line.text.ends_with(".h2\"")
+                        )
+                    {
+                        //  Strip off the 2"
+                        auto h_include = line.text.substr(0, line.text.size()-2);
+                        printer.print_cpp1( h_include + "\"", curr_lineno );
+                        hpp_includes += h_include + "pp\"\n";
+                    }
+                    else {
+                        printer.print_cpp1( line.text, curr_lineno );
+                    }
+                }
+            }
+            ++curr_lineno;
+        }
 
         //---------------------------------------------------------------------
         //  Do phase0_type_decls
@@ -1408,63 +1477,9 @@ public:
             //  Skip dummy line we added to make 0-vs-1-based offsets readable
             if (curr_lineno != 0)
             {
-                //  If it's a Cpp1 line, emit it
-                if (line.cat != source_line::category::cpp2)
+                //  If it's a Cpp2 line, emit it
+                if (line.cat == source_line::category::cpp2)
                 {
-                    if (
-                        source.has_cpp2()
-                        && line.cat != source_line::category::preprocessor
-                        )
-                    {
-                        ++ret.cpp2_lines;
-                    }
-                    else
-                    {
-                        ++ret.cpp1_lines;
-                    }
-
-                    if (
-                        flag_cpp2_only
-                        && !line.text.empty()
-                        && line.cat != source_line::category::comment
-                        && line.cat != source_line::category::import
-                        )
-                    {
-                        if (line.cat == source_line::category::preprocessor) {
-                            if (!line.text.ends_with(".h2\"")) {
-                                errors.emplace_back(
-                                    source_position(curr_lineno, 1),
-                                    "pure-cpp2 switch disables the preprocessor, including #include (except of .h2 files) - use import instead (note: 'import std;' is implicit in -pure-cpp2)"
-                                );
-                                return {};
-                            }
-                        }
-                        else {
-                            errors.emplace_back(
-                                source_position(curr_lineno, 1),
-                                "pure-cpp2 switch disables Cpp1 syntax"
-                            );
-                            return {};
-                        }
-                    }
-
-                    if (
-                        line.cat == source_line::category::preprocessor
-                        && line.text.ends_with(".h2\"")
-                        )
-                    {
-                        //  Strip off the 2"
-                        auto h_include = line.text.substr(0, line.text.size()-2);
-                        printer.print_cpp1( h_include + "\"", curr_lineno );
-                        hpp_includes += h_include + "pp\"\n";
-                    }
-                    else {
-                        printer.print_cpp1( line.text, curr_lineno );
-                    }
-                }
-
-                //  If it's a Cpp2 line...
-                else {
                     ++ret.cpp2_lines;
 
                     //  We should be in a position to emit a set of Cpp2 declarations
@@ -5767,16 +5782,16 @@ public:
             return;
         }
 
-        //  In phase 0, only need to consider namespaces and types
+        //  In phase 0, only need to consider namespaces, types, and Namespace-scope alias
+        const auto processNode = [&]() -> bool {
+            if (printer.get_phase() != printer.phase0_type_decls) return true;
+            if (n.is_namespace()) return true;
+            if (n.is_type()) return true;
+            if (n.is_alias() && n.parent_is_namespace()) return true;
+            return false;
+        };
 
-        if (
-            printer.get_phase() == printer.phase0_type_decls
-            && !n.is_namespace()
-            && !n.is_type()
-            )
-        {
-            return;
-        }
+        if (!processNode()) return;
 
         //  If this is a generated declaration (negative source line number),
         //  add a line break before
@@ -5800,26 +5815,26 @@ public:
             auto& a = std::get<declaration_node::an_alias>(n.type);
             assert(a);
 
-            //  Namespace-scope aliases are emitted in phase 1,
+            //  Namespace-scope aliases are emitted in phase 0,
             //  type-scope object aliases in both phases 1 and 2, and
             //  function-scope aliases in phase 2
-            if (
-                (
-                    !n.parent_is_function()
-                    && printer.get_phase() == printer.phase1_type_defs_func_decls
-                    )
-                ||
-                (
-                    n.parent_is_type()
-                    && n.is_object_alias()
-                    && printer.get_phase() == printer.phase2_func_defs
-                    )
-                ||
-                (
-                    n.parent_is_function()
-                    && printer.get_phase() == printer.phase2_func_defs
-                    )
-                )
+            const auto processAliasNode = [&]() -> bool {
+                if (!n.parent_is_function()) {
+                    if (n.parent_is_namespace()) {
+                        if (printer.get_phase() == printer.phase0_type_decls) return true;
+                    } else {
+                        if (printer.get_phase() == printer.phase1_type_defs_func_decls) return true;
+                    }
+                }
+                if (n.parent_is_type() && n.is_object_alias()) {
+                    if (printer.get_phase() == printer.phase2_func_defs) return true;
+                }
+                if (n.parent_is_function()) {
+                    if (printer.get_phase() == printer.phase2_func_defs) return true;
+                }
+                return false;
+            };
+            if (processAliasNode())
             {
                 assert(
                     a->is_type_alias()
@@ -6137,23 +6152,28 @@ public:
         }
 
         //  Now, emit our own template parameters
-        if (
-            n.template_parameters
-            && (
-                printer.get_phase() <  printer.phase2_func_defs
-                || n.is_object()
-                || (
-                    n.is_function()
-                    && n.has_name()     // only if it is not unnamed function aka lambda
-                    && n.initializer    // only if the function has a definition (is not abstract)
-                    && printer.get_phase() == printer.phase2_func_defs
-                    )
-                )
-            && (
-                !n.is_concept()
-                || printer.get_phase() == printer.phase1_type_defs_func_decls
-                )
-            )
+        const auto processTemplateParameters = [&]() -> bool {
+            if (!n.template_parameters) return false;
+            const auto rule1 = [&]() -> bool {
+                if (printer.get_phase() < printer.phase2_func_defs) return true;
+                if (n.is_object()) return true;
+                if (!n.is_function()) return false;
+                if (!n.has_name()) return false; // only if it is not unnamed function aka lambda
+                if (!n.initializer) return false; // only if the function has a definition (is not abstract)
+                return printer.get_phase() == printer.phase2_func_defs;
+            };
+            const auto rule2 = [&]() -> bool {
+                if (!n.is_concept()) return true;
+                return printer.get_phase() == printer.phase1_type_defs_func_decls;
+            };
+            const auto rule3 = [&]() -> bool {
+                if (!n.is_alias()) return true;
+                if (!n.parent_is_namespace()) return true;
+                return printer.get_phase() == printer.phase0_type_decls;
+            };
+            return rule1() && rule2() && rule3();
+        };
+        if (processTemplateParameters())
         {
             printer.print_cpp2("template", n.position());
             emit(*n.template_parameters, false, true);
