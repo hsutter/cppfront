@@ -3,6 +3,25 @@
 #define REFLECT_H_CPP2
 
 
+//=== Cpp1 type definitions and function declarations ====================================================
+
+#line 1 "reflect.h2"
+
+//  Copyright 2022-2024 Herb Sutter
+//  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//  
+//  Part of the Cppfront Project, under the Apache License v2.0 with LLVM Exceptions.
+//  See https://github.com/hsutter/cppfront/blob/main/LICENSE for license information.
+
+
+//===========================================================================
+//  Reflection and meta
+//===========================================================================
+
+#include "parse.h"
+#include "cpp2regex.h"
+using namespace cpp2::regex;
+
 //=== Cpp2 type declarations ====================================================
 
 
@@ -45,11 +64,18 @@ class compound_statement;
 #line 1094 "reflect.h2"
 class value_member_info;
 
+#line 1608 "reflect.h2"
+using error_func = std::function<void(cpp2::impl::in<std::string> x)>;
+
 #line 1612 "reflect.h2"
 class expression_flags;
 
 #line 1628 "reflect.h2"
 class regex_token;
+
+#line 1648 "reflect.h2"
+using token_ptr = std::shared_ptr<regex_token>;
+using token_vec = std::vector<token_ptr>;
 
 #line 1654 "reflect.h2"
 class regex_token_check;
@@ -121,21 +147,6 @@ template<typename Error_out> class regex_generator;
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "reflect.h2"
-
-//  Copyright 2022-2024 Herb Sutter
-//  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//  
-//  Part of the Cppfront Project, under the Apache License v2.0 with LLVM Exceptions.
-//  See https://github.com/hsutter/cppfront/blob/main/LICENSE for license information.
-
-
-//===========================================================================
-//  Reflection and meta
-//===========================================================================
-
-#include "parse.h"
-#include "cpp2regex.h"
-using namespace cpp2::regex;
 
 #line 17 "reflect.h2"
 namespace cpp2 {
@@ -602,9 +613,6 @@ auto cpp2_union(meta::type_declaration& t) -> void;
 #line 1588 "reflect.h2"
 auto print(cpp2::impl::in<meta::type_declaration> t) -> void;
 
-#line 1608 "reflect.h2"
-using error_func = std::function<void(cpp2::impl::in<std::string> x)>;
-
 #line 1612 "reflect.h2"
 class expression_flags
  {
@@ -666,9 +674,6 @@ class regex_token
 
 #line 1646 "reflect.h2"
 };
-
-using token_ptr = std::shared_ptr<regex_token>;
-using token_vec = std::vector<token_ptr>;
 
 #line 1652 "reflect.h2"
 //  Adds a check in code generation.

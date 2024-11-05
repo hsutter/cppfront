@@ -3,6 +3,32 @@
 #define CPP2REGEX_H_CPP2
 
 
+//=== Cpp1 type definitions and function declarations ====================================================
+
+#line 1 "cpp2regex.h2"
+
+//  Copyright 2022-2024 Herb Sutter
+//  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//  
+//  Part of the Cppfront Project, under the Apache License v2.0 with LLVM Exceptions.
+//  See https://github.com/hsutter/cppfront/blob/main/LICENSE for license information.
+
+
+//===========================================================================
+//  Regex support
+//===========================================================================
+
+#ifndef CPP2_CPP2REGEX_H
+#define CPP2_CPP2REGEX_H
+
+template<typename matcher_wrapper, typename Iter, typename CharT>
+using matcher_wrapper_type = typename matcher_wrapper::template wrap<Iter, CharT>;
+
+template<typename matcher>
+using matcher_context_type = typename matcher::context;
+#line 758 "cpp2regex.h2"
+#endif
+
 //=== Cpp2 type declarations ====================================================
 
 
@@ -14,6 +40,9 @@
 namespace cpp2 {
 
 namespace regex {
+
+template<typename CharT> using bstring = std::basic_string<CharT>;
+template <typename CharT> using bview = std::basic_string_view<CharT>;
 
 #line 38 "cpp2regex.h2"
 template<typename Iter> class match_group;
@@ -54,11 +83,58 @@ template<typename CharT, typename Inner> class negated_class_entry;
 #line 211 "cpp2regex.h2"
 template<typename CharT, string_util::fixed_string Name, typename Inner> class shorthand_class_entry;
 
+#line 220 "cpp2regex.h2"
+template        <typename CharT> using digits_class = named_class_entry<CharT,"digits",range_class_entry<CharT,'0','9'>>;
+template        <typename CharT> using lower_class = named_class_entry<CharT,"lower",range_class_entry<CharT,'a','z'>>;
+template        <typename CharT> using upper_class = named_class_entry<CharT,"upper",range_class_entry<CharT,'A','Z'>>;
+
+#line 226 "cpp2regex.h2"
+template          <typename CharT> using alnum_class = named_class_entry<CharT,"alnum",combined_class_entry<CharT,lower_class<CharT>,upper_class<CharT>,digits_class<CharT>>>;
+template          <typename CharT> using alpha_class = named_class_entry<CharT,"alpha",combined_class_entry<CharT,lower_class<CharT>,upper_class<CharT>>>;
+template          <typename CharT> using ascii_class = named_class_entry<CharT,"ascii",range_class_entry<CharT,'\x00','\x7F'>>;
+template          <typename CharT> using blank_class = named_class_entry<CharT,"blank",list_class_entry<CharT,' ','\t'>>;
+template          <typename CharT> using cntrl_class = named_class_entry<CharT,"cntrl",combined_class_entry<CharT,range_class_entry<CharT,'\x00','\x1F'>,single_class_entry<CharT,'\x7F'>>>;
+template          <typename CharT> using graph_class = named_class_entry<CharT,"graph",range_class_entry<CharT,'\x21','\x7E'>>;
+template<typename CharT> using hor_space_class = named_class_entry<CharT,"hspace",list_class_entry<CharT,'\t',' '>>;
+template          <typename CharT> using print_class = named_class_entry<CharT,"print",range_class_entry<CharT,'\x20','\x7E'>>;
+template          <typename CharT> using punct_class = named_class_entry<CharT,"punct",list_class_entry<CharT,'[','!','"','#','$','%','&','\'','(',')','*','+',',','-','.','/',':',';','<','=','>','?','@','[','\\',']','^','_','`','{','|','}','~',']'>>;
+template          <typename CharT> using space_class = named_class_entry<CharT,"space",list_class_entry<CharT,' ','\t','\r','\n','\v','\f'>>;
+template<typename CharT> using ver_space_class = named_class_entry<CharT,"vspace",list_class_entry<CharT,'\n','\v','\f','\r'>>;
+template          <typename CharT> using word_class = named_class_entry<CharT,"word",combined_class_entry<CharT,alnum_class<CharT>,single_class_entry<CharT,'_'>>>;
+template          <typename CharT> using xdigit_class = named_class_entry<CharT,"xdigit",combined_class_entry<CharT,range_class_entry<CharT,'A','F'>,range_class_entry<CharT,'a','f'>,digits_class<CharT>>>;
+
+#line 242 "cpp2regex.h2"
+template                 <typename CharT> using short_digits_class = shorthand_class_entry<CharT,"\\d",digits_class<CharT>>;
+template                 <typename CharT> using short_hor_space_class = shorthand_class_entry<CharT,"\\h",hor_space_class<CharT>>;
+template                 <typename CharT> using short_space_class = shorthand_class_entry<CharT,"\\s",space_class<CharT>>;
+template<typename CharT> using short_vert_space_class = shorthand_class_entry<CharT,"\\v",ver_space_class<CharT>>;
+template                 <typename CharT> using short_word_class = shorthand_class_entry<CharT,"\\w",word_class<CharT>>;
+
+template                     <typename CharT> using short_not_digits_class = negated_class_entry<CharT,shorthand_class_entry<CharT,"\\D",digits_class<CharT>>>;
+template                     <typename CharT> using short_not_hor_space_class = negated_class_entry<CharT,shorthand_class_entry<CharT,"\\H",hor_space_class<CharT>>>;
+template                     <typename CharT> using short_not_space_class = negated_class_entry<CharT,shorthand_class_entry<CharT,"\\S",space_class<CharT>>>;
+template<typename CharT> using short_not_vert_space_class = negated_class_entry<CharT,shorthand_class_entry<CharT,"\\V",ver_space_class<CharT>>>;
+template                     <typename CharT> using short_not_word_class = negated_class_entry<CharT,shorthand_class_entry<CharT,"\\W",word_class<CharT>>>;
+
 #line 259 "cpp2regex.h2"
 template<typename CharT> class alternative_token_matcher;
 
 #line 337 "cpp2regex.h2"
 template<typename CharT, bool negate, bool case_insensitive, typename ...List> class class_token_matcher;
+
+#line 397 "cpp2regex.h2"
+template                    <typename CharT,          bool case_insensitive> using named_class_no_new_line = class_token_matcher<CharT,true,case_insensitive,single_class_entry<CharT,'\n'>>;
+template                    <typename CharT,          bool case_insensitive> using named_class_digits = class_token_matcher<CharT,false,case_insensitive,digits_class<CharT>>;
+template                    <typename CharT,          bool case_insensitive> using named_class_hor_space = class_token_matcher<CharT,false,case_insensitive,hor_space_class<CharT>>;
+template                    <typename CharT,          bool case_insensitive> using named_class_space = class_token_matcher<CharT,false,case_insensitive,space_class<CharT>>;
+template                    <typename CharT,          bool case_insensitive> using named_class_ver_space = class_token_matcher<CharT,false,case_insensitive,ver_space_class<CharT>>;
+template                    <typename CharT,          bool case_insensitive> using named_class_word = class_token_matcher<CharT,false,case_insensitive,word_class<CharT>>;
+
+template                    <typename CharT,          bool case_insensitive> using named_class_not_digits = class_token_matcher<CharT,true,case_insensitive,digits_class<CharT>>;
+template                    <typename CharT,          bool case_insensitive> using named_class_not_hor_space = class_token_matcher<CharT,true,case_insensitive,hor_space_class<CharT>>;
+template                    <typename CharT,          bool case_insensitive> using named_class_not_space = class_token_matcher<CharT,true,case_insensitive,space_class<CharT>>;
+template                    <typename CharT,          bool case_insensitive> using named_class_not_ver_space = class_token_matcher<CharT,true,case_insensitive,ver_space_class<CharT>>;
+template                    <typename CharT,          bool case_insensitive> using named_class_not_word = class_token_matcher<CharT,true,case_insensitive,word_class<CharT>>;
 
 #line 492 "cpp2regex.h2"
 class range_flags;
@@ -79,34 +155,12 @@ template<typename CharT, typename matcher_wrapper> class regular_expression;
 
 #line 1 "cpp2regex.h2"
 
-//  Copyright 2022-2024 Herb Sutter
-//  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//  
-//  Part of the Cppfront Project, under the Apache License v2.0 with LLVM Exceptions.
-//  See https://github.com/hsutter/cppfront/blob/main/LICENSE for license information.
-
-
-//===========================================================================
-//  Regex support
-//===========================================================================
-
-#ifndef CPP2_CPP2REGEX_H
-#define CPP2_CPP2REGEX_H
-
-template<typename matcher_wrapper, typename Iter, typename CharT>
-using matcher_wrapper_type = typename matcher_wrapper::template wrap<Iter, CharT>;
-
-template<typename matcher>
-using matcher_context_type = typename matcher::context;
-
 #line 22 "cpp2regex.h2"
 namespace cpp2 {
 
 namespace regex {
 
-template<typename CharT> using bstring = std::basic_string<CharT>;
-template <typename CharT> using bview = std::basic_string_view<CharT>;
-
+#line 29 "cpp2regex.h2"
 //-----------------------------------------------------------------------
 //
 //  Helper structures for the expression matching.
@@ -335,39 +389,14 @@ template<typename CharT, string_util::fixed_string Name, typename Inner> class s
 #line 218 "cpp2regex.h2"
 //  Named basic character classes
 //
-template        <typename CharT> using digits_class = named_class_entry<CharT,"digits",range_class_entry<CharT,'0','9'>>;
-template        <typename CharT> using lower_class = named_class_entry<CharT,"lower",range_class_entry<CharT,'a','z'>>;
-template        <typename CharT> using upper_class = named_class_entry<CharT,"upper",range_class_entry<CharT,'A','Z'>>;
 
+#line 224 "cpp2regex.h2"
 //  Named other classes
 //
-template          <typename CharT> using alnum_class = named_class_entry<CharT,"alnum",combined_class_entry<CharT,lower_class<CharT>,upper_class<CharT>,digits_class<CharT>>>;
-template          <typename CharT> using alpha_class = named_class_entry<CharT,"alpha",combined_class_entry<CharT,lower_class<CharT>,upper_class<CharT>>>;
-template          <typename CharT> using ascii_class = named_class_entry<CharT,"ascii",range_class_entry<CharT,'\x00','\x7F'>>;
-template          <typename CharT> using blank_class = named_class_entry<CharT,"blank",list_class_entry<CharT,' ','\t'>>;
-template          <typename CharT> using cntrl_class = named_class_entry<CharT,"cntrl",combined_class_entry<CharT,range_class_entry<CharT,'\x00','\x1F'>,single_class_entry<CharT,'\x7F'>>>;
-template          <typename CharT> using graph_class = named_class_entry<CharT,"graph",range_class_entry<CharT,'\x21','\x7E'>>;
-template<typename CharT> using hor_space_class = named_class_entry<CharT,"hspace",list_class_entry<CharT,'\t',' '>>;
-template          <typename CharT> using print_class = named_class_entry<CharT,"print",range_class_entry<CharT,'\x20','\x7E'>>;
-template          <typename CharT> using punct_class = named_class_entry<CharT,"punct",list_class_entry<CharT,'[','!','"','#','$','%','&','\'','(',')','*','+',',','-','.','/',':',';','<','=','>','?','@','[','\\',']','^','_','`','{','|','}','~',']'>>;
-template          <typename CharT> using space_class = named_class_entry<CharT,"space",list_class_entry<CharT,' ','\t','\r','\n','\v','\f'>>;
-template<typename CharT> using ver_space_class = named_class_entry<CharT,"vspace",list_class_entry<CharT,'\n','\v','\f','\r'>>;
-template          <typename CharT> using word_class = named_class_entry<CharT,"word",combined_class_entry<CharT,alnum_class<CharT>,single_class_entry<CharT,'_'>>>;
-template          <typename CharT> using xdigit_class = named_class_entry<CharT,"xdigit",combined_class_entry<CharT,range_class_entry<CharT,'A','F'>,range_class_entry<CharT,'a','f'>,digits_class<CharT>>>;
 
+#line 240 "cpp2regex.h2"
 // Shorthand class entries
 //
-template                 <typename CharT> using short_digits_class = shorthand_class_entry<CharT,"\\d",digits_class<CharT>>;
-template                 <typename CharT> using short_hor_space_class = shorthand_class_entry<CharT,"\\h",hor_space_class<CharT>>;
-template                 <typename CharT> using short_space_class = shorthand_class_entry<CharT,"\\s",space_class<CharT>>;
-template<typename CharT> using short_vert_space_class = shorthand_class_entry<CharT,"\\v",ver_space_class<CharT>>;
-template                 <typename CharT> using short_word_class = shorthand_class_entry<CharT,"\\w",word_class<CharT>>;
-
-template                     <typename CharT> using short_not_digits_class = negated_class_entry<CharT,shorthand_class_entry<CharT,"\\D",digits_class<CharT>>>;
-template                     <typename CharT> using short_not_hor_space_class = negated_class_entry<CharT,shorthand_class_entry<CharT,"\\H",hor_space_class<CharT>>>;
-template                     <typename CharT> using short_not_space_class = negated_class_entry<CharT,shorthand_class_entry<CharT,"\\S",space_class<CharT>>>;
-template<typename CharT> using short_not_vert_space_class = negated_class_entry<CharT,shorthand_class_entry<CharT,"\\V",ver_space_class<CharT>>>;
-template                     <typename CharT> using short_not_word_class = negated_class_entry<CharT,shorthand_class_entry<CharT,"\\W",word_class<CharT>>>;
 
 #line 255 "cpp2regex.h2"
 //  Regex syntax: |  Example: ab|ba
@@ -459,18 +488,6 @@ template<typename CharT, bool negate, bool case_insensitive, typename ...List> c
 #line 395 "cpp2regex.h2"
 // Named short classes
 //
-template                    <typename CharT,          bool case_insensitive> using named_class_no_new_line = class_token_matcher<CharT,true,case_insensitive,single_class_entry<CharT,'\n'>>;
-template                    <typename CharT,          bool case_insensitive> using named_class_digits = class_token_matcher<CharT,false,case_insensitive,digits_class<CharT>>;
-template                    <typename CharT,          bool case_insensitive> using named_class_hor_space = class_token_matcher<CharT,false,case_insensitive,hor_space_class<CharT>>;
-template                    <typename CharT,          bool case_insensitive> using named_class_space = class_token_matcher<CharT,false,case_insensitive,space_class<CharT>>;
-template                    <typename CharT,          bool case_insensitive> using named_class_ver_space = class_token_matcher<CharT,false,case_insensitive,ver_space_class<CharT>>;
-template                    <typename CharT,          bool case_insensitive> using named_class_word = class_token_matcher<CharT,false,case_insensitive,word_class<CharT>>;
-
-template                    <typename CharT,          bool case_insensitive> using named_class_not_digits = class_token_matcher<CharT,true,case_insensitive,digits_class<CharT>>;
-template                    <typename CharT,          bool case_insensitive> using named_class_not_hor_space = class_token_matcher<CharT,true,case_insensitive,hor_space_class<CharT>>;
-template                    <typename CharT,          bool case_insensitive> using named_class_not_space = class_token_matcher<CharT,true,case_insensitive,space_class<CharT>>;
-template                    <typename CharT,          bool case_insensitive> using named_class_not_ver_space = class_token_matcher<CharT,true,case_insensitive,ver_space_class<CharT>>;
-template                    <typename CharT,          bool case_insensitive> using named_class_not_word = class_token_matcher<CharT,true,case_insensitive,word_class<CharT>>;
 
 #line 411 "cpp2regex.h2"
 //  Regex syntax: \<number>  Example: \1
@@ -624,7 +641,6 @@ template<typename CharT, typename matcher_wrapper> class regular_expression
 
 }
 }
-#endif
 
 
 //=== Cpp2 function definitions =================================================
