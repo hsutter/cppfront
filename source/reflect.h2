@@ -350,9 +350,12 @@ function_declaration: @copyable type =
     has_deduced_return_type      : (this) -> bool = n*.has_deduced_return_type();
     has_bool_return_type         : (this) -> bool = n*.has_bool_return_type();
     has_non_void_return_type     : (this) -> bool = n*.has_non_void_return_type();
-    has_compound_body            : (this) -> bool = n*.is_function_with_compound_body();
 
-    unnamed_return_type          : (this) -> std::string = n*.unnamed_return_type_to_string();
+    has_compound_body            : (this) -> bool = n*.is_function_with_compound_body();
+    get_compound_body            : (this) -> compound_statement = (n*.get_compound_initializer(), this);
+
+    get_unnamed_return_type      : (this) -> std::string = n*.unnamed_return_type_to_string();
+    get_signature                : (this) -> std::string = n*.signature_to_string();
 
     is_binary_comparison_function: (this) -> bool = n*.is_binary_comparison_function();
 
@@ -654,6 +657,17 @@ compound_statement: @copyable type =
         }
         return ret;
     }
+
+    add_statement: (inout this, source: std::string_view, before_position: int = 0)
+    = {
+        stmt := parse_statement(source);
+        if !(stmt as bool) {
+            error("the provided source string is not a valid statement");
+            return;
+        }
+        require( n*.add_statement(move stmt, before_position),
+                 std::string("unexpected error while attempting to add statement:\n") + source );
+    }
 }
 
 
@@ -789,7 +803,7 @@ ordered_impl: (
     {
         if mf.has_name("operator<=>") {
             has_spaceship = true;
-            return_name := mf.unnamed_return_type();
+            return_name := mf.get_unnamed_return_type();
             if return_name.find(ordering) == return_name.npos
             {
                 mf.error( "operator<=> must return std::" + ordering as std::string );
@@ -1588,6 +1602,28 @@ union: (inout t : meta::type_declaration)
 print: (t: meta::type_declaration) =
 {
     std::cout << t.print() << "\n";
+}
+
+
+//-----------------------------------------------------------------------
+//
+//  noisy - make each function print its name and signature,
+//          so the programmer can see what's called
+//
+noisy: (t: meta::type_declaration) =
+{
+    for   t.get_members()
+    do    (m)
+    if    m.is_function()
+          && !m.has_name("operator=")
+    {
+        mf := m.as_function();
+        if mf.has_compound_body() {
+            body := mf.get_compound_body();
+            body.add_statement( "    std::cout << \"(mf.get_signature())$\\n\";" );
+            _ = body;
+        }
+    }
 }
 
 
@@ -3807,16 +3843,17 @@ apply_metafunctions: (
         else if name == "print" {
             print( rtype );
         }
+        else if name == "noisy" {
+            noisy( rtype );
+        }
         else if name == "regex" {
             regex_gen( rtype );
         }
         else {
             error( "unrecognized metafunction name: " + name );
             error( 
-                "(temporary alpha limitation) currently the supported names are: "
-                "interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, "
-                "copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, "
-                "struct, enum, flag_enum, union, cpp1_rule_of_zero, regex, print"
+                "the current supported names are listed at "
+                "https://hsutter.github.io/cppfront/cpp2/metafunctions/#built-in-metafunctions"
             );
             return false;
         }

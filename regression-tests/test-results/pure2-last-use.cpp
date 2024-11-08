@@ -287,7 +287,7 @@ class issue_857_4 {
   public: std::move_only_function<int()> mf; 
   public: std::move_only_function<int([[maybe_unused]] cpp2::impl::in<int> unnamed_param_1)> mg; 
   public: issue_857_4(auto&& f_, auto&& g_, auto&& mf_, auto&& mg_)
-CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(f_), std::add_const_t<std::add_pointer_t<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(g_), std::add_const_t<std::add_pointer_t<int(cpp2::impl::in<int> in_)>>&> && std::is_convertible_v<CPP2_TYPEOF(mf_), std::add_const_t<std::move_only_function<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(mg_), std::add_const_t<std::move_only_function<int(cpp2::impl::in<int> in_)>>&>) ;
+CPP2_REQUIRES_ (std::is_convertible_v<CPP2_TYPEOF(f_), std::add_const_t<std::add_pointer_t<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(g_), std::add_const_t<std::add_pointer_t<int([[maybe_unused]] cpp2::impl::in<int> unnamed_param_1)>>&> && std::is_convertible_v<CPP2_TYPEOF(mf_), std::add_const_t<std::move_only_function<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(mg_), std::add_const_t<std::move_only_function<int([[maybe_unused]] cpp2::impl::in<int> unnamed_param_1)>>&>) ;
 
 //   h0: (move this) = _ = mf();
 //   h1: (move this) = _ = this.mf();
@@ -772,11 +772,11 @@ requires (std::is_convertible_v<CPP2_TYPEOF(i_), std::add_const_t<std::add_lvalu
                                                                                         return *this;}
 issue_857_6::issue_857_6(){}
 issue_857_4::issue_857_4(auto&& f_, auto&& g_, auto&& mf_, auto&& mg_)
-requires (std::is_convertible_v<CPP2_TYPEOF(f_), std::add_const_t<std::add_pointer_t<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(g_), std::add_const_t<std::add_pointer_t<int(cpp2::impl::in<int> in_)>>&> && std::is_convertible_v<CPP2_TYPEOF(mf_), std::add_const_t<std::move_only_function<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(mg_), std::add_const_t<std::move_only_function<int(cpp2::impl::in<int> in_)>>&>) 
-                                                                                                                                                                                                                                                                             : f{ CPP2_FORWARD(f_) }
-                                                                                                                                                                                                                                                                             , g{ CPP2_FORWARD(g_) }
-                                                                                                                                                                                                                                                                             , mf{ CPP2_FORWARD(mf_) }
-                                                                                                                                                                                                                                                                             , mg{ CPP2_FORWARD(mg_) }{}
+requires (std::is_convertible_v<CPP2_TYPEOF(f_), std::add_const_t<std::add_pointer_t<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(g_), std::add_const_t<std::add_pointer_t<int([[maybe_unused]] cpp2::impl::in<int> unnamed_param_1)>>&> && std::is_convertible_v<CPP2_TYPEOF(mf_), std::add_const_t<std::move_only_function<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(mg_), std::add_const_t<std::move_only_function<int([[maybe_unused]] cpp2::impl::in<int> unnamed_param_1)>>&>) 
+                                                                                                                                                                                                                                                                               : f{ CPP2_FORWARD(f_) }
+                                                                                                                                                                                                                                                                               , g{ CPP2_FORWARD(g_) }
+                                                                                                                                                                                                                                                                               , mf{ CPP2_FORWARD(mf_) }
+                                                                                                                                                                                                                                                                               , mg{ CPP2_FORWARD(mg_) }{}
 #line 267 "pure2-last-use.cpp2"
                                // OK: The implicit `this` is moved, not `i`.
 

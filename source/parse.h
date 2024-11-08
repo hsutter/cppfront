@@ -1913,6 +1913,21 @@ struct compound_statement_node
         return open_brace;
     }
 
+    auto add_statement( 
+        std::unique_ptr<statement_node>&& statement,
+        int                               before_pos
+    )
+        -> bool
+    {
+        //  Adopt this statement into our list of statements
+        statements.insert( 
+            statements.begin() + std::clamp( before_pos, 0, unchecked_narrow<int>(std::ssize(statements)) ),
+            std::move(statement)
+        );
+
+        return true;
+    }
+
     auto visit(auto& v, int depth) -> void;
 };
 
@@ -2341,7 +2356,9 @@ struct parameter_declaration_node
 
     //  API
     //
-    auto to_string() const
+    auto to_string(
+        bool verbose = true
+    ) const
         -> std::string;
 
     auto has_name() const
@@ -2439,7 +2456,9 @@ struct parameter_declaration_list_node
 
     //  API
     //
-    auto to_string() const
+    auto to_string(
+        bool verbose = true
+    ) const
         -> std::string
     {
         assert(open_paren && close_paren);
@@ -2447,7 +2466,15 @@ struct parameter_declaration_list_node
         auto ret = open_paren->to_string();
 
         for (auto const& p: parameters) {
-            ret += p->to_string() + ", ";
+            ret += p->to_string(verbose) + ", ";
+        }
+
+        if (
+            !verbose
+            && std::ssize(ret) > 3
+            ) 
+        {
+            ret.resize( std::ssize(ret) - 2 );   // omit the final ", "
         }
 
         ret += close_paren->as_string_view();
@@ -2658,6 +2685,15 @@ struct function_type_node
             return (*id).type->to_string();
         }
         return {};
+    }
+
+    auto parameters_to_string(
+        bool verbose = true
+    ) const
+        -> std::string
+    {
+        assert (parameters);
+        return parameters->to_string(verbose);
     }
 
     auto has_bool_return_type() const
@@ -3034,7 +3070,12 @@ struct declaration_node
 
     //  API
     //
-    auto to_string() const
+    auto to_string(
+        bool verbose = true
+    ) const
+        -> std::string;
+
+    auto signature_to_string() const
         -> std::string;
 
     auto is_template_parameter() const
@@ -3635,6 +3676,12 @@ public:
             ;
     }
 
+    auto get_compound_initializer() const
+        -> compound_statement_node*
+    {
+        return initializer->get_if<compound_statement_node>();
+    }
+
     auto is_function_with_this() const
         -> bool
     {
@@ -4087,7 +4134,9 @@ public:
 };
 
 
-auto parameter_declaration_node::to_string() const
+auto parameter_declaration_node::to_string(
+    bool verbose /*= true*/
+) const
     -> std::string
 {
     auto ret = std::string{};
@@ -4105,7 +4154,15 @@ auto parameter_declaration_node::to_string() const
         ;
     }
 
-    ret += to_string_view(pass) + declaration->to_string();
+    if (
+        verbose 
+        || pass != passing_style::in
+        )
+    {
+        ret += to_string_view(pass);
+        ret += " ";
+    }
+    ret += declaration->to_string( verbose );
 
     return ret;
 }
@@ -4870,15 +4927,32 @@ auto pretty_print_visualize(type_node const& n, int indent)
     -> std::string;
 auto pretty_print_visualize(namespace_node const& n, int indent)
     -> std::string;
-auto pretty_print_visualize(declaration_node const& n, int indent, bool include_metafunctions_list = false)
+auto pretty_print_visualize(declaration_node const& n, int indent, bool include_metafunctions_list = false, bool verbose = true)
     -> std::string;
 
 
-auto declaration_node::to_string() const
+auto declaration_node::to_string(
+    bool verbose /*= true*/
+) const
     -> std::string
 {
     //  These need to be unified someday... let's not duplicate this long function...
-    return pretty_print_visualize(*this, 0);
+    return pretty_print_visualize(*this, 0, false, verbose);
+}
+
+
+auto declaration_node::signature_to_string() const
+    -> std::string
+{
+    auto ret = std::string{};
+    if (auto fname = name()) {
+        ret += *fname;
+    }
+    if (auto func = std::get_if<a_function>(&type)) {
+        assert ((*func)->parameters);
+        ret += (*func)->parameters->to_string(false);
+    }
+    return ret;
 }
 
 
@@ -5593,7 +5667,12 @@ auto pretty_print_visualize(namespace_node const&)
 }
 
 
-auto pretty_print_visualize(declaration_node const& n, int indent, bool include_metafunctions_list /* = false */ )
+auto pretty_print_visualize(
+    declaration_node const& n, 
+    int                     indent, 
+    bool                    include_metafunctions_list /* = false */,
+    bool                    verbose /* = true */
+)
     -> std::string
 {
     indent_spaces = 4;
@@ -5627,22 +5706,24 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
     }
 
     auto initializer = std::string{};
-    if (n.initializer) {
-        auto adjusted_indent = indent;
-        if (!n.name()) {
-            ++adjusted_indent;
+    if (verbose) {
+        if (n.initializer) {
+            auto adjusted_indent = indent;
+            if (!n.name()) {
+                ++adjusted_indent;
+            }
+            initializer = " =";
+            if (n.is_function() && n.is_constexpr) {
+                initializer += "=";
+            }
+            initializer += " " + pretty_print_visualize(*n.initializer, adjusted_indent);
+            if (initializer.ends_with(";;")) {
+                initializer.pop_back();
+            }
         }
-        initializer = " =";
-        if (n.is_function() && n.is_constexpr) {
-            initializer += "=";
+        else if (!n.is_parameter()) {
+            initializer = ";";
         }
-        initializer += " " + pretty_print_visualize(*n.initializer, adjusted_indent);
-        if (initializer.ends_with(";;")) {
-            initializer.pop_back();
-        }
-    }
-    else if (!n.is_parameter()) {
-        initializer = ";";
     }
 
     //  Then slot them in where appropriate
