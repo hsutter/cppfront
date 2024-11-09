@@ -1,13 +1,94 @@
 pure2-last-use.cpp
 pure2-last-use.cpp2(274): error C2039: 'move_only_function': is not a member of 'std'
-predefined C++ types (compiler internal)(347): note: see declaration of 'std'
+predefined C++ types (compiler internal)(357): note: see declaration of 'std'
 pure2-last-use.cpp2(274): error C7568: argument list missing after assumed function template 'move_only_function'
 pure2-last-use.cpp2(274): error C2062: type 'unknown-type' unexpected
 pure2-last-use.cpp2(274): error C2238: unexpected token(s) preceding ';'
 pure2-last-use.cpp2(275): error C2039: 'move_only_function': is not a member of 'std'
-predefined C++ types (compiler internal)(347): note: see declaration of 'std'
+predefined C++ types (compiler internal)(357): note: see declaration of 'std'
 pure2-last-use.cpp2(275): error C7568: argument list missing after assumed function template 'move_only_function'
 pure2-last-use.cpp2(275): error C2062: type 'unknown-type' unexpected
 pure2-last-use.cpp2(275): error C2238: unexpected token(s) preceding ';'
 pure2-last-use.cpp2(277): error C2760: syntax error: '>' was unexpected here; expected 'expression'
-pure2-last-use.cpp2(276): fatal error C1907: unable to recover from previous error(s); stopping compilation
+pure2-last-use.cpp2(277): error C2760: syntax error: '>' was unexpected here; expected ';'
+pure2-last-use.cpp2(277): error C2059: syntax error: '>'
+pure2-last-use.cpp2(344): error C2039: 'move_only_function': is not a member of 'std'
+predefined C++ types (compiler internal)(357): note: see declaration of 'std'
+pure2-last-use.cpp2(344): error C7568: argument list missing after assumed function template 'move_only_function'
+pure2-last-use.cpp2(344): error C2062: type 'unknown-type' unexpected
+pure2-last-use.cpp2(344): error C2238: unexpected token(s) preceding ';'
+pure2-last-use.cpp2(348): error C2760: syntax error: '>' was unexpected here; expected 'expression'
+pure2-last-use.cpp2(348): error C2760: syntax error: '>' was unexpected here; expected ';'
+pure2-last-use.cpp2(348): error C2059: syntax error: '>'
+pure2-last-use.cpp2(773): error C2039: 'move_only_function': is not a member of 'std'
+predefined C++ types (compiler internal)(357): note: see declaration of 'std'
+pure2-last-use.cpp2(773): error C2061: syntax error: identifier 'move_only_function'
+pure2-last-use.cpp2(279): error C2760: syntax error: '>' was unexpected here; expected 'expression'
+pure2-last-use.cpp2(278): error C2244: 'issue_857_4::{ctor}': unable to match function definition to an existing declaration
+pure2-last-use.cpp2(278): note: see declaration of 'issue_857_4::{ctor}'
+pure2-last-use.cpp2(278): note: definition
+pure2-last-use.cpp2(278): note: 'void issue_857_4::{ctor}(_T0 &&,_T1 &&,_T2 &&,_T3 &&)'
+pure2-last-use.cpp2(278): note: existing declarations
+pure2-last-use.cpp2(329): note: 'issue_857_4::issue_857_4(issue_857_4 &&)'
+pure2-last-use.cpp2(329): note: 'issue_857_4::issue_857_4(const issue_857_4 &)'
+pure2-last-use.cpp2(276): note: 'issue_857_4::issue_857_4(_T0 &&,_T1 &&,_T2 &&,_T3 &&)'
+pure2-last-use.cpp2(279): error C2760: syntax error: '>' was unexpected here; expected ';'
+pure2-last-use.cpp2(279): error C2059: syntax error: '>'
+pure2-last-use.cpp2(279): error C2065: 'mg_': undeclared identifier
+pure2-last-use.cpp2(279): error C3553: decltype expects an expression not a type
+pure2-last-use.cpp2(279): error C2039: 'move_only_function': is not a member of 'std'
+predefined C++ types (compiler internal)(357): note: see declaration of 'std'
+pure2-last-use.cpp2(279): error C2143: syntax error: missing ')' before 'attribute specifier'
+pure2-last-use.cpp2(279): error C2065: 'move_only_function': undeclared identifier
+pure2-last-use.cpp2(279): error C2059: syntax error: 'attribute specifier'
+pure2-last-use.cpp2(279): error C2947: expecting '>' to terminate template-argument-list, found '>>'
+pure2-last-use.cpp2(279): error C2059: syntax error: ')'
+pure2-last-use.cpp2(280): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+pure2-last-use.cpp2(280): error C2065: 'f_': undeclared identifier
+pure2-last-use.cpp2(280): error C3553: decltype expects an expression not a type
+pure2-last-use.cpp2(281): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+pure2-last-use.cpp2(281): error C2065: 'g_': undeclared identifier
+pure2-last-use.cpp2(281): error C3553: decltype expects an expression not a type
+pure2-last-use.cpp2(282): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+pure2-last-use.cpp2(282): error C2065: 'mf_': undeclared identifier
+pure2-last-use.cpp2(282): error C3553: decltype expects an expression not a type
+pure2-last-use.cpp2(283): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+pure2-last-use.cpp2(283): error C2065: 'mg_': undeclared identifier
+pure2-last-use.cpp2(283): error C3553: decltype expects an expression not a type
+pure2-last-use.cpp2(283): error C2059: syntax error: '{'
+pure2-last-use.cpp2(283): error C2143: syntax error: missing ';' before '{'
+pure2-last-use.cpp2(283): error C2447: '{': missing function header (old-style formal list?)
+pure2-last-use.cpp2(349): error C2760: syntax error: '>' was unexpected here; expected 'expression'
+pure2-last-use.cpp2(348): error C2244: 'issue_857_8::{ctor}': unable to match function definition to an existing declaration
+pure2-last-use.cpp2(348): note: see declaration of 'issue_857_8::{ctor}'
+pure2-last-use.cpp2(348): note: definition
+pure2-last-use.cpp2(348): note: 'void issue_857_8::{ctor}(_T0 &&,_T1 &&,_T2 &&)'
+pure2-last-use.cpp2(348): note: existing declarations
+pure2-last-use.cpp2(347): note: 'issue_857_8::issue_857_8(issue_857_8 &&)'
+pure2-last-use.cpp2(347): note: 'issue_857_8::issue_857_8(const issue_857_8 &)'
+pure2-last-use.cpp2(347): note: 'issue_857_8::issue_857_8(_T0 &&,_T1 &&,_T2 &&)'
+pure2-last-use.cpp2(349): error C2760: syntax error: '>' was unexpected here; expected ';'
+pure2-last-use.cpp2(349): error C2059: syntax error: '>'
+pure2-last-use.cpp2(349): error C2065: 'c_': undeclared identifier
+pure2-last-use.cpp2(349): error C3553: decltype expects an expression not a type
+pure2-last-use.cpp2(349): error C2059: syntax error: ')'
+pure2-last-use.cpp2(350): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+pure2-last-use.cpp2(350): error C2065: 'a_': undeclared identifier
+pure2-last-use.cpp2(350): error C3553: decltype expects an expression not a type
+pure2-last-use.cpp2(351): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+pure2-last-use.cpp2(351): error C2065: 'b_': undeclared identifier
+pure2-last-use.cpp2(351): error C3553: decltype expects an expression not a type
+pure2-last-use.cpp2(352): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+pure2-last-use.cpp2(352): error C2065: 'c_': undeclared identifier
+pure2-last-use.cpp2(352): error C3553: decltype expects an expression not a type
+pure2-last-use.cpp2(352): error C2059: syntax error: '{'
+pure2-last-use.cpp2(352): error C2143: syntax error: missing ';' before '{'
+pure2-last-use.cpp2(352): error C2447: '{': missing function header (old-style formal list?)
+pure2-last-use.cpp2(773): error C2039: 'move_only_function': is not a member of 'std'
+predefined C++ types (compiler internal)(357): note: see declaration of 'std'
+pure2-last-use.cpp2(773): error C2061: syntax error: identifier 'move_only_function'
+pure2-last-use.cpp2(774): error C3861: 'size': identifier not found
+pure2-last-use.cpp2(774): note: This diagnostic occurred in the compiler generated function 'decltype(auto) issue_888_1::<lambda_1>::operator ()(Obj &&,Params ...) noexcept(<expr>) const'
+pure2-last-use.cpp2(774): error C2065: 'size': undeclared identifier
+pure2-last-use.cpp2(774): note: This diagnostic occurred in the compiler generated function 'decltype(auto) issue_888_1::<lambda_1>::operator ()(Obj &&,Params ...) noexcept(<expr>) const'
+pure2-last-use.cpp2(773): fatal error C1075: '{': no matching token found
