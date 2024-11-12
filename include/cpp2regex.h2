@@ -420,15 +420,23 @@ named_class_not_word      : <CharT, case_insensitive: bool> type == class_token_
 //                \k<name_or_number>
 //                \k'name_or_number'
 //
-group_ref_token_matcher: <CharT, group: int, case_insensitive: bool> (inout cur, inout ctx) -> bool =
+group_ref_token_matcher: <CharT, group: int, case_insensitive: bool, reverse: bool> (inout cur, inout ctx) -> bool =
 {
     g := ctx..get_group(group);
 
     group_pos := g.start;
+    group_end := g.end;
+    group_inc : int = 1;
+    if reverse {
+        group_pos = g.end;
+        group_end = g.start;
+        group_inc = -1;
+    }
+
     while
-        group_pos != g.end
+        group_pos != group_end
         && cur != ctx.end
-    next (group_pos++, cur++)
+    next (group_pos += group_inc, cur++)
     {
         if constexpr case_insensitive {
             if string_util::safe_tolower(group_pos*) != string_util::safe_tolower(cur*) {
@@ -442,7 +450,7 @@ group_ref_token_matcher: <CharT, group: int, case_insensitive: bool> (inout cur,
         }
     }
 
-    if group_pos == g.end {
+    if group_pos == group_end {
         return true;
     }
     else {

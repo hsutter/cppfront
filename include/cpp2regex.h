@@ -60,17 +60,17 @@ template<typename CharT> class alternative_token_matcher;
 #line 343 "cpp2regex.h2"
 template<typename CharT, bool negate, bool case_insensitive, typename ...List> class class_token_matcher;
 
-#line 498 "cpp2regex.h2"
+#line 506 "cpp2regex.h2"
 class range_flags;
     
 
-#line 507 "cpp2regex.h2"
+#line 515 "cpp2regex.h2"
 template<typename CharT, int min_count, int max_count, int kind> class range_token_matcher;
 
-#line 679 "cpp2regex.h2"
+#line 687 "cpp2regex.h2"
 template<typename CharT, typename matcher_wrapper> class regular_expression;
 
-#line 815 "cpp2regex.h2"
+#line 823 "cpp2regex.h2"
 }
 }
 
@@ -483,29 +483,29 @@ template                    <typename CharT,          bool case_insensitive> usi
 //                \k<name_or_number>
 //                \k'name_or_number'
 //
-template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto group_ref_token_matcher(auto& cur, auto& ctx) -> bool;
+template<typename CharT, int group, bool case_insensitive, bool reverse> [[nodiscard]] auto group_ref_token_matcher(auto& cur, auto& ctx) -> bool;
 
-#line 454 "cpp2regex.h2"
+#line 462 "cpp2regex.h2"
 //  Regex syntax: $  Example: aa$
 //
 template<typename CharT, bool match_new_line, bool match_new_line_before_end> [[nodiscard]] auto line_end_token_matcher(auto const& cur, auto& ctx) -> bool;
 
-#line 470 "cpp2regex.h2"
+#line 478 "cpp2regex.h2"
 //  Regex syntax: ^  Example: ^aa
 //
 template<typename CharT, bool match_new_line> [[nodiscard]] auto line_start_token_matcher(auto const& cur, auto& ctx) -> bool;
 
-#line 479 "cpp2regex.h2"
+#line 487 "cpp2regex.h2"
 //  Regex syntax: (?=) or (?!) or (*pla), etc.  Example: (?=AA)
 //
 //  Parsed in group_token.
 //
 template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_matcher(auto const& cur, auto& ctx, auto const& func) -> bool;
 
-#line 494 "cpp2regex.h2"
+#line 502 "cpp2regex.h2"
 // TODO: @enum as template parameter currently not working. See issue https://github.com/hsutter/cppfront/issues/1147
 
-#line 497 "cpp2regex.h2"
+#line 505 "cpp2regex.h2"
 //  Options for range matching.
 class range_flags {
     public: static const int not_greedy;// Try to take as few as possible.
@@ -516,9 +516,9 @@ class range_flags {
     public: range_flags(range_flags const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(range_flags const&) -> void = delete;
 };
-#line 503 "cpp2regex.h2"
+#line 511 "cpp2regex.h2"
 
-#line 505 "cpp2regex.h2"
+#line 513 "cpp2regex.h2"
 //  Regex syntax: <matcher>{min, max}  Example: a{2,4}
 //
 template<typename CharT, int min_count, int max_count, int kind> class range_token_matcher
@@ -526,42 +526,42 @@ template<typename CharT, int min_count, int max_count, int kind> class range_tok
 
     public: template<typename Iter> [[nodiscard]] static auto match(Iter const& cur, auto& ctx, auto const& inner, auto const& reset_func, auto const& end_func, auto const& tail) -> auto;
 
-#line 523 "cpp2regex.h2"
+#line 531 "cpp2regex.h2"
     private: [[nodiscard]] static auto is_below_upper_bound(cpp2::impl::in<int> count) -> bool;
 
-#line 528 "cpp2regex.h2"
+#line 536 "cpp2regex.h2"
     private: [[nodiscard]] static auto is_below_lower_bound(cpp2::impl::in<int> count) -> bool;
 
-#line 533 "cpp2regex.h2"
+#line 541 "cpp2regex.h2"
     private: [[nodiscard]] static auto is_in_range(cpp2::impl::in<int> count) -> bool;
 
-#line 539 "cpp2regex.h2"
+#line 547 "cpp2regex.h2"
     private: template<typename Iter> [[nodiscard]] static auto match_min_count(Iter const& cur, auto& ctx, auto const& inner, auto const& end_func, int& count_r) -> auto;
 
-#line 555 "cpp2regex.h2"
+#line 563 "cpp2regex.h2"
     private: template<typename Iter> [[nodiscard]] static auto match_greedy(cpp2::impl::in<int> count, Iter const& cur, Iter const& last_valid, auto& ctx, auto const& inner, auto const& reset_func, auto const& end_func, auto const& other) -> match_return<Iter>;
 
-#line 585 "cpp2regex.h2"
+#line 593 "cpp2regex.h2"
     private: template<typename Iter> [[nodiscard]] static auto match_possessive(Iter const& cur, auto& ctx, auto const& inner, auto const& end_func, auto const& other) -> match_return<Iter>;
 
-#line 613 "cpp2regex.h2"
+#line 621 "cpp2regex.h2"
     private: template<typename Iter> [[nodiscard]] static auto match_not_greedy(Iter const& cur, auto& ctx, auto const& inner, auto const& end_func, auto const& other) -> match_return<Iter>;
     public: range_token_matcher() = default;
     public: range_token_matcher(range_token_matcher const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(range_token_matcher const&) -> void = delete;
 
 
-#line 639 "cpp2regex.h2"
+#line 647 "cpp2regex.h2"
 };
 
-#line 642 "cpp2regex.h2"
+#line 650 "cpp2regex.h2"
 //  Regex syntax: \b or \B  Example: \bword\b
 //
 //  Matches the start end end of word boundaries.
 //
 template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_matcher(auto& cur, auto& ctx) -> bool;
 
-#line 671 "cpp2regex.h2"
+#line 679 "cpp2regex.h2"
 //-----------------------------------------------------------------------
 //
 //  Regular expression implementation.
@@ -583,10 +583,10 @@ template<typename CharT, typename matcher_wrapper> class regular_expression
 
         public: explicit search_return(cpp2::impl::in<bool> matched_, context<Iter> const& ctx_, Iter const& pos_);
 
-#line 696 "cpp2regex.h2"
+#line 704 "cpp2regex.h2"
         public: explicit search_return(Iter const& begin, Iter const& end);
 
-#line 702 "cpp2regex.h2"
+#line 710 "cpp2regex.h2"
         public: [[nodiscard]] auto group_number() const& -> decltype(auto);
         public: [[nodiscard]] auto group(cpp2::impl::in<int> g) const& -> decltype(auto);
         public: [[nodiscard]] auto group_start(cpp2::impl::in<int> g) const& -> decltype(auto);
@@ -598,13 +598,13 @@ template<typename CharT, typename matcher_wrapper> class regular_expression
 
         public: auto update(cpp2::impl::in<match_return<Iter>> r) & -> void;
 
-#line 716 "cpp2regex.h2"
+#line 724 "cpp2regex.h2"
         private: [[nodiscard]] auto get_group_id(cpp2::impl::in<bstring<CharT>> g) const& -> auto;
         public: search_return(search_return const&) = delete; /* No 'that' constructor, suppress copy */
         public: auto operator=(search_return const&) -> void = delete;
 
 
-#line 723 "cpp2regex.h2"
+#line 731 "cpp2regex.h2"
     };
 
     public: [[nodiscard]] auto find_all(auto&& func, cpp2::impl::in<bview<CharT>> str) const& -> decltype(auto);
@@ -612,22 +612,22 @@ template<typename CharT, typename matcher_wrapper> class regular_expression
     public: [[nodiscard]] auto find_all(auto&& func, cpp2::impl::in<bview<CharT>> str, cpp2::impl::in<int> start, cpp2::impl::in<int> length) const& -> decltype(auto);
     public: template<typename Iter> auto find_all(auto const& func, Iter const& start, Iter const& end) const& -> void;
 
-#line 756 "cpp2regex.h2"
+#line 764 "cpp2regex.h2"
     public: [[nodiscard]] auto match(cpp2::impl::in<bview<CharT>> str) const& -> decltype(auto);
     public: [[nodiscard]] auto match(cpp2::impl::in<bview<CharT>> str, auto const& start) const& -> decltype(auto);
     public: [[nodiscard]] auto match(cpp2::impl::in<bview<CharT>> str, auto const& start, auto const& length) const& -> decltype(auto);
     public: template<typename Iter> [[nodiscard]] auto match(Iter const& start, Iter const& end) const& -> search_return<Iter>;
 
-#line 767 "cpp2regex.h2"
+#line 775 "cpp2regex.h2"
     public: [[nodiscard]] auto search(cpp2::impl::in<bview<CharT>> str) const& -> decltype(auto);
     public: [[nodiscard]] auto search(cpp2::impl::in<bview<CharT>> str, auto const& start) const& -> decltype(auto);
     public: [[nodiscard]] auto search(cpp2::impl::in<bview<CharT>> str, auto const& start, auto const& length) const& -> decltype(auto);
     public: template<typename Iter> [[nodiscard]] auto search(Iter const& start, Iter const& end) const& -> search_return<Iter>;
 
-#line 776 "cpp2regex.h2"
+#line 784 "cpp2regex.h2"
     private: template<typename Iter> [[nodiscard]] auto search_with_context(context<Iter>& ctx, Iter const& start) const& -> match_return<Iter>;
 
-#line 801 "cpp2regex.h2"
+#line 809 "cpp2regex.h2"
     public: [[nodiscard]] auto to_string() const& -> decltype(auto);
 
     //  Helper functions
@@ -638,7 +638,7 @@ template<typename CharT, typename matcher_wrapper> class regular_expression
     public: auto operator=(regular_expression const&) -> void = delete;
 
 
-#line 813 "cpp2regex.h2"
+#line 821 "cpp2regex.h2"
 };
 
 }
@@ -896,15 +896,23 @@ template<typename CharT, bool single_line> [[nodiscard]] auto any_token_matcher(
     }
 
 #line 423 "cpp2regex.h2"
-template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto group_ref_token_matcher(auto& cur, auto& ctx) -> bool
+template<typename CharT, int group, bool case_insensitive, bool reverse> [[nodiscard]] auto group_ref_token_matcher(auto& cur, auto& ctx) -> bool
 {
     auto g {ctx.get_group(group)}; 
 
-    auto group_pos {cpp2::move(g).start}; 
+    auto group_pos {g.start}; 
+    auto group_end {g.end}; 
+    int group_inc {1}; 
+    if (reverse) {
+        group_pos = g.end;
+        group_end = cpp2::move(g).start;
+        group_inc = -1;
+    }
+
     for( ; 
-        group_pos != g.end 
+        group_pos != group_end 
         && cur != ctx.end; 
-    (++group_pos, ++cur) ) 
+    (group_pos += group_inc, ++cur) ) 
     {
         if constexpr (case_insensitive) {
             if (string_util::safe_tolower(*cpp2::impl::assert_not_null(group_pos)) != string_util::safe_tolower(*cpp2::impl::assert_not_null(cur))) {
@@ -918,7 +926,7 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
         }
     }
 
-    if (cpp2::move(group_pos) == cpp2::move(g).end) {
+    if (cpp2::move(group_pos) == cpp2::move(group_end)) {
         return true; 
     }
     else {
@@ -926,7 +934,7 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
     }
 }
 
-#line 456 "cpp2regex.h2"
+#line 464 "cpp2regex.h2"
 template<typename CharT, bool match_new_line, bool match_new_line_before_end> [[nodiscard]] auto line_end_token_matcher(auto const& cur, auto& ctx) -> bool
 {
     if (cur == ctx.end || (match_new_line && *cpp2::impl::assert_not_null(cur) == '\n')) {
@@ -940,14 +948,14 @@ template<typename CharT, bool match_new_line, bool match_new_line_before_end> [[
     }}
 }
 
-#line 472 "cpp2regex.h2"
+#line 480 "cpp2regex.h2"
 template<typename CharT, bool match_new_line> [[nodiscard]] auto line_start_token_matcher(auto const& cur, auto& ctx) -> bool
 {
     return cur == ctx.begin || // Start of string
            (match_new_line && *cpp2::impl::assert_not_null((cur - 1)) == '\n'); // Start of new line
 }
 
-#line 483 "cpp2regex.h2"
+#line 491 "cpp2regex.h2"
 template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_matcher(auto const& cur, auto& ctx, auto const& func) -> bool
 {
     auto r {func(cur, ctx, true_end_func())}; 
@@ -958,12 +966,12 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
     return cpp2::move(r).matched; 
 }
 
-#line 499 "cpp2regex.h2"
+#line 507 "cpp2regex.h2"
     inline CPP2_CONSTEXPR int range_flags::not_greedy{ 1 };
     inline CPP2_CONSTEXPR int range_flags::greedy{ 2 };
     inline CPP2_CONSTEXPR int range_flags::possessive{ 3 };
 
-#line 510 "cpp2regex.h2"
+#line 518 "cpp2regex.h2"
     template <typename CharT, int min_count, int max_count, int kind> template<typename Iter> [[nodiscard]] auto range_token_matcher<CharT,min_count,max_count,kind>::match(Iter const& cur, auto& ctx, auto const& inner, auto const& reset_func, auto const& end_func, auto const& tail) -> auto
     {
         if (range_flags::possessive == kind) {
@@ -977,26 +985,26 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
         }}
     }
 
-#line 523 "cpp2regex.h2"
+#line 531 "cpp2regex.h2"
     template <typename CharT, int min_count, int max_count, int kind> [[nodiscard]] auto range_token_matcher<CharT,min_count,max_count,kind>::is_below_upper_bound(cpp2::impl::in<int> count) -> bool{
         if (-1 == max_count) {return true; }
         else {return cpp2::impl::cmp_less(count,max_count); }
     }
 
-#line 528 "cpp2regex.h2"
+#line 536 "cpp2regex.h2"
     template <typename CharT, int min_count, int max_count, int kind> [[nodiscard]] auto range_token_matcher<CharT,min_count,max_count,kind>::is_below_lower_bound(cpp2::impl::in<int> count) -> bool{
         if (-1 == min_count) {return false; }
         else {return cpp2::impl::cmp_less(count,min_count); }
     }
 
-#line 533 "cpp2regex.h2"
+#line 541 "cpp2regex.h2"
     template <typename CharT, int min_count, int max_count, int kind> [[nodiscard]] auto range_token_matcher<CharT,min_count,max_count,kind>::is_in_range(cpp2::impl::in<int> count) -> bool{
         if (-1 != min_count && cpp2::impl::cmp_less(count,min_count)) {return false; }
         if (-1 != max_count && cpp2::impl::cmp_greater(count,max_count)) {return false; }
         return true; 
     }
 
-#line 539 "cpp2regex.h2"
+#line 547 "cpp2regex.h2"
     template <typename CharT, int min_count, int max_count, int kind> template<typename Iter> [[nodiscard]] auto range_token_matcher<CharT,min_count,max_count,kind>::match_min_count(Iter const& cur, auto& ctx, auto const& inner, auto const& end_func, int& count_r) -> auto
     {   // TODO: count_r as out parameter introduces a performance loss.
         auto res {ctx.pass(cur)}; 
@@ -1013,7 +1021,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
         return res; 
     }
 
-#line 555 "cpp2regex.h2"
+#line 563 "cpp2regex.h2"
     template <typename CharT, int min_count, int max_count, int kind> template<typename Iter> [[nodiscard]] auto range_token_matcher<CharT,min_count,max_count,kind>::match_greedy(cpp2::impl::in<int> count, Iter const& cur, Iter const& last_valid, auto& ctx, auto const& inner, auto const& reset_func, auto const& end_func, auto const& other) -> match_return<Iter>
     {
         auto inner_call {[_0 = (count + 1), _1 = (cur), _2 = (inner), _3 = (reset_func), _4 = (end_func), _5 = (other)](auto const& tail_cur, auto& tail_ctx) -> auto{
@@ -1044,7 +1052,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
         return r; 
     }
 
-#line 585 "cpp2regex.h2"
+#line 593 "cpp2regex.h2"
     template <typename CharT, int min_count, int max_count, int kind> template<typename Iter> [[nodiscard]] auto range_token_matcher<CharT,min_count,max_count,kind>::match_possessive(Iter const& cur, auto& ctx, auto const& inner, auto const& end_func, auto const& other) -> match_return<Iter>
     {
         auto count {0}; 
@@ -1073,7 +1081,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
         return other(cpp2::move(pos), ctx, end_func); 
     }
 
-#line 613 "cpp2regex.h2"
+#line 621 "cpp2regex.h2"
     template <typename CharT, int min_count, int max_count, int kind> template<typename Iter> [[nodiscard]] auto range_token_matcher<CharT,min_count,max_count,kind>::match_not_greedy(Iter const& cur, auto& ctx, auto const& inner, auto const& end_func, auto const& other) -> match_return<Iter>
     {
         auto count {0}; 
@@ -1101,7 +1109,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
         return other(cpp2::move(pos), ctx, end_func); // Upper bound reached.
     }
 
-#line 646 "cpp2regex.h2"
+#line 654 "cpp2regex.h2"
 template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_matcher(auto& cur, auto& ctx) -> bool
 {
     word_class<CharT> words {}; 
@@ -1126,47 +1134,47 @@ template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_mat
     return is_match; 
 }
 
-#line 690 "cpp2regex.h2"
+#line 698 "cpp2regex.h2"
         template <typename CharT, typename matcher_wrapper> template <typename Iter> regular_expression<CharT,matcher_wrapper>::search_return<Iter>::search_return(cpp2::impl::in<bool> matched_, context<Iter> const& ctx_, Iter const& pos_)
             : matched{ matched_ }
             , ctx{ ctx_ }
             , pos{ cpp2::unchecked_narrow<int>(std::distance(ctx_.begin, pos_)) }{
 
-#line 694 "cpp2regex.h2"
+#line 702 "cpp2regex.h2"
         }
 
-#line 696 "cpp2regex.h2"
+#line 704 "cpp2regex.h2"
         template <typename CharT, typename matcher_wrapper> template <typename Iter> regular_expression<CharT,matcher_wrapper>::search_return<Iter>::search_return(Iter const& begin, Iter const& end)
             : matched{ false }
             , ctx{ begin, end }
             , pos{ 0 }{
 
-#line 700 "cpp2regex.h2"
+#line 708 "cpp2regex.h2"
         }
 
-#line 702 "cpp2regex.h2"
+#line 710 "cpp2regex.h2"
         template <typename CharT, typename matcher_wrapper> template <typename Iter> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search_return<Iter>::group_number() const& -> decltype(auto) { return ctx.size(); }
-#line 703 "cpp2regex.h2"
+#line 711 "cpp2regex.h2"
         template <typename CharT, typename matcher_wrapper> template <typename Iter> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search_return<Iter>::group(cpp2::impl::in<int> g) const& -> decltype(auto) { return ctx.get_group_string(g); }
-#line 704 "cpp2regex.h2"
+#line 712 "cpp2regex.h2"
         template <typename CharT, typename matcher_wrapper> template <typename Iter> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search_return<Iter>::group_start(cpp2::impl::in<int> g) const& -> decltype(auto) { return ctx.get_group_start(g); }
-#line 705 "cpp2regex.h2"
+#line 713 "cpp2regex.h2"
         template <typename CharT, typename matcher_wrapper> template <typename Iter> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search_return<Iter>::group_end(cpp2::impl::in<int> g) const& -> decltype(auto) { return ctx.get_group_end(g); }
 
-#line 707 "cpp2regex.h2"
+#line 715 "cpp2regex.h2"
         template <typename CharT, typename matcher_wrapper> template <typename Iter> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search_return<Iter>::group(cpp2::impl::in<bstring<CharT>> g) const& -> decltype(auto) { return group(get_group_id(g)); }
-#line 708 "cpp2regex.h2"
+#line 716 "cpp2regex.h2"
         template <typename CharT, typename matcher_wrapper> template <typename Iter> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search_return<Iter>::group_start(cpp2::impl::in<bstring<CharT>> g) const& -> decltype(auto) { return group_start(get_group_id(g)); }
-#line 709 "cpp2regex.h2"
+#line 717 "cpp2regex.h2"
         template <typename CharT, typename matcher_wrapper> template <typename Iter> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search_return<Iter>::group_end(cpp2::impl::in<bstring<CharT>> g) const& -> decltype(auto) { return group_end(get_group_id(g)); }
 
-#line 711 "cpp2regex.h2"
+#line 719 "cpp2regex.h2"
         template <typename CharT, typename matcher_wrapper> template <typename Iter> auto regular_expression<CharT,matcher_wrapper>::search_return<Iter>::update(cpp2::impl::in<match_return<Iter>> r) & -> void{
             matched = r.matched;
             pos     = cpp2::unchecked_narrow<int>(std::distance(ctx.begin, r.pos));
         }
 
-#line 716 "cpp2regex.h2"
+#line 724 "cpp2regex.h2"
         template <typename CharT, typename matcher_wrapper> template <typename Iter> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search_return<Iter>::get_group_id(cpp2::impl::in<bstring<CharT>> g) const& -> auto{
             auto group_id {matcher<Iter>::get_named_group_index(g)}; 
             if (-1 == group_id) {
@@ -1175,13 +1183,13 @@ template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_mat
             return group_id; 
         }
 
-#line 725 "cpp2regex.h2"
+#line 733 "cpp2regex.h2"
     template <typename CharT, typename matcher_wrapper> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::find_all(auto&& func, cpp2::impl::in<bview<CharT>> str) const& -> decltype(auto) { return find_all(CPP2_FORWARD(func), str.begin(), str.end()); }
-#line 726 "cpp2regex.h2"
+#line 734 "cpp2regex.h2"
     template <typename CharT, typename matcher_wrapper> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::find_all(auto&& func, cpp2::impl::in<bview<CharT>> str, cpp2::impl::in<int> start) const& -> decltype(auto) { return find_all(CPP2_FORWARD(func), get_iter(str, start), str.end()); }
-#line 727 "cpp2regex.h2"
+#line 735 "cpp2regex.h2"
     template <typename CharT, typename matcher_wrapper> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::find_all(auto&& func, cpp2::impl::in<bview<CharT>> str, cpp2::impl::in<int> start, cpp2::impl::in<int> length) const& -> decltype(auto) { return find_all(CPP2_FORWARD(func), get_iter(str, start), get_iter(str, start + length));  }
-#line 728 "cpp2regex.h2"
+#line 736 "cpp2regex.h2"
     template <typename CharT, typename matcher_wrapper> template<typename Iter> auto regular_expression<CharT,matcher_wrapper>::find_all(auto const& func, Iter const& start, Iter const& end) const& -> void
     {
         auto sr {search_return<Iter>(start, end)}; 
@@ -1210,13 +1218,13 @@ template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_mat
         }
     }
 
-#line 756 "cpp2regex.h2"
+#line 764 "cpp2regex.h2"
     template <typename CharT, typename matcher_wrapper> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::match(cpp2::impl::in<bview<CharT>> str) const& -> decltype(auto) { return match(str.begin(), str.end()); }
-#line 757 "cpp2regex.h2"
+#line 765 "cpp2regex.h2"
     template <typename CharT, typename matcher_wrapper> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::match(cpp2::impl::in<bview<CharT>> str, auto const& start) const& -> decltype(auto) { return match(get_iter(str, start), str.end()); }
-#line 758 "cpp2regex.h2"
+#line 766 "cpp2regex.h2"
     template <typename CharT, typename matcher_wrapper> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::match(cpp2::impl::in<bview<CharT>> str, auto const& start, auto const& length) const& -> decltype(auto) { return match(get_iter(str, start), get_iter(str, start + length));  }
-#line 759 "cpp2regex.h2"
+#line 767 "cpp2regex.h2"
     template <typename CharT, typename matcher_wrapper> template<typename Iter> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::match(Iter const& start, Iter const& end) const& -> search_return<Iter>
     {
         context<Iter> ctx {start, end}; 
@@ -1225,20 +1233,20 @@ template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_mat
         return search_return<Iter>(r.matched && r.pos == end, cpp2::move(ctx), r.pos); 
     }
 
-#line 767 "cpp2regex.h2"
+#line 775 "cpp2regex.h2"
     template <typename CharT, typename matcher_wrapper> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search(cpp2::impl::in<bview<CharT>> str) const& -> decltype(auto) { return search(str.begin(), str.end()); }
-#line 768 "cpp2regex.h2"
+#line 776 "cpp2regex.h2"
     template <typename CharT, typename matcher_wrapper> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search(cpp2::impl::in<bview<CharT>> str, auto const& start) const& -> decltype(auto) { return search(get_iter(str, start), str.end()); }
-#line 769 "cpp2regex.h2"
+#line 777 "cpp2regex.h2"
     template <typename CharT, typename matcher_wrapper> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search(cpp2::impl::in<bview<CharT>> str, auto const& start, auto const& length) const& -> decltype(auto) { return search(get_iter(str, start), get_iter(str, start + length));  }
-#line 770 "cpp2regex.h2"
+#line 778 "cpp2regex.h2"
     template <typename CharT, typename matcher_wrapper> template<typename Iter> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search(Iter const& start, Iter const& end) const& -> search_return<Iter>{
         context<Iter> ctx {start, end}; 
         auto r {search_with_context(ctx, start)}; 
         return search_return<Iter>(r.matched, cpp2::move(ctx), cpp2::move(r).pos); 
     }
 
-#line 776 "cpp2regex.h2"
+#line 784 "cpp2regex.h2"
     template <typename CharT, typename matcher_wrapper> template<typename Iter> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search_with_context(context<Iter>& ctx, Iter const& start) const& -> match_return<Iter>
     {
         auto r {ctx.fail()}; 
@@ -1262,10 +1270,10 @@ template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_mat
         return r; 
     }
 
-#line 801 "cpp2regex.h2"
+#line 809 "cpp2regex.h2"
     template <typename CharT, typename matcher_wrapper> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::to_string() const& -> decltype(auto) { return matcher_wrapper::to_string();  }
 
-#line 805 "cpp2regex.h2"
+#line 813 "cpp2regex.h2"
     template <typename CharT, typename matcher_wrapper> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::get_iter(cpp2::impl::in<bview<CharT>> str, auto const& pos) -> auto{
         if (cpp2::impl::cmp_less(pos,str.size())) {
             return str.begin() + pos; 
@@ -1275,7 +1283,7 @@ template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_mat
         }
     }
 
-#line 815 "cpp2regex.h2"
+#line 823 "cpp2regex.h2"
 }
 }
 

@@ -1675,6 +1675,7 @@ regex_token: @polymorphic_base type =
 
     //parse: (inout ctx: parse_context) -> token_ptr;
     generate_code: (virtual this, inout _: generation_context);        // Generate the matching code.
+    reverse:       (virtual this) -> std::shared_ptr<regex_token>;     // Create a reverse token for look behind expressions.
 
     add_groups: (virtual this, inout _: std::set<int>) = {}            // Adds all group indices to the set.
     to_string: (this) -> std::string         = { return string_rep; }  // Create a string representation.
@@ -1701,6 +1702,8 @@ regex_token_check: @polymorphic_base type =
     generate_code: (override this, inout ctx: generation_context) = {
         ctx..add_check(check + "(" + ctx..match_parameters() + ")");
     }
+
+    reverse: (override this) -> token_ptr = shared.new<regex_token_check>(this.to_string(), this.check);
 }
 
 
@@ -1720,6 +1723,8 @@ regex_token_code: @polymorphic_base type =
     generate_code: (override this, inout ctx: generation_context) = {
         ctx..add(code);
     }
+
+    reverse: (override this) -> token_ptr = shared.new<regex_token_code>(this.to_string(), this.code);
 }
 
 
@@ -1736,6 +1741,8 @@ regex_token_empty: @polymorphic_base type =
     generate_code: (override this, inout _: generation_context) = {
         // Nothing.
     }
+
+    reverse: (override this) -> token_ptr = shared.new<regex_token_empty>(this.to_string());
 }
 
 
@@ -1770,6 +1777,19 @@ regex_token_list: @polymorphic_base type =
             r += token*..to_string();
         }
         return r;
+    }
+
+    reverse: (override this) -> token_ptr = {
+        s : int = cpp2::unchecked_narrow<int>(tokens..size());
+
+        reverse_vec: token_vec = ();
+        reverse_vec..resize(s);
+
+        i: int = 0;
+        while i < tokens.ssize() next (i += 1) {
+            reverse_vec[s - 1 -i] = tokens[i]*.reverse();
+        }
+        return shared.new<regex_token_list>(reverse_vec);
     }
 }
 
@@ -2214,7 +2234,7 @@ parse_context: type =
         return true;
     }
 
-    parse_until:(inout this, term: char) -> bool = {
+    parse_until: (inout this, term: char) -> bool = {
         cur_token: token_ptr = ();
 
         while valid() next _ = next()
@@ -2563,6 +2583,19 @@ alternative_token_gen: @polymorphic_base type =
 
         return r;
     }
+
+    reverse: (override this) -> token_ptr = {
+        s : int = cpp2::unchecked_narrow<int>(alternatives..size());
+
+        reverse_vec: token_vec = ();
+        reverse_vec..resize(s);
+
+        i: int = 0;
+        while i < s next (i += 1) {
+            reverse_vec[i] = alternatives[i]*.reverse(); // We only reverse the alternatives, not the order in which they are checked.
+        }
+        return shared.new<alternative_token_gen>(reverse_vec);
+    }
 }
 
 
@@ -2595,6 +2628,12 @@ char_token: @polymorphic_base type =
 
     operator=: (out this, t: char, ignore_case_: bool) = {
         regex_token = (std::string(1, t));
+        token = t;
+        ignore_case = ignore_case_;
+    }
+
+    operator=: (out this, t: std::string, ignore_case_: bool) = {
+        regex_token = (t);
         token = t;
         ignore_case = ignore_case_;
     }
@@ -2678,6 +2717,12 @@ char_token: @polymorphic_base type =
         str = string_util::replace_all(str, "\t", "\\t");
 
         return str;
+    }
+
+    reverse: (override this) -> token_ptr = {
+        reverse_str: std::string = token;
+        std::reverse(reverse_str..begin(), reverse_str..end());
+        return shared.new<char_token>(reverse_str, ignore_case);
     }
 
     append: (inout this, that) = {
@@ -2831,6 +2876,15 @@ class_token: @polymorphic_base type =
             );
     }
 
+    reverse: (override this) -> token_ptr = {
+        return shared.new<class_token>(
+            negate,
+            case_insensitive,
+            class_str,
+            to_string()
+            );
+    }
+
     generate_code: (override this, inout ctx: generation_context) = 
     {
         ctx..add_check("class_token_matcher<char, (negate)$, (case_insensitive)$, (class_str)$>::match((ctx..match_parameters())$)");
@@ -2910,12 +2964,14 @@ group_ref_token: @polymorphic_base type =
 
     id              : int;
     case_insensitive: bool;
+    reverse_eval    : bool;
 
-    operator=:(out this, id_: int, case_insensitive_: bool, str: std::string) = 
+    operator=:(out this, id_: int, case_insensitive_: bool, reverse_: bool, str: std::string) =
     {
         regex_token      = str;
         id               = id_;
         case_insensitive = case_insensitive_;
+        reverse_eval     = reverse_;
     }
 
     parse: (inout ctx: parse_context) -> token_ptr = 
@@ -3016,11 +3072,15 @@ group_ref_token: @polymorphic_base type =
             if -1 == group_id { return ctx..error("Group names does not exist. (Name is: (group)$)");}
         }
 
-        return shared.new<group_ref_token>(group_id, ctx..get_modifiers()..has(expression_flags::case_insensitive), str);
+        return shared.new<group_ref_token>(group_id, ctx..get_modifiers()..has(expression_flags::case_insensitive), false, str);
+    }
+
+    reverse: (override this) -> token_ptr = {
+        return shared.new<group_ref_token>(id, case_insensitive, !reverse_eval, to_string());
     }
 
     generate_code: (override this, inout ctx: generation_context) = {
-        ctx..add_check("group_ref_token_matcher<char, (id)$, (case_insensitive)$>((ctx..match_parameters())$)");
+        ctx..add_check("group_ref_token_matcher<char, (id)$, (case_insensitive)$, (reverse_eval)$>((ctx..match_parameters())$)");
     }
 }
 
@@ -3039,8 +3099,9 @@ group_token: @polymorphic_base type =
 {
     this: regex_token = ();
 
-    number: int      = -1;
-    inner: token_ptr = nullptr;
+    number:       int       = -1;
+    reverse_eval: bool      = false;
+    inner:        token_ptr = nullptr;
 
     parse_lookahead: (inout ctx: parse_context, syntax: std::string, positive: bool) -> token_ptr = 
     {
@@ -3193,6 +3254,14 @@ group_token: @polymorphic_base type =
         }
     }
 
+    reverse: (override this) -> token_ptr = {
+        r := shared.new<group_token>();
+        r*.number = number;
+        r*.reverse_eval = !reverse_eval;
+        r*.inner = inner*.reverse();
+        return r;
+    }
+
     gen_string: (name: std::string, name_brackets: bool, has_modifier: bool, modifiers: std::string, inner_: token_ptr) -> std::string = 
     {
         start : std::string = "(";
@@ -3214,12 +3283,23 @@ group_token: @polymorphic_base type =
     generate_code: (override this, inout ctx: generation_context) = 
     {
         if -1 != number {
-            ctx..add("ctx..set_group_start((number)$, r.pos);");
+            if reverse_eval {
+                ctx..add("ctx..set_group_end((number)$, r.pos);");
+            }
+            else {
+                ctx..add("ctx..set_group_start((number)$, r.pos);");
+            }
         }
 
         inner*..generate_code(ctx);
         if -1 != number {
-            ctx..add("ctx..set_group_end((number)$, r.pos);");
+            if reverse_eval {
+                ctx..add("ctx..set_group_start((number)$, r.pos);");
+            }
+            else {
+                ctx..add("ctx..set_group_end((number)$, r.pos);");
+            }
+
             tmp_name := ctx..gen_temp();
             ctx..add("(tmp_name)$_func :=  :() = {");
             ctx..add("  if !r&$*.matched {");
@@ -3337,6 +3417,10 @@ lookahead_token: @polymorphic_base type =
         inner_name := ctx..generate_func(inner);
 
         ctx..add_check("lookahead_token_matcher<char, (positive)$>((ctx..match_parameters())$, (inner_name)$)");
+    }
+
+    reverse: (override this) -> token_ptr = {
+        return nullptr; // TODO: 1) Implement error, 2) implement functionality.
     }
 
     add_groups: (override this, inout groups: std::set<int>) = {
@@ -3527,6 +3611,16 @@ range_token: @polymorphic_base type =
         else {
             r += "{(min_count)$,(max_count)$}";
         }
+
+        return r;
+    }
+
+    reverse: (override this) -> token_ptr = {
+        r := shared.new<range_token>();
+        r*.min_count   = min_count;
+        r*.max_count   = max_count;
+        r*.kind        = kind;
+        r*.inner_token = inner_token*.reverse();
 
         return r;
     }
