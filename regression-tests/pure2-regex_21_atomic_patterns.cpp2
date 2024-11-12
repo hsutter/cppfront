@@ -163,36 +163,24 @@ test: <M> (regex: M, id: std::string, regex_str: std::string, str: std::string, 
 }
 
 
-test_tests_01_char_matcher: @regex type = {
-  regex_01 := R"(abc)";
-  regex_02 := R"(abc)";
-  regex_03 := R"(abc)";
-  regex_04 := R"(abc)";
-  regex_05 := R"(abc)";
-  regex_06 := R"(abc)";
-  regex_07 := R"(abc)";
-  regex_08 := R"(abc)";
-  regex_09 := R"(abc)";
-  regex_10 := R"(abc)";
-  regex_11 := R"(abc)";
-  regex_12 := R"(abc)";
+test_tests_21_atomic_patterns: @regex type = {
+  regex_01 := R"((?>a+)b)";
+  regex_02 := R"(((?>a+)b))";
+  regex_03 := R"((?>(a+))b)";
+  regex_04 := R"(((?>[^()]+)|\([^()]*\))+)";
+  regex_05 := R"(round\(((?>[^()]+))\))";
+  regex_06 := R"(^((?>(?:aa)?b)?))";
   run: (this) = {
-    std::cout << "Running tests_01_char_matcher:"<< std::endl;
-    test(regex_01, "01", R"(abc)", "abc", "y", R"($&)", "abc");
-    test(regex_02, "02", R"(abc)", "abc", "y", R"($-[0])", "0");
-    test(regex_03, "03", R"(abc)", "abc", "y", R"($+[0])", "3");
-    test(regex_04, "04", R"(abc)", "xbc", "n", R"(-)", "-");
-    test(regex_05, "05", R"(abc)", "axc", "n", R"(-)", "-");
-    test(regex_06, "06", R"(abc)", "abx", "n", R"(-)", "-");
-    test(regex_07, "07", R"(abc)", "xabcy", "y", R"($&)", "abc");
-    test(regex_08, "08", R"(abc)", "xabcy", "y", R"($-[0])", "1");
-    test(regex_09, "09", R"(abc)", "xabcy", "y", R"($+[0])", "4");
-    test(regex_10, "10", R"(abc)", "ababc", "y", R"($&)", "abc");
-    test(regex_11, "11", R"(abc)", "ababc", "y", R"($-[0])", "2");
-    test(regex_12, "12", R"(abc)", "ababc", "y", R"($+[0])", "5");
+    std::cout << "Running tests_21_atomic_patterns:"<< std::endl;
+    test(regex_01, "01", R"((?>a+)b)", "aaab", "y", R"(-)", "-");
+    test(regex_02, "02", R"(((?>a+)b))", "aaab", "y", R"($1)", "aaab");
+    test(regex_03, "03", R"((?>(a+))b)", "aaab", "y", R"($1)", "aaa");
+    test(regex_04, "04", R"(((?>[^()]+)|\([^()]*\))+)", "((abc(ade)ufh()()x", "y", R"($&)", "abc(ade)ufh()()x");
+    test(regex_05, "05", R"(round\(((?>[^()]+))\))", "_I(round(xs * sz),1)", "y", R"($1)", "xs * sz");
+    test(regex_06, "06", R"(^((?>(?:aa)?b)?))", "aab", "y", R"($1)", "aab");
     std::cout << std::endl;
   }
 }
 main: () = {
-    test_tests_01_char_matcher().run();
+    test_tests_21_atomic_patterns().run();
 }
