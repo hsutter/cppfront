@@ -13,8 +13,6 @@
 #ifndef CPP2_CPP2REGEX_H
 #define CPP2_CPP2REGEX_H
 
-template<typename matcher_wrapper, typename Iter, typename CharT>
-using matcher_wrapper_type = typename matcher_wrapper::template wrap<CharT>;
 
 template<typename matcher, typename Iter>
 using matcher_context_type = typename matcher::template context<Iter>;
@@ -768,10 +766,9 @@ word_boundary_token_matcher: <CharT, negate: bool> (inout cur, inout ctx) -> boo
 //
 
 //  Regular expression implementation
-regular_expression: <CharT, matcher_wrapper> type = 
+regular_expression: <CharT, matcher> type =
 {
-    matcher: <Iter> type == matcher_wrapper_type<matcher_wrapper, Iter, CharT>; // TODO: Remove when nested types are allowed: https://github.com/hsutter/cppfront/issues/727
-    context: <Iter> type == matcher_context_type<matcher<Iter>, Iter>;                      // TODO: Remove when nested types are allowed: https://github.com/hsutter/cppfront/issues/727
+    context: <Iter> type == matcher_context_type<matcher, Iter>;                      // TODO: Remove when nested types are allowed: https://github.com/hsutter/cppfront/issues/727
 
     search_return: <Iter> type = 
     {
@@ -806,7 +803,7 @@ regular_expression: <CharT, matcher_wrapper> type =
         }
 
         private get_group_id: (this, g: bstring<CharT>) -> _ = {
-            group_id := matcher<Iter>::get_named_group_index(g);
+            group_id := matcher::get_named_group_index(g);
             if -1 == group_id {
                 // TODO: Throw error.
             }
@@ -852,7 +849,7 @@ regular_expression: <CharT, matcher_wrapper> type =
     {
         ctx: context<Iter> = (start, end);
 
-        r := matcher<Iter>::entry(start, ctx);
+        r := matcher::entry(start, ctx);
         return search_return<Iter>(r.matched && r.pos == end, ctx, r.pos);
     }
 
@@ -871,7 +868,7 @@ regular_expression: <CharT, matcher_wrapper> type =
 
         cur:= start;
         while true next (cur++) {
-            r = matcher<Iter>::entry(cur, ctx);
+            r = matcher::entry(cur, ctx);
             if r.matched {
                 break;
             }
@@ -880,7 +877,7 @@ regular_expression: <CharT, matcher_wrapper> type =
                 break;
             }
 
-            if matcher<Iter>::is_start_match() {
+            if matcher::is_start_match() {
                 break; // Always break with \G option.
             }
         }
@@ -890,7 +887,7 @@ regular_expression: <CharT, matcher_wrapper> type =
 
 
 
-    to_string: (in this) = matcher_wrapper::to_string();
+    to_string: (in this) = matcher::to_string();
 
     //  Helper functions
     //

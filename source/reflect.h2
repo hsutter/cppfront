@@ -3782,7 +3782,6 @@ regex_generator: <Error_out> type =
         }
 
         source += "{\n";
-        source += " wrap: <CharT> type = {\n"; // TODO: Remove wrapper when template template parameters are available.
         source += "  context: <Iter> type == cpp2::regex::match_context<CharT, Iter, (parse_ctx..get_cur_group())$>;";
 
         gen_ctx: generation_context = ();
@@ -3796,7 +3795,6 @@ regex_generator: <Error_out> type =
 
         source += gen_ctx..create_named_group_lookup(parse_ctx.named_groups);
         source += "  is_start_match: () -> bool == (parse_ctx.is_start_match)$;";
-        source += "}\n"; // wrap end
 
         string := parse_ctx..get_as_token()*..to_string();
         source += "  to_string: () -> std::string = { return R\"((modifier_escape)$(string)$(modifier_escape)$(modifier)$)\"; }\n";
@@ -3880,8 +3878,8 @@ regex_gen: (inout t: meta::type_declaration) =
         regular_expression := generate_regex(expr.second, :(message) = t$.error(message););
 
         if !regular_expression..empty() {
-            t.add_member("public (expr.first)$_matcher: type = (regular_expression)$");
-            t.add_member("public (expr.first)$: cpp2::regex::regular_expression<char, (expr.first)$_matcher> = ();");
+            t.add_member("public (expr.first)$_matcher: <CharT> type = (regular_expression)$");
+            t.add_member("public (expr.first)$: cpp2::regex::regular_expression<char, (expr.first)$_matcher<char>> = ();\n");
         }
     }
 

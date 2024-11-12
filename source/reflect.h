@@ -112,7 +112,7 @@ class special_range_token;
 #line 3759 "reflect.h2"
 template<typename Error_out> class regex_generator;
 
-#line 4009 "reflect.h2"
+#line 4007 "reflect.h2"
 }
 
 }
@@ -1502,21 +1502,21 @@ template<typename Error_out> class regex_generator
 #line 3774 "reflect.h2"
     public: [[nodiscard]] auto parse() & -> std::string;
 
-#line 3811 "reflect.h2"
+#line 3809 "reflect.h2"
     private: auto extract_modifiers() & -> void;
     public: regex_generator(regex_generator const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(regex_generator const&) -> void = delete;
 
 
-#line 3825 "reflect.h2"
+#line 3823 "reflect.h2"
 };
 
 template<typename Err> [[nodiscard]] auto generate_regex(cpp2::impl::in<std::string_view> regex, Err const& err) -> std::string;
 
-#line 3837 "reflect.h2"
+#line 3835 "reflect.h2"
 auto regex_gen(meta::type_declaration& t) -> void;
 
-#line 3892 "reflect.h2"
+#line 3890 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  apply_metafunctions
@@ -1527,7 +1527,7 @@ auto regex_gen(meta::type_declaration& t) -> void;
     auto const& error
     ) -> bool;
 
-#line 4009 "reflect.h2"
+#line 4007 "reflect.h2"
 }
 
 }
@@ -5523,7 +5523,6 @@ size_t i{0};
         }
 
         source += "{\n";
-        source += " wrap: <CharT> type = {\n"; // TODO: Remove wrapper when template template parameters are available.
         source += "  context: <Iter> type == cpp2::regex::match_context<CharT, Iter, " + cpp2::to_string(parse_ctx.get_cur_group()) + ">;";
 
         generation_context gen_ctx {}; 
@@ -5537,7 +5536,6 @@ size_t i{0};
 
         source += cpp2::move(gen_ctx).create_named_group_lookup(parse_ctx.named_groups);
         source += "  is_start_match: () -> bool == " + cpp2::to_string(parse_ctx.is_start_match) + ";";
-        source += "}\n"; // wrap end
 
         auto string {(*cpp2::impl::assert_not_null(parse_ctx.get_as_token())).to_string()}; 
         source += "  to_string: () -> std::string = { return R\"(" + cpp2::to_string(modifier_escape) + cpp2::to_string(cpp2::move(string)) + cpp2::to_string(modifier_escape) + cpp2::to_string(modifier) + ")\"; }\n";
@@ -5549,7 +5547,7 @@ size_t i{0};
         return source; 
     }
 
-#line 3811 "reflect.h2"
+#line 3809 "reflect.h2"
     template <typename Error_out> auto regex_generator<Error_out>::extract_modifiers() & -> void
     {
         if (regex.find_first_of("'/") == 0) {
@@ -5565,7 +5563,7 @@ size_t i{0};
         }
     }
 
-#line 3827 "reflect.h2"
+#line 3825 "reflect.h2"
 template<typename Err> [[nodiscard]] auto generate_regex(cpp2::impl::in<std::string_view> regex, Err const& err) -> std::string
 {
     regex_generator<Err> parser {regex, err}; 
@@ -5574,7 +5572,7 @@ template<typename Err> [[nodiscard]] auto generate_regex(cpp2::impl::in<std::str
     return r; 
 }
 
-#line 3837 "reflect.h2"
+#line 3835 "reflect.h2"
 auto regex_gen(meta::type_declaration& t) -> void
 {
     auto has_default {false}; 
@@ -5621,15 +5619,15 @@ auto regex_gen(meta::type_declaration& t) -> void
         auto regular_expression {generate_regex(expr.second, [_0 = t](auto const& message) mutable -> decltype(auto) { return CPP2_UFCS(error)(_0, message);  })}; 
 
         if (!(regular_expression.empty())) {
-            CPP2_UFCS(add_member)(t, "public " + cpp2::to_string(expr.first) + "_matcher: type = " + cpp2::to_string(cpp2::move(regular_expression)) + "");
-            CPP2_UFCS(add_member)(t, "public " + cpp2::to_string(expr.first) + ": cpp2::regex::regular_expression<char, " + cpp2::to_string(expr.first) + "_matcher> = ();");
+            CPP2_UFCS(add_member)(t, "public " + cpp2::to_string(expr.first) + "_matcher: <CharT> type = " + cpp2::to_string(cpp2::move(regular_expression)) + "");
+            CPP2_UFCS(add_member)(t, "public " + cpp2::to_string(expr.first) + ": cpp2::regex::regular_expression<char, " + cpp2::to_string(expr.first) + "_matcher<char>> = ();\n");
         }
     }
 
     CPP2_UFCS(add_runtime_support_include)(t, "cpp2regex.h");
 }
 
-#line 3896 "reflect.h2"
+#line 3894 "reflect.h2"
 [[nodiscard]] auto apply_metafunctions(
     declaration_node& n, 
     type_declaration& rtype, 
@@ -5742,7 +5740,7 @@ auto regex_gen(meta::type_declaration& t) -> void
     return true; 
 }
 
-#line 4009 "reflect.h2"
+#line 4007 "reflect.h2"
 }
 
 }
