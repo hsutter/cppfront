@@ -65,6 +65,11 @@ match_context: <CharT, Iter, max_groups: int> type =
 
     operator=: (out this, that) = {}
 
+    // String end and start positions
+    //
+    get_string_start: (in this) = begin;
+    get_string_end: (in this) = end;
+
     //  Getter and setter for groups
     //
     get_group: (in this, group) = groups[group];
@@ -133,6 +138,11 @@ reverse_match_context: <CharT, Iter, max_groups: int> type =
 
     operator=: (out this, that) = {}
 
+    // String end and start positions
+    //
+    get_string_start: (in this) = end;
+    get_string_end: (in this) = begin;
+
     //  Getter and setter for groups
     //
     //get_group: (in this, group) = groups[group];
@@ -156,18 +166,17 @@ reverse_match_context: <CharT, Iter, max_groups: int> type =
     //     return std::string(groups[group].start, groups[group].end);
     // }
 
-    // set_group_end: (inout this, group, pos) = {
-    //     groups[group].end = pos;
-    //     groups[group].matched = true;
-    // }
+    set_group_end: (inout this, group, pos) = {
+        forward_context*..set_group_end(group, (pos).base());
+    }
 
-    // set_group_invalid: (inout this, group) = {
-    //     groups[group].matched = false;
-    // }
+    set_group_invalid: (inout this, group) = {
+        forward_context*..set_group_invalid(group);
+    }
 
-    // set_group_start: (inout this, group, pos) = {
-    //     groups[group].start = pos;
-    // }
+    set_group_start: (inout this, group, pos) = {
+        forward_context*..set_group_start(group, (pos).base());
+    }
 
     // size: (in this) = max_groups;
 
@@ -533,10 +542,10 @@ group_ref_token_matcher: <CharT, group: int, case_insensitive: bool, reverse: bo
 //
 line_end_token_matcher: <CharT, match_new_line: bool, match_new_line_before_end: bool> (cur, inout ctx) -> bool = 
 {
-    if cur == ctx.end || (match_new_line && cur* == '\n') {
+    if cur == ctx.get_string_end() || (match_new_line && cur* == '\n') {
         return true;
     }
-    else if match_new_line_before_end && (cur* == '\n' && (cur + 1) == ctx.end) { // Special case for new line at end.
+    else if match_new_line_before_end && (cur* == '\n' && (cur + 1) == ctx.get_string_end()) { // Special case for new line at end.
         return true;
     }
     else {
@@ -549,7 +558,7 @@ line_end_token_matcher: <CharT, match_new_line: bool, match_new_line_before_end:
 //
 line_start_token_matcher: <CharT, match_new_line: bool> (cur, inout ctx) -> bool = 
 {
-    return cur == ctx.begin || // Start of string
+    return cur == ctx.get_string_start() || // Start of string
            (match_new_line && (cur - 1)* == '\n'); // Start of new line
 }
 
@@ -737,15 +746,15 @@ word_boundary_token_matcher: <CharT, negate: bool> (inout cur, inout ctx) -> boo
 {
     words : word_class<CharT> = ();
     is_match := false;
-    if cur == ctx.begin { // String start
+    if cur == ctx.begin { // Iteration start
         if cur != ctx.end { // No empty string
             is_match = words..includes(cur*);
         }
     }
-    else if cur == ctx.end { // String end
+    else if cur == ctx.end { // Iteration end
         is_match = words..includes((cur - 1)*);
     }
-    else { // Middle of string
+    else { // Middle of iteration
         is_match =
                 (words..includes((cur - 1)*) && !words..includes(cur*))  // End of word: \w\W
             || (!words..includes((cur - 1)*) && words..includes(cur*)); // Start of word: \W\w
