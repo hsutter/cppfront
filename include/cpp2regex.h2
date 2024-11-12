@@ -192,9 +192,26 @@ reverse_match_context: <CharT, Iter, max_groups: int> type =
     // }
 }
 
+make_forward_match_context: <CharT, Iter, max_groups: int> (inout ctx: match_context<CharT, Iter, max_groups>) -> forward _ = {
+    return ctx;
+}
+
+make_forward_match_context: <CharT, Iter, max_groups: int> (inout ctx: reverse_match_context<CharT, Iter, max_groups>) -> forward _ = {
+    return ctx.forward_context*;
+}
+
 make_reverse_match_context: <CharT, Iter, max_groups: int> (inout ctx: match_context<CharT, Iter, max_groups>) -> _ = {
     return reverse_match_context<CharT, Iter, max_groups>(ctx&);
 }
+
+make_reverse_match_context: <CharT, Iter, max_groups: int> (inout ctx: reverse_match_context<CharT, Iter, max_groups>) -> forward _ = {
+    return ctx;
+}
+
+make_forward_iterator: <Iter> (pos: Iter)                        -> _ = pos;
+make_forward_iterator: <Iter> (pos: std::reverse_iterator<Iter>) -> _  = pos.base();
+make_reverse_iterator: <Iter> (pos: Iter)                        -> _ = std::make_reverse_iterator(pos);
+make_reverse_iterator: <Iter> (pos: std::reverse_iterator<Iter>) -> _ = pos;
 
 
 //  End function that returns a valid match.
@@ -540,7 +557,7 @@ group_ref_token_matcher: <CharT, group: int, case_insensitive: bool, reverse: bo
 
 //  Regex syntax: $  Example: aa$
 //
-line_end_token_matcher: <CharT, match_new_line: bool, match_new_line_before_end: bool> (cur, inout ctx) -> bool = 
+line_end_token_matcher: <CharT, match_new_line: bool, match_new_line_before_end: bool> (cur, inout ctx) -> bool =
 {
     if cur == ctx.get_string_end() || (match_new_line && cur* == '\n') {
         return true;
@@ -556,7 +573,7 @@ line_end_token_matcher: <CharT, match_new_line: bool, match_new_line_before_end:
 
 //  Regex syntax: ^  Example: ^aa
 //
-line_start_token_matcher: <CharT, match_new_line: bool> (cur, inout ctx) -> bool = 
+line_start_token_matcher: <CharT, match_new_line: bool> (cur, inout ctx) -> bool =
 {
     return cur == ctx.get_string_start() || // Start of string
            (match_new_line && (cur - 1)* == '\n'); // Start of new line
@@ -567,9 +584,9 @@ line_start_token_matcher: <CharT, match_new_line: bool> (cur, inout ctx) -> bool
 //
 //  Parsed in group_token.
 //
-lookahead_token_matcher: <CharT, positive: bool> (cur, inout ctx, func) -> bool = 
+lookahead_token_matcher: <CharT, positive: bool> (cur, inout ctx, func) -> bool =
 {
-    r := func(cur, ctx, true_end_func());
+    r := func(make_forward_iterator(cur), make_forward_match_context(ctx), true_end_func());
     if !positive {
         r.matched = !r.matched;
     }
@@ -577,11 +594,13 @@ lookahead_token_matcher: <CharT, positive: bool> (cur, inout ctx, func) -> bool 
     return r.matched;
 }
 
+//  Regex syntax: (?<=) or (?<!) or (*plb), etc.  Example: (?<=AA)
+//
+//  Parsed in group_token.
+//
 lookbehind_token_matcher: <CharT, positive: bool> (cur, inout ctx, func) -> bool =
 {
-    reverse_ctx := make_reverse_match_context(ctx);
-    r := func(std::make_reverse_iterator(cur), reverse_ctx, true_end_func());
-    _ = reverse_ctx;
+    r := func(make_reverse_iterator(cur), make_reverse_match_context(ctx), true_end_func());
     if !positive {
         r.matched = !r.matched;
     }
@@ -603,10 +622,10 @@ range_flags: type = {
 
 //  Regex syntax: <matcher>{min, max}  Example: a{2,4}
 //
-range_token_matcher: <CharT, min_count: int, max_count: int, kind: int> type = 
+range_token_matcher: <CharT, min_count: int, max_count: int, kind: int> type =
 {
 
-    match: <Iter> (cur: Iter, inout ctx, inner, reset_func, end_func, tail) -> _ = 
+    match: <Iter> (cur: Iter, inout ctx, inner, reset_func, end_func, tail) -> _ =
     {
         if range_flags::possessive == kind {
             return match_possessive(cur, ctx, inner, end_func, tail);

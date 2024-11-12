@@ -2364,7 +2364,7 @@ generation_context: type =
         cur := new_context();
 
         cur*.code += "(cur*.tabs)$(name)$: @struct<noforward> type = {\n";
-        cur*.code += "(cur*.tabs)$  operator(): <Iter> (this, cur: Iter, inout ctx, other) -> cpp2::regex::match_return<Iter> = {\n";
+        cur*.code += "(cur*.tabs)$  operator(): <Iter> (this, cur: Iter, forward ctx, other) -> cpp2::regex::match_return<Iter> = {\n";
         cur*.code += "(cur*.tabs)$    r := ctx..pass(cur);\n";
         cur*.code += "(cur*.tabs)$    do {\n";
         cur*..add_tabs(3);
@@ -2389,6 +2389,7 @@ generation_context: type =
         cur*.code += "(cur*.tabs)$    else {\n";
         cur*.code += "(cur*.tabs)$      r.pos = ctx.end;\n";
         cur*.code += "(cur*.tabs)$    }\n";
+        cur*.code += "(cur*.tabs)$    _ = ctx;\n";
         cur*.code += "(cur*.tabs)$    return r;\n";
         cur*.code += "(cur*.tabs)$  }\n";
         cur*.code += "(cur*.tabs)$}\n";
@@ -3445,7 +3446,10 @@ lookahead_lookbehind_token: @polymorphic_base type =
     }
 
     reverse: (override this) -> token_ptr = {
-        return nullptr; // TODO: 1) Implement error, 2) implement functionality.
+        r := shared.new<lookahead_lookbehind_token>(lookahead, positive);
+        r*.inner = inner; // We do not reverse here. Nested lookahead and lookbehind stay as they are.
+
+        return r;
     }
 
     add_groups: (override this, inout groups: std::set<int>) = {
