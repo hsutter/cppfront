@@ -120,7 +120,7 @@ match_context: <CharT, Iter, max_groups: int> type =
     }
 }
 
-//  Modifiable state during matching.
+//  Wrapper of context for reverse matches. Implements only the minimal interface for matching.
 //
 reverse_match_context: <CharT, Iter, max_groups: int> type =
 {
@@ -145,27 +145,6 @@ reverse_match_context: <CharT, Iter, max_groups: int> type =
 
     //  Getter and setter for groups
     //
-    //get_group: (in this, group) = groups[group];
-
-    // get_group_end:    (in this, group) -> int = {
-    //     if group >= max_groups || !groups[group].matched {
-    //         return 0;
-    //     }
-    //     return cpp2::unchecked_narrow<int>( std::distance(begin, groups[group].end) );
-    // }
-    // get_group_start:  (in this, group) -> int = {
-    //     if group >= max_groups || !groups[group].matched {
-    //         return 0;
-    //     }
-    //     return cpp2::unchecked_narrow<int>( std::distance(begin, groups[group].start) );
-    // }
-    // get_group_string: (in this, group) -> std::string = {
-    //     if group >= max_groups || !groups[group].matched {
-    //         return "";
-    //     }
-    //     return std::string(groups[group].start, groups[group].end);
-    // }
-
     set_group_end: (inout this, group, pos) = {
         forward_context*..set_group_end(group, (pos).base());
     }
@@ -178,20 +157,14 @@ reverse_match_context: <CharT, Iter, max_groups: int> type =
         forward_context*..set_group_start(group, (pos).base());
     }
 
-    // size: (in this) = max_groups;
-
     //  Misc functions
     //
     fail: (in this)            = match_return<ReverseIter>(false, end);
     pass: (in this, cur: ReverseIter) = match_return<ReverseIter>(true, cur);
-
-    // reset: (inout this) = {
-    //     for groups do (inout g) {
-    //         g.matched = false;
-    //     }
-    // }
 }
 
+//  Helpers for creating wrappers of the match context.
+//
 make_forward_match_context: <CharT, Iter, max_groups: int> (inout ctx: match_context<CharT, Iter, max_groups>) -> forward _ = {
     return ctx;
 }
@@ -208,6 +181,8 @@ make_reverse_match_context: <CharT, Iter, max_groups: int> (inout ctx: reverse_m
     return ctx;
 }
 
+//  Helpers for creating wrappers of the iterators.
+//
 make_forward_iterator: <Iter> (pos: Iter)                        -> _ = pos;
 make_forward_iterator: <Iter> (pos: std::reverse_iterator<Iter>) -> _  = pos.base();
 make_reverse_iterator: <Iter> (pos: Iter)                        -> _ = std::make_reverse_iterator(pos);
@@ -857,9 +832,9 @@ regular_expression: <CharT, matcher> type =
     find_all: (in this, forward func, str: bview<CharT>, start: int, length : int) = find_all(func, get_iter(str, start), get_iter(str, start + length));
     find_all: <Iter> (in this, func, start: Iter, end: Iter) =
     {
-        sr := search_return<Iter>(start, end);
+        sr   := search_return<Iter>(start, end);
         cont := true;
-        cur := start;
+        cur  := start;
 
         while cont {
             r := search_with_context(sr.ctx, cur);
@@ -897,7 +872,8 @@ regular_expression: <CharT, matcher> type =
     search: (in this, str: bview<CharT>)                = search(str..begin(), str..end());
     search: (in this, str: bview<CharT>, start)         = search(get_iter(str, start), str..end());
     search: (in this, str: bview<CharT>, start, length) = search(get_iter(str, start), get_iter(str, start + length));
-    search: <Iter> (in this, start: Iter, end: Iter) -> search_return<Iter> = {
+    search: <Iter> (in this, start: Iter, end: Iter) -> search_return<Iter> =
+    {
         ctx: context<Iter> = (start, end);
         r := search_with_context(ctx, start);
         return search_return<Iter>(r.matched, ctx, r.pos);
