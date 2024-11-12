@@ -150,7 +150,7 @@ template<typename CharT, typename Iter, int max_groups> class match_context
 
     private: std::array<match_group<Iter>,max_groups> groups {}; 
 
-    public: explicit match_context(Iter const& begin_, Iter const& end_);
+    public: match_context(Iter const& begin_, Iter const& end_);
 
 #line 66 "cpp2regex.h2"
     public: match_context(match_context const& that);
@@ -210,7 +210,7 @@ template<typename CharT, typename Iter, int max_groups> class reverse_match_cont
             public: ReverseIter begin; 
             public: ReverseIter end; 
 
-    public: explicit reverse_match_context(auto const& forward_context_);
+    public: reverse_match_context(auto const& forward_context_);
 #line 133 "cpp2regex.h2"
     public: auto operator=(auto const& forward_context_) -> reverse_match_context& ;
 
@@ -288,7 +288,7 @@ template<typename Func> class on_return
  {
     private: Func func; 
 
-    public: explicit on_return(Func const& f);
+    public: on_return(Func const& f);
 #line 213 "cpp2regex.h2"
     public: auto operator=(Func const& f) -> on_return& ;
 
@@ -664,10 +664,10 @@ template<typename CharT, typename matcher> class regular_expression
         public: context<Iter> ctx; 
         public: int pos; 
 
-        public: explicit search_return(cpp2::impl::in<bool> matched_, context<Iter> const& ctx_, Iter const& pos_);
+        public: search_return(cpp2::impl::in<bool> matched_, context<Iter> const& ctx_, Iter const& pos_);
 
 #line 801 "cpp2regex.h2"
-        public: explicit search_return(Iter const& begin, Iter const& end);
+        public: search_return(Iter const& begin, Iter const& end);
 
 #line 807 "cpp2regex.h2"
         public: [[nodiscard]] auto group_number() const& -> decltype(auto);

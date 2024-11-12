@@ -160,7 +160,7 @@ class compiler_services
     private: bool metafunctions_used {false}; 
 
 #line 44 "reflect.h2"
-    public: explicit compiler_services(
+    public: compiler_services(
 
         std::vector<error_entry>* errors_, 
         std::set<std::string>* includes_, 
@@ -222,7 +222,7 @@ template<typename T> class reflection_base
 #line 193 "reflect.h2"
     protected: T* n; 
 
-    protected: explicit reflection_base(
+    protected: reflection_base(
 
         T* n_, 
         cpp2::impl::in<compiler_services> s
@@ -243,7 +243,7 @@ class declaration
 : public reflection_base<declaration_node> {
 
 #line 226 "reflect.h2"
-    public: explicit declaration(
+    public: declaration(
 
         declaration_node* n_, 
         cpp2::impl::in<compiler_services> s
@@ -318,7 +318,7 @@ class function_declaration
 : public declaration {
 
 #line 308 "reflect.h2"
-    public: explicit function_declaration(
+    public: function_declaration(
 
         declaration_node* n_, 
         cpp2::impl::in<compiler_services> s
@@ -388,7 +388,7 @@ class object_declaration
 : public declaration {
 
 #line 400 "reflect.h2"
-    public: explicit object_declaration(
+    public: object_declaration(
 
         declaration_node* n_, 
         cpp2::impl::in<compiler_services> s
@@ -413,7 +413,7 @@ class type_declaration
 : public declaration {
 
 #line 436 "reflect.h2"
-    public: explicit type_declaration(
+    public: type_declaration(
 
         declaration_node* n_, 
         cpp2::impl::in<compiler_services> s
@@ -468,7 +468,7 @@ class alias_declaration
 : public declaration {
 
 #line 574 "reflect.h2"
-    public: explicit alias_declaration(
+    public: alias_declaration(
 
         declaration_node* n_, 
         cpp2::impl::in<compiler_services> s
@@ -484,7 +484,7 @@ class statement
 : public reflection_base<statement_node> {
 
 #line 600 "reflect.h2"
-    public: explicit statement(
+    public: statement(
 
         statement_node* n_, 
         cpp2::impl::in<compiler_services> s
@@ -518,7 +518,7 @@ class compound_statement
 : public reflection_base<compound_statement_node> {
 
 #line 642 "reflect.h2"
-    public: explicit compound_statement(
+    public: compound_statement(
 
         compound_statement_node* n_, 
         cpp2::impl::in<compiler_services> s
@@ -660,7 +660,7 @@ class regex_token
  {
     public: std::string string_rep; 
 
-    public: explicit regex_token(cpp2::impl::in<std::string> str);
+    public: regex_token(cpp2::impl::in<std::string> str);
 
 #line 1672 "reflect.h2"
     public: explicit regex_token();
@@ -692,7 +692,7 @@ class regex_token_check
 #line 1695 "reflect.h2"
     private: std::string check; 
 
-    public: explicit regex_token_check(cpp2::impl::in<std::string> str, cpp2::impl::in<std::string> check_);
+    public: regex_token_check(cpp2::impl::in<std::string> str, cpp2::impl::in<std::string> check_);
 
 #line 1702 "reflect.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
@@ -716,7 +716,7 @@ class regex_token_code
 #line 1716 "reflect.h2"
     private: std::string code; 
 
-    public: explicit regex_token_code(cpp2::impl::in<std::string> str, cpp2::impl::in<std::string> code_);
+    public: regex_token_code(cpp2::impl::in<std::string> str, cpp2::impl::in<std::string> code_);
 
 #line 1723 "reflect.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
@@ -738,7 +738,7 @@ class regex_token_empty
 : public regex_token {
 
 #line 1737 "reflect.h2"
-    public: explicit regex_token_empty(cpp2::impl::in<std::string> str);
+    public: regex_token_empty(cpp2::impl::in<std::string> str);
 
 #line 1741 "reflect.h2"
     public: auto generate_code([[maybe_unused]] generation_context& unnamed_param_2) const -> void override;
@@ -762,7 +762,7 @@ class regex_token_list
 #line 1755 "reflect.h2"
     public: token_vec tokens; 
 
-    public: explicit regex_token_list(cpp2::impl::in<token_vec> t);
+    public: regex_token_list(cpp2::impl::in<token_vec> t);
 
 #line 1762 "reflect.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
@@ -879,7 +879,7 @@ class parse_context
     private: error_func error_out; // TODO: Declaring std::function<void(std::string)> fails for cpp2.
     private: bool has_error {false}; 
 
-    public: explicit parse_context(cpp2::impl::in<std::string_view> r, auto const& e);
+    public: parse_context(cpp2::impl::in<std::string_view> r, auto const& e);
 
 #line 1930 "reflect.h2"
     //  State management functions
@@ -1142,7 +1142,7 @@ class alternative_token_gen
 #line 2544 "reflect.h2"
     private: token_vec alternatives; 
 
-    public: explicit alternative_token_gen(cpp2::impl::in<token_vec> a);
+    public: alternative_token_gen(cpp2::impl::in<token_vec> a);
 
 #line 2551 "reflect.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
@@ -1171,7 +1171,7 @@ class any_token
 : public regex_token_check {
 
 #line 2609 "reflect.h2"
-    public: explicit any_token(cpp2::impl::in<bool> single_line);
+    public: any_token(cpp2::impl::in<bool> single_line);
 
 #line 2613 "reflect.h2"
     public: [[nodiscard]] static auto parse(parse_context& ctx) -> token_ptr;
@@ -1219,10 +1219,10 @@ class char_token
     private: std::string token; 
     private: bool ignore_case; 
 
-    public: explicit char_token(cpp2::impl::in<char> t, cpp2::impl::in<bool> ignore_case_);
+    public: char_token(cpp2::impl::in<char> t, cpp2::impl::in<bool> ignore_case_);
 
 #line 2665 "reflect.h2"
-    public: explicit char_token(cpp2::impl::in<std::string> t, cpp2::impl::in<bool> ignore_case_);
+    public: char_token(cpp2::impl::in<std::string> t, cpp2::impl::in<bool> ignore_case_);
 
 #line 2671 "reflect.h2"
     public: [[nodiscard]] static auto parse(parse_context& ctx) -> token_ptr;
@@ -1264,7 +1264,7 @@ class class_token
     private: bool case_insensitive; 
     private: std::string class_str; 
 
-    public: explicit class_token(cpp2::impl::in<bool> negate_, cpp2::impl::in<bool> case_insensitive_, cpp2::impl::in<std::string> class_str_, cpp2::impl::in<std::string> str);
+    public: class_token(cpp2::impl::in<bool> negate_, cpp2::impl::in<bool> case_insensitive_, cpp2::impl::in<std::string> class_str_, cpp2::impl::in<std::string> str);
 
 #line 2783 "reflect.h2"
     //  TODO: Rework class generation: Generate check functions for classes.
@@ -1312,7 +1312,7 @@ class group_ref_token
     private: bool case_insensitive; 
     private: bool reverse_eval; 
 
-    public: explicit group_ref_token(cpp2::impl::in<int> id_, cpp2::impl::in<bool> case_insensitive_, cpp2::impl::in<bool> reverse_, cpp2::impl::in<std::string> str);
+    public: group_ref_token(cpp2::impl::in<int> id_, cpp2::impl::in<bool> case_insensitive_, cpp2::impl::in<bool> reverse_, cpp2::impl::in<std::string> str);
 
 #line 3007 "reflect.h2"
     public: [[nodiscard]] static auto parse(parse_context& ctx) -> token_ptr;
@@ -1407,7 +1407,7 @@ class lookahead_lookbehind_token
     protected: bool positive; 
     public:   token_ptr inner {nullptr}; 
 
-    public: explicit lookahead_lookbehind_token(cpp2::impl::in<bool> lookahead_, cpp2::impl::in<bool> positive_);
+    public: lookahead_lookbehind_token(cpp2::impl::in<bool> lookahead_, cpp2::impl::in<bool> positive_);
 
 #line 3488 "reflect.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
@@ -1528,7 +1528,7 @@ template<typename Error_out> class regex_generator
 
     private: std::string source {""}; 
 
-    public: explicit regex_generator(cpp2::impl::in<std::string_view> r, Error_out const& e);
+    public: regex_generator(cpp2::impl::in<std::string_view> r, Error_out const& e);
 
 #line 3828 "reflect.h2"
     public: [[nodiscard]] auto parse() & -> std::string;
