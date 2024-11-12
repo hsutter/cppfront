@@ -67,9 +67,6 @@ match_context: <CharT, Iter, max_groups: int> type =
 
     operator=: (out this, that) = {}
 
-    // Helper functions
-    reverse: (inout this) = { std::swap(begin, end); }
-
     //  Getter and setter for groups
     //
     get_group: (in this, group) = groups[group];
@@ -118,6 +115,78 @@ match_context: <CharT, Iter, max_groups: int> type =
             g.matched = false;
         }
     }
+}
+
+//  Modifiable state during matching.
+//
+reverse_match_context: <CharT, Iter, max_groups: int> type =
+{
+    public ReverseIter : type == std::reverse_iterator<Iter>;
+    public forward_context : *match_context<CharT, Iter, max_groups>;
+
+    public  begin : ReverseIter;
+    public  end   : ReverseIter;
+
+    operator=: (out this, forward_context_) = {
+        forward_context = forward_context_;
+        begin = std::make_reverse_iterator(forward_context*.end);
+        end = std::make_reverse_iterator(forward_context*.begin);
+    }
+
+    operator=: (out this, that) = {}
+
+    //  Getter and setter for groups
+    //
+    //get_group: (in this, group) = groups[group];
+
+    // get_group_end:    (in this, group) -> int = {
+    //     if group >= max_groups || !groups[group].matched {
+    //         return 0;
+    //     }
+    //     return cpp2::unchecked_narrow<int>( std::distance(begin, groups[group].end) );
+    // }
+    // get_group_start:  (in this, group) -> int = {
+    //     if group >= max_groups || !groups[group].matched {
+    //         return 0;
+    //     }
+    //     return cpp2::unchecked_narrow<int>( std::distance(begin, groups[group].start) );
+    // }
+    // get_group_string: (in this, group) -> std::string = {
+    //     if group >= max_groups || !groups[group].matched {
+    //         return "";
+    //     }
+    //     return std::string(groups[group].start, groups[group].end);
+    // }
+
+    // set_group_end: (inout this, group, pos) = {
+    //     groups[group].end = pos;
+    //     groups[group].matched = true;
+    // }
+
+    // set_group_invalid: (inout this, group) = {
+    //     groups[group].matched = false;
+    // }
+
+    // set_group_start: (inout this, group, pos) = {
+    //     groups[group].start = pos;
+    // }
+
+    // size: (in this) = max_groups;
+
+    //  Misc functions
+    //
+    fail: (in this)            = match_return<ReverseIter>(false, end);
+    pass: (in this, cur: ReverseIter) = match_return<ReverseIter>(true, cur);
+
+    // reset: (inout this) = {
+    //     for groups do (inout g) {
+    //         g.matched = false;
+    //     }
+    // }
+}
+
+make_reverse_match_context: <CharT, Iter, max_groups: int> (inout ctx: match_context<CharT, Iter, max_groups>) -> _ = {
+    return reverse_match_context<CharT, Iter, max_groups>(ctx&);
 }
 
 
@@ -503,12 +572,12 @@ lookahead_token_matcher: <CharT, positive: bool> (cur, inout ctx, func) -> bool 
 
 lookbehind_token_matcher: <CharT, positive: bool> (cur, inout ctx, func) -> bool =
 {
-    ctx..reverse();
-    r := func(std::make_reverse_iterator(cur), ctx, true_end_func());
+    reverse_ctx := make_reverse_match_context(ctx);
+    r := func(std::make_reverse_iterator(cur), reverse_ctx, true_end_func());
+    _ = reverse_ctx;
     if !positive {
         r.matched = !r.matched;
     }
-    ctx..reverse();
 
     return r.matched;
 }

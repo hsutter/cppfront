@@ -2364,7 +2364,7 @@ generation_context: type =
         cur := new_context();
 
         cur*.code += "(cur*.tabs)$(name)$: @struct<noforward> type = {\n";
-        cur*.code += "(cur*.tabs)$  operator(): (this, cur: Iter, inout ctx: context, other) -> cpp2::regex::match_return<Iter> = {\n";
+        cur*.code += "(cur*.tabs)$  operator(): <Iter2> (this, cur: Iter2, inout ctx, other) -> cpp2::regex::match_return<Iter2> = {\n";
         cur*.code += "(cur*.tabs)$    r := ctx..pass(cur);\n";
         cur*.code += "(cur*.tabs)$    do {\n";
         cur*..add_tabs(3);
