@@ -1,0 +1,11 @@
+Running tests_01_char_matcher:
+Not full match fails: 0
+Full match is ok:     1
+Search finds at position 1: 1
+Search finds at position 3: 3
+Find all finds at position: 1
+Find all finds at position: 4
+Find all finds at position: 7
+Find all found 3 matched: 3
+Find all finds at position: 2
+Find all found 1 match: 1

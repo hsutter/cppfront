@@ -19,26 +19,19 @@ class general_regex_test {
 
 #line 4 "pure2-regex-general.cpp2"
   public: auto run() const& -> void;
-  public: class regex_01_matcher {
-  public: template<typename Iter, typename CharT> class wrap {
-  public: using context = cpp2::regex::match_context<CharT,Iter,1>;
+  public: template<typename CharT> class regex_01_matcher {
+  public: template<typename Iter> using context = cpp2::regex::match_context<CharT,Iter,1>;
 public: class func_0 {
-  public: [[nodiscard]] auto operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>;
+  public: template<typename Iter> [[nodiscard]] auto operator()(Iter const& cur, auto&& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>;
 
   };
 
-  public: [[nodiscard]] static auto entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>;
+  public: template<typename Iter> [[nodiscard]] static auto entry(Iter const& cur, context<Iter>& ctx) -> cpp2::regex::match_return<Iter>;
 
   public: [[nodiscard]] static auto get_named_group_index(auto const& name) -> int;
 
   public: [[nodiscard]] constexpr static auto is_start_match() -> bool;
-
-  public: wrap() = default;
-  public: wrap(wrap const&) = delete; /* No 'that' constructor, suppress copy */
-  public: auto operator=(wrap const&) -> void = delete;
-};
-
-  public: [[nodiscard]] static auto to_string() -> std::string;
+public: [[nodiscard]] static auto to_string() -> std::string;
 
         public: regex_01_matcher() = default;
         public: regex_01_matcher(regex_01_matcher const&) = delete; /* No 'that' constructor, suppress copy */
@@ -46,31 +39,24 @@ public: class func_0 {
 
   };
 
-  public: cpp2::regex::regular_expression<char,regex_01_matcher> regex_01 {}; public: class regex_02_matcher {
-  public: template<typename Iter, typename CharT> class wrap {
-  public: using context = cpp2::regex::match_context<CharT,Iter,1>;
+  public: cpp2::regex::regular_expression<char,regex_01_matcher<char>> regex_01 {}; public: template<typename CharT> class regex_02_matcher {
+  public: template<typename Iter> using context = cpp2::regex::match_context<CharT,Iter,1>;
 public: class func_1 {
-  public: [[nodiscard]] auto operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>;
+  public: template<typename Iter> [[nodiscard]] auto operator()(Iter const& cur, auto&& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>;
 
   };
 
   public: class func_0 {
-  public: [[nodiscard]] auto operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>;
+  public: template<typename Iter> [[nodiscard]] auto operator()(Iter const& cur, auto&& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>;
 
   };
 
-  public: [[nodiscard]] static auto entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>;
+  public: template<typename Iter> [[nodiscard]] static auto entry(Iter const& cur, context<Iter>& ctx) -> cpp2::regex::match_return<Iter>;
 
   public: [[nodiscard]] static auto get_named_group_index(auto const& name) -> int;
 
   public: [[nodiscard]] constexpr static auto is_start_match() -> bool;
-
-  public: wrap() = default;
-  public: wrap(wrap const&) = delete; /* No 'that' constructor, suppress copy */
-  public: auto operator=(wrap const&) -> void = delete;
-};
-
-  public: [[nodiscard]] static auto to_string() -> std::string;
+public: [[nodiscard]] static auto to_string() -> std::string;
 
         public: regex_02_matcher() = default;
         public: regex_02_matcher(regex_02_matcher const&) = delete; /* No 'that' constructor, suppress copy */
@@ -78,7 +64,7 @@ public: class func_1 {
 
   };
 
-  public: cpp2::regex::regular_expression<char,regex_02_matcher> regex_02 {}; 
+  public: cpp2::regex::regular_expression<char,regex_02_matcher<char>> regex_02 {}; 
   public: general_regex_test() = default;
   public: general_regex_test(general_regex_test const&) = delete; /* No 'that' constructor, suppress copy */
   public: auto operator=(general_regex_test const&) -> void = delete;
@@ -122,8 +108,7 @@ auto main() -> int;
 
 
 
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto general_regex_test::regex_01_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename CharT> template<typename Iter> [[nodiscard]] auto general_regex_test::regex_01_matcher<CharT>::func_0::operator()(Iter const& cur, auto&& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -151,10 +136,11 @@ int i{0};
   else {
   r.pos = ctx.end;
   }
+  static_cast<void>(CPP2_FORWARD(ctx));
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto general_regex_test::regex_01_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename CharT> template<typename Iter> [[nodiscard]] auto general_regex_test::regex_01_matcher<CharT>::entry(Iter const& cur, context<Iter>& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -162,21 +148,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto general_regex_test::regex_01_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename CharT> [[nodiscard]] auto general_regex_test::regex_01_matcher<CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] constexpr auto general_regex_test::regex_01_matcher::wrap<Iter,CharT>::is_start_match() -> bool { return false; }
-
-  [[nodiscard]] auto general_regex_test::regex_01_matcher::to_string() -> std::string{return R"(AA)"; }
-
+  template <typename CharT> [[nodiscard]] constexpr auto general_regex_test::regex_01_matcher<CharT>::is_start_match() -> bool { return false; }
+template <typename CharT> [[nodiscard]] auto general_regex_test::regex_01_matcher<CharT>::to_string() -> std::string{return R"(AA)"; }
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto general_regex_test::regex_02_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename CharT> template<typename Iter> [[nodiscard]] auto general_regex_test::regex_02_matcher<CharT>::func_1::operator()(Iter const& cur, auto&& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -204,11 +188,12 @@ int i{0};
   else {
   r.pos = ctx.end;
   }
+  static_cast<void>(CPP2_FORWARD(ctx));
   return r; 
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto general_regex_test::regex_02_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename CharT> template<typename Iter> [[nodiscard]] auto general_regex_test::regex_02_matcher<CharT>::func_0::operator()(Iter const& cur, auto&& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -223,10 +208,11 @@ int i{0};
   else {
   r.pos = ctx.end;
   }
+  static_cast<void>(CPP2_FORWARD(ctx));
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto general_regex_test::regex_02_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename CharT> template<typename Iter> [[nodiscard]] auto general_regex_test::regex_02_matcher<CharT>::entry(Iter const& cur, context<Iter>& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -234,14 +220,13 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto general_regex_test::regex_02_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename CharT> [[nodiscard]] auto general_regex_test::regex_02_matcher<CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] constexpr auto general_regex_test::regex_02_matcher::wrap<Iter,CharT>::is_start_match() -> bool { return false; }
-
-  [[nodiscard]] auto general_regex_test::regex_02_matcher::to_string() -> std::string{return R"((?=aa))"; }
+  template <typename CharT> [[nodiscard]] constexpr auto general_regex_test::regex_02_matcher<CharT>::is_start_match() -> bool { return false; }
+template <typename CharT> [[nodiscard]] auto general_regex_test::regex_02_matcher<CharT>::to_string() -> std::string{return R"((?=aa))"; }
 
 
 #line 30 "pure2-regex-general.cpp2"
