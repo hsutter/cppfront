@@ -15,7 +15,7 @@ The listings are taken from the [Perl regex docs](https://perldoc.perl.org/perlr
 | **`s`** | Treat the string as single line. That is, change `.` to match any character whatsoever, even a newline, which normally it would not match. | <span style="color:green">Supported</span> |
 | ***`x` and `xx`** | Extend your pattern's legibility by permitting whitespace and comments. For details see: [Perl regex docs: `/x` and `/xx`](https://perldoc.perl.org/perlre#/x-and-/xx). | <span style="color:green">Supported</span> |
 | **`n`** | Prevent the grouping metacharacters `(` and `)` from capturing. This modifier will stop `$1`, `$2`, etc. from being filled in. | <span style="color:green">Supported</span> |
-| **`c`** | Keep the current position during repeated matching. | <span style="color:gray">Planned</span> |
+| **`c`** | Keep the current position during repeated matching. | <span style="color:green">Supported</span> |
 
 
 ### Escape sequences __(Complete)__
@@ -96,7 +96,7 @@ The listings are taken from the [Perl regex docs](https://perldoc.perl.org/perlr
 | **`\A`** |     Match only at beginning of string | <span style="color:green">Supported</span> | 
 | **`\Z`** |     Match only at end of string, or before newline at the end | <span style="color:green">Supported</span> | 
 | **`\z`** |     Match only at end of string | <span style="color:green">Supported</span> | 
-| **`\G`** |     Match only at pos() (e.g. at the end-of-match position of prior m//g) | <span style="color:gray">Planned</span> | 
+| **`\G`** |     Match only at pos() (e.g. at the end-of-match position of prior m//g) | <span style="color:green">Supported</span> |
 
 
 ### Capture groups __(Complete)__
@@ -142,12 +142,12 @@ The listings are taken from the [Perl regex docs](https://perldoc.perl.org/perlr
 | **`(?!pattern)`**                     | Negative look ahead. | <span style="color:green">Supported</span> | 
 | **`(*nla:pattern)`**                  | Negative look ahead. | <span style="color:green">Supported</span> | 
 | **`(*negative_lookahead:pattern)`**   | Negative look ahead. | <span style="color:green">Supported</span> | 
-| **`(?<=pattern)`**                    | Positive look behind. | <span style="color:gray">Planned</span> | 
-| **`(*plb:pattern)`**                  | Positive look behind. | <span style="color:gray">Planned</span> | 
-| **`(*positive_lookbehind:pattern)`**  | Positive look behind. | <span style="color:gray">Planned</span> | 
-| **`(?<!pattern)`**                    | Negative look behind. | <span style="color:gray">Planned</span> | 
-| **`(*nlb:pattern)`**                  | Negative look behind. | <span style="color:gray">Planned</span> | 
-| **`(*negative_lookbehind:pattern)`**  | Negative look behind. | <span style="color:gray">Planned</span> | 
+| **`(?<=pattern)`**                    | Positive look behind. | <span style="color:green">Supported</span> |
+| **`(*plb:pattern)`**                  | Positive look behind. | <span style="color:green">Supported</span> |
+| **`(*positive_lookbehind:pattern)`**  | Positive look behind. | <span style="color:green">Supported</span> |
+| **`(?<!pattern)`**                    | Negative look behind. | <span style="color:green">Supported</span> |
+| **`(*nlb:pattern)`**                  | Negative look behind. | <span style="color:green">Supported</span> |
+| **`(*negative_lookbehind:pattern)`**  | Negative look behind. | <span style="color:green">Supported</span> |
 
 
 ### Special Backtracking Control Verbs
