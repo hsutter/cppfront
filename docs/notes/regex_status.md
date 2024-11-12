@@ -128,8 +128,8 @@ The listings are taken from the [Perl regex docs](https://perldoc.perl.org/perlr
 | **`(?'NAME'pattern)`** |            Named capture group | <span style="color:green">Supported</span> | 
 | **`(?(condition)yes-pattern`<code>&#124;</code>`no-pattern)`** |  Conditional patterns. | <span style="color:gray">Planned</span> | 
 | **`(?(condition)yes-pattern)`** |             Conditional patterns. | <span style="color:gray">Planned</span> | 
-| **`(?>pattern)`** |                 Atomic patterns. (Disable backtrack.) | <span style="color:gray">Planned</span> | 
-| **`(*atomic:pattern)`** |           Atomic patterns. (Disable backtrack.) | <span style="color:gray">Planned</span> | 
+| **`(?>pattern)`** |                 Atomic patterns. (Disable backtrack.) | <span style="color:green">Supported</span> |
+| **`(*atomic:pattern)`** |           Atomic patterns. (Disable backtrack.) | <span style="color:green">Supported</span> |
 
 
 ### Lookaround Assertions

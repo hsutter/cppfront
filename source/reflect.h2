@@ -2617,6 +2617,35 @@ any_token: @polymorphic_base type =
     }
 }
 
+//  Regex syntax: (?><matcher>)  Example: a(?>bc|c)c
+//
+atomic_group_token: @polymorphic_base type =
+{
+    this                 : regex_token = ("");
+
+    public  inner_token : token_ptr   = nullptr;
+
+    operator=: (out this) = {}
+
+    reverse: (override this) -> token_ptr = {
+        r := shared.new<atomic_group_token>();
+        r*.inner_token = inner_token*.reverse();
+
+        return r;
+    }
+
+    generate_code: (override this, inout ctx: generation_context) =
+    {
+        inner_name := ctx..generate_func(inner_token);
+
+        next_name := ctx..next_func_name();
+        ctx..add_statefull(next_name, "cpp2::regex::atomic_group_matcher<char>((ctx..match_parameters())$, (inner_name)$, other, (next_name)$)");
+    }
+
+    add_groups: (override this, inout groups: std::set<int>) = {
+        inner_token*..add_groups(groups);
+    }
+}
 
 //  Regex syntax: a
 //
@@ -3122,6 +3151,20 @@ group_token: @polymorphic_base type =
         return r;
     }
 
+    parse_atomic_pattern: (inout ctx: parse_context, syntax: std::string) -> token_ptr =
+    {
+        _ = ctx..next(); // Skip last token defining the syntax
+
+        r := shared.new<atomic_group_token>();
+
+        old_state := ctx..start_group();
+        if !ctx..parse_until(')') { return ctx..error("Group without a closing bracket."); }
+        r*.inner_token = ctx..end_group(old_state);
+        r*..set_string("((syntax)$(r*.inner_token*..to_string())$)");
+
+        return r;
+    }
+
     parse: (inout ctx: parse_context) -> token_ptr = 
     {
         if ctx..current() != '(' { return nullptr; }
@@ -3202,6 +3245,11 @@ group_token: @polymorphic_base type =
                 // Lookahead
                 return parse_lookahead_lookbehind(ctx, "?(ctx..current())$", true, ctx..current() == '=');
             }
+            else if ctx..current() == '>'
+            {
+                // Atomic pattern
+                return parse_atomic_pattern(ctx, "?(ctx..current())$");
+            }
             else 
             {
                 //  Simple modifier
@@ -3237,6 +3285,9 @@ group_token: @polymorphic_base type =
             }
             else if name == "nlb" || name == "negative_lookbehind" {
                 return parse_lookahead_lookbehind(ctx, "*(name)$:", false, false);
+            }
+            else if name == "atomic" {
+                return parse_atomic_pattern(ctx, "*(name)$:");
             }
             else {
                 return ctx..error("Unknown named group pattern: '(name)$'");
@@ -3668,7 +3719,6 @@ range_token: @polymorphic_base type =
     add_groups: (override this, inout groups: std::set<int>) = {
         inner_token*..add_groups(groups);
     }
-
 }
 
 

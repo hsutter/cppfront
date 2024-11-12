@@ -399,6 +399,19 @@ any_token_matcher: <CharT, single_line: bool> (inout cur, inout ctx) -> bool =
     return false;
 }
 
+//  Regex syntax: (?><matcher>)  Example: a(?>bc|c)c
+//
+atomic_group_matcher: <CharT, Iter> (cur: Iter, inout ctx, inner, end_func, other) -> _ =
+{
+    r := inner(cur, ctx, true_end_func());
+
+    if r.matched {
+        r = other(r.pos, ctx, end_func);
+    }
+
+    return r;
+}
+
 
 // TODO: Check if vectorization works at some point with this implementation.
 // char_token_matcher: <tokens: string_util::fixed_string> (inout cur, inout ctx) -> bool = {
