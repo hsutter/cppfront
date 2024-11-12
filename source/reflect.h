@@ -4167,7 +4167,7 @@ generation_function_context::generation_function_context(){}
         auto cur {new_context()}; 
 
         (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + cpp2::to_string(name) + ": @struct<noforward> type = {\n";
-        (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "  operator(): <Iter2> (this, cur: Iter2, inout ctx, other) -> cpp2::regex::match_return<Iter2> = {\n";
+        (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "  operator(): <Iter> (this, cur: Iter, inout ctx, other) -> cpp2::regex::match_return<Iter> = {\n";
         (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "    r := ctx..pass(cur);\n";
         (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "    do {\n";
         (*cpp2::impl::assert_not_null(cpp2::move(cur))).add_tabs(3);
@@ -5523,12 +5523,12 @@ size_t i{0};
         }
 
         source += "{\n";
-        source += " wrap: <Iter, CharT> type = {\n"; // TODO: Remove wrapper when template template parameters are available.
-        source += "  context: type == cpp2::regex::match_context<CharT, Iter, " + cpp2::to_string(parse_ctx.get_cur_group()) + ">;";
+        source += " wrap: <CharT> type = {\n"; // TODO: Remove wrapper when template template parameters are available.
+        source += "  context: <Iter> type == cpp2::regex::match_context<CharT, Iter, " + cpp2::to_string(parse_ctx.get_cur_group()) + ">;";
 
         generation_context gen_ctx {}; 
         source += gen_ctx.run(parse_ctx.get_as_token());
-        source += "  entry: (cur: Iter, inout ctx: context) -> cpp2::regex::match_return<Iter> = {\n";
+        source += "  entry: <Iter> (cur: Iter, inout ctx: context<Iter>) -> cpp2::regex::match_return<Iter> = {\n";
         source += "    ctx..set_group_start(0, cur);\n";
         source += "    r := " + cpp2::to_string(gen_ctx.get_entry_func()) + "(cur, ctx, cpp2::regex::true_end_func());\n";
         source += "    if r.matched { ctx..set_group_end(0, r.pos); }\n";

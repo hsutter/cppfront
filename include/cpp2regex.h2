@@ -14,10 +14,10 @@
 #define CPP2_CPP2REGEX_H
 
 template<typename matcher_wrapper, typename Iter, typename CharT>
-using matcher_wrapper_type = typename matcher_wrapper::template wrap<Iter, CharT>;
+using matcher_wrapper_type = typename matcher_wrapper::template wrap<CharT>;
 
-template<typename matcher>
-using matcher_context_type = typename matcher::context;
+template<typename matcher, typename Iter>
+using matcher_context_type = typename matcher::template context<Iter>;
 
 cpp2: namespace = {
 
@@ -771,7 +771,7 @@ word_boundary_token_matcher: <CharT, negate: bool> (inout cur, inout ctx) -> boo
 regular_expression: <CharT, matcher_wrapper> type = 
 {
     matcher: <Iter> type == matcher_wrapper_type<matcher_wrapper, Iter, CharT>; // TODO: Remove when nested types are allowed: https://github.com/hsutter/cppfront/issues/727
-    context: <Iter> type == matcher_context_type<matcher<Iter>>;                      // TODO: Remove when nested types are allowed: https://github.com/hsutter/cppfront/issues/727
+    context: <Iter> type == matcher_context_type<matcher<Iter>, Iter>;                      // TODO: Remove when nested types are allowed: https://github.com/hsutter/cppfront/issues/727
 
     search_return: <Iter> type = 
     {

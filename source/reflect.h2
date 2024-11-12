@@ -2364,7 +2364,7 @@ generation_context: type =
         cur := new_context();
 
         cur*.code += "(cur*.tabs)$(name)$: @struct<noforward> type = {\n";
-        cur*.code += "(cur*.tabs)$  operator(): <Iter2> (this, cur: Iter2, inout ctx, other) -> cpp2::regex::match_return<Iter2> = {\n";
+        cur*.code += "(cur*.tabs)$  operator(): <Iter> (this, cur: Iter, inout ctx, other) -> cpp2::regex::match_return<Iter> = {\n";
         cur*.code += "(cur*.tabs)$    r := ctx..pass(cur);\n";
         cur*.code += "(cur*.tabs)$    do {\n";
         cur*..add_tabs(3);
@@ -3782,12 +3782,12 @@ regex_generator: <Error_out> type =
         }
 
         source += "{\n";
-        source += " wrap: <Iter, CharT> type = {\n"; // TODO: Remove wrapper when template template parameters are available.
-        source += "  context: type == cpp2::regex::match_context<CharT, Iter, (parse_ctx..get_cur_group())$>;";
+        source += " wrap: <CharT> type = {\n"; // TODO: Remove wrapper when template template parameters are available.
+        source += "  context: <Iter> type == cpp2::regex::match_context<CharT, Iter, (parse_ctx..get_cur_group())$>;";
 
         gen_ctx: generation_context = ();
         source += gen_ctx..run(parse_ctx..get_as_token());
-        source += "  entry: (cur: Iter, inout ctx: context) -> cpp2::regex::match_return<Iter> = {\n";
+        source += "  entry: <Iter> (cur: Iter, inout ctx: context<Iter>) -> cpp2::regex::match_return<Iter> = {\n";
         source += "    ctx..set_group_start(0, cur);\n";
         source += "    r := (gen_ctx..get_entry_func())$(cur, ctx, cpp2::regex::true_end_func());\n";
         source += "    if r.matched { ctx..set_group_end(0, r.pos); }\n";

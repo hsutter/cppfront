@@ -97,10 +97,10 @@ template<typename CharT, typename matcher_wrapper> class regular_expression;
 #define CPP2_CPP2REGEX_H
 
 template<typename matcher_wrapper, typename Iter, typename CharT>
-using matcher_wrapper_type = typename matcher_wrapper::template wrap<Iter, CharT>;
+using matcher_wrapper_type = typename matcher_wrapper::template wrap<CharT>;
 
-template<typename matcher>
-using matcher_context_type = typename matcher::context;
+template<typename matcher, typename Iter>
+using matcher_context_type = typename matcher::template context<Iter>;
 
 #line 22 "cpp2regex.h2"
 namespace cpp2 {
@@ -654,7 +654,7 @@ template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_mat
 template<typename CharT, typename matcher_wrapper> class regular_expression
  {
     public: template<typename Iter> using matcher = matcher_wrapper_type<matcher_wrapper,Iter,CharT>;// TODO: Remove when nested types are allowed: https://github.com/hsutter/cppfront/issues/727
-    public: template<typename Iter> using context = matcher_context_type<matcher<Iter>>;// TODO: Remove when nested types are allowed: https://github.com/hsutter/cppfront/issues/727
+    public: template<typename Iter> using context = matcher_context_type<matcher<Iter>,Iter>;// TODO: Remove when nested types are allowed: https://github.com/hsutter/cppfront/issues/727
 
     public: template<typename Iter> class search_return
      {
