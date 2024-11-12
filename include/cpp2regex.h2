@@ -109,6 +109,12 @@ match_context: <CharT, Iter, max_groups: int> type =
     //
     fail: (in this)            = match_return<Iter>(false, end);
     pass: (in this, cur: Iter) = match_return<Iter>(true, cur);
+
+    reset: (inout this) = {
+        for groups do (inout g) {
+            g.matched = false;
+        }
+    }
 }
 
 
@@ -687,6 +693,12 @@ regular_expression: <CharT, matcher_wrapper> type =
             pos = unchecked_narrow<int>(std::distance(ctx_.begin, pos_));
         }
 
+        operator=:(out this, begin: Iter, end: Iter) = {
+            matched = false;
+            ctx = (begin, end);
+            pos = 0;
+        }
+
         group_number: (this)         = ctx..size();
         group:        (this, g: int) = ctx..get_group_string(g);
         group_start:  (this, g: int) = ctx..get_group_start(g);
@@ -696,12 +708,48 @@ regular_expression: <CharT, matcher_wrapper> type =
         group_start:  (this, g: bstring<CharT>) = group_start(get_group_id(g));
         group_end:    (this, g: bstring<CharT>) = group_end(get_group_id(g));
 
+        update:       (inout this, r: match_return<Iter>) = {
+            matched = r.matched;
+            pos     = unchecked_narrow<int>(std::distance(ctx.begin, r.pos));
+        }
+
         private get_group_id: (this, g: bstring<CharT>) -> _ = {
             group_id := matcher<Iter>::get_named_group_index(g);
             if -1 == group_id {
                 // TODO: Throw error.
             }
             return group_id;
+        }
+    }
+
+    find_all: (in this, forward func, str: bview<CharT>)                           = find_all(func, str..begin(), str..end());
+    find_all: (in this, forward func, str: bview<CharT>, start: int)               = find_all(func, get_iter(str, start), str..end());
+    find_all: (in this, forward func, str: bview<CharT>, start: int, length : int) = find_all(func, get_iter(str, start), get_iter(str, start + length));
+    find_all: <Iter> (in this, func, start: Iter, end: Iter) =
+    {
+        sr := search_return<Iter>(start, end);
+        cont := true;
+        cur := start;
+
+        while cont {
+            r := search_with_context(sr.ctx, cur);
+            cont = r.matched; // First update the continue so that the user can override it.
+
+            if r.matched {
+                sr..update(r);
+                cont = func(sr);
+            }
+
+            if cont {
+                // Prevent infinity loop for zero length match.
+                cont = 0 != sr.ctx..get_group_end(0) - sr.ctx..get_group_start(0);
+            }
+
+            // Check now if to continue, user may override
+            if cont {
+                cur = start + sr.ctx..get_group_end(0);
+                sr.ctx.reset();
+            }
         }
     }
 
@@ -719,9 +767,14 @@ regular_expression: <CharT, matcher_wrapper> type =
     search: (in this, str: bview<CharT>)                = search(str..begin(), str..end());
     search: (in this, str: bview<CharT>, start)         = search(get_iter(str, start), str..end());
     search: (in this, str: bview<CharT>, start, length) = search(get_iter(str, start), get_iter(str, start + length));
-    search: <Iter> (in this, start: Iter, end: Iter) -> search_return<Iter> = 
-    {
+    search: <Iter> (in this, start: Iter, end: Iter) -> search_return<Iter> = {
         ctx: context<Iter> = (start, end);
+        r := search_with_context(ctx, start);
+        return search_return<Iter>(r.matched, ctx, r.pos);
+    }
+
+    private search_with_context: <Iter> (in this, inout ctx: context<Iter>, start: Iter) -> match_return<Iter> =
+    {
         r := ctx..fail();
 
         cur:= start;
@@ -740,8 +793,10 @@ regular_expression: <CharT, matcher_wrapper> type =
             }
         }
 
-        return search_return<Iter>(r.matched, ctx, r.pos);
+        return r;
     }
+
+
 
     to_string: (in this) = matcher_wrapper::to_string();
 
