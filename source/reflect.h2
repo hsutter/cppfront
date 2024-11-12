@@ -3145,7 +3145,7 @@ group_token: @polymorphic_base type =
         r*..set_string("((syntax)$(r*.inner*..to_string())$)");
 
         if !lookahead {
-            r*.inner = r*.inner*.reverse();
+            r*.inner = r*.inner*..reverse();
         }
 
         return r;
