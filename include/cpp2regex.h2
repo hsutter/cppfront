@@ -67,6 +67,9 @@ match_context: <CharT, Iter, max_groups: int> type =
 
     operator=: (out this, that) = {}
 
+    // Helper functions
+    reverse: (inout this) = { std::swap(begin, end); }
+
     //  Getter and setter for groups
     //
     get_group: (in this, group) = groups[group];
@@ -494,6 +497,18 @@ lookahead_token_matcher: <CharT, positive: bool> (cur, inout ctx, func) -> bool 
     if !positive {
         r.matched = !r.matched;
     }
+
+    return r.matched;
+}
+
+lookbehind_token_matcher: <CharT, positive: bool> (cur, inout ctx, func) -> bool =
+{
+    ctx..reverse();
+    r := func(std::make_reverse_iterator(cur), ctx, true_end_func());
+    if !positive {
+        r.matched = !r.matched;
+    }
+    ctx..reverse();
 
     return r.matched;
 }

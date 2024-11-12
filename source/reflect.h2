@@ -3103,16 +3103,20 @@ group_token: @polymorphic_base type =
     reverse_eval: bool      = false;
     inner:        token_ptr = nullptr;
 
-    parse_lookahead: (inout ctx: parse_context, syntax: std::string, positive: bool) -> token_ptr = 
+    parse_lookahead_lookbehind: (inout ctx: parse_context, syntax: std::string, lookahead: bool, positive: bool) -> token_ptr =
     {
         _ = ctx..next(); // Skip last token defining the syntax
 
-        r := shared.new<lookahead_token>(positive);
+        r := shared.new<lookahead_lookbehind_token>(lookahead, positive);
 
         old_state := ctx..start_group();
-        if !ctx..parse_until(')') { return ctx..error("Lookahead without a closing bracket."); }
+        if !ctx..parse_until(')') { return ctx..error("Group without a closing bracket."); }
         r*.inner = ctx..end_group(old_state);
         r*..set_string("((syntax)$(r*.inner*..to_string())$)");
+
+        if !lookahead {
+            r*.inner = r*.inner*.reverse();
+        }
 
         return r;
     }
@@ -3136,7 +3140,14 @@ group_token: @polymorphic_base type =
             //  Special group
             if !ctx..next_no_skip() { return ctx..error("Missing character after group opening.");  }
 
-            if ctx..current() == '<' || ctx..current() == '\'' 
+            if  ctx.current() == '<' && (ctx.peek() == '=' || ctx.peek() == '!')
+            {
+                // Lookbehind
+                _ = ctx.next(); // Skip the '<'
+
+                return parse_lookahead_lookbehind(ctx, "?<(ctx..current())$", false, ctx..current() == '=');
+            }
+            else if ctx..current() == '<' || ctx..current() == '\''
             {
                 //  Named group
                 end_char := ctx..current();
@@ -3187,7 +3198,8 @@ group_token: @polymorphic_base type =
             }
             else if ctx..current() == '=' || ctx..current() == '!' 
             {
-                return parse_lookahead(ctx, "?(ctx..current())$", ctx..current() == '=');
+                // Lookahead
+                return parse_lookahead_lookbehind(ctx, "?(ctx..current())$", true, ctx..current() == '=');
             }
             else 
             {
@@ -3214,10 +3226,16 @@ group_token: @polymorphic_base type =
             if !ctx..grab_until(':', out name) { return ctx..error("Missing colon for named pattern.");  }
 
             if name == "pla" || name == "positive_lookahead" {
-                return parse_lookahead(ctx, "*(name)$:", true);
+                return parse_lookahead_lookbehind(ctx, "*(name)$:", true, true);
             }
             else if name == "nla" || name == "negative_lookahead" {
-                return parse_lookahead(ctx, "*(name)$:", false);
+                return parse_lookahead_lookbehind(ctx, "*(name)$:", true, false);
+            }
+            else if name == "plb" || name == "positive_lookbehind" {
+                return parse_lookahead_lookbehind(ctx, "*(name)$:", false, true);
+            }
+            else if name == "nlb" || name == "negative_lookbehind" {
+                return parse_lookahead_lookbehind(ctx, "*(name)$:", false, false);
             }
             else {
                 return ctx..error("Unknown named group pattern: '(name)$'");
@@ -3402,21 +3420,28 @@ line_start_token_parse: (inout ctx: parse_context) -> token_ptr =
 //
 //  Parsed in group_token.
 //
-lookahead_token: @polymorphic_base type = 
+lookahead_lookbehind_token: @polymorphic_base type =
 {
     this: regex_token = ("");
 
-    protected positive: bool;
-    public    inner   : token_ptr = nullptr;
+    protected lookahead: bool;
+    protected positive:  bool;
+    public    inner   :  token_ptr = nullptr;
 
-    operator=: (out this, positive_: bool) = {
-        positive = positive_;
+    operator=: (out this, lookahead_: bool, positive_: bool) = {
+        lookahead = lookahead_;
+        positive  = positive_;
     }
 
     generate_code: (override this, inout ctx: generation_context) = {
         inner_name := ctx..generate_func(inner);
 
-        ctx..add_check("lookahead_token_matcher<char, (positive)$>((ctx..match_parameters())$, (inner_name)$)");
+        if lookahead {
+            ctx..add_check("lookahead_token_matcher<char, (positive)$>((ctx..match_parameters())$, (inner_name)$)");
+        }
+        else {
+            ctx..add_check("lookbehind_token_matcher<char, (positive)$>((ctx..match_parameters())$, (inner_name)$)");
+        }
     }
 
     reverse: (override this) -> token_ptr = {
