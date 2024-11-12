@@ -172,6 +172,7 @@ test_tests_04_start_end: @regex type = {
   regex_07 := R"(^)";
   regex_08 := R"($)";
   regex_09 := R"($b)";
+  regex_10 := R"(\GX.*X)";
   run: (this) = {
     std::cout << "Running tests_04_start_end:"<< std::endl;
     test(regex_01, "01", R"(^abc$)", "abc", "y", R"($&)", "abc");
@@ -183,6 +184,7 @@ test_tests_04_start_end: @regex type = {
     test(regex_07, "07", R"(^)", "abc", "y", R"($&)", "");
     test(regex_08, "08", R"($)", "abc", "y", R"($&)", "");
     test(regex_09, "09", R"($b)", "b", "n", R"(-)", "-");
+    test(regex_10, "10", R"(\GX.*X)", "aaaXbX", "n", R"(-)", "-");
     std::cout << std::endl;
   }
 }

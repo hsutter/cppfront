@@ -1890,6 +1890,8 @@ parse_context: type =
     pos:   size_t = 0;         // Current parsing position.
     root:  token_ptr;          // Token representing the regular expression.
 
+    public is_start_match: bool = false;  // If the regex contains \G at the beginning.
+
     cur_group_state:        parse_context_group_state = ();
     cur_branch_reset_state: parse_context_branch_reset_state = ();
 
@@ -2235,6 +2237,7 @@ parse_context: type =
             if !cur_token && valid() { cur_token = octal_token_parse(this); }
             if !cur_token && valid() { cur_token = range_token::parse(this); }
             if !cur_token && valid() { cur_token = special_range_token::parse(this); }
+            if !cur_token && valid() { cur_token = start_match_parse(this); }
             if !cur_token && valid() { cur_token = word_boundary_token_parse(this); }
 
             // Everything else is matched as it is.
@@ -3584,6 +3587,25 @@ special_range_token: @polymorphic_base type =
     }
 }
 
+//  Regex syntax: \G  Example: \Gaa
+//
+//  Forces the match and/or consecutive matches to start at the position of the last match.
+//
+start_match_parse: (inout ctx: parse_context) -> token_ptr =
+{
+    if ctx..current() != '\\' { return nullptr; }
+
+    if ctx..peek() == 'G' {
+        if 0 != ctx..get_pos() { return ctx..error("\\G is only supported at the first position in the regex."); }
+        _ = ctx..next();
+        ctx.is_start_match = true;
+        return shared.new<regex_token_empty>("\\G");
+    }
+    else {
+        return nullptr;
+    }
+}
+
 
 //  Regex syntax: \b or \B  Example: \bword\b
 //
@@ -3654,10 +3676,12 @@ regex_generator: <Error_out> type =
         source += "  }\n";
 
         source += gen_ctx..create_named_group_lookup(parse_ctx.named_groups);
-        source += "}\n";
+        source += "  is_start_match: () -> bool == (parse_ctx.is_start_match)$;";
+        source += "}\n"; // wrap end
 
         string := parse_ctx..get_as_token()*..to_string();
         source += "  to_string: () -> std::string = { return R\"((modifier_escape)$(string)$(modifier_escape)$(modifier)$)\"; }\n";
+
         source += "}\n";
 
         _ = parse_ctx;

@@ -734,6 +734,10 @@ regular_expression: <CharT, matcher_wrapper> type =
             if cur == ctx.end {
                 break;
             }
+
+            if matcher<Iter>::is_start_match() {
+                break; // Always break with \G option.
+            }
         }
 
         return search_return<Iter>(r.matched, ctx, r.pos);
