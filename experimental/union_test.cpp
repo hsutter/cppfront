@@ -20,21 +20,29 @@
 //      Tag             discriminator tag to store for each object (uintNN_t where
 //                      NN is large enough to hold the #alternatives in the union)
 //
-//  For an object U of union type, when       inject a call to this (zero-based alternative #s)
-//    U is created initialized                  on_set_alternative(&U,0) = the first alternative# is active
-//    U is created uninitialized                on_set_alternative(&U,invalid)
-//    U.A = xxx (alt #A is assigned to)         on_set_alternative(&U,A)
-//    U.A (alt #A is otherwise mentioned)       on_get_alternative(&U,A)
-//    U is destroyed / goes out of scope        on_destroy(&U)
+//  For an object U of union type that
+//  has a unique address, when              inject a call to this (zero-based alternative #s)
+//
+//    U is created initialized                on_set_alternative(&U,0) = the first alternative# is active
+//
+//    U is created uninitialized              on_set_alternative(&U,invalid)
+//
+//    U.A = xxx (alt #A is assigned to)       on_set_alternative(&U,#A)
+//
+//    U.A (alt #A is otherwise mentioned)     on_get_alternative(&U,#A)
+//      and A is not a common initial
+//      sequence
+//
+//    U is destroyed / goes out of scope      on_destroy(&U)
 //
 //  That's it. Here's an example:
 //    {
 //      union Test { int a; double b; };
-//      Test t = {42};                          union_registry<>::on_set_alternative(&u,0);
-//      std::cout << t.a;                       union_registry<>::on_get_alternative(&u,0);
-//      t.b = 3.14159;                          union_registry<>::on_set_alternative(&u,1);
-//      std::cout << t.b;                       union_registry<>::on_get_alternative(&u,1);
-//    }                                         union_registry<>::on_destroy(&u);
+//      Test t = {42};                        union_registry<>::on_set_alternative(&u,0);
+//      std::cout << t.a;                     union_registry<>::on_get_alternative(&u,0);
+//      t.b = 3.14159;                        union_registry<>::on_set_alternative(&u,1);
+//      std::cout << t.b;                     union_registry<>::on_get_alternative(&u,1);
+//    }                                       union_registry<>::on_destroy(&u);
 //
 //  For all unions with under 256 alternatives, use union_registry<>
 //  For all unions with between 256 and 16k alternatives, use union_registry<uint16_t>
