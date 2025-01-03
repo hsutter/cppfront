@@ -121,18 +121,29 @@ public:
     }
 
     //--------------------------------------------------------------------------
-    //  operator[]( pobj ) - returns the data entry for pobj
+    //  find_or_insert( pobj ) - returns the data entry for pobj
     //
     //  If pobj does not yet have an entry, creates it
     //
-    auto operator[](void* pobj) -> Value& {
+    auto find_or_insert(void* pobj) -> Value& {
         if constexpr (debug_instrumentation) {
             //  m_o_relaxed is enough, inc order doesn't matter for totals
             instrument_access_count.fetch_add(1, std::memory_order_relaxed);
         }
-        auto v = lookup(pobj);
+        auto v = lookup(pobj, lookup_mode::find_or_insert);
         assert (v);
         return *v;
+    }
+
+    //--------------------------------------------------------------------------
+    //  find( pobj ) - returns the data entry for pobj or null if not present
+    //
+    auto find(void* pobj) -> Value* {
+        if constexpr (debug_instrumentation) {
+            //  m_o_relaxed is enough, inc order doesn't matter for totals
+            instrument_access_count.fetch_add(1, std::memory_order_relaxed);
+        }
+        return lookup(pobj, lookup_mode::find_or_insert);
     }
 
     //--------------------------------------------------------------------------
@@ -143,7 +154,7 @@ public:
             //  m_o_relaxed is enough, inc order doesn't matter for totals
             instrument_erase_count.fetch_add(1, std::memory_order_relaxed);
         }
-        lookup(pobj, true);
+        lookup(pobj, lookup_mode::erase);
     }
 
 private:
@@ -178,9 +189,10 @@ private:
     //      as I think they can be correct here and they are in the hot path
     //      of the data structure traversal.
     //
+    enum class lookup_mode { find, find_or_insert, erase };
     auto lookup(
-        void* pobj,
-        bool  erase = false
+        void*       pobj,
+        lookup_mode mode
     )
         -> Value*
     {
@@ -202,7 +214,7 @@ private:
                 //  and so this thread already has exclusive access to *pobj
                 //  and its .values data
                 if (pchunk->keys[i].load(std::memory_order_relaxed) == pobj) {
-                    if (erase) { 
+                    if (mode == lookup_mode::erase) { 
                         pchunk->keys[i].store(nullptr, std::memory_order_relaxed); 
                         return nullptr;
                     }
@@ -217,11 +229,14 @@ private:
             pchunk = pchunk->next.load(std::memory_order_relaxed);
         }
 
-        //  2. Otherwise, if we're erasing we're done but we didn't actually find something to erase
-        if (erase) { 
+        //  2. Otherwise, if we're not allowed to insert we're done 
+        //     but we didn't actually find something so return null
+        if (mode != lookup_mode::find_or_insert) { 
             if constexpr (debug_instrumentation) {
-                //  m_o_relaxed is enough, inc order doesn't matter for totals
-                instrument_erase_fail_count.fetch_add(1, std::memory_order_relaxed);
+                if (mode == lookup_mode::erase) {
+                    //  m_o_relaxed is enough, inc order doesn't matter for totals
+                    instrument_erase_fail_count.fetch_add(1, std::memory_order_relaxed);
+                }
             }
             return nullptr;
         }

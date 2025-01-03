@@ -55,25 +55,25 @@
 //
 template<typename Tag = uint8_t>
 class union_registry {
-    inline static auto tags    = extrinsic_storage<Tag>{};
-    inline static auto log     = std::ofstream{ "union-violations.log" };
+    static inline auto tags    = extrinsic_storage<Tag>{};
+    static inline auto log     = std::ofstream{ "union-violations.log" };
 public:
-    inline static auto invalid = std::numeric_limits<Tag>::max();
-    inline static auto unknown = std::numeric_limits<Tag>::max()-1;
+    static inline auto invalid = std::numeric_limits<Tag>::max();
+    static inline auto unknown = std::numeric_limits<Tag>::max()-1;
 
-    static auto on_destroy        (void* pobj)               -> void { tags.erase(pobj); }
-    static auto on_set_alternative(void* pobj, uint32_t alt) -> void { tags[pobj] = alt; }
-    static auto on_get_alternative(void* pobj, uint32_t alt, std::source_location where = std::source_location::current()) -> void
+    static inline auto on_destroy        (void* pobj)               -> void { tags.erase(pobj); }
+    static inline auto on_set_alternative(void* pobj, uint32_t alt) -> void { tags.find_or_insert(pobj) = alt; }
+    static inline auto on_get_alternative(void* pobj, uint32_t alt, std::source_location where = std::source_location::current()) -> void
     {
-        if (auto active = tags[pobj];
-            active != alt
-            && active != unknown
+        if (auto active = tags.find(pobj);
+            active                  // if we have discriminator info for this union
+            && *active != alt       // and the discriminator not what is expected
+            && *active != unknown   // and is not unknown
             )
         { 
-            log << where.file_name() << '(' << where.line() << ") " << where.function_name()
-                << ": union " << pobj 
-                << ", active " << (active == invalid ? "invalid" : std::to_string(active))
-                << ", accessed " << alt << "\n";
+            log << where.file_name() << '(' << where.line()
+                << "): union type safety violation - active member " << (*active == invalid ? "invalid" : std::to_string(*active))
+                << ", attempted to access " << alt << "\n";
         }
     }
 };
