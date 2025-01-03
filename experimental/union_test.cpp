@@ -29,7 +29,7 @@
 //
 //    U.A = xxx (alt A is assigned to)        on_set_alternative(&U,#A)
 //
-//    U.A is passed to a function by          on_set_alternative(&U,unknown)
+//    U or U.A is passed to a function by     on_set_alternative(&U,unknown)
 //      pointer/reference to non-const
 //
 //    U.A (alt A is otherwise used)           on_get_alternative(&U,#A)
