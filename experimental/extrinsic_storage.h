@@ -124,15 +124,14 @@ public:
     //  find_or_insert( pobj ) - returns the data entry for pobj
     //
     //  If pobj does not yet have an entry, creates it
+    //  Returns null only if not present and allocation is needed but fails
     //
-    auto find_or_insert(void* pobj) noexcept -> Value& {
+    auto find_or_insert(void* pobj) noexcept -> Value* {
         if constexpr (debug_instrumentation) {
             //  m_o_relaxed is enough, inc order doesn't matter for totals
             instrument_access_count.fetch_add(1, std::memory_order_relaxed);
         }
-        auto v = lookup(pobj, lookup_mode::find_or_insert);
-        assert (v);
-        return *v;
+        return lookup(pobj, lookup_mode::find_or_insert);
     }
 
     //--------------------------------------------------------------------------
@@ -143,7 +142,7 @@ public:
             //  m_o_relaxed is enough, inc order doesn't matter for totals
             instrument_access_count.fetch_add(1, std::memory_order_relaxed);
         }
-        return lookup(pobj, lookup_mode::find_or_insert);
+        return lookup(pobj, lookup_mode::find);
     }
 
     //--------------------------------------------------------------------------
@@ -171,8 +170,10 @@ private:
     //
     //  Parameters
     //      pobj    the key to look up
-    //      erase   if true, reset key to null and return nullptr
-    //              if false, return a pointer to the value (insert key if not present)
+    //      mode    if erase, reset key to null and return nullptr
+    //              if find, return a pointer to the value if it exists, or null
+    //              if find_or_insert, return a pointer to the value (inserted if
+    //                   not present) or null if allocation was needed and failed
     // 
     //  (*) This function requires that the calling code has exclusive access to
     //      *pobj, and if *pobj is shared has done any necessary synchronization
@@ -274,10 +275,16 @@ private:
         //  b) Otherwise, we need to allocate a new chunk for it
         //     At this point, pchunk points to the last chunk in this bucket
         assert (pchunk);
-        auto pnew = std::make_unique<chunk>();
-        auto ret  = &pnew->values[0];
+
+        //  Not using make_unique: In principle, if allocation fails we don't
+        //  want to change well-formed program behavior. (In practice, if this
+        //  small allocation ever fails the program is already in deep trouble;
+        //  unless Key or Data are large, a chunk is usually well under 1KB)
+        auto pnew = std::unique_ptr<chunk>( new (std::nothrow) chunk{} );
+        if (pnew == nullptr) { return nullptr; }
 
         pnew->keys[0] = pobj;
+        auto ret  = &pnew->values[0];
         while (!pchunk->next.compare_exchange_weak_null(pnew)) {
             pchunk = pchunk->next.load();
             assert (pchunk);

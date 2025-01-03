@@ -61,10 +61,13 @@ public:
     static inline auto invalid = std::numeric_limits<Tag>::max();
     static inline auto unknown = std::numeric_limits<Tag>::max()-1;
 
-    static inline auto on_destroy        (void* pobj)               noexcept -> void { tags.erase(pobj); }
-    static inline auto on_set_alternative(void* pobj, uint32_t alt) noexcept -> void { tags.find_or_insert(pobj) = alt; }
-    static inline auto on_get_alternative(void* pobj, uint32_t alt, std::source_location where = std::source_location::current()) -> void
-    {
+    static inline auto on_destroy(void* pobj) noexcept -> void { tags.erase(pobj); }
+
+    static inline auto on_set_alternative(void* pobj, uint32_t alt) noexcept -> void {
+        if (auto p = tags.find_or_insert(pobj)) { *p = alt; }
+    }
+    
+    static inline auto on_get_alternative(void* pobj, uint32_t alt, std::source_location where = std::source_location::current()) -> void {
         if (auto active = tags.find(pobj);
             active                  // if we have discriminator info for this union
             && *active != alt       // and the discriminator not what is expected
