@@ -11,7 +11,7 @@
 
 //  *****************************************************************
 //  Enable/disable debug instrumentation and statistics printing here
-constexpr auto debug_instrumentation = false;
+constexpr auto debug_instrumentation = true;
 //  *****************************************************************
 
 
@@ -197,10 +197,12 @@ private:
     ) noexcept
         -> Value*
     {
-        auto hash = (((std::size_t)pobj)>>2) % Buckets;
-        //  in my experiments, this has smoother utilization (only
-        //  6.6x difference between the most vs least popular bucket)
-        //  than std::hash<void*>{}(pobj) % Buckets (22x difference)
+        //auto hash = std::hash<void*>{}(pobj) % Buckets;   // A
+        auto hash = (((std::size_t)pobj)>>2) % Buckets;     // B
+            //  across the three major C++ implementations I tried, hash B has
+            //  smoother utilization (2% to 5% difference between the most vs
+            //  least popular bucket) than hash A (3.5% to 16% difference)
+
         assert( 0 <= hash && hash < Buckets );
         if constexpr (debug_instrumentation) {
             //  m_o_relaxed is enough, inc order doesn't matter for totals
