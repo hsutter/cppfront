@@ -8,25 +8,21 @@
 #ifndef CPP2_EXPERIMENTAL_EXTRINSIC_STORAGE_H
 #define CPP2_EXPERIMENTAL_EXTRINSIC_STORAGE_H
 
-
 //  *****************************************************************
 //  Enable/disable debug instrumentation and statistics printing here
-constexpr auto debug_instrumentation = true;
+constexpr inline auto debug_instrumentation = false;
 //  *****************************************************************
-
 
 #include <algorithm>
 #include <array>
 #include <atomic>
 #include <cassert>
 #include <cstdint>
-#include <fstream>
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <map>
-#include <iostream>
 #include <ranges>
-#include <source_location>
 #include <string>
 #include <type_traits>
 

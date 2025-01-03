@@ -5,10 +5,14 @@
 //  Part of the Cppfront Project, under the Apache License v2.0 with LLVM Exceptions.
 //  See https://github.com/hsutter/cppfront/blob/main/LICENSE for license information.
 
+//#include "extrinsic_storage_std_locked.h"
 #include "extrinsic_storage.h"
 
 #include <chrono>
 #include <cstdint>
+#include <fstream>
+#include <iostream>
+#include <source_location>
 #include <thread>
 #include <vector>
 
