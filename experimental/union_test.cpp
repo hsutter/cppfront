@@ -21,15 +21,18 @@
 //                      NN is large enough to hold the #alternatives in the union)
 //
 //  For an object U of union type that
-//  has a unique address, when              inject a call to this (zero-based alternative #s)
+//  has a unique address, when              Inject a call to this (zero-based alternative #s)
 //
 //    U is created initialized                on_set_alternative(&U,0) = the first alternative# is active
 //
 //    U is created uninitialized              on_set_alternative(&U,invalid)
 //
-//    U.A = xxx (alt #A is assigned to)       on_set_alternative(&U,#A)
+//    U.A = xxx (alt A is assigned to)        on_set_alternative(&U,#A)
 //
-//    U.A (alt #A is otherwise mentioned)     on_get_alternative(&U,#A)
+//    U.A is passed to a function by          on_set_alternative(&U,unknown)
+//      pointer/reference to non-const
+//
+//    U.A (alt A is otherwise used)           on_get_alternative(&U,#A)
 //      and A is not a common initial
 //      sequence
 //
@@ -44,9 +47,9 @@
 //      std::cout << t.b;                     union_registry<>::on_get_alternative(&u,1);
 //    }                                       union_registry<>::on_destroy(&u);
 //
-//  For all unions with under 256 alternatives, use union_registry<>
-//  For all unions with between 256 and 16k alternatives, use union_registry<uint16_t>
-//  If you find a union with >16k alternatives, email me the story and use union_registry<uint32_t>
+//  For all unions with up to 254 alternatives, use union_registry<>
+//  For all unions with between 255 and 16k-2 alternatives, use union_registry<uint16_t>
+//  If you find a union with >16k-2 alternatives, email me the story and use union_registry<uint32_t>
 //
 template<typename Tag = uint8_t>
 class union_registry {
@@ -54,6 +57,7 @@ class union_registry {
     inline static auto log     = std::ofstream{ "union-violations.log" };
 public:
     inline static auto invalid = std::numeric_limits<Tag>::max();
+    inline static auto unknown = std::numeric_limits<Tag>::max()-1;
 
     static auto on_destroy        (void* pobj)               -> void { tags.erase(pobj); }
     static auto on_set_alternative(void* pobj, uint32_t alt) -> void { tags[pobj] = alt; }
@@ -61,7 +65,9 @@ public:
     {
         if (auto active = tags[pobj];
             active != alt
-            ) { 
+            && active != unknown
+            )
+        { 
             log << where.file_name() << '(' << where.line() << ") " << where.function_name()
                 << ": union " << pobj 
                 << ", active " << (active == invalid ? "invalid" : std::to_string(active))
