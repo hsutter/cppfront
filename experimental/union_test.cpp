@@ -31,6 +31,8 @@
 //
 //    U or U.A is passed to a function by     on_set_alternative(&U,unknown)
 //      pointer/reference to non-const
+//      and we don't know the function
+//      is compiled in this mode
 //
 //    U.A (alt A is otherwise used)           on_get_alternative(&U,#A)
 //      and A is not a common initial
