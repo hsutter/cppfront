@@ -557,6 +557,7 @@ constexpr bool is_escaped(std::string_view s) {
 }
 
 inline bool string_to_int(std::string const& s, int& v, int base = 10) {
+#ifndef CPP2_NO_EXCEPTIONS
     try {
         v = stoi(s, nullptr, base);
         return true;
@@ -569,6 +570,20 @@ inline bool string_to_int(std::string const& s, int& v, int base = 10) {
     {
         return false;
     }
+#else
+    errno = 0;
+    char* end = nullptr;
+
+    const long num = std::strtol(s.c_str(), &end, base);
+
+    if (end == s.c_str() || *end != '\0')
+        return false; // invalid argument
+    if (errno == ERANGE || num < std::numeric_limits<int>::min() || num > std::numeric_limits<int>::max())
+        return false; // out of range
+
+    v = static_cast<int>(num);
+    return true;
+#endif
 }
 
 template<int Base = 10>
@@ -2328,9 +2343,9 @@ public:
         if (include_last) { 
             if constexpr (std::integral<TT>) {
                 if (last == std::numeric_limits<TT>::max()) {
-                    throw std::runtime_error(
+                    impl::Throw( std::runtime_error(
                         "range with last == numeric_limits<T>::max() will overflow"
-                    );
+                    ), "range with last == numeric_limits<T>::max() will overflow");
                 }
             }
             ++last; 
