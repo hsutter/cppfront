@@ -24,8 +24,9 @@ main: () = {
     hello( words[1] );
 }
 
-hello: (msg: std::string_view) =
+hello: (msg: std::string_view) = {
     std::cout << "Hello, (msg)$!\n";
+}
 ```
 
 This short program code already illustrates a few Cpp2 essentials.
