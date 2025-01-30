@@ -24,8 +24,9 @@ main: () = {
     hello( words[1] );
 }
 
-hello: (msg: std::string_view) =
+hello: (msg: std::string_view) = {
     std::cout << "Hello, (msg)$!\n";
+}
 ```
 
 This short program code already illustrates a few Cpp2 essentials.
@@ -151,4 +152,4 @@ Hello, world!
 ### &#10148; Next: [Adding cppfront to your existing C++ project](integration.md)
 
 
-[^clean-cpp1]: For presentation purposes, this documentation generally shows the `.cpp` as generated when using cppfront's `-c` (short for `-clean-cpp1`), which suppresses extra information cppfront normally emits in the `.cpp` to light up C++ tools (e.g., to let IDEs integrate cppfront error message output, debuggers step to the right lines in Cpp2 source code, and so forth). In normal use, you won't need or even want `-c`.
+[^clean-cpp1]: For presentation purposes, this documentation generally shows the `.cpp` as generated when using cppfront's `-cl` (short for `-clean-cpp1`), which suppresses extra information cppfront normally emits in the `.cpp` to light up C++ tools (e.g., to let IDEs integrate cppfront error message output, debuggers step to the right lines in Cpp2 source code, and so forth). In normal use, you won't need or even want `-cl`.
