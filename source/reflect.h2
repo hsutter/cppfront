@@ -1612,10 +1612,10 @@ print: (t: meta::type_declaration) =
 //
 noisy: (t: meta::type_declaration) =
 {
-    for   t.get_members()
-    do    (m)
-    if    m.is_function()
-          && !m.has_name("operator=")
+    for t.get_members()
+    do  (m)
+    if  m.is_function()
+        && !m.has_name("operator=")
     {
         mf := m.as_function();
         if mf.has_compound_body() {

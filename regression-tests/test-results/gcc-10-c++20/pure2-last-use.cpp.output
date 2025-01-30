@@ -102,9 +102,9 @@ pure2-last-use.cpp2:266:7: note: candidates are: ‘issue_857_6& issue_857_6::op
 pure2-last-use.cpp2:266:7: note:                 ‘issue_857_6& issue_857_6::operator=(const issue_857_6&)’
 pure2-last-use.cpp2:272:14: note:                 ‘template<class auto:125> issue_857_6& issue_857_6::operator=(auto:125&&)’
 pure2-last-use.cpp2:266:7: note: ‘class issue_857_6’ defined here
-pure2-last-use.cpp2:279:272: error: ‘move_only_function’ is not a member of ‘std’
-pure2-last-use.cpp2:279:295: error: template argument 1 is invalid
-pure2-last-use.cpp2:279:299: error: expected primary-expression before ‘>’ token
-pure2-last-use.cpp2:279:304: error: label ‘std’ referenced outside of any function
-pure2-last-use.cpp2:279:307: error: expected ‘)’ before ‘::’ token
+pure2-last-use.cpp2:279:301: error: ‘move_only_function’ is not a member of ‘std’
+pure2-last-use.cpp2:279:324: error: template argument 1 is invalid
+pure2-last-use.cpp2:279:328: error: expected primary-expression before ‘>’ token
+pure2-last-use.cpp2:279:333: error: label ‘std’ referenced outside of any function
+pure2-last-use.cpp2:279:336: error: expected ‘)’ before ‘::’ token
 pure2-last-use.cpp2:280: confused by earlier errors, bailing out

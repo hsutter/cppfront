@@ -3315,9 +3315,9 @@ auto print(cpp2::impl::in<meta::type_declaration> t) -> void
 auto noisy(cpp2::impl::in<meta::type_declaration> t) -> void
 {
     for ( 
-           auto const& m : CPP2_UFCS(get_members)(t) ) 
-    if (   CPP2_UFCS(is_function)(m) 
-          && !(CPP2_UFCS(has_name)(m, "operator="))) 
+         auto const& m : CPP2_UFCS(get_members)(t) ) 
+    if ( CPP2_UFCS(is_function)(m) 
+        && !(CPP2_UFCS(has_name)(m, "operator="))) 
     {
         auto mf {CPP2_UFCS(as_function)(m)}; 
         if (CPP2_UFCS(has_compound_body)(mf)) {
