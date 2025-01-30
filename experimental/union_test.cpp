@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <source_location>
 #include <thread>
 #include <vector>
@@ -151,14 +152,9 @@ auto test(int threads = 1) -> void
         }
     };
 
-    if (threads == 1) {
-        run();
-    }
-    else {
-        std::vector<std::jthread> thds;
-        for (auto i = 0; i < threads; ++i) {
-            thds.emplace_back( run );
-        }
+    std::vector<std::jthread> thds;
+    for (auto i = 0; i < threads; ++i) {
+        thds.emplace_back( run );
     }
 }
 
@@ -176,29 +172,39 @@ int main()
     auto tot_raw = int64_t{0};
     auto tot_chk = int64_t{0};
 
-    //  Repeat test sequence a couple of times
-    for (auto reps = 0; reps < 2; ++reps)
+    auto stats = std::map<int,uint64_t>{};
+
+    //  Repeat test sequence a few times
+    for (auto reps = 0; reps < 5; ++reps)
     {
-       //  Run "raw" vs "checked" test for 1, 2, 4, 8, 16, 32, and 64 threads
-       for (auto i = 1; i <= 64; i *= 2)
-       {
-           std::cout << "# threads: " << i << "\n";
+        //  Run "raw" vs "checked" test for 1, 2, 4, 8, 16, 32, 64, and 128 threads
+        for (auto i = 1; i <= 128; i *= 2)
+        {
+            ////std::cout << "# threads: " << i << "\n";
 
-           //  First without checks
-           auto t = timer{};
-           test(i);
-           auto raw_time = t.microseconds();
-           std::cout << "  raw:     " << print(raw_time) << "\n";
-           tot_raw += raw_time;
+            //  First without checks
+            auto t = timer{};
+            test(i);
+            auto raw_time = t.microseconds();
+            ////std::cout << "  raw:     " << print(raw_time) << "\n";
+            tot_raw += raw_time;
 
-           //  Then with checks, via specifying <true>
-           t = timer{};
-           test<true>(i);
-           auto chk_time = t.microseconds();
-           std::cout << "  checked: " << print(chk_time) << "\n";
-           tot_chk += chk_time;
-       }
+            //  Then with checks, via specifying <true>
+            t = timer{};
+            test<true>(i);
+            auto chk_time = t.microseconds();
+            ////std::cout << "  checked: " << print(chk_time) << "\n";
+            stats[i] += chk_time-raw_time;
+            tot_chk += chk_time;
+        }
     }
+
+    //  Print each #threads timings in an Excel-friendly format
+    for (auto [threads, timings] : stats) {
+        if (threads != 1) { std::cout << " "; }
+        std::cout << timings;
+    }
+    std::cout << "\n";
 
     std::cout << "totals\n"
               << "  raw:     " << print(tot_raw) << "\n"

@@ -10,7 +10,13 @@
 
 //  *****************************************************************
 //  Enable/disable debug instrumentation and statistics printing here
-constexpr inline auto debug_instrumentation = false;
+constexpr inline auto debug_instrumentation = true;
+
+//  Try with/without m_o_relaxed
+#define M_O_RELAXED         , std::memory_order_relaxed
+#define M_O_RELAXED_NOCOMMA std::memory_order_relaxed
+//#define M_O_RELAXED
+//#define M_O_RELAXED_NOCOMMA
 //  *****************************************************************
 
 #include <algorithm>
@@ -125,7 +131,7 @@ public:
     auto find_or_insert(void* pobj) noexcept -> Value* {
         if constexpr (debug_instrumentation) {
             //  m_o_relaxed is enough, inc order doesn't matter for totals
-            instrument_access_count.fetch_add(1, std::memory_order_relaxed);
+            instrument_access_count.fetch_add(1 M_O_RELAXED);
         }
         return lookup(pobj, lookup_mode::find_or_insert);
     }
@@ -136,7 +142,7 @@ public:
     auto find(void* pobj) noexcept -> Value* {
         if constexpr (debug_instrumentation) {
             //  m_o_relaxed is enough, inc order doesn't matter for totals
-            instrument_access_count.fetch_add(1, std::memory_order_relaxed);
+            instrument_access_count.fetch_add(1 M_O_RELAXED);
         }
         return lookup(pobj, lookup_mode::find);
     }
@@ -147,7 +153,7 @@ public:
     auto erase(void* pobj) noexcept -> void {
         if constexpr (debug_instrumentation) {
             //  m_o_relaxed is enough, inc order doesn't matter for totals
-            instrument_erase_count.fetch_add(1, std::memory_order_relaxed);
+            instrument_erase_count.fetch_add(1 M_O_RELAXED);
         }
         lookup(pobj, lookup_mode::erase);
     }
@@ -202,7 +208,7 @@ private:
         assert( 0 <= hash && hash < Buckets );
         if constexpr (debug_instrumentation) {
             //  m_o_relaxed is enough, inc order doesn't matter for totals
-            instrument_bucket_access[hash].fetch_add(1, std::memory_order_relaxed);
+            instrument_bucket_access[hash].fetch_add(1 M_O_RELAXED);
         }
 
         //  1. If we find key==pobj, we're done
@@ -212,9 +218,9 @@ private:
                 //  (*) m_o_relaxed is enough, equality means we own the slot
                 //  and so this thread already has exclusive access to *pobj
                 //  and its .values data
-                if (pchunk->keys[i].load(std::memory_order_relaxed) == pobj) {
+                if (pchunk->keys[i].load(M_O_RELAXED_NOCOMMA) == pobj) {
                     if (mode == lookup_mode::erase) { 
-                        pchunk->keys[i].store(nullptr, std::memory_order_relaxed); 
+                        pchunk->keys[i].store(nullptr M_O_RELAXED); 
                         return nullptr;
                     }
                     //  Else
@@ -225,7 +231,7 @@ private:
             //  it is first set to non-null, and if a new chunk(s) was just
             //  concurrently added by a different thread then that new
             //  chunk(s) cannot contain an entry for pobj
-            pchunk = pchunk->next.load(std::memory_order_relaxed);
+            pchunk = pchunk->next.load(M_O_RELAXED_NOCOMMA);
         }
 
         //  2. Otherwise, if we're not allowed to insert we're done 
@@ -234,7 +240,7 @@ private:
             if constexpr (debug_instrumentation) {
                 if (mode == lookup_mode::erase) {
                     //  m_o_relaxed is enough, inc order doesn't matter for totals
-                    instrument_erase_fail_count.fetch_add(1, std::memory_order_relaxed);
+                    instrument_erase_fail_count.fetch_add(1 M_O_RELAXED);
                 }
             }
             return nullptr;
@@ -249,14 +255,14 @@ private:
                 void* null = nullptr;
                 if (
                     //  m_o_relaxed is enough for this first load...
-                    pchunk->keys[i].load(std::memory_order_relaxed) == nullptr
+                    pchunk->keys[i].load(M_O_RELAXED_NOCOMMA) == nullptr
                     //  ... because it's just a best-effort optimization to
                     //  avoid this maybe-unneeded c_e_weak (which is safely SC)
                     && pchunk->keys[i].compare_exchange_weak( null, pobj )
                     ) {
                     if constexpr (debug_instrumentation) {
                         //  m_o_relaxed is enough, inc order doesn't matter for totals
-                        instrument_insert_count.fetch_add(1, std::memory_order_relaxed);
+                        instrument_insert_count.fetch_add(1 M_O_RELAXED);
                     }
                     return &pchunk->values[i];
                 }
@@ -264,7 +270,7 @@ private:
             //  (*) m_o_relaxed is enough here, because if a new chunk(s)
             //  was just concurrently added by a different thread then we'll
             //  just add an extra chunk which is fine
-            if ( pchunk->next.load(std::memory_order_relaxed) == nullptr ) {
+            if ( pchunk->next.load(M_O_RELAXED_NOCOMMA) == nullptr ) {
                 break;
             }
             pchunk = pchunk->next.load();
@@ -290,7 +296,7 @@ private:
 
         if constexpr (debug_instrumentation) {
             //  m_o_relaxed is enough, inc order doesn't matter for totals
-            instrument_alloc_count.fetch_add(1, std::memory_order_relaxed);
+            instrument_alloc_count.fetch_add(1 M_O_RELAXED);
         }
         return ret;
     }
