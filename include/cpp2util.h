@@ -58,6 +58,7 @@
     //  to the 'include std' path
     #if defined(CPP2_IMPORT_STD) && defined(__cpp_lib_modules)
         import std.compat;
+        #include <cerrno>
     //  If 'include std' was requested, include all standard headers.
     //  This list tracks the current draft standard, so as of this
     //  writing includes draft C++26 headers like <debugging>.
@@ -254,6 +255,7 @@
     #endif
     #include <algorithm>
     #include <any>
+    #include <cerrno>
     #include <compare>
     #include <concepts>
     #include <cstddef>
@@ -453,6 +455,144 @@ using _uchar     = unsigned char;    // normally use u8 instead
 
 //-----------------------------------------------------------------------
 //
+//  An implementation of GSL's narrow_cast with a clearly 'unchecked' name
+//
+//-----------------------------------------------------------------------
+//
+namespace impl {
+
+template< typename To, typename From >
+constexpr auto is_narrowing_v =
+    // [dcl.init.list] 7.1
+    (std::is_floating_point_v<From> && std::is_integral_v<To>) ||
+    // [dcl.init.list] 7.2
+    (std::is_floating_point_v<From> && std::is_floating_point_v<To> && sizeof(From) > sizeof(To)) || // NOLINT(misc-redundant-expression)
+    // [dcl.init.list] 7.3
+    (std::is_integral_v<From> && std::is_floating_point_v<To>) ||
+    (std::is_enum_v<From> && std::is_floating_point_v<To>) ||
+    // [dcl.init.list] 7.4
+    (std::is_integral_v<From> && std::is_integral_v<To> && sizeof(From) > sizeof(To)) || // NOLINT(misc-redundant-expression)
+    (std::is_enum_v<From> && std::is_integral_v<To> && sizeof(From) > sizeof(To)) ||
+    // [dcl.init.list] 7.5
+    (std::is_pointer_v<From> && std::is_same_v<To, bool>)
+    ;
+
+}
+
+
+template <typename C, typename X>
+constexpr auto unchecked_narrow( X x ) noexcept 
+    -> decltype(auto)
+    requires (
+        impl::is_narrowing_v<C, X>
+        || (
+            std::is_arithmetic_v<C>
+            && std::is_arithmetic_v<X>
+            )
+        )
+{
+    return static_cast<C>(x);
+}
+
+
+template <typename C, typename X>
+constexpr auto unchecked_cast( X&& x ) noexcept 
+    -> decltype(auto)
+{
+    return static_cast<C>(CPP2_FORWARD(x));
+}
+
+
+//-----------------------------------------------------------------------
+//
+//  contract_group
+//
+//-----------------------------------------------------------------------
+//
+
+#ifdef CPP2_USE_SOURCE_LOCATION
+    #define CPP2_SOURCE_LOCATION_PARAM              , [[maybe_unused]] std::source_location where
+    #define CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT , [[maybe_unused]] std::source_location where = std::source_location::current()
+    #define CPP2_SOURCE_LOCATION_PARAM_SOLO         [[maybe_unused]] std::source_location where
+    #define CPP2_SOURCE_LOCATION_ARG                , where
+    #define CPP2_SOURCE_LOCATION_VALUE              (cpp2::to_string(where.file_name()) + "(" + cpp2::to_string(where.line()) + ") " + where.function_name())
+#else
+    #define CPP2_SOURCE_LOCATION_PARAM
+    #define CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT
+    #define CPP2_SOURCE_LOCATION_PARAM_SOLO
+    #define CPP2_SOURCE_LOCATION_ARG
+    #define CPP2_SOURCE_LOCATION_VALUE              std::string("")
+#endif
+
+//  For C++23: make this std::string_view and drop the macro
+//      Before C++23 std::string_view was not guaranteed to be trivially copyable,
+//      and so in<T> will pass it by const& and really it should be by value
+#define CPP2_MESSAGE_PARAM  char const*
+#define CPP2_CONTRACT_MSG   cpp2::message_to_cstr_adapter
+
+inline auto message_to_cstr_adapter( CPP2_MESSAGE_PARAM msg ) -> CPP2_MESSAGE_PARAM { return msg ? msg : ""; }
+inline auto message_to_cstr_adapter( std::string const& msg ) -> CPP2_MESSAGE_PARAM { return msg.c_str(); }
+
+class contract_group {
+public:
+    using handler = void (*)(CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM);
+
+    constexpr contract_group  (handler h = {}) : reporter{h} { }
+    constexpr auto set_handler(handler h = {}) { reporter = h; }
+    constexpr auto is_active  () const -> bool    { return reporter != handler{}; }
+
+    constexpr auto enforce(bool b, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
+                                          -> void { if (!b) report_violation(msg CPP2_SOURCE_LOCATION_ARG); }
+    constexpr auto report_violation(CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
+                                          -> void { if (reporter) reporter(msg CPP2_SOURCE_LOCATION_ARG); }
+private:
+    handler reporter;
+};
+
+[[noreturn]] inline auto report_and_terminate(std::string_view group, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) noexcept -> void {
+    std::cerr
+#ifdef CPP2_USE_SOURCE_LOCATION
+        << where.file_name() << "("
+        << where.line() << ") "
+        << where.function_name() << ": "
+#endif
+        << group << " violation";
+    if (msg && msg[0] != '\0') {
+        std::cerr << ": " << msg;
+    }
+    std::cerr << "\n";
+    std::terminate();
+}
+
+auto inline cpp2_default = contract_group(
+    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
+        report_and_terminate("Contract",      msg CPP2_SOURCE_LOCATION_ARG);
+    }
+);
+auto inline bounds_safety = contract_group(
+    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
+        report_and_terminate("Bounds safety", msg CPP2_SOURCE_LOCATION_ARG);
+    }
+);
+auto inline null_safety = contract_group(
+    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
+        report_and_terminate("Null safety",   msg CPP2_SOURCE_LOCATION_ARG);
+    }
+);
+auto inline type_safety = contract_group(
+    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
+        report_and_terminate("Type safety",   msg CPP2_SOURCE_LOCATION_ARG);
+    }
+);
+auto inline testing = contract_group(
+    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
+        report_and_terminate("Testing",       msg CPP2_SOURCE_LOCATION_ARG);
+    }
+);
+
+
+//-----------------------------------------------------------------------
+//
 //  String utilities
 //
 
@@ -557,6 +697,7 @@ constexpr bool is_escaped(std::string_view s) {
 }
 
 inline bool string_to_int(std::string const& s, int& v, int base = 10) {
+#ifdef CPP2_NO_EXCEPTIONS
     try {
         v = stoi(s, nullptr, base);
         return true;
@@ -569,6 +710,32 @@ inline bool string_to_int(std::string const& s, int& v, int base = 10) {
     {
         return false;
     }
+#else
+    errno = 0;
+    char* end = nullptr;
+
+    auto const num = std::strtol(s.c_str(), &end, base);
+
+    cpp2_default.enforce(end != nullptr);
+    if (
+        end == s.c_str() 
+        || *end != '\0'
+        )
+    {
+        return false; // invalid argument
+    }
+    if (
+        errno == ERANGE 
+        || num < std::numeric_limits<int>::min() 
+        || num > std::numeric_limits<int>::max()
+        )
+    {
+        return false; // out of range
+    }
+
+    v = unchecked_narrow<int>(num);
+    return true;
+#endif
 }
 
 template<int Base = 10>
@@ -920,94 +1087,6 @@ template<class T, class U>
             return std::move(x);
     }
 }
-
-
-//-----------------------------------------------------------------------
-//
-//  contract_group
-//
-//-----------------------------------------------------------------------
-//
-
-#ifdef CPP2_USE_SOURCE_LOCATION
-    #define CPP2_SOURCE_LOCATION_PARAM              , [[maybe_unused]] std::source_location where
-    #define CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT , [[maybe_unused]] std::source_location where = std::source_location::current()
-    #define CPP2_SOURCE_LOCATION_PARAM_SOLO         [[maybe_unused]] std::source_location where
-    #define CPP2_SOURCE_LOCATION_ARG                , where
-    #define CPP2_SOURCE_LOCATION_VALUE              (cpp2::to_string(where.file_name()) + "(" + cpp2::to_string(where.line()) + ") " + where.function_name())
-#else
-    #define CPP2_SOURCE_LOCATION_PARAM
-    #define CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT
-    #define CPP2_SOURCE_LOCATION_PARAM_SOLO
-    #define CPP2_SOURCE_LOCATION_ARG
-    #define CPP2_SOURCE_LOCATION_VALUE              std::string("")
-#endif
-
-//  For C++23: make this std::string_view and drop the macro
-//      Before C++23 std::string_view was not guaranteed to be trivially copyable,
-//      and so in<T> will pass it by const& and really it should be by value
-#define CPP2_MESSAGE_PARAM  char const*
-#define CPP2_CONTRACT_MSG   cpp2::message_to_cstr_adapter
-
-inline auto message_to_cstr_adapter( CPP2_MESSAGE_PARAM msg ) -> CPP2_MESSAGE_PARAM { return msg ? msg : ""; }
-inline auto message_to_cstr_adapter( std::string const& msg ) -> CPP2_MESSAGE_PARAM { return msg.c_str(); }
-
-class contract_group {
-public:
-    using handler = void (*)(CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM);
-
-    constexpr contract_group  (handler h = {}) : reporter{h} { }
-    constexpr auto set_handler(handler h = {}) { reporter = h; }
-    constexpr auto is_active  () const -> bool    { return reporter != handler{}; }
-
-    constexpr auto enforce(bool b, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
-                                          -> void { if (!b) report_violation(msg CPP2_SOURCE_LOCATION_ARG); }
-    constexpr auto report_violation(CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
-                                          -> void { if (reporter) reporter(msg CPP2_SOURCE_LOCATION_ARG); }
-private:
-    handler reporter;
-};
-
-[[noreturn]] inline auto report_and_terminate(std::string_view group, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) noexcept -> void {
-    std::cerr
-#ifdef CPP2_USE_SOURCE_LOCATION
-        << where.file_name() << "("
-        << where.line() << ") "
-        << where.function_name() << ": "
-#endif
-        << group << " violation";
-    if (msg && msg[0] != '\0') {
-        std::cerr << ": " << msg;
-    }
-    std::cerr << "\n";
-    std::terminate();
-}
-
-auto inline cpp2_default = contract_group(
-    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
-        report_and_terminate("Contract",      msg CPP2_SOURCE_LOCATION_ARG);
-    }
-);
-auto inline bounds_safety = contract_group(
-    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
-        report_and_terminate("Bounds safety", msg CPP2_SOURCE_LOCATION_ARG);
-    }
-);
-auto inline null_safety = contract_group(
-    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
-        report_and_terminate("Null safety",   msg CPP2_SOURCE_LOCATION_ARG);
-    }
-);
-auto inline type_safety = contract_group(
-    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
-        report_and_terminate("Type safety",   msg CPP2_SOURCE_LOCATION_ARG);
-    }
-);
-auto inline testing = contract_group(
-    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
-        report_and_terminate("Testing",       msg CPP2_SOURCE_LOCATION_ARG);
-    }
-);
 
 
 namespace impl {
@@ -1405,7 +1484,7 @@ class deferred_init {
 public:
     constexpr  deferred_init() noexcept       { }
     constexpr ~deferred_init() noexcept       { destroy(); }
-    constexpr auto value()    noexcept -> T& { cpp2_default.enforce(init);  return t(); }
+    constexpr auto value()     noexcept -> T& { cpp2_default.enforce(init);  return t(); }
 
     constexpr auto construct(auto&& ...args) -> void { cpp2_default.enforce(!init);  new (&data) T{CPP2_FORWARD(args)...};  init = true; }
 };
@@ -1761,22 +1840,6 @@ constexpr auto is( X const& x, bool (*value)(X const&) ) -> bool {
 
 //  The 'as' cast functions are <To, From> so use that order here
 //  If it's confusing, we can switch this to <From, To>
-
-template< typename To, typename From >
-constexpr auto is_narrowing_v =
-    // [dcl.init.list] 7.1
-    (std::is_floating_point_v<From> && std::is_integral_v<To>) ||
-    // [dcl.init.list] 7.2
-    (std::is_floating_point_v<From> && std::is_floating_point_v<To> && sizeof(From) > sizeof(To)) || // NOLINT(misc-redundant-expression)
-    // [dcl.init.list] 7.3
-    (std::is_integral_v<From> && std::is_floating_point_v<To>) ||
-    (std::is_enum_v<From> && std::is_floating_point_v<To>) ||
-    // [dcl.init.list] 7.4
-    (std::is_integral_v<From> && std::is_integral_v<To> && sizeof(From) > sizeof(To)) || // NOLINT(misc-redundant-expression)
-    (std::is_enum_v<From> && std::is_integral_v<To> && sizeof(From) > sizeof(To)) ||
-    // [dcl.init.list] 7.5
-    (std::is_pointer_v<From> && std::is_same_v<To, bool>)
-    ;
 
 template< typename To, typename From >
 constexpr auto is_unsafe_pointer_conversion_v =
@@ -2185,35 +2248,6 @@ private:
 
 //-----------------------------------------------------------------------
 //
-//  An implementation of GSL's narrow_cast with a clearly 'unchecked' name
-//
-//-----------------------------------------------------------------------
-//
-template <typename C, typename X>
-constexpr auto unchecked_narrow( X x ) noexcept 
-    -> decltype(auto)
-    requires (
-        impl::is_narrowing_v<C, X>
-        || (
-            std::is_arithmetic_v<C>
-            && std::is_arithmetic_v<X>
-            )
-            )
-{
-    return static_cast<C>(x);
-}
-
-
-template <typename C, typename X>
-constexpr auto unchecked_cast( X&& x ) noexcept 
-    -> decltype(auto)
-{
-    return static_cast<C>(CPP2_FORWARD(x));
-}
-
-
-//-----------------------------------------------------------------------
-//
 //  args: see main() arguments as a container of string_views
 //
 //  Does not perform any dynamic memory allocation - each string_view
@@ -2328,9 +2362,9 @@ public:
         if (include_last) { 
             if constexpr (std::integral<TT>) {
                 if (last == std::numeric_limits<TT>::max()) {
-                    throw std::runtime_error(
+                    impl::Throw( std::runtime_error(
                         "range with last == numeric_limits<T>::max() will overflow"
-                    );
+                    ), "range with last == numeric_limits<T>::max() will overflow");
                 }
             }
             ++last; 
