@@ -49,26 +49,34 @@ pure2-last-use.cpp2:271:7: error: missing '}' at end of definition of 'issue_857
 pure2-last-use.cpp2:905:1: note: still within definition of 'issue_857_4' here
   905 | namespace captures {
       | ^
-pure2-last-use.cpp2:279:272: error: no member named 'move_only_function' in namespace 'std'
-  279 | requires (std::is_convertible_v<CPP2_TYPEOF(f_), std::add_const_t<std::add_pointer_t<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(g_), std::add_const_t<std::add_pointer_t<int(cpp2::impl::in<int> in_)>>&> && std::is_convertible_v<CPP2_TYPEOF(mf_), std::add_const_t<std::move_only_function<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(mg_), std::add_const_t<std::move_only_function<int(cpp2::impl::in<int> in_)>>&>) 
-      |                                                                                                                                                                                                                                                                           ~~~~~^
-pure2-last-use.cpp2:279:299: error: expected expression
-  279 | requires (std::is_convertible_v<CPP2_TYPEOF(f_), std::add_const_t<std::add_pointer_t<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(g_), std::add_const_t<std::add_pointer_t<int(cpp2::impl::in<int> in_)>>&> && std::is_convertible_v<CPP2_TYPEOF(mf_), std::add_const_t<std::move_only_function<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(mg_), std::add_const_t<std::move_only_function<int(cpp2::impl::in<int> in_)>>&>) 
-      |                                                                                                                                                                                                                                                                                                           ^
-pure2-last-use.cpp2:279:304: error: use of address-of-label extension outside of a function body
-  279 | requires (std::is_convertible_v<CPP2_TYPEOF(f_), std::add_const_t<std::add_pointer_t<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(g_), std::add_const_t<std::add_pointer_t<int(cpp2::impl::in<int> in_)>>&> && std::is_convertible_v<CPP2_TYPEOF(mf_), std::add_const_t<std::move_only_function<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(mg_), std::add_const_t<std::move_only_function<int(cpp2::impl::in<int> in_)>>&>) 
-      |                                                                                                                                                                                                                                                                                                                ^
-pure2-last-use.cpp2:278:14: error: out-of-line definition of 'issue_857_4' does not match any declaration in 'issue_857_4'
-  278 | issue_857_4::issue_857_4(auto&& f_, auto&& g_, auto&& mf_, auto&& mg_)
-      |              ^~~~~~~~~~~
-pure2-last-use.cpp2:281:272: error: member initializer 'g' does not name a non-static data member or base class
-  281 |                                                                                                                                                                                                                                                                              , g{ CPP2_FORWARD(g_) }
-      |                                                                                                                                                                                                                                                                                ^~~~~~~~~~~~~~~~~~~~~
-pure2-last-use.cpp2:282:272: error: member initializer 'mf' does not name a non-static data member or base class
-  282 |                                                                                                                                                                                                                                                                              , mf{ CPP2_FORWARD(mf_) }
-      |                                                                                                                                                                                                                                                                                ^~~~~~~~~~~~~~~~~~~~~~~
-pure2-last-use.cpp2:283:272: error: member initializer 'mg' does not name a non-static data member or base class
-  283 |                                                                                                                                                                                                                                                                              , mg{ CPP2_FORWARD(mg_) }{}
-      |                                                                                                                                                                                                                                                                                ^~~~~~~~~~~~~~~~~~~~~~~
-fatal error: too many errors emitted, stopping now [-ferror-limit=]
-20 errors generated.
+pure2-last-use.cpp2:279:179: error: expected variable name or 'this' in lambda capture list
+  279 | requires (std::is_convertible_v<CPP2_TYPEOF(f_), std::add_const_t<std::add_pointer_t<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(g_), std::add_const_t<std::add_pointer_t<int([[maybe_unused]] cpp2::impl::in<int> unnamed_param_1)>>&> && std::is_convertible_v<CPP2_TYPEOF(mf_), std::add_const_t<std::move_only_function<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(mg_), std::add_const_t<std::move_only_function<int([[maybe_unused]] cpp2::impl::in<int> unnamed_param_1)>>&>) 
+      |                                                                                                                                                                                   ^
+pure2-last-use.cpp2:1044:2: error: expected '>'
+ 1044 | }
+      |  ^
+pure2-last-use.cpp2:279:173: note: to match this '<'
+  279 | requires (std::is_convertible_v<CPP2_TYPEOF(f_), std::add_const_t<std::add_pointer_t<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(g_), std::add_const_t<std::add_pointer_t<int([[maybe_unused]] cpp2::impl::in<int> unnamed_param_1)>>&> && std::is_convertible_v<CPP2_TYPEOF(mf_), std::add_const_t<std::move_only_function<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(mg_), std::add_const_t<std::move_only_function<int([[maybe_unused]] cpp2::impl::in<int> unnamed_param_1)>>&>) 
+      |                                                                                                                                                                             ^
+pure2-last-use.cpp2:1045:1: error: type name requires a specifier or qualifier
+ 1045 | 
+      | ^
+pure2-last-use.cpp2:1044:2: error: expected '>'
+ 1044 | }
+      |  ^
+pure2-last-use.cpp2:279:154: note: to match this '<'
+  279 | requires (std::is_convertible_v<CPP2_TYPEOF(f_), std::add_const_t<std::add_pointer_t<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(g_), std::add_const_t<std::add_pointer_t<int([[maybe_unused]] cpp2::impl::in<int> unnamed_param_1)>>&> && std::is_convertible_v<CPP2_TYPEOF(mf_), std::add_const_t<std::move_only_function<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(mg_), std::add_const_t<std::move_only_function<int([[maybe_unused]] cpp2::impl::in<int> unnamed_param_1)>>&>) 
+      |                                                                                                                                                          ^
+pure2-last-use.cpp2:1045:1: error: type name requires a specifier or qualifier
+ 1045 | 
+      | ^
+pure2-last-use.cpp2:1044:2: error: expected '>'
+ 1044 | }
+      |  ^
+pure2-last-use.cpp2:279:120: note: to match this '<'
+  279 | requires (std::is_convertible_v<CPP2_TYPEOF(f_), std::add_const_t<std::add_pointer_t<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(g_), std::add_const_t<std::add_pointer_t<int([[maybe_unused]] cpp2::impl::in<int> unnamed_param_1)>>&> && std::is_convertible_v<CPP2_TYPEOF(mf_), std::add_const_t<std::move_only_function<int()>>&> && std::is_convertible_v<CPP2_TYPEOF(mg_), std::add_const_t<std::move_only_function<int([[maybe_unused]] cpp2::impl::in<int> unnamed_param_1)>>&>) 
+      |                                                                                                                        ^
+pure2-last-use.cpp2:1045:1: error: expected function body after function declarator
+ 1045 | 
+      | ^
+19 errors generated.
