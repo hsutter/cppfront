@@ -697,7 +697,7 @@ constexpr bool is_escaped(std::string_view s) {
 }
 
 inline bool string_to_int(std::string const& s, int& v, int base = 10) {
-#ifdef CPP2_NO_EXCEPTIONS
+#ifndef CPP2_NO_EXCEPTIONS
     try {
         v = stoi(s, nullptr, base);
         return true;
