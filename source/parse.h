@@ -1913,20 +1913,10 @@ struct compound_statement_node
         return open_brace;
     }
 
-    auto add_statement( 
+    auto add_statement(
         std::unique_ptr<statement_node>&& statement,
         int                               before_pos
-    )
-        -> bool
-    {
-        //  Adopt this statement into our list of statements
-        statements.insert( 
-            statements.begin() + std::clamp( before_pos, 0, unchecked_narrow<int>(std::ssize(statements)) ),
-            std::move(statement)
-        );
-
-        return true;
-    }
+    ) -> bool;
 
     auto visit(auto& v, int depth) -> void;
 };
@@ -2320,6 +2310,20 @@ auto alternative_node::visit(auto& v, int depth)
     v.end(*this, depth);
 }
 
+auto compound_statement_node::add_statement( 
+    std::unique_ptr<statement_node>&& statement,
+    int                               before_pos
+)
+    -> bool
+{
+    //  Adopt this statement into our list of statements
+    statements.insert(
+        statements.begin() + std::clamp( before_pos, 0, unchecked_narrow<int>(std::ssize(statements)) ),
+        std::move(statement)
+    );
+
+    return true;
+}
 
 auto compound_statement_node::visit(auto& v, int depth)
     -> void
