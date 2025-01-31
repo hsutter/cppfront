@@ -27,6 +27,14 @@ Running tests_19_lookahead:
 26_y: OK regex: ^(a*?)(?!(aa|aaaa)*$)(?=a\z) parsed_regex: ^(a*?)(?!(aa|aaaa)*$)(?=a\z) str: aaaaaaaa result_expr: $1 expected_results aaaaaaa
 27_y: OK regex: a(?!b(?!c))(..) parsed_regex: a(?!b(?!c))(..) str: abababc result_expr: $1 expected_results bc
 28_y: OK regex: a(?!b(?=a))(..) parsed_regex: a(?!b(?=a))(..) str: abababc result_expr: $1 expected_results bc
+29_y: OK regex: (?=foo) parsed_regex: (?=foo) str: foo result_expr: @+ expected_results 0
+30_y: OK regex: (?=foo) parsed_regex: (?=foo) str: XfooY result_expr: @+ expected_results 1
+31_y: OK regex: .*(?=foo) parsed_regex: .*(?=foo) str: XfooY result_expr: @+ expected_results 1
+32_y: OK regex: (?=.*P)P parsed_regex: (?=.*P)P str: aP result_expr: @+ expected_results 2
+33_y: OK regex: X(?=foo)f parsed_regex: X(?=foo)f str: ..XfooY.. result_expr: @+ expected_results 4
+34_y: OK regex: X(?=foo) parsed_regex: X(?=foo) str: ..XfooY.. result_expr: @+ expected_results 3
+35_y: OK regex: (?=XY*foo) parsed_regex: (?=XY*foo) str: Xfoo result_expr: @+ expected_results 0
+36_y: OK regex: ^(?=XY*foo) parsed_regex: ^(?=XY*foo) str: Xfoo result_expr: @+ expected_results 0
 37_y: OK regex: X(\w+)(?=\s)|X(\w+) parsed_regex: X(\w+)(?=\s)|X(\w+) str: Xab result_expr: [$1-$2] expected_results [-ab]
 38_y: OK regex: ^a*(?=b)b parsed_regex: ^a*(?=b)b str: ab result_expr: $& expected_results ab
 39_y: OK regex: '(?!\A)x'm parsed_regex: '(?!\A)x'm str: a\nxb\n result_expr: - expected_results -
@@ -44,4 +52,6 @@ Running tests_19_lookahead:
 51_y: OK regex: ((?s)b.)c(?!\N) parsed_regex: ((?s)b.)c(?!\N) str: a\nb\nc\n result_expr: $1:$& expected_results b\n:b\nc
 52_y: OK regex: '(b.)c(?!\N)'s parsed_regex: '(b.)c(?!\N)'s str: a\nb\nc\n result_expr: $1:$& expected_results b\n:b\nc
 53_n: OK regex: a*(?!) parsed_regex: a*(?!) str: aaaab result_expr: - expected_results -
+54_y: OK regex: (?<bar>)foo parsed_regex: (?<bar>)foo str: bar>ABCfoo result_expr: $& expected_results foo
+55_y: OK regex: (?<bar>ABC)foo parsed_regex: (?<bar>ABC)foo str: bar>ABCfoo result_expr: $& expected_results ABCfoo
 

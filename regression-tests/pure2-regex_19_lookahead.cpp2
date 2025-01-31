@@ -94,6 +94,7 @@ create_result: (resultExpr: std::string, r) -> std::string = {
             }
             result +=  std::to_string(pos);
           }
+          next++;
         }
         else {
           std::cerr << "Not implemented";
@@ -191,6 +192,14 @@ test_tests_19_lookahead: @regex type = {
   regex_26 := R"(^(a*?)(?!(aa|aaaa)*$)(?=a\z))";
   regex_27 := R"(a(?!b(?!c))(..))";
   regex_28 := R"(a(?!b(?=a))(..))";
+  regex_29 := R"((?=foo))";
+  regex_30 := R"((?=foo))";
+  regex_31 := R"(.*(?=foo))";
+  regex_32 := R"((?=.*P)P)";
+  regex_33 := R"(X(?=foo)f)";
+  regex_34 := R"(X(?=foo))";
+  regex_35 := R"((?=XY*foo))";
+  regex_36 := R"(^(?=XY*foo))";
   regex_37 := R"(X(\w+)(?=\s)|X(\w+))";
   regex_38 := R"(^a*(?=b)b)";
   regex_39 := R"('(?!\A)x'm)";
@@ -208,6 +217,8 @@ test_tests_19_lookahead: @regex type = {
   regex_51 := R"(((?s)b.)c(?!\N))";
   regex_52 := R"('(b.)c(?!\N)'s)";
   regex_53 := R"(a*(?!))";
+  regex_54 := R"((?<bar>)foo)";
+  regex_55 := R"((?<bar>ABC)foo)";
   run: (this) = {
     std::cout << "Running tests_19_lookahead:"<< std::endl;
     test(regex_01, "01", R"(a(?!b).)", "abad", "y", R"($&)", "ad");
@@ -238,6 +249,14 @@ test_tests_19_lookahead: @regex type = {
     test(regex_26, "26", R"(^(a*?)(?!(aa|aaaa)*$)(?=a\z))", "aaaaaaaa", "y", R"($1)", "aaaaaaa");
     test(regex_27, "27", R"(a(?!b(?!c))(..))", "abababc", "y", R"($1)", "bc");
     test(regex_28, "28", R"(a(?!b(?=a))(..))", "abababc", "y", R"($1)", "bc");
+    test(regex_29, "29", R"((?=foo))", "foo", "y", R"(@+)", "0");
+    test(regex_30, "30", R"((?=foo))", "XfooY", "y", R"(@+)", "1");
+    test(regex_31, "31", R"(.*(?=foo))", "XfooY", "y", R"(@+)", "1");
+    test(regex_32, "32", R"((?=.*P)P)", "aP", "y", R"(@+)", "2");
+    test(regex_33, "33", R"(X(?=foo)f)", "..XfooY..", "y", R"(@+)", "4");
+    test(regex_34, "34", R"(X(?=foo))", "..XfooY..", "y", R"(@+)", "3");
+    test(regex_35, "35", R"((?=XY*foo))", "Xfoo", "y", R"(@+)", "0");
+    test(regex_36, "36", R"(^(?=XY*foo))", "Xfoo", "y", R"(@+)", "0");
     test(regex_37, "37", R"(X(\w+)(?=\s)|X(\w+))", "Xab", "y", R"([$1-$2])", "[-ab]");
     test(regex_38, "38", R"(^a*(?=b)b)", "ab", "y", R"($&)", "ab");
     test(regex_39, "39", R"('(?!\A)x'm)", "a\nxb\n", "y", R"(-)", "-");
@@ -255,6 +274,8 @@ test_tests_19_lookahead: @regex type = {
     test(regex_51, "51", R"(((?s)b.)c(?!\N))", "a\nb\nc\n", "y", R"($1:$&)", "b\n:b\nc");
     test(regex_52, "52", R"('(b.)c(?!\N)'s)", "a\nb\nc\n", "y", R"($1:$&)", "b\n:b\nc");
     test(regex_53, "53", R"(a*(?!))", "aaaab", "n", R"(-)", "-");
+    test(regex_54, "54", R"((?<bar>)foo)", "bar>ABCfoo", "y", R"($&)", "foo");
+    test(regex_55, "55", R"((?<bar>ABC)foo)", "bar>ABCfoo", "y", R"($&)", "ABCfoo");
     std::cout << std::endl;
   }
 }

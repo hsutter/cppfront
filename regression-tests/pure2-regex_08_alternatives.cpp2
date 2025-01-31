@@ -94,6 +94,7 @@ create_result: (resultExpr: std::string, r) -> std::string = {
             }
             result +=  std::to_string(pos);
           }
+          next++;
         }
         else {
           std::cerr << "Not implemented";

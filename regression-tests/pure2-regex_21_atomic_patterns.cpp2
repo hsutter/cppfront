@@ -1,0 +1,186 @@
+create_result: (resultExpr: std::string, r) -> std::string = {
+  result: std::string = "";
+
+  get_next := :(iter) -> _ = {
+		start := std::distance(resultExpr&$*.cbegin(), iter);
+    firstDollar := resultExpr&$*.find("$", start);
+    firstAt := resultExpr&$*.find("@", start);
+
+		end := std::min(firstDollar, firstAt);
+		if end != std::string::npos {
+			return resultExpr&$*.cbegin() + end;
+		}
+		else {
+			return resultExpr&$*.cend();
+		}
+  };
+  extract_group_and_advance := :(inout iter) -> _ = {
+    start := iter;
+
+    while std::isdigit(iter*) next iter++ {}
+
+    return std::stoi(std::string(start, iter));
+  };
+  extract_until := :(inout iter, to: char) -> _ = {
+    start := iter;
+
+    while (to != iter*) next iter++ {} // TODO: Without bracket: error: postfix unary * (dereference) cannot be immediately followed by a (, identifier, or literal - add whitespace before * here if you meant binary * (multiplication)
+
+    return std::string(start, iter);
+  };
+
+  iter := resultExpr.begin();
+
+  while iter != resultExpr.end() {
+    next := get_next(iter);
+
+    if next != iter {
+      result += std::string(iter, next);
+    }
+    if next != resultExpr.end() {
+      if next* == '$' {
+        next++;
+
+        if next* == '&' {
+          next++;
+          result += r.group(0);
+        }
+        else if next* == '-' || next* == '+' {
+          is_start := next* == '-';
+          next++;
+          if next* == '{' {
+            next++; // Skip {
+            group := extract_until(next, '}');
+            next++; // Skip }
+            result += r.group(group);
+          }
+          else if next* == '[' {
+            next++; // Skip [
+            group := extract_group_and_advance(next);
+            next++; // Skip ]
+
+            if is_start {
+              result += std::to_string(r.group_start(group));
+            }
+            else {
+              result += std::to_string(r.group_end(group));
+            }
+          }
+          else {
+            // Return max group
+            result += r.group(r.group_number() - 1);
+          }
+        }
+        else if std::isdigit(next*) {
+          group := extract_group_and_advance(next);
+          result += r.group(group);
+        }
+        else {
+          std::cerr << "Not implemented";
+        }
+      }
+      else if next* == '@' {
+        next++;
+        
+        if next* == '-'  || next* == '+' {
+          i := 0;
+          while i < cpp2::unchecked_narrow<int>(r.group_number()) next i++ {
+            pos := 0;
+            if next* == '-' {
+              pos = r.group_start(i);
+            }
+            else {
+              pos = r.group_end(i);
+            }
+            result +=  std::to_string(pos);
+          }
+          next++;
+        }
+        else {
+          std::cerr << "Not implemented";
+        }
+      }
+      else {
+        std::cerr << "Not implemented.";
+      }
+    }
+    iter = next;
+  }
+
+  return result;
+}
+
+sanitize: (copy str: std::string) -> std::string =
+{
+  str = cpp2::string_util::replace_all(str, "\a", "\\a");
+  str = cpp2::string_util::replace_all(str, "\f", "\\f");
+  str = cpp2::string_util::replace_all(str, "\x1b", "\\e");
+  str = cpp2::string_util::replace_all(str, "\n", "\\n");
+  str = cpp2::string_util::replace_all(str, "\r", "\\r");
+  str = cpp2::string_util::replace_all(str, "\t", "\\t");
+
+  return str;
+}
+
+test: <M> (regex: M, id: std::string, regex_str: std::string, str: std::string, kind: std::string, resultExpr: std::string,
+           resultExpected: std::string) = {
+  
+  warning: std::string = "";
+  if regex.to_string() != regex_str {
+    warning = "Warning: Parsed regex does not match.";
+  }
+
+  status: std::string = "OK";
+
+  r := regex.search(str);
+
+  if "y" == kind || "yM" == kind || "yS" == kind || "yB" == kind {
+    if !r.matched {
+      status = "Failure: Regex should apply.";
+    }
+    else {
+      // Have a match check the result
+
+      result := create_result(resultExpr, r);
+
+      if result != resultExpected {
+        status = "Failure: Result is wrong. (is: (sanitize(result))$)";
+      }
+    }
+  }
+  else if "n" == kind {
+    if r.matched {
+      status = "Failure: Regex should not apply. Result is '(r.group(0))$'";
+    }
+  } else {
+    status = "Unknown kind '(kind)$'";
+  }
+
+  if !warning.empty() {
+    warning += " ";
+  }
+  std::cout << "(id)$_(kind)$: (status)$ (warning)$regex: (regex_str)$ parsed_regex: (regex.to_string())$ str: (sanitize(str))$ result_expr: (resultExpr)$ expected_results (sanitize(resultExpected))$" << std::endl;
+}
+
+
+test_tests_21_atomic_patterns: @regex type = {
+  regex_01 := R"((?>a+)b)";
+  regex_02 := R"(((?>a+)b))";
+  regex_03 := R"((?>(a+))b)";
+  regex_04 := R"(((?>[^()]+)|\([^()]*\))+)";
+  regex_05 := R"(round\(((?>[^()]+))\))";
+  regex_06 := R"(^((?>(?:aa)?b)?))";
+  run: (this) = {
+    std::cout << "Running tests_21_atomic_patterns:"<< std::endl;
+    test(regex_01, "01", R"((?>a+)b)", "aaab", "y", R"(-)", "-");
+    test(regex_02, "02", R"(((?>a+)b))", "aaab", "y", R"($1)", "aaab");
+    test(regex_03, "03", R"((?>(a+))b)", "aaab", "y", R"($1)", "aaa");
+    test(regex_04, "04", R"(((?>[^()]+)|\([^()]*\))+)", "((abc(ade)ufh()()x", "y", R"($&)", "abc(ade)ufh()()x");
+    test(regex_05, "05", R"(round\(((?>[^()]+))\))", "_I(round(xs * sz),1)", "y", R"($1)", "xs * sz");
+    test(regex_06, "06", R"(^((?>(?:aa)?b)?))", "aab", "y", R"($1)", "aab");
+    std::cout << std::endl;
+  }
+}
+main: () = {
+    test_tests_21_atomic_patterns().run();
+}
