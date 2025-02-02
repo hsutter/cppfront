@@ -9337,7 +9337,8 @@ private:
                 {
                     auto& type = std::get<declaration_node::an_object>(n->type);
                     // object initialized by the address of the curr() object
-                    if (peek(1)->type() == lexeme::Ampersand)
+                    if (peek(1)->type() == lexeme::Ampersand 
+                        && (!peek(2) || peek(2)->type() == lexeme::Semicolon))
                     {
                         type->address_of = &curr();
                     }
