@@ -3979,9 +3979,28 @@ public:
         if (!is_function()) {
             return {};
         }
-        // else
+
         auto ret = std::vector<parameter_declaration_node const*>{};
         for (auto& param : std::get<a_function>(type)->parameters->parameters) {
+            ret.push_back( param.get() );
+        }
+        return ret;
+    }
+
+    auto get_function_returns()
+        -> std::vector<parameter_declaration_node const*>
+    {
+        if (!is_function()) {
+            return {};
+        }
+
+        auto returns = std::get_if<function_type_node::list>(&std::get<a_function>(type)->returns);
+        if (!returns) {
+            return {};
+        }
+
+        auto ret = std::vector<parameter_declaration_node const*>{};
+        for (auto& param : (*returns)->parameters) {
             ret.push_back( param.get() );
         }
         return ret;

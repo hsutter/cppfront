@@ -369,6 +369,16 @@ function_declaration: @copyable type =
         return ret;
     }
 
+    get_returns: (this)
+        -> std::vector<object_declaration>
+    = {
+        ret: std::vector<object_declaration> = ();
+        for n*.get_function_returns() do (param) {
+            _ = ret.emplace_back( param*.declaration.get(), this );
+        }
+        return ret;
+    }
+
     //  Modifying operations
     //
     default_to_virtual           : (inout this) = _ = n*.make_function_virtual();
@@ -1623,6 +1633,64 @@ noisy: (t: meta::type_declaration) =
             body.add_statement( "    std::cout << \"(mf.get_signature())$\\n\";" );
             _ = body;
         }
+    }
+}
+
+
+//-----------------------------------------------------------------------
+//
+//  autodiff - stub
+//
+autodiff: (inout t: meta::type_declaration) =
+{
+    for t.get_members()
+    do  (m)
+    if  m.is_function()
+    {
+        mf := m.as_function();
+
+        //  Check some initial requirements
+
+        m.require( mf.has_non_void_return_type(),
+                   "a differentiable function must return non-void"
+                );
+        m.require( mf.has_compound_body(),
+            "temporary alpha limitation: a differentiable function must have a {}-enclosed body"
+        );
+
+        //  Generate the modified signature: Parameters and returns
+
+        diff: std::string = "    (mf.name())$_diff: (";
+
+        for mf.get_parameters() do (param) {
+            diff += "(param.name())$ : (param.type())$, ";
+            diff += "(param.name())$_d : (param.type())$, ";
+        }
+
+        diff += ") -> (";
+
+        for mf.get_returns() do (param) {
+            diff += "(param.name())$ : (param.type())$ = 1, ";
+            diff += "(param.name())$_d : (param.type())$ = 1, ";
+        }
+
+        diff += ") = {";
+
+        if mf.has_compound_body() {
+            body := mf.get_compound_body();
+
+
+
+            //body.add_statement( "    std::cout << \"(mf.get_signature())$\\n\";" );
+            //_ = body;
+
+
+
+        }
+
+        diff += "}";
+
+        t.add_member( diff );
     }
 }
 
@@ -4040,6 +4108,9 @@ apply_metafunctions: (
         }
         else if name == "noisy" {
             noisy( rtype );
+        }
+        else if name == "autodiff" {
+            autodiff( rtype );
         }
         else if name == "regex" {
             regex_gen( rtype );
