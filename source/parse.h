@@ -2752,6 +2752,28 @@ struct function_type_node
         return false;
     }
 
+    auto has_return_named(std::string_view s) const
+        -> bool
+    {
+        auto list = std::get_if<active::list>(&returns);
+        if (!list) {
+            return false;
+        }
+
+        for (auto& param : (*list)->parameters) {
+            if (param->has_name(s)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    auto has_parameter_or_return_named(std::string_view s) const
+        -> bool
+    {
+        return has_parameter_named(s) || has_return_named(s);
+    }
+
     auto has_parameter_with_name_and_pass(
         std::string_view s,
         passing_style    pass
@@ -3292,6 +3314,24 @@ public:
             return false;
         }
         return std::get<a_function>(type)->has_parameter_named(s);
+    }
+
+    auto has_return_named(std::string_view s) const
+        -> bool
+    {
+        if (!is_function()) {
+            return false;
+        }
+        return std::get<a_function>(type)->has_return_named(s);
+    }
+
+    auto has_parameter_or_return_named(std::string_view s) const
+        -> bool
+    {
+        if (!is_function()) {
+            return false;
+        }
+        return std::get<a_function>(type)->has_parameter_or_return_named(s);
     }
 
     auto has_in_parameter_named(std::string_view s) const

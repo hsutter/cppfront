@@ -317,6 +317,8 @@ function_declaration: @copyable type =
 
     index_of_parameter_named     : (this, s: std::string_view) -> int  = n*.index_of_parameter_named(s);
     has_parameter_named          : (this, s: std::string_view) -> bool = n*.has_parameter_named(s);
+    has_return_named             : (this, s: std::string_view) -> bool = n*.has_return_named(s);
+    has_parameter_or_return_named: (this, s: std::string_view) -> bool = n*.has_parameter_or_return_named(s);
     has_in_parameter_named       : (this, s: std::string_view) -> bool = n*.has_in_parameter_named(s);
     has_in_ref_parameter_named   : (this, s: std::string_view) -> bool = n*.has_in_ref_parameter_named(s);
     has_copy_parameter_named     : (this, s: std::string_view) -> bool = n*.has_copy_parameter_named(s);
@@ -352,10 +354,10 @@ function_declaration: @copyable type =
     has_non_void_return_type     : (this) -> bool = n*.has_non_void_return_type();
 
     has_compound_body            : (this) -> bool = n*.is_function_with_compound_body();
-    get_compound_body            : (this) -> compound_statement = (n*.get_compound_initializer(), this);
 
-    get_unnamed_return_type      : (this) -> std::string = n*.unnamed_return_type_to_string();
-    get_signature                : (this) -> std::string = n*.signature_to_string();
+    get_compound_body            : (this) -> compound_statement = (n*.get_compound_initializer(), this);
+    get_unnamed_return_type      : (this) -> std::string        = n*.unnamed_return_type_to_string();
+    get_signature                : (this) -> std::string        = n*.signature_to_string();
 
     is_binary_comparison_function: (this) -> bool = n*.is_binary_comparison_function();
 
@@ -627,7 +629,7 @@ statement: @polymorphic_base @copyable type =
     is_inspect_expression   : (this) -> bool = n*.is_inspect();
     is_jump_statement       : (this) -> bool = n*.is_jump();
 
-    //as_expression_statement : (this) -> expression_statement  = expression_statement (n*.get_if<expression_statement_node>(), this);
+    as_expression_statement : (this) -> expression_statement  = (n*.get_if<expression_statement_node>(), this);
     as_compound_statement   : (this) -> compound_statement    = (n*.get_if<compound_statement_node>(), this);
     //as_selection_statement  : (this) -> selection_statement   = selection_statement  (n*.get_if<selection_statement_node>(), this);
     //as_declaration_statement: (this) -> declaration_statement = declaration_statement(n*.get_if<declaration_statement_node>(), this);
@@ -637,6 +639,28 @@ statement: @polymorphic_base @copyable type =
     //as_contract             : (this) -> contract              = contract             (n*.get_if<contract_node>(), this);
     //as_inspect_expression   : (this) -> inspect_expression    = inspect_expression   (n*.get_if<inspect_expression_node>(), this);
     //as_jump_statement       : (this) -> jump_statement        = jump_statement       (n*.get_if<jump_statement_node>(), this);
+
+    to_string: (this) -> std::string = n*.to_string();
+}
+
+
+//-----------------------------------------------------------------------
+//  Expression statements
+//
+expression_statement: @copyable type =
+{
+    this: reflection_base<expression_statement_node> = ();
+
+    operator=: (
+        out this,
+        n_: *expression_statement_node,
+        s : compiler_services
+    )
+    = {
+        reflection_base<expression_statement_node> = (n_, s);
+    }
+
+    get_expression: (this) -> expression  = (n*.expr.get(), this);
 
     to_string     : (this) -> std::string = n*.to_string();
 }
@@ -678,6 +702,138 @@ compound_statement: @copyable type =
         require( n*.add_statement(move stmt, before_position),
                  std::string("unexpected error while attempting to add statement:\n") + source );
     }
+}
+
+
+//-----------------------------------------------------------------------
+// 
+//  Expressions
+//
+//-----------------------------------------------------------------------
+//
+
+//-----------------------------------------------------------------------
+//  Postfix expressions
+//
+postfix_expression: @copyable type =
+{
+    this: reflection_base<postfix_expression_node> = ();
+
+    operator=: (
+        out this,
+        n_: *postfix_expression_node,
+        s : compiler_services
+    )
+    = {
+        reflection_base<postfix_expression_node> = (n_, s);
+    }
+
+    is_fold_expression: (this) -> bool = n*.is_fold_expression();
+    is_identifier     : (this) -> bool = n*.is_identifier     ();
+    is_id_expression  : (this) -> bool = n*.is_id_expression  ();
+    is_unqualified_id : (this) -> bool = n*.is_unqualified_id ();
+    is_expression_list: (this) -> bool = n*.is_expression_list();
+    is_literal        : (this) -> bool = n*.is_literal        ();
+
+    // get_expression_list          : (this) -> expression_list
+    // get_literal                  : (this) -> literal
+
+    get_first_token_ignoring_this: (this) -> * const token = n*.get_first_token_ignoring_this();
+
+    starts_with_function_call_with_num_parameters: (this, num: int) -> bool = n*.starts_with_function_call_with_n_parameters(num);
+    is_result_a_temporary_variable               : (this) -> bool           = n*.is_result_a_temporary_variable             ();
+
+    to_string: (this) -> std::string = n*.to_string();
+}
+
+
+//-----------------------------------------------------------------------
+//  Logical or expressions
+//
+logical_or_expression: @copyable type =
+{
+    this: reflection_base<logical_or_expression_node> = ();
+
+    operator=: (
+        out this,
+        n_: *logical_or_expression_node,
+        s : compiler_services
+    )
+    = {
+        reflection_base<logical_or_expression_node> = (n_, s);
+    }
+
+    is_fold_expression      : (this) -> bool = n*.is_fold_expression      ();
+    lhs_is_id_expression    : (this) -> bool = n*.lhs_is_id_expression    ();
+    is_standalone_expression: (this) -> bool = n*.is_standalone_expression();
+    terms_size              : (this) -> int  = n*.terms_size              ();
+    is_identifier           : (this) -> bool = n*.is_identifier           ();
+    is_id_expression        : (this) -> bool = n*.is_id_expression        ();
+    is_unqualified_id       : (this) -> bool = n*.is_unqualified_id       ();
+    is_expression_list      : (this) -> bool = n*.is_expression_list      ();
+    is_literal              : (this) -> bool = n*.is_literal              ();
+
+    // get_expression_list          : (this) -> expression_list
+    // get_literal                  : (this) -> literal
+
+    //  Get left-hand postfix-expression
+    get_lhs_postfix_expression      : (this) -> postfix_expression = (n*.get_postfix_expression_node()          , this);
+    get_if_only_a_postfix_expression: (this) -> postfix_expression = (n*.get_if_only_a_postfix_expression_node(), this);
+    //  Get first right-hand postfix-expression, if there is one
+    get_second_postfix_expression   : (this) -> postfix_expression = (n*.get_second_postfix_expression_node()   , this);
+
+    is_result_a_temporary_variable  : (this) -> bool               = n*.is_result_a_temporary_variable();
+
+    to_string: (this) -> std::string = n*.to_string();
+}
+
+
+//-----------------------------------------------------------------------
+//  General expression
+//
+expression: @polymorphic_base @copyable type =
+{
+    this: reflection_base<expression_node> = ();
+
+    operator=: (
+        out this,
+        n_: *expression_node,
+        s : compiler_services
+    )
+    = {
+        reflection_base<expression_node> = (n_, s);
+    }
+
+    is_fold_expression      : (this) -> bool = n*.is_fold_expression      ();
+    is_standalone_expression: (this) -> bool = n*.is_standalone_expression();
+    subexpression_count     : (this) -> int  = n*.subexpression_count     ();
+    is_identifier           : (this) -> bool = n*.is_identifier           ();
+    is_id_expression        : (this) -> bool = n*.is_id_expression        ();
+    is_unqualified_id       : (this) -> bool = n*.is_unqualified_id       ();
+    is_expression_list      : (this) -> bool = n*.is_expression_list      ();
+    is_empty_expression_list: (this) -> bool = n*.is_empty_expression_list();
+    is_literal              : (this) -> bool = n*.is_literal              ();
+
+    is_simple_assignment    : (this) -> bool = {
+        ret := n*.get_lhs_rhs_if_simple_assignment();
+        return ret.lhs && ret.rhs;
+    }
+
+    get_lhs_rhs_if_simple_assignment: (this)
+        -> (
+            lhs: postfix_expression, 
+            rhs: logical_or_expression
+        )
+    = {
+        ret := n*.get_lhs_rhs_if_simple_assignment();
+        lhs = (ret.lhs, this);
+        rhs = (ret.rhs, this);
+    }
+
+    // get_expression_list: (this) -> expression_list
+    // get_literal        : (this) -> literal
+
+    to_string: (this) -> std::string = n*.to_string();
 }
 
 
@@ -1649,18 +1805,10 @@ autodiff: (inout t: meta::type_declaration) =
     {
         mf := m.as_function();
 
-        //  Check some initial requirements
-
-        m.require( mf.has_non_void_return_type(),
-                   "a differentiable function must return non-void"
-                );
-        m.require( mf.has_compound_body(),
-            "temporary alpha limitation: a differentiable function must have a {}-enclosed body"
-        );
-
-        //  Generate the modified signature: Parameters and returns
-
         diff: std::string = "    (mf.name())$_diff: (";
+
+        //  1. Generate the modified signature
+        //  a) Parameters
 
         for mf.get_parameters() do (param) {
             diff += "(param.name())$ : (param.type())$, ";
@@ -1669,6 +1817,8 @@ autodiff: (inout t: meta::type_declaration) =
 
         diff += ") -> (";
 
+        //  b) Returns
+
         for mf.get_returns() do (param) {
             diff += "(param.name())$ : (param.type())$ = 1, ";
             diff += "(param.name())$_d : (param.type())$ = 1, ";
@@ -1676,13 +1826,26 @@ autodiff: (inout t: meta::type_declaration) =
 
         diff += ") = {";
 
-        if mf.has_compound_body() {
-            body := mf.get_compound_body();
+        //  Generate the body
 
+        if !mf.has_compound_body() {
+            m.error( "temporary alpha limitation: a differentiable function must have a {}-enclosed body" );
+            return;
+        }
 
-
-            //body.add_statement( "    std::cout << \"(mf.get_signature())$\\n\";" );
-            //_ = body;
+        for mf.get_compound_body().get_statements() do (stmt)
+        {
+            if stmt.is_expression_statement() {
+                expr := stmt.as_expression_statement().get_expression();
+                if expr.is_simple_assignment() {
+                    assign := expr.get_lhs_rhs_if_simple_assignment();
+                    lhs := assign.lhs.get_first_token_ignoring_this();
+                    if mf.has_parameter_or_return_named(lhs*) {
+                        diff += "        (lhs*)$_d = TODO_computed_derivative_expression;\n";
+                        diff += "        (lhs*)$ = TODO_changed_original_expression;\n";
+                    }
+                }
+            }
 
 
 
