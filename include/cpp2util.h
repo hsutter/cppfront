@@ -2102,10 +2102,7 @@ constexpr auto is( X const& x ) -> bool {
     if (!x.has_value()) {
         return std::same_as<T, empty>;
     }
-    if constexpr (requires { static_cast<const T&>(*x);}) {
-        return true;
-    }
-    return false;
+    return std::same_as<T, typename X::value_type>;
 }
 
 //  is Value
