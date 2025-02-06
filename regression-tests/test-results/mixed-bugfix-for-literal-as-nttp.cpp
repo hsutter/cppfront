@@ -1,3 +1,4 @@
+#include <chrono>
 
 
 //=== Cpp2 type declarations ====================================================
@@ -11,7 +12,8 @@
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "mixed-bugfix-for-literal-as-nttp.cpp2"
-#include <chrono>
+
+#line 2 "mixed-bugfix-for-literal-as-nttp.cpp2"
 auto main() -> int;
 
 //=== Cpp2 function definitions =================================================

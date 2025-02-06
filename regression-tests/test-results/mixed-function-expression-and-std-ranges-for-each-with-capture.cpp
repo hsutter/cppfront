@@ -1,3 +1,9 @@
+#include <vector>
+#include <ranges>
+#include <string>
+#include <span>
+#include <algorithm>
+#include <iostream>
 
 
 //=== Cpp2 type declarations ====================================================
@@ -11,12 +17,6 @@
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "mixed-function-expression-and-std-ranges-for-each-with-capture.cpp2"
-#include <vector>
-#include <ranges>
-#include <string>
-#include <span>
-#include <algorithm>
-#include <iostream>
 
 #line 8 "mixed-function-expression-and-std-ranges-for-each-with-capture.cpp2"
 [[nodiscard]] auto main() -> int;

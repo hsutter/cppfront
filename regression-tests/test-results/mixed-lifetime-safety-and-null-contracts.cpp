@@ -1,3 +1,7 @@
+#line 2 "mixed-lifetime-safety-and-null-contracts.cpp2"
+#include <iostream>
+#include <vector>
+#include <string>
 
 
 //=== Cpp2 type declarations ====================================================
@@ -11,10 +15,6 @@
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "mixed-lifetime-safety-and-null-contracts.cpp2"
-
-#include <iostream>
-#include <vector>
-#include <string>
 
 #line 6 "mixed-lifetime-safety-and-null-contracts.cpp2"
 [[nodiscard]] auto main() -> int;

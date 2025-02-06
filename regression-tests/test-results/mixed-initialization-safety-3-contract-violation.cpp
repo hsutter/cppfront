@@ -1,3 +1,6 @@
+#include <random>
+#include <string>
+#include <vector>
 
 
 //=== Cpp2 type declarations ====================================================
@@ -11,9 +14,6 @@
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "mixed-initialization-safety-3-contract-violation.cpp2"
-#include <random>
-#include <string>
-#include <vector>
 
 #line 5 "mixed-initialization-safety-3-contract-violation.cpp2"
 [[nodiscard]] auto main() -> int;

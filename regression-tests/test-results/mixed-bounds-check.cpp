@@ -1,3 +1,5 @@
+#line 2 "mixed-bounds-check.cpp2"
+#include <vector>
 
 
 //=== Cpp2 type declarations ====================================================
@@ -11,8 +13,6 @@
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "mixed-bounds-check.cpp2"
-
-#include <vector>
 
 #line 4 "mixed-bounds-check.cpp2"
 [[nodiscard]] auto main() -> int;

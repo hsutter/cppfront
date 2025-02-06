@@ -1,3 +1,6 @@
+#line 2 "mixed-hello.cpp2"
+#include <iostream>
+#include <string>
 
 
 //=== Cpp2 type declarations ====================================================
@@ -11,9 +14,6 @@
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "mixed-hello.cpp2"
-
-#include <iostream>
-#include <string>
 
 #line 5 "mixed-hello.cpp2"
 [[nodiscard]] auto name() -> std::string;

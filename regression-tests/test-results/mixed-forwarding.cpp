@@ -1,3 +1,5 @@
+#include <iostream>
+#include <utility>
 
 
 //=== Cpp2 type declarations ====================================================
@@ -11,8 +13,7 @@
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "mixed-forwarding.cpp2"
-#include <iostream>
-#include <utility>
+#line 3 "mixed-forwarding.cpp2"
 
 struct X {
     int i;

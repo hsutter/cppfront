@@ -1,3 +1,6 @@
+#line 2 "mixed-inspect-values-2.cpp2"
+#include <iostream>
+#include <vector>
 
 
 //=== Cpp2 type declarations ====================================================
@@ -12,8 +15,7 @@
 
 #line 1 "mixed-inspect-values-2.cpp2"
 
-#include <iostream>
-#include <vector>
+#line 4 "mixed-inspect-values-2.cpp2"
 
 constexpr auto less_than = [](int value) {
     return [=](auto x) { return x < value;};

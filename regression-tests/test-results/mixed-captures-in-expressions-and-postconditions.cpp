@@ -1,3 +1,6 @@
+#line 2 "mixed-captures-in-expressions-and-postconditions.cpp2"
+#include <algorithm>
+#include <vector>
 
 
 //=== Cpp2 type declarations ====================================================
@@ -11,9 +14,6 @@
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "mixed-captures-in-expressions-and-postconditions.cpp2"
-
-#include <algorithm>
-#include <vector>
 
 #line 5 "mixed-captures-in-expressions-and-postconditions.cpp2"
 [[nodiscard]] auto main() -> int;
