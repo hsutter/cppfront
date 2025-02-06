@@ -2102,7 +2102,8 @@ constexpr auto is( X const& x ) -> bool {
     if (!x.has_value()) {
         return std::same_as<T, empty>;
     }
-    return std::same_as<T, typename X::value_type>;
+    return std::same_as<T, typename X::value_type> 
+        || std::derived_from<std::remove_pointer_t<typename X::value_type>, std::remove_pointer_t<T>>;
 }
 
 //  is Value
