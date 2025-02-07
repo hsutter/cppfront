@@ -2205,8 +2205,8 @@ autodiff: (inout t: meta::type_declaration) =
                             m.error( "temporary alpha limitation: the addition's right-hand side '(rhs)$' must be a parameter or return name");
                         }
 
-                        line1 += "(lhs)$ * (rhs)$_d + (rhs)$ * (lhs)$_d;";
-                        line2 += "(lhs)$ * (rhs)$;";
+                        line1 += "(lhs)$_d + (rhs)$_d;";
+                        line2 += "(lhs)$ + (rhs)$;";
 
                         diff += line1 + line2;
 

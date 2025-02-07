@@ -4250,8 +4250,8 @@ auto autodiff(meta::type_declaration& t) -> void
                             CPP2_UFCS(error)(m, "temporary alpha limitation: the addition's right-hand side '" + cpp2::to_string(rhs) + "' must be a parameter or return name");
                         }
 
-                        line1 += "" + cpp2::to_string(lhs) + " * " + cpp2::to_string(rhs) + "_d + " + cpp2::to_string(rhs) + " * " + cpp2::to_string(lhs) + "_d;";
-                        line2 += "" + cpp2::to_string(cpp2::move(lhs)) + " * " + cpp2::to_string(cpp2::move(rhs)) + ";";
+                        line1 += "" + cpp2::to_string(lhs) + "_d + " + cpp2::to_string(rhs) + "_d;";
+                        line2 += "" + cpp2::to_string(cpp2::move(lhs)) + " + " + cpp2::to_string(cpp2::move(rhs)) + ";";
 
                         diff += cpp2::move(line1) + cpp2::move(line2);
 
