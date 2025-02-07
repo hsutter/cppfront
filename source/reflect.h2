@@ -2190,9 +2190,8 @@ autodiff: (inout t: meta::type_declaration) =
                     if additive_terms.ssize() > 1
                     {
                         if additive_terms.ssize() != 2
-                           || additive_terms[1].get_op() != "+"
                         {
-                            m.error( "temporary alpha limitation: this initial baby step only supports specifically 'a + b', not subtraction or chains of + and -");
+                            m.error( "temporary alpha limitation: this does not support chains of + and -");
                         }
 
                         lhs := additive_terms[0].get_term().to_string();
@@ -2205,8 +2204,10 @@ autodiff: (inout t: meta::type_declaration) =
                             m.error( "temporary alpha limitation: the addition's right-hand side '(rhs)$' must be a parameter or return name");
                         }
 
-                        line1 += "(lhs)$_d + (rhs)$_d;";
-                        line2 += "(lhs)$ + (rhs)$;";
+                        op := additive_terms[1].get_op().to_string();
+
+                        line1 += "(lhs)$_d (op)$ (rhs)$_d;";
+                        line2 += "(lhs)$ (op)$ (rhs)$;";
 
                         diff += line1 + line2;
 
