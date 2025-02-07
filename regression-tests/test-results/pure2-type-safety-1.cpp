@@ -8,6 +8,10 @@
 
 #line 1 "pure2-type-safety-1.cpp2"
 
+#line 39 "pure2-type-safety-1.cpp2"
+class B;
+class D;
+
 
 //=== Cpp2 type definitions and function declarations ===========================
 
@@ -16,12 +20,28 @@
 #line 2 "pure2-type-safety-1.cpp2"
 [[nodiscard]] auto main() -> int;
 
-#line 24 "pure2-type-safety-1.cpp2"
+#line 32 "pure2-type-safety-1.cpp2"
 auto test_generic(auto const& x, auto const& msg) -> void;
 
-#line 31 "pure2-type-safety-1.cpp2"
+#line 39 "pure2-type-safety-1.cpp2"
+class B {
+      public: B() = default;
+      public: B(B const&) = delete; /* No 'that' constructor, suppress copy */
+      public: auto operator=(B const&) -> void = delete;
+};
+#line 40 "pure2-type-safety-1.cpp2"
+class D: public B {
+      public: D() = default;
+      public: D(D const&) = delete; /* No 'that' constructor, suppress copy */
+      public: auto operator=(D const&) -> void = delete;
+};
+#line 41 "pure2-type-safety-1.cpp2"
+
+auto test_1365(auto const& o) -> void;
+
+#line 63 "pure2-type-safety-1.cpp2"
 auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void;
-#line 37 "pure2-type-safety-1.cpp2"
+#line 69 "pure2-type-safety-1.cpp2"
 
 #line 1 "pure2-type-safety-1.cpp2"
 
@@ -50,9 +70,17 @@ auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void;
     test_generic(cpp2::move(v), "variant<int, int, double>");
     test_generic(cpp2::move(a), "any");
     test_generic(cpp2::move(o), "optional<int>");
+
+    std::optional<int> oi {5}; 
+    std::cout << "optional<int> is: ";
+    test_1365(cpp2::move(oi));
+    std::optional<D*> od {nullptr}; 
+    std::cout << "\noptional<*D> is: ";
+    test_1365(cpp2::move(od));
+    std::cout << "\n";
 }
 
-#line 24 "pure2-type-safety-1.cpp2"
+#line 32 "pure2-type-safety-1.cpp2"
 auto test_generic(auto const& x, auto const& msg) -> void{
     std::string msgx {msg}; 
     // Full qualification is necessary to avoid ambiguity in C++23
@@ -60,7 +88,29 @@ auto test_generic(auto const& x, auto const& msg) -> void{
     ::print(cpp2::move(msgx) + " is int? ", cpp2::impl::is<int>(x));
 }
 
-#line 31 "pure2-type-safety-1.cpp2"
+#line 42 "pure2-type-safety-1.cpp2"
+auto test_1365(auto const& o) -> void{
+    if (cpp2::impl::is<int>(o)) {
+        std::cout << "int ";
+    }
+    if (cpp2::impl::is<bool>(o)) {
+        std::cout << "bool ";
+    }
+    if (cpp2::impl::is<float>(o)) {
+        std::cout << "float ";
+    }
+    if (cpp2::impl::is<B*>(o)) {
+        std::cout << "*B ";
+    }
+    if (cpp2::impl::is<D*>(o)) {
+        std::cout << "*D ";
+    }
+    if (cpp2::impl::is<std::string>(o)) {
+        std::cout << "std::string ";
+    }
+}
+
+#line 63 "pure2-type-safety-1.cpp2"
 auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void{
     cpp2::impl::deferred_init<char const*> bmsg; 
     if (b) { bmsg.construct("true");}
