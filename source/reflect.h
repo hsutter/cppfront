@@ -4234,15 +4234,15 @@ auto autodiff(meta::type_declaration& t) -> void
                     auto additive_terms {CPP2_UFCS(get_terms)(CPP2_UFCS(get_term)(CPP2_UFCS(front)(cpp2::move(shift_terms))))}; 
                     if (cpp2::impl::cmp_greater(CPP2_UFCS(ssize)(additive_terms),1)) 
                     {
-                        auto first {true};
+                        auto first {true}; 
                         for ( auto const& term : additive_terms ) {
                             if (!(first)) {
-                                auto op {CPP2_UFCS(to_string)(CPP2_UFCS(get_op)(term))};
+                                auto op {CPP2_UFCS(to_string)(CPP2_UFCS(get_op)(term))}; 
                                 line1 += " " + cpp2::to_string(op) + " ";
                                 line2 += " " + cpp2::to_string(cpp2::move(op)) + " ";
                             }
 
-                            auto var {CPP2_UFCS(to_string)(CPP2_UFCS(get_term)(term))};
+                            auto var {CPP2_UFCS(to_string)(CPP2_UFCS(get_term)(term))}; 
                             if (!(CPP2_UFCS(has_parameter_or_return_named)(mf, var))) {
                                 CPP2_UFCS(error)(m, "temporary alpha limitation: the addition's left-hand side '" + cpp2::to_string(var) + "' must be a parameter or return name");
                             }
@@ -4267,22 +4267,22 @@ auto autodiff(meta::type_declaration& t) -> void
                     auto multiplicative_terms {CPP2_UFCS(get_terms)(CPP2_UFCS(get_term)(CPP2_UFCS(front)(cpp2::move(additive_terms))))}; 
                     if (cpp2::impl::cmp_greater(CPP2_UFCS(ssize)(multiplicative_terms),1)) 
                     {
-                        if (CPP2_UFCS(ssize)(multiplicative_terms) != 2)
+                        if (CPP2_UFCS(ssize)(multiplicative_terms) != 2) 
                         {
                             CPP2_UFCS(error)(m, "temporary alpha limitation: does not support chains of * and /");
                         }
 
-                        auto lhs {CPP2_UFCS(to_string)(CPP2_UFCS(get_term)(CPP2_ASSERT_IN_BOUNDS_LITERAL(multiplicative_terms, 0)))};
+                        auto lhs {CPP2_UFCS(to_string)(CPP2_UFCS(get_term)(CPP2_ASSERT_IN_BOUNDS_LITERAL(multiplicative_terms, 0)))}; 
                         if (!(CPP2_UFCS(has_parameter_or_return_named)(mf, lhs))) {
                             CPP2_UFCS(error)(m, "temporary alpha limitation: the addition's left-hand side '" + cpp2::to_string(lhs) + "' must be a parameter or return name");
                         }
 
-                        auto rhs {CPP2_UFCS(to_string)(CPP2_UFCS(get_term)(CPP2_ASSERT_IN_BOUNDS_LITERAL(multiplicative_terms, 1)))};
+                        auto rhs {CPP2_UFCS(to_string)(CPP2_UFCS(get_term)(CPP2_ASSERT_IN_BOUNDS_LITERAL(multiplicative_terms, 1)))}; 
                         if (!(CPP2_UFCS(has_parameter_or_return_named)(mf, rhs))) {
                             CPP2_UFCS(error)(m, "temporary alpha limitation: the addition's right-hand side '" + cpp2::to_string(rhs) + "' must be a parameter or return name");
                         }
 
-                        auto op {CPP2_UFCS(to_string)(CPP2_UFCS(get_op)(CPP2_ASSERT_IN_BOUNDS_LITERAL(cpp2::move(multiplicative_terms), 1)))};
+                        auto op {CPP2_UFCS(to_string)(CPP2_UFCS(get_op)(CPP2_ASSERT_IN_BOUNDS_LITERAL(cpp2::move(multiplicative_terms), 1)))}; 
                         if ("*" == op) {
                             line1 += "" + cpp2::to_string(lhs) + " * " + cpp2::to_string(rhs) + "_d + " + cpp2::to_string(rhs) + " * " + cpp2::to_string(lhs) + "_d;";
                             line2 += "" + cpp2::to_string(cpp2::move(lhs)) + " * " + cpp2::to_string(cpp2::move(rhs)) + ";";
