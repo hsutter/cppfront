@@ -1291,6 +1291,35 @@ public:
         //  Generate a reasonable macroized name
         auto cpp1_FILENAME = to_upper_and_underbar(cpp1_filename);
 
+        //  Emit any prefix of Cpp1-only header #include directives
+        //  to ensure they stay in front of all Cpp2 code
+        if (source.has_cpp2())
+        {
+            for (
+                lineno_t curr_lineno = 0;
+                auto& line : source.get_lines()
+                )
+            {
+                if (
+                    line.cat == source_line::category::preprocessor
+                    && contains(line.text, "#include")
+                    && !line.text.ends_with("*.h2\"")
+                    )
+                {
+                    printer.print_cpp1(line.text, curr_lineno);
+                    line.cat = source_line::category::preprocessor_was_emitted;
+                }
+                else if (
+                    line.cat != source_line::category::empty
+                    && line.cat != source_line::category::comment
+                    )
+                {
+                    break;
+                }
+                ++curr_lineno;
+            }
+        }
+
 
         //---------------------------------------------------------------------
         //  Do lowered file prolog
@@ -1414,6 +1443,7 @@ public:
                     if (
                         source.has_cpp2()
                         && line.cat != source_line::category::preprocessor
+                        && line.cat != source_line::category::preprocessor_was_emitted
                         )
                     {
                         ++ret.cpp2_lines;
@@ -1458,7 +1488,7 @@ public:
                         printer.print_cpp1( h_include + "\"", curr_lineno );
                         hpp_includes += h_include + "pp\"\n";
                     }
-                    else {
+                    else if (line.cat != source_line::category::preprocessor_was_emitted) {
                         printer.print_cpp1( line.text, curr_lineno );
                     }
                 }

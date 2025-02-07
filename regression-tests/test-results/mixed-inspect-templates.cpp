@@ -1,3 +1,6 @@
+#include <vector>
+#include <array>
+#include <string>
 
 
 //=== Cpp2 type declarations ====================================================
@@ -11,9 +14,7 @@
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "mixed-inspect-templates.cpp2"
-#include <vector>
-#include <array>
-#include <string>
+#line 4 "mixed-inspect-templates.cpp2"
 
 template <typename A, typename B>
 struct my_type {};

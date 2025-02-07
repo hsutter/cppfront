@@ -1,3 +1,5 @@
+#include <string>
+#include <iostream>
 
 
 //=== Cpp2 type declarations ====================================================
@@ -11,8 +13,7 @@
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "mixed-ufcs-multiple-template-arguments.cpp2"
-#include <string>
-#include <iostream>
+#line 3 "mixed-ufcs-multiple-template-arguments.cpp2"
 
 template <auto from, auto to>
 auto substr(const std::string& input) -> std::string {

@@ -1,3 +1,4 @@
+#include <vector>
 
 
 //=== Cpp2 type declarations ====================================================
@@ -11,7 +12,7 @@
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "mixed-test-parens.cpp2"
-#include <vector>
+#line 2 "mixed-test-parens.cpp2"
 
 template<auto>
 auto f(auto, auto) -> void { }

@@ -1,3 +1,6 @@
+#line 2 "mixed-lifetime-safety-pointer-init-4.cpp2"
+#include <iostream>
+#include <random>
 
 
 //=== Cpp2 type declarations ====================================================
@@ -11,9 +14,6 @@
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "mixed-lifetime-safety-pointer-init-4.cpp2"
-
-#include <iostream>
-#include <random>
 
 #line 5 "mixed-lifetime-safety-pointer-init-4.cpp2"
 [[nodiscard]] auto main() -> int;

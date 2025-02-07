@@ -1,3 +1,4 @@
+#include <iostream>
 
 
 //=== Cpp2 type declarations ====================================================
@@ -11,7 +12,7 @@
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "mixed-parameter-passing-generic-out.cpp2"
-#include <iostream>
+#line 2 "mixed-parameter-passing-generic-out.cpp2"
 
 struct X {
     X(int) { }

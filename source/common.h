@@ -60,7 +60,7 @@ struct source_line
 {
     std::string text;
 
-    enum class category : u8 { empty, preprocessor, comment, import, cpp1, cpp2, rawstring };
+    enum class category : u8 { empty, preprocessor, comment, import, cpp1, cpp2, rawstring, preprocessor_was_emitted };
     category cat;
 
     bool all_tokens_are_densely_spaced = true; // to be overridden in lexing if they're not
@@ -893,7 +893,9 @@ public:
         constexpr std::string_view b = __TIME__;
         std::unordered_map<std::string_view, char> m = { {"Jan",'1'}, {"Feb",'2'}, {"Mar",'3'}, {"Apr",'4'}, {"May",'5'}, {"Jun",'6'}, {"Jul",'7'}, {"Aug",'8'}, {"Sep",'9'}, {"Oct",'A'}, {"Nov",'B'}, {"Dec",'C'} };
 
-        auto stamp = std::to_string(atoi(&a[9])-15);
+        auto y = atoi(&a[9])-15;
+        auto stamp = std::string();
+        stamp += y<10 ? char('0'+y) : char('A'+y-10);
         stamp += m[a.substr(0, 3)];
         stamp += a.substr(4,2);
         stamp += ":";

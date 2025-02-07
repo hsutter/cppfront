@@ -1,3 +1,7 @@
+#line 2 "mixed-parameter-passing.cpp2"
+#include <string>
+#include <cstdlib>
+#include <ctime>
 
 
 //=== Cpp2 type declarations ====================================================
@@ -14,10 +18,6 @@ template<typename T> class container;
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "mixed-parameter-passing.cpp2"
-
-#include <string>
-#include <cstdlib>
-#include <ctime>
 
 #line 6 "mixed-parameter-passing.cpp2"
 auto copy_from([[maybe_unused]] auto unnamed_param_1) -> void;
