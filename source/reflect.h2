@@ -2189,25 +2189,26 @@ autodiff: (inout t: meta::type_declaration) =
                     additive_terms := shift_terms.front().get_term().get_terms();
                     if additive_terms.ssize() > 1
                     {
-                        if additive_terms.ssize() != 2
-                        {
-                            m.error( "temporary alpha limitation: this does not support chains of + and -");
+                        first := true;
+                        for additive_terms do (term) {
+                            if !first {
+                                op := term.get_op().to_string();
+                                line1 += " (op)$ ";
+                                line2 += " (op)$ ";
+                            }
+
+                            var := term.get_term().to_string();
+                            if !mf.has_parameter_or_return_named(var) {
+                                m.error( "temporary alpha limitation: the addition's left-hand side '(var)$' must be a parameter or return name");
+                            }
+                            line1 += "(var)$_d";
+                            line2 += "(var)$";
+
+                            first = false;
                         }
 
-                        lhs := additive_terms[0].get_term().to_string();
-                        if !mf.has_parameter_or_return_named(lhs) {
-                            m.error( "temporary alpha limitation: the addition's left-hand side '(lhs)$' must be a parameter or return name");
-                        }
-
-                        rhs := additive_terms[1].get_term().to_string();
-                        if !mf.has_parameter_or_return_named(rhs) {
-                            m.error( "temporary alpha limitation: the addition's right-hand side '(rhs)$' must be a parameter or return name");
-                        }
-
-                        op := additive_terms[1].get_op().to_string();
-
-                        line1 += "(lhs)$_d (op)$ (rhs)$_d;";
-                        line2 += "(lhs)$ (op)$ (rhs)$;";
+                        line1 += ";";
+                        line2 += ";";
 
                         diff += line1 + line2;
 
