@@ -2222,17 +2222,35 @@ autodiff: (inout t: meta::type_declaration) =
                     multiplicative_terms := additive_terms.front().get_term().get_terms();
                     if multiplicative_terms.ssize() > 1
                     {
-                        //  TODO: Do whatever is appropriate here...
-                        //  For now, just list out what we found (visible via @print)...
-                        diff += "found_multiplicative_with_____";
-                        count := 0;
-                        for multiplicative_terms do (term) {
-                            if count++ > 1 {
-                                diff += term.get_op() + "___";
-                            }
-                            diff += term.get_term().to_string() + "___";
+                        if multiplicative_terms.ssize() != 2
+                        {
+                            m.error( "temporary alpha limitation: does not support chains of * and /");
                         }
-                        diff += ";";
+
+                        lhs := multiplicative_terms[0].get_term().to_string();
+                        if !mf.has_parameter_or_return_named(lhs) {
+                            m.error( "temporary alpha limitation: the addition's left-hand side '(lhs)$' must be a parameter or return name");
+                        }
+
+                        rhs := multiplicative_terms[1].get_term().to_string();
+                        if !mf.has_parameter_or_return_named(rhs) {
+                            m.error( "temporary alpha limitation: the addition's right-hand side '(rhs)$' must be a parameter or return name");
+                        }
+
+                        op := multiplicative_terms[1].get_op().to_string();
+                        if "*" == op {
+                            line1 += "(lhs)$ * (rhs)$_d + (rhs)$ * (lhs)$_d;";
+                            line2 += "(lhs)$ * (rhs)$;";
+                        }
+                        else if "/" == op {
+                            line1 += "(lhs)$_d / (rhs)$ - (lhs)$ * (rhs)$_d / ((rhs)$ * (rhs)$);";
+                            line2 += "(lhs)$ / (rhs)$;";
+                        }
+                        else {
+                            m.error( "unkown multiplicative operator '(op)$'");
+                        }
+
+                        diff += line1 + line2;
 
                         continue next_statement;
                     }
