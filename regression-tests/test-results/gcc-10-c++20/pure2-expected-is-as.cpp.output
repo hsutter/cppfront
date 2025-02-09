@@ -1,0 +1,39 @@
+pure2-expected-is-as.cpp2: In function ‘int main()’:
+pure2-expected-is-as.cpp2:7:10: error: ‘expected’ is not a member of ‘std’; did you mean ‘unexpected’?
+pure2-expected-is-as.cpp2:7:19: error: expected primary-expression before ‘int’
+pure2-expected-is-as.cpp2:8:10: error: ‘expected’ is not a member of ‘std’; did you mean ‘unexpected’?
+pure2-expected-is-as.cpp2:8:19: error: expected primary-expression before ‘int’
+pure2-expected-is-as.cpp2:9:10: error: ‘expected’ is not a member of ‘std’; did you mean ‘unexpected’?
+pure2-expected-is-as.cpp2:9:30: error: expected primary-expression before ‘,’ token
+pure2-expected-is-as.cpp2:9:37: error: expected primary-expression before ‘>’ token
+pure2-expected-is-as.cpp2:9:39: error: ‘ex3’ was not declared in this scope; did you mean ‘exp’?
+pure2-expected-is-as.cpp2:11:29: error: ‘ex1’ was not declared in this scope; did you mean ‘exp’?
+pure2-expected-is-as.cpp2:15:30: error: ‘ex1’ was not declared in this scope; did you mean ‘exp’?
+pure2-expected-is-as.cpp2:20:30: error: ‘ex1’ was not declared in this scope; did you mean ‘exp’?
+pure2-expected-is-as.cpp2:25:21: error: parse error in template argument list
+pure2-expected-is-as.cpp2:25:46: error: ‘ex1’ was not declared in this scope; did you mean ‘exp’?
+pure2-expected-is-as.cpp2:30:24: error: ‘ex1’ was not declared in this scope; did you mean ‘exp’?
+pure2-expected-is-as.cpp2:34:24: error: ‘ex1’ was not declared in this scope; did you mean ‘exp’?
+pure2-expected-is-as.cpp2:39:37: error: ‘ex1’ was not declared in this scope; did you mean ‘exp’?
+pure2-expected-is-as.cpp2:42:29: error: ‘ex2’ was not declared in this scope; did you mean ‘exp2’?
+pure2-expected-is-as.cpp2:47:30: error: ‘ex2’ was not declared in this scope; did you mean ‘exp2’?
+pure2-expected-is-as.cpp2:52:24: error: ‘ex2’ was not declared in this scope; did you mean ‘exp2’?
+pure2-expected-is-as.cpp2:57:21: error: parse error in template argument list
+pure2-expected-is-as.cpp2:57:46: error: ‘ex2’ was not declared in this scope; did you mean ‘exp2’?
+pure2-expected-is-as.cpp2:61:30: error: ‘ex2’ was not declared in this scope; did you mean ‘exp2’?
+pure2-expected-is-as.cpp2:65:31: error: parse error in template argument list
+pure2-expected-is-as.cpp2:65:57: error: ‘ex2’ was not declared in this scope; did you mean ‘exp2’?
+pure2-expected-is-as.cpp2: In function ‘void test_inspect(const auto:110&, const auto:111&)’:
+pure2-expected-is-as.cpp2:77:55: error: template argument 1 is invalid
+pure2-expected-is-as.cpp2:77:21: error: ‘cpp2::impl::unexp’ has not been declared
+pure2-expected-is-as.cpp2: In lambda function:
+pure2-expected-is-as.cpp2:78:33: error: ‘unexp’ was not declared in this scope
+pure2-expected-is-as.cpp2: In lambda function:
+pure2-expected-is-as.cpp2:85:34: error: parse error in template argument list
+pure2-expected-is-as.cpp2:85:159: error: parse error in template argument list
+In file included from pure2-expected-is-as.cpp:7:
+pure2-expected-is-as.cpp2:85:309: error: parse error in template argument list
+../../../include/cpp2util.h:315:66: note: in definition of macro ‘CPP2_TYPEOF’
+  315 | #define CPP2_TYPEOF(x)              std::remove_cvref_t<decltype(x)>
+      |                                                                  ^
+pure2-expected-is-as.cpp2:85:430: error: parse error in template argument list

@@ -135,28 +135,11 @@ if [ -z "$label" ]; then
     usage
 fi
 
-tests=$(ls | grep ".cpp2$")
-if [[ -n "$chosen_tests" ]]; then
-    for test in $chosen_tests; do
-        if ! [[ -f "$test" ]]; then
-            echo "Requested test ($test) not found"
-            exit 1
-        fi
-    done
-    echo "Performing tests:"
-    for test in $chosen_tests; do
-        echo "    $test"
-    done
-    echo
-    tests="$chosen_tests"
-else
-    printf "Performing all regression tests\n\n"
-fi
-
-expected_results_dir="test-results"
-
 ################
 # Get the directory with the exec outputs and compilation command
+# We also allow each compiler configuration to specify any test files(s) to exclude from running.
+expected_results_dir="test-results"
+exclude_test_filter=""
 if [[ "$cxx_compiler" == *"cl.exe"* ]]; then
     compiler_cmd="cl.exe -nologo -std:${cxx_std} -MD -EHsc -I ..\..\..\include -Fe:"
     exec_out_dir="$expected_results_dir/msvc-2022-${cxx_std}"
@@ -174,6 +157,12 @@ else
     if [[ "$compiler_version" == *"Apple clang version 14.0"* ||
           "$compiler_version" == *"Homebrew clang version 15.0"* ]]; then
         exec_out_dir="$expected_results_dir/apple-clang-14"
+        # We share the expected results dir for these two compilers, but there is one
+        # test which (as expected) fails to compile on both compilers, but has a slightly
+        # different error diagnostic because the clang path differs. So we exclude it from
+        # running. The alternative would be to duplicate the expected results files, which
+        # seems wasteful for just one test (that doesn't even compile).
+        exclude_test_filter="pure2-expected-is-as.cpp2"
     elif [[ "$compiler_version" == *"Apple clang version 15.0"* ]]; then
         exec_out_dir="$expected_results_dir/apple-clang-15"
     elif [[ "$compiler_version" == *"clang version 12.0"* ]]; then 
@@ -234,6 +223,30 @@ if [[ -d "$exec_out_dir" ]]; then
 else
     printf "Directory with reference compilation/execution files not found for compiler: '$cxx_compiler' at $exec_out_dir\n\n"
     exit 2
+fi
+
+################
+# Get the list of .cpp2 test files
+if [[ -n "$exclude_test_filter" ]]; then
+    tests=$(ls | grep ".cpp2$" | grep -v $exclude_test_filter)
+else
+    tests=$(ls | grep ".cpp2$")
+fi
+if [[ -n "$chosen_tests" ]]; then
+    for test in $chosen_tests; do
+        if ! [[ -f "$test" ]]; then
+            echo "Requested test ($test) not found"
+            exit 1
+        fi
+    done
+    echo "Performing tests:"
+    for test in $chosen_tests; do
+        echo "    $test"
+    done
+    echo
+    tests="$chosen_tests"
+else
+    printf "Performing all regression tests\n\n"
 fi
 
 ################
