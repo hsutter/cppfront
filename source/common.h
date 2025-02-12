@@ -582,7 +582,7 @@ auto print_with_thousands(T val)
 
 //  In the past when we don't have standard string+string_view, we needed to 
 //  manually implement it. However, since P2591 was adopted into C++26, we can
-//  now safely tune it on/off with FTM.
+//  now safely turn it on/off with FTM.
 //
 #if __cpp_lib_string_view < 202403L
 template<class charT, class traits, class Allocator>
