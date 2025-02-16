@@ -1,0 +1,8 @@
+Running tests_21_atomic_patterns:
+01_y: OK regex: (?>a+)b parsed_regex: (?>a+)b str: aaab result_expr: - expected_results -
+02_y: OK regex: ((?>a+)b) parsed_regex: ((?>a+)b) str: aaab result_expr: $1 expected_results aaab
+03_y: OK regex: (?>(a+))b parsed_regex: (?>(a+))b str: aaab result_expr: $1 expected_results aaa
+04_y: OK regex: ((?>[^()]+)|\([^()]*\))+ parsed_regex: ((?>[^()]+)|\([^()]*\))+ str: ((abc(ade)ufh()()x result_expr: $& expected_results abc(ade)ufh()()x
+05_y: OK regex: round\(((?>[^()]+))\) parsed_regex: round\(((?>[^()]+))\) str: _I(round(xs * sz),1) result_expr: $1 expected_results xs * sz
+06_y: OK regex: ^((?>(?:aa)?b)?) parsed_regex: ^((?>(?:aa)?b)?) str: aab result_expr: $1 expected_results aab
+

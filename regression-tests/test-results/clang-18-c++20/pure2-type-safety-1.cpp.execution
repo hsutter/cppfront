@@ -7,3 +7,5 @@
       variant<int, int, double> is int? true
                             any is int? true
                   optional<int> is int? true
+optional<int> is: int 
+optional<*D> is: *B *D 

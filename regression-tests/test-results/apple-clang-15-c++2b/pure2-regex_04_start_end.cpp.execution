@@ -8,4 +8,5 @@ Running tests_04_start_end:
 07_y: OK regex: ^ parsed_regex: ^ str: abc result_expr: $& expected_results 
 08_y: OK regex: $ parsed_regex: $ str: abc result_expr: $& expected_results 
 09_n: OK regex: $b parsed_regex: $b str: b result_expr: - expected_results -
+10_n: OK regex: \GX.*X parsed_regex: \GX.*X str: aaaXbX result_expr: - expected_results -
 

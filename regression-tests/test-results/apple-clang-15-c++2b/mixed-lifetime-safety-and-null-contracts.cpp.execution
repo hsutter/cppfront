@@ -1,2 +1,2 @@
 sending error to my framework... [dynamic null dereference attempt detected]
-from source location: ../../../include/cpp2util.h(1047) decltype(auto) cpp2::impl::assert_not_null(auto &&, std::source_location) [arg:auto = int *&]
+from source location: ../../../include/cpp2util.h(1126) decltype(auto) cpp2::impl::assert_not_null(auto &&, std::source_location) [arg:auto = int *&]
