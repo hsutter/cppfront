@@ -1,1 +1,1 @@
-../../../include/cpp2util.h(1047) decltype(auto) cpp2::impl::assert_not_null(auto &&, std::source_location) [arg:auto = std::unique_ptr<int>]: Null safety violation: std::unique_ptr is empty
+../../../include/cpp2util.h(1126) decltype(auto) cpp2::impl::assert_not_null(auto &&, std::source_location) [arg:auto = std::unique_ptr<int>]: Null safety violation: std::unique_ptr is empty
