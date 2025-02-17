@@ -1303,7 +1303,7 @@ public:
                 if (
                     line.cat == source_line::category::preprocessor
                     && contains(line.text, "#include")
-                    && !line.text.ends_with("*.h2\"")
+                    && !line.text.ends_with(".h2\"")
                     )
                 {
                     printer.print_cpp1(line.text, curr_lineno);
