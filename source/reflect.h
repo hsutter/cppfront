@@ -3617,7 +3617,7 @@ std::string to_string_impl{"    to_string_impl: (this, prefix: std::string_view"
         CPP2_UFCS(add_member)(t, "    to_code  : (this) -> std::string = to_string_impl( \"" + cpp2::to_string(CPP2_UFCS(name)(t)) + "::\" );");
     }
 {
-std::string from_string{"    from_string: (s: std::string_view) -> " + cpp2::to_string(CPP2_UFCS(name)(t)) + " = { \n"};
+std::string from_string{"    from_string: (cpp2_s__: std::string_view) -> " + cpp2::to_string(CPP2_UFCS(name)(t)) + " = { \n"};
 
     //  Provide a 'from_string' function to parse strings into enumerators    
 
@@ -3634,11 +3634,11 @@ std::string from_string{"    from_string: (s: std::string_view) -> " + cpp2::to_
 
             from_string += "        ret := none;\n"
                            "        outer: do {\n"
-                           "        for cpp2::string_util::split_string_list(s) do (x) {\n";
+                           "        for cpp2::string_util::split_string_list(cpp2_s__) do (x) {\n";
         }
         //  Otherwise, accept just a single string
         else {
-            from_string += "        x := s;\n";
+            from_string += "        x := cpp2_s__;\n";
         }
 {
 std::string_view else_{""};
@@ -3659,7 +3659,7 @@ std::string_view else_{""};
                            "        } while false;\n";
         }
 
-        from_string += "        cpp2::type_safety.report_violation( (\"can't convert string '\" + cpp2::to_string(s) + \"' to " + cpp2::to_string(cpp2::move(prefix)) + "enum of type " + cpp2::to_string(CPP2_UFCS(name)(t)) + "\").c_str() );\n"
+        from_string += "        cpp2::type_safety.report_violation( (\"can't convert string '\" + cpp2::to_string(cpp2_s__) + \"' to " + cpp2::to_string(cpp2::move(prefix)) + "enum of type " + cpp2::to_string(CPP2_UFCS(name)(t)) + "\").c_str() );\n"
                        "        return " + cpp2::to_string(cpp2::move(default_value)) + ";\n"
                        "    }\n\n";
 
@@ -3668,7 +3668,7 @@ std::string_view else_{""};
 }
 
 #line 1652 "reflect.h2"
-    CPP2_UFCS(add_member)(t, "    from_code: (s: std::string_view) -> " + cpp2::to_string(CPP2_UFCS(name)(t)) + " = { str: std::string = s; return from_string( cpp2::string_util::replace_all(str, \"" + cpp2::to_string(CPP2_UFCS(name)(t)) + "::\", \"\" ) ); }");
+    CPP2_UFCS(add_member)(t, "    from_code: (cpp2_s__: std::string_view) -> " + cpp2::to_string(CPP2_UFCS(name)(t)) + " = { str: std::string = cpp2_s__; return from_string( cpp2::string_util::replace_all(str, \"" + cpp2::to_string(CPP2_UFCS(name)(t)) + "::\", \"\" ) ); }");
 }
 
 #line 1656 "reflect.h2"
