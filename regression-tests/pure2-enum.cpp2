@@ -25,6 +25,11 @@ file_attributes: @flag_enum<u8> type = {
     cached_and_current := cached | current;
 }
 
+// #1342
+foo : @enum type = {
+    s;
+}
+
 main: () = {
     j := janus::past;
     j.flip();
@@ -132,4 +137,7 @@ main: () = {
 
     f_from_string = file_attributes::from_code("(file_attributes::cached | file_attributes::obsolete)");
     std::cout << "f_from_string is " << f_from_string.to_string() << "\n";
+
+    a := foo::s;
+    std::cout << "a.to_string() is (a.to_string())$\n";
 }

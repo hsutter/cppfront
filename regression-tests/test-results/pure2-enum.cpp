@@ -20,6 +20,10 @@ class janus;
 class file_attributes;
     
 
+#line 29 "pure2-enum.cpp2"
+class foo;
+    
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "pure2-enum.cpp2"
@@ -45,8 +49,8 @@ public: [[nodiscard]] auto operator<=>(skat_game const& that) const& -> std::str
 public: [[nodiscard]] auto to_string_impl(cpp2::impl::in<std::string_view> prefix) const& -> std::string;
 public: [[nodiscard]] auto to_string() const& -> std::string;
 public: [[nodiscard]] auto to_code() const& -> std::string;
-public: [[nodiscard]] static auto from_string(cpp2::impl::in<std::string_view> s) -> skat_game;
-public: [[nodiscard]] static auto from_code(cpp2::impl::in<std::string_view> s) -> skat_game;
+public: [[nodiscard]] static auto from_string(cpp2::impl::in<std::string_view> cpp2_s__) -> skat_game;
+public: [[nodiscard]] static auto from_code(cpp2::impl::in<std::string_view> cpp2_s__) -> skat_game;
 
 #line 4 "pure2-enum.cpp2"
              // 10
@@ -75,8 +79,8 @@ public: [[nodiscard]] auto operator<=>(janus const& that) const& -> std::strong_
 public: [[nodiscard]] auto to_string_impl(cpp2::impl::in<std::string_view> prefix) const& -> std::string;
 public: [[nodiscard]] auto to_string() const& -> std::string;
 public: [[nodiscard]] auto to_code() const& -> std::string;
-public: [[nodiscard]] static auto from_string(cpp2::impl::in<std::string_view> s) -> janus;
-public: [[nodiscard]] static auto from_code(cpp2::impl::in<std::string_view> s) -> janus;
+public: [[nodiscard]] static auto from_string(cpp2::impl::in<std::string_view> cpp2_s__) -> janus;
+public: [[nodiscard]] static auto from_code(cpp2::impl::in<std::string_view> cpp2_s__) -> janus;
 
 #line 19 "pure2-enum.cpp2"
 };
@@ -109,8 +113,8 @@ public: [[nodiscard]] auto operator<=>(file_attributes const& that) const& -> st
 public: [[nodiscard]] auto to_string_impl(cpp2::impl::in<std::string_view> prefix, cpp2::impl::in<std::string_view> separator) const& -> std::string;
 public: [[nodiscard]] auto to_string() const& -> std::string;
 public: [[nodiscard]] auto to_code() const& -> std::string;
-public: [[nodiscard]] static auto from_string(cpp2::impl::in<std::string_view> s) -> file_attributes;
-public: [[nodiscard]] static auto from_code(cpp2::impl::in<std::string_view> s) -> file_attributes;
+public: [[nodiscard]] static auto from_string(cpp2::impl::in<std::string_view> cpp2_s__) -> file_attributes;
+public: [[nodiscard]] static auto from_code(cpp2::impl::in<std::string_view> cpp2_s__) -> file_attributes;
 
 #line 22 "pure2-enum.cpp2"
                 // 1
@@ -118,6 +122,28 @@ public: [[nodiscard]] static auto from_code(cpp2::impl::in<std::string_view> s) 
                 // 4
 
 #line 26 "pure2-enum.cpp2"
+};
+
+// #1342
+class foo {
+private: cpp2::i8 _value; private: constexpr foo(cpp2::impl::in<cpp2::i64> _val);
+
+private: constexpr auto operator=(cpp2::impl::in<cpp2::i64> _val) -> foo& ;
+public: static const foo s;
+public: [[nodiscard]] constexpr auto get_raw_value() const& -> cpp2::i8;
+public: constexpr explicit foo();
+public: constexpr foo(foo const& that);
+public: constexpr auto operator=(foo const& that) -> foo& ;
+public: constexpr foo(foo&& that) noexcept;
+public: constexpr auto operator=(foo&& that) noexcept -> foo& ;
+public: [[nodiscard]] auto operator<=>(foo const& that) const& -> std::strong_ordering = default;
+public: [[nodiscard]] auto to_string_impl(cpp2::impl::in<std::string_view> prefix) const& -> std::string;
+public: [[nodiscard]] auto to_string() const& -> std::string;
+public: [[nodiscard]] auto to_code() const& -> std::string;
+public: [[nodiscard]] static auto from_string(cpp2::impl::in<std::string_view> cpp2_s__) -> foo;
+public: [[nodiscard]] static auto from_code(cpp2::impl::in<std::string_view> cpp2_s__) -> foo;
+
+#line 31 "pure2-enum.cpp2"
 };
 
 auto main() -> int;
@@ -172,9 +198,9 @@ return "invalid skat_game value";
 
 [[nodiscard]] auto skat_game::to_string() const& -> std::string { return to_string_impl(""); }
 [[nodiscard]] auto skat_game::to_code() const& -> std::string { return to_string_impl("skat_game::"); }
-[[nodiscard]] auto skat_game::from_string(cpp2::impl::in<std::string_view> s) -> skat_game{
+[[nodiscard]] auto skat_game::from_string(cpp2::impl::in<std::string_view> cpp2_s__) -> skat_game{
 
-auto x {s}; 
+auto x {cpp2_s__}; 
 if ("diamonds" == x) {return diamonds; }
 else {if ("hearts" == x) {return hearts; }
 else {if ("spades" == x) {return spades; }
@@ -183,12 +209,12 @@ else {if ("grand" == x) {return grand; }
 else {if ("null" == cpp2::move(x)) {return null; }
 #line 1 "pure2-enum.cpp2"
 }}}}}
-CPP2_UFCS(report_violation)(cpp2::type_safety, CPP2_UFCS(c_str)(("can't convert string '" + cpp2::to_string(s) + "' to enum of type skat_game")));
+CPP2_UFCS(report_violation)(cpp2::type_safety, CPP2_UFCS(c_str)(("can't convert string '" + cpp2::to_string(cpp2_s__) + "' to enum of type skat_game")));
 return diamonds; 
 }
 
-[[nodiscard]] auto skat_game::from_code(cpp2::impl::in<std::string_view> s) -> skat_game{
-std::string str {s}; return from_string(cpp2::string_util::replace_all(cpp2::move(str), "skat_game::", "")); }
+[[nodiscard]] auto skat_game::from_code(cpp2::impl::in<std::string_view> cpp2_s__) -> skat_game{
+std::string str {cpp2_s__}; return from_string(cpp2::string_util::replace_all(cpp2::move(str), "skat_game::", "")); }
 
 #line 15 "pure2-enum.cpp2"
     constexpr auto janus::flip() & -> void{
@@ -230,19 +256,19 @@ constexpr auto janus::operator=(janus&& that) noexcept -> janus& {
 
     [[nodiscard]] auto janus::to_string() const& -> std::string { return to_string_impl(""); }
 [[nodiscard]] auto janus::to_code() const& -> std::string { return to_string_impl("janus::"); }
-[[nodiscard]] auto janus::from_string(cpp2::impl::in<std::string_view> s) -> janus{
+[[nodiscard]] auto janus::from_string(cpp2::impl::in<std::string_view> cpp2_s__) -> janus{
 
-    auto x {s}; 
+    auto x {cpp2_s__}; 
     if ("past" == x) {return past; }
     else {if ("future" == cpp2::move(x)) {return future; }
 #line 1 "pure2-enum.cpp2"
 }
-CPP2_UFCS(report_violation)(cpp2::type_safety, CPP2_UFCS(c_str)(("can't convert string '" + cpp2::to_string(s) + "' to enum of type janus")));
+CPP2_UFCS(report_violation)(cpp2::type_safety, CPP2_UFCS(c_str)(("can't convert string '" + cpp2::to_string(cpp2_s__) + "' to enum of type janus")));
 return past; 
 }
 
-[[nodiscard]] auto janus::from_code(cpp2::impl::in<std::string_view> s) -> janus{
-std::string str {s}; return from_string(cpp2::string_util::replace_all(cpp2::move(str), "janus::", "")); }
+[[nodiscard]] auto janus::from_code(cpp2::impl::in<std::string_view> cpp2_s__) -> janus{
+std::string str {cpp2_s__}; return from_string(cpp2::string_util::replace_all(cpp2::move(str), "janus::", "")); }
 
 constexpr file_attributes::file_attributes(cpp2::impl::in<cpp2::i64> _val)
                                                           : _value{ cpp2::unchecked_narrow<cpp2::u8>(_val) } {  }
@@ -299,11 +325,11 @@ return cpp2::move(ret) + ")";
 
 [[nodiscard]] auto file_attributes::to_string() const& -> std::string { return to_string_impl("", ", "); }
 [[nodiscard]] auto file_attributes::to_code() const& -> std::string { return to_string_impl("file_attributes::", " | "); }
-[[nodiscard]] auto file_attributes::from_string(cpp2::impl::in<std::string_view> s) -> file_attributes{
+[[nodiscard]] auto file_attributes::from_string(cpp2::impl::in<std::string_view> cpp2_s__) -> file_attributes{
 
 auto ret {none}; 
 do {{
-for ( auto const& x : cpp2::string_util::split_string_list(s) ) {
+for ( auto const& x : cpp2::string_util::split_string_list(cpp2_s__) ) {
 if ("cached" == x) {ret |= cached;}
 else {if ("current" == x) {ret |= current;}
 else {if ("obsolete" == x) {ret |= obsolete;}
@@ -319,14 +345,54 @@ return ret;
  while ( 
 false
 );
-CPP2_UFCS(report_violation)(cpp2::type_safety, CPP2_UFCS(c_str)(("can't convert string '" + cpp2::to_string(s) + "' to flag_enum of type file_attributes")));
+CPP2_UFCS(report_violation)(cpp2::type_safety, CPP2_UFCS(c_str)(("can't convert string '" + cpp2::to_string(cpp2_s__) + "' to flag_enum of type file_attributes")));
 return none; 
 }
 
-[[nodiscard]] auto file_attributes::from_code(cpp2::impl::in<std::string_view> s) -> file_attributes{
-std::string str {s}; return from_string(cpp2::string_util::replace_all(cpp2::move(str), "file_attributes::", "")); }
+[[nodiscard]] auto file_attributes::from_code(cpp2::impl::in<std::string_view> cpp2_s__) -> file_attributes{
+std::string str {cpp2_s__}; return from_string(cpp2::string_util::replace_all(cpp2::move(str), "file_attributes::", "")); }
 
-#line 28 "pure2-enum.cpp2"
+constexpr foo::foo(cpp2::impl::in<cpp2::i64> _val)
+                                                          : _value{ cpp2::unchecked_narrow<cpp2::i8>(_val) } {  }
+
+constexpr auto foo::operator=(cpp2::impl::in<cpp2::i64> _val) -> foo&  { 
+                                                          _value = cpp2::unchecked_narrow<cpp2::i8>(_val);
+                                                          return *this; }
+inline CPP2_CONSTEXPR foo foo::s{ 0 };
+
+[[nodiscard]] constexpr auto foo::get_raw_value() const& -> cpp2::i8 { return _value; }
+constexpr foo::foo()
+                                        : _value{ s._value }{}
+constexpr foo::foo(foo const& that)
+                                              : _value{ that._value }{}
+constexpr auto foo::operator=(foo const& that) -> foo& {
+                                              _value = that._value;
+                                              return *this;}
+constexpr foo::foo(foo&& that) noexcept
+                                              : _value{ std::move(that)._value }{}
+constexpr auto foo::operator=(foo&& that) noexcept -> foo& {
+                                              _value = std::move(that)._value;
+                                              return *this;}
+[[nodiscard]] auto foo::to_string_impl(cpp2::impl::in<std::string_view> prefix) const& -> std::string{
+
+auto pref {cpp2::to_string(prefix)}; 
+if ((*this) == s) {return cpp2::move(pref) + "s"; }
+return "invalid foo value"; 
+}
+
+[[nodiscard]] auto foo::to_string() const& -> std::string { return to_string_impl(""); }
+[[nodiscard]] auto foo::to_code() const& -> std::string { return to_string_impl("foo::"); }
+[[nodiscard]] auto foo::from_string(cpp2::impl::in<std::string_view> cpp2_s__) -> foo{
+
+auto x {cpp2_s__}; 
+if ("s" == cpp2::move(x)) {return s; }
+CPP2_UFCS(report_violation)(cpp2::type_safety, CPP2_UFCS(c_str)(("can't convert string '" + cpp2::to_string(cpp2_s__) + "' to enum of type foo")));
+return s; 
+}
+
+[[nodiscard]] auto foo::from_code(cpp2::impl::in<std::string_view> cpp2_s__) -> foo{
+std::string str {cpp2_s__}; return from_string(cpp2::string_util::replace_all(cpp2::move(str), "foo::", "")); }
+#line 33 "pure2-enum.cpp2"
 auto main() -> int{
     auto j {janus::past}; 
     CPP2_UFCS(flip)(j);
@@ -434,5 +500,8 @@ auto main() -> int{
 
     f_from_string = file_attributes::from_code("(file_attributes::cached | file_attributes::obsolete)");
     std::cout << "f_from_string is " << CPP2_UFCS(to_string)(cpp2::move(f_from_string)) << "\n";
+
+    auto a {foo::s}; 
+    std::cout << "a.to_string() is " + cpp2::to_string(CPP2_UFCS(to_string)(cpp2::move(a))) + "\n";
 }
 
