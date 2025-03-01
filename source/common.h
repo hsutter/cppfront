@@ -580,12 +580,9 @@ auto print_with_thousands(T val)
 }
 
 
-//  In keep trying to write string+string_view, and it ought to Just Work without
-//  the current workarounds. Not having that is a minor impediment to using safe
-//  and efficient string_views, which we should be encouraging. So for my own use
-//  and to remove that minor impediment to writing safe and efficient code, I'm
-//  just going to add this until we get P2591 in C++26(?) -- See: wg21.link/p2591
-//
+//  Provide string+string_view if P2591 is not available.
+// 
+#if __cpp_lib_string_view < 202403L
 template<class charT, class traits, class Allocator>
 [[nodiscard]] constexpr auto operator+(
     std::basic_string<charT, traits, Allocator> lhs,
@@ -605,6 +602,7 @@ template<class charT, class traits, class Allocator>
 {
     return rhs.insert(0, lhs);
 }
+#endif
 
 
 //-----------------------------------------------------------------------
