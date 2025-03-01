@@ -3585,13 +3585,13 @@ std::string to_string_impl{"    to_string_impl: (this, prefix: std::string_view"
             if (e.name != "_") {// ignore unnamed values
                 if (bitwise) {
                     if (e.name != "none") {
-                        to_string_impl += "    if (this & " + cpp2::to_string(e.name) + ") == " + cpp2::to_string(e.name) + " { "
+                        to_string_impl += "    if (this & " + cpp2::to_string(CPP2_UFCS(name)(t)) + "::" + cpp2::to_string(e.name) + ") == " + cpp2::to_string(CPP2_UFCS(name)(t)) + "::" + cpp2::to_string(e.name) + " { "
                                                   "ret += sep + pref + \"" + cpp2::to_string(e.name) + "\"; sep = separator; "
                                               "}\n";
                     }
                 }
                 else {
-                    to_string_impl += "    if this == " + cpp2::to_string(e.name) + " { return pref + \"" + cpp2::to_string(e.name) + "\"; }\n";
+                    to_string_impl += "    if this == " + cpp2::to_string(CPP2_UFCS(name)(t)) + "::" + cpp2::to_string(e.name) + " { return pref + \"" + cpp2::to_string(e.name) + "\"; }\n";
                 }
             }
         }
@@ -3646,7 +3646,7 @@ std::string_view else_{""};
 #line 1632 "reflect.h2"
         for ( 
               auto const& e : cpp2::move(enumerators) ) {
-            from_string += "            " + cpp2::to_string(else_) + "if \"" + cpp2::to_string(e.name) + "\" == x { " + cpp2::to_string(combine_op) + " " + cpp2::to_string(e.name) + "; }\n";
+            from_string += "            " + cpp2::to_string(else_) + "if \"" + cpp2::to_string(e.name) + "\" == x { " + cpp2::to_string(combine_op) + " " + cpp2::to_string(CPP2_UFCS(name)(t)) + "::" + cpp2::to_string(e.name) + "; }\n";
             else_ = "else ";
         }
 }
@@ -3660,7 +3660,7 @@ std::string_view else_{""};
         }
 
         from_string += "        cpp2::type_safety.report_violation( (\"can't convert string '\" + cpp2::to_string(s) + \"' to " + cpp2::to_string(cpp2::move(prefix)) + "enum of type " + cpp2::to_string(CPP2_UFCS(name)(t)) + "\").c_str() );\n"
-                       "        return " + cpp2::to_string(cpp2::move(default_value)) + ";\n"
+                       "        return " + cpp2::to_string(CPP2_UFCS(name)(t)) + "::" + cpp2::to_string(cpp2::move(default_value)) + ";\n"
                        "    }\n\n";
 
         CPP2_UFCS(add_member)(t, cpp2::move(from_string));
@@ -4362,12 +4362,12 @@ std::string sep {};
 if ((*this) == none) {return "(none)"; }
 
 auto pref {cpp2::to_string(prefix)}; 
-if (((*this) & case_insensitive) == case_insensitive) {ret += sep + pref + "case_insensitive";sep = separator;}
-if (((*this) & multiple_lines) == multiple_lines) {ret += sep + pref + "multiple_lines";sep = separator;}
-if (((*this) & single_line) == single_line) {ret += sep + pref + "single_line";sep = separator;}
-if (((*this) & no_group_captures) == no_group_captures) {ret += sep + pref + "no_group_captures";sep = separator;}
-if (((*this) & perl_code_syntax) == perl_code_syntax) {ret += sep + pref + "perl_code_syntax";sep = separator;}
-if (((*this) & perl_code_syntax_in_classes) == perl_code_syntax_in_classes) {ret += sep + cpp2::move(pref) + "perl_code_syntax_in_classes";sep = separator;}
+if (((*this) & expression_flags::case_insensitive) == expression_flags::case_insensitive) {ret += sep + pref + "case_insensitive";sep = separator;}
+if (((*this) & expression_flags::multiple_lines) == expression_flags::multiple_lines) {ret += sep + pref + "multiple_lines";sep = separator;}
+if (((*this) & expression_flags::single_line) == expression_flags::single_line) {ret += sep + pref + "single_line";sep = separator;}
+if (((*this) & expression_flags::no_group_captures) == expression_flags::no_group_captures) {ret += sep + pref + "no_group_captures";sep = separator;}
+if (((*this) & expression_flags::perl_code_syntax) == expression_flags::perl_code_syntax) {ret += sep + pref + "perl_code_syntax";sep = separator;}
+if (((*this) & expression_flags::perl_code_syntax_in_classes) == expression_flags::perl_code_syntax_in_classes) {ret += sep + cpp2::move(pref) + "perl_code_syntax_in_classes";sep = separator;}
 return cpp2::move(ret) + ")"; 
 }
 
@@ -4378,13 +4378,13 @@ return cpp2::move(ret) + ")";
 auto ret {none}; 
 do {{
 for ( auto const& x : cpp2::string_util::split_string_list(s) ) {
-if ("case_insensitive" == x) {ret |= case_insensitive;}
-else {if ("multiple_lines" == x) {ret |= multiple_lines;}
-else {if ("single_line" == x) {ret |= single_line;}
-else {if ("no_group_captures" == x) {ret |= no_group_captures;}
-else {if ("perl_code_syntax" == x) {ret |= perl_code_syntax;}
-else {if ("perl_code_syntax_in_classes" == x) {ret |= perl_code_syntax_in_classes;}
-else {if ("none" == x) {ret |= none;}
+if ("case_insensitive" == x) {ret |= expression_flags::case_insensitive;}
+else {if ("multiple_lines" == x) {ret |= expression_flags::multiple_lines;}
+else {if ("single_line" == x) {ret |= expression_flags::single_line;}
+else {if ("no_group_captures" == x) {ret |= expression_flags::no_group_captures;}
+else {if ("perl_code_syntax" == x) {ret |= expression_flags::perl_code_syntax;}
+else {if ("perl_code_syntax_in_classes" == x) {ret |= expression_flags::perl_code_syntax_in_classes;}
+else {if ("none" == x) {ret |= expression_flags::none;}
 else {goto BREAK_outer;}
 #line 1 "reflect.h2"
 }}}}}}

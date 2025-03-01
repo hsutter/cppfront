@@ -1577,13 +1577,13 @@ basic_enum: (
             if e.name != "_" {  // ignore unnamed values
                 if bitwise {
                     if e.name != "none" {
-                        to_string_impl += "    if (this & (e.name)$) == (e.name)$ { "
+                        to_string_impl += "    if (this & (t.name())$::(e.name)$) == (t.name())$::(e.name)$ { "
                                                   "ret += sep + pref + \"(e.name)$\"; sep = separator; "
                                               "}\n";
                     }
                 }
                 else {
-                    to_string_impl += "    if this == (e.name)$ { return pref + \"(e.name)$\"; }\n";
+                    to_string_impl += "    if this == (t.name())$::(e.name)$ { return pref + \"(e.name)$\"; }\n";
                 }
             }
         }
@@ -1631,7 +1631,7 @@ basic_enum: (
         (copy else_: std::string_view = "")
         for  enumerators
         do   (e) {
-            from_string += "            (else_)$if \"(e.name)$\" == x { (combine_op)$ (e.name)$; }\n";
+            from_string += "            (else_)$if \"(e.name)$\" == x { (combine_op)$ (t.name())$::(e.name)$; }\n";
             else_ = "else ";
         }
 
@@ -1643,7 +1643,7 @@ basic_enum: (
         }
 
         from_string += "        cpp2::type_safety.report_violation( (\"can't convert string '\" + cpp2::to_string(s) + \"' to (prefix)$enum of type (t.name())$\").c_str() );\n"
-                       "        return (default_value)$;\n"
+                       "        return (t.name())$::(default_value)$;\n"
                        "    }\n\n";
 
         t.add_member( from_string );
