@@ -40,3 +40,9 @@ buildh2.bat
 gen_version.bat
 mkdocs_serve.sh
 experimental/a.out
+cppfront/x64/Debug/microsoft/STL/std.compat.ixx.ifc.dt.d.json
+cppfront/x64/Debug/microsoft/STL/std.compat.ixx.ifc.dt.module.json
+cppfront/x64/Debug/microsoft/STL/std.compat.ixx.ifc.dt.module.json.command
+cppfront/x64/Debug/microsoft/STL/std.ixx.ifc.dt.d.json
+cppfront/x64/Debug/microsoft/STL/std.ixx.ifc.dt.module.json
+cppfront/x64/Debug/microsoft/STL/std.ixx.ifc.dt.module.json.command
