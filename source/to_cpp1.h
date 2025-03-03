@@ -2776,7 +2776,6 @@ public:
     auto emit(primary_expression_node const& n)
         -> void
     {   STACKINSTR
-        try_emit<primary_expression_node::identifier     >(n.expr);
         try_emit<primary_expression_node::expression_list>(n.expr);
         try_emit<primary_expression_node::id_expression  >(n.expr);
         try_emit<primary_expression_node::inspect        >(n.expr, true);

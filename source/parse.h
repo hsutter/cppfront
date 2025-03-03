@@ -125,10 +125,9 @@ struct template_argument;
 
 struct primary_expression_node
 {
-    enum active : u8 { empty=0, identifier, expression_list, id_expression, declaration, inspect, literal };
+    enum active : u8 { empty=0, expression_list, id_expression, declaration, inspect, literal };
     std::variant<
         std::monostate,
-        token const*,
         std::unique_ptr<expression_list_node>,
         std::unique_ptr<id_expression_node>,
         std::unique_ptr<declaration_node>,
@@ -149,6 +148,9 @@ struct primary_expression_node
 
     auto is_identifier() const
         -> bool;
+
+    auto get_identifier() const
+        -> token const*;
 
     auto is_id_expression() const
         -> bool;
@@ -272,6 +274,9 @@ struct prefix_expression_node
     auto is_identifier() const
         -> bool;
 
+    auto get_identifier() const
+        -> token const*;
+
     auto is_id_expression() const
         -> bool;
 
@@ -378,6 +383,16 @@ struct binary_expression_node
         -> bool
     {
         return terms.empty() && expr->is_identifier();
+    }
+
+    auto get_identifier() const
+        -> token const*
+    {
+        if (!terms.empty()) {
+            return nullptr;
+        }
+        // Else
+        return expr->get_identifier();
     }
 
     auto is_id_expression() const
@@ -589,6 +604,12 @@ struct expression_node
         return expr->is_identifier();
     }
 
+    auto get_identifier() const
+        -> token const*
+    {
+        return expr->get_identifier();
+    }
+
     auto is_id_expression() const
         -> bool
     {
@@ -755,6 +776,12 @@ struct expression_list_node
         return ret;
     }
 
+    auto get_expressions() const
+        -> std::vector<term> const&
+    {
+        return expressions;
+    }
+
     auto to_string() const
         -> std::string
     {
@@ -796,12 +823,6 @@ struct expression_list_node
         v.end(*this, depth);
     }
 };
-
-auto primary_expression_node::is_identifier() const
-    -> bool
-{
-    return expr.index() == identifier;
-}
 
 auto primary_expression_node::is_id_expression() const
     -> bool
@@ -975,6 +996,16 @@ struct postfix_expression_node
         return ops.empty() && expr->is_identifier();
     }
 
+    auto get_identifier() const
+        -> token const*
+    {
+        if (!ops.empty()) {
+            return nullptr;
+        }
+        // Else
+        return expr->get_identifier();
+    }
+
     auto is_id_expression() const
         -> bool
     {
@@ -1067,6 +1098,16 @@ auto prefix_expression_node::is_identifier() const
     -> bool
 {
     return ops.empty() && expr->is_identifier();
+}
+
+auto prefix_expression_node::get_identifier() const
+    -> token const*
+{
+    if (!ops.empty()) {
+        return nullptr;
+    }
+    // Else
+    return expr->get_identifier();
 }
 
 auto prefix_expression_node::is_id_expression() const
@@ -1250,6 +1291,22 @@ struct unqualified_id_node
         }
         // else
         return {};
+    }
+
+    auto is_identifier() const
+        -> bool
+    {
+        return template_args.empty();
+    }
+
+    auto get_identifier() const
+        -> token const*
+    {
+        if (is_identifier()) {
+            return identifier;
+        }
+        // Else
+        return nullptr;
     }
 
     auto to_string() const
@@ -1573,6 +1630,16 @@ struct is_as_expression_node
         return ops.empty() && expr->is_identifier();
     }
 
+    auto get_identifier() const
+        -> token const*
+    {
+        if (!ops.empty()) {
+            return nullptr;
+        }
+        // Else
+        return expr->get_identifier();
+    }
+
     auto is_id_expression() const
         -> bool
     {
@@ -1719,6 +1786,26 @@ struct id_expression_node
         return std::get<qualified>(id)->template_arguments();
     }
 
+    auto is_identifier() const
+        -> bool
+    {
+        if (auto puid = std::get_if<unqualified>(&id)) {
+            return (*puid)->is_identifier();
+        }
+        // Else
+        return false;
+    }
+
+    auto get_identifier() const
+        -> token const*
+    {
+        if (auto puid = std::get_if<unqualified>(&id)) {
+            return (*puid)->get_identifier();
+        }
+        // Else
+        return nullptr;
+    }
+
     auto is_fold_expression() const
         -> bool
     {
@@ -1786,6 +1873,28 @@ struct id_expression_node
 };
 
 
+auto primary_expression_node::is_identifier() const
+-> bool
+{
+    if (auto pid = std::get_if<id_expression>(&expr)) {
+        return (*pid)->is_identifier();
+    }
+    // Else
+    return false;
+}
+
+
+auto primary_expression_node::get_identifier() const
+-> token const*
+{
+    if (auto pid = std::get_if<id_expression>(&expr)) {
+        return (*pid)->get_identifier();
+    }
+    // Else
+    return nullptr;
+}
+
+
 postfix_expression_node::~postfix_expression_node()
 {
     if (cap_grp) {
@@ -1813,8 +1922,6 @@ auto primary_expression_node::is_fold_expression() const
     //  This is a fold-expression if any subexpression has
     //  has an identifier named "..."
     switch (expr.index()) {
-    break;case identifier:
-        return *std::get<identifier>(expr) == "...";
     break;case expression_list:
         return expression_list_is_fold_expression;
     break;case id_expression:
@@ -4659,10 +4766,7 @@ auto primary_expression_node::template_arguments() const
 auto primary_expression_node::get_token() const
     -> token const*
 {
-    if (expr.index() == identifier) {
-        return std::get<identifier>(expr);
-    }
-    else if (expr.index() == id_expression) {
+    if (expr.index() == id_expression) {
         return std::get<id_expression>(expr)->get_token();
     }
     else if (expr.index() == literal) {
@@ -4681,12 +4785,6 @@ auto primary_expression_node::position() const
     {
     break;case empty:
         return { 0, 0 };
-
-    break;case identifier: {
-        auto const& s = std::get<identifier>(expr);
-        assert (s);
-        return s->position();
-    }
 
     break;case expression_list: {
         auto const& s = std::get<expression_list>(expr);
@@ -4729,7 +4827,6 @@ auto primary_expression_node::visit(auto& v, int depth)
     -> void
 {
     v.start(*this, depth);
-    try_visit<identifier     >(expr, v, depth);
     try_visit<expression_list>(expr, v, depth);
     try_visit<id_expression  >(expr, v, depth);
     try_visit<declaration    >(expr, v, depth);
@@ -5027,12 +5124,6 @@ auto primary_expression_node::to_string() const
     break; case empty:
         return {};
 
-    break; case identifier: {
-        auto const& s = std::get<identifier>(expr);
-        assert(s);
-        return s->to_string();
-    }
-
     break; case expression_list: {
         auto const& s = std::get<expression_list>(expr);
         assert(s);
@@ -5119,7 +5210,6 @@ auto pretty_print_visualize(primary_expression_node const& n, int indent)
 {
     auto ret = std::string{};
 
-    ret += try_pretty_print_visualize<primary_expression_node::identifier     >(n.expr, indent);
     ret += try_pretty_print_visualize<primary_expression_node::expression_list>(n.expr, indent);
     ret += try_pretty_print_visualize<primary_expression_node::id_expression  >(n.expr, indent);
     ret += try_pretty_print_visualize<primary_expression_node::declaration    >(n.expr, indent);

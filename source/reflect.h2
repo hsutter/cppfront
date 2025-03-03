@@ -738,7 +738,11 @@ postfix_expression: @copyable type =
     // get_expression_list          : (this) -> expression_list
     // get_literal                  : (this) -> literal
 
-    get_first_token_ignoring_this: (this) -> std::string_view = n*.get_first_token_ignoring_this()*;
+    get_first_token_ignoring_this: (this) -> std::string_view = {
+        ptok := n*.get_first_token_ignoring_this();
+        if ptok { return ptok*; }
+        return "";
+    }
 
     starts_with_function_call_with_num_parameters: (this, num: int) -> bool = n*.starts_with_function_call_with_n_parameters(num);
     is_result_a_temporary_variable               : (this) -> bool           = n*.is_result_a_temporary_variable             ();
@@ -903,7 +907,55 @@ is_as_expression: @polymorphic_base @copyable type =
         reflection_base<is_as_expression_node> = (n_, s);
     }
 
+    is_fold_expression      : (this) -> bool = this.n*.is_fold_expression      ();
+    is_identifier           : (this) -> bool = this.n*.is_identifier           ();
+    is_id_expression        : (this) -> bool = this.n*.is_id_expression        ();
+    is_unqualified_id       : (this) -> bool = this.n*.is_unqualified_id       ();
+    is_expression_list      : (this) -> bool = this.n*.is_expression_list      ();
+    is_literal              : (this) -> bool = this.n*.is_literal              ();
+                            
+    // get_expression_list     : (this) -> expression_list  = (this.n*.get_expression_list(), this);
+
+    get_identifier          : (this) -> std::string_view = { 
+        ptok := this.n*.get_identifier();
+        if ptok { return ptok*; }
+        return "";
+    }
+
     to_string: (this) -> std::string = this.n*.to_string();
+}
+
+
+//-----------------------------------------------------------------------
+//  Expression list
+//
+expression_list: @copyable type =
+{
+    this: reflection_base<expression_list_node> = ();
+
+    operator=: (
+        out this,
+        n_: *expression_list_node,
+        s : compiler_services
+    )
+    = {
+        reflection_base<expression_list_node> = (n_, s);
+    }
+
+    is_empty          : (this) -> bool = n*.is_empty          ();
+    is_fold_expression: (this) -> bool = n*.is_fold_expression();
+
+    get_expressions: (this)
+        -> std::vector<expression>
+    = {
+        ret: std::vector<expression> = ();
+        for n*.get_expressions() do (expr) {
+            _ = ret.emplace_back(expression(expr.expr.get(), this));
+        }
+        return ret;
+    }
+
+    to_string: (this) -> std::string = n*.to_string();
 }
 
 
@@ -2220,6 +2272,19 @@ autodiff: (inout t: meta::type_declaration) =
                         m.error( "ICE: there should be exactly one additive term here" );
                     }
                     multiplicative_terms := additive_terms.front().get_term().get_terms();
+
+                    //  Temporary test loop
+                    if multiplicative_terms.ssize() > 1
+                    {
+                        std::cout << "debug: found (multiplicative_terms.ssize())$ is_as_expressions\n";
+                        for multiplicative_terms do (isas) {
+                            std::cout << "debug:   is_as term: \"(isas.get_term().to_string())$\"\n";
+                            if isas.get_term().is_identifier() {
+                                std::cout << "debug:       identifier: (isas.get_term().get_identifier())$\n";
+                            }
+                        }
+                    }
+
                     if multiplicative_terms.ssize() > 1
                     {
                         if multiplicative_terms.ssize() != 2
