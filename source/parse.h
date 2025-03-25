@@ -4502,9 +4502,11 @@ auto function_type_node::is_constructor() const
         (*parameters).ssize() > 0
         && (*parameters)[0]->has_name("this")
         && (*parameters)[0]->direction() == passing_style::out
+        && my_decl
+        && my_decl->has_name("operator=")
         )
     {
-        assert(my_decl && my_decl->has_name("operator="));
+        //assert(my_decl && my_decl->has_name("operator="));
         return true;
     }
     return false;
