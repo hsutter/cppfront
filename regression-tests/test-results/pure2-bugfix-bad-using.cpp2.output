@@ -1,0 +1,3 @@
+pure2-bugfix-bad-using.cpp2...
+pure2-bugfix-bad-using.cpp2(3,1): error: expected valid id-expression after 'using' (at '}')
+
