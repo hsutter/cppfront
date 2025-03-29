@@ -1,0 +1,4 @@
+pure2-bugfix-for-assert-capture.cpp2...
+pure2-bugfix-for-assert-capture.cpp2(2,29): error: $ (capture) cannot appear here - it must appear in an anonymous expression function, a postcondition, or an interpolated string literal (at '$')
+pure2-bugfix-for-assert-capture.cpp2(2,23): error: expected ')' at the end of the contract (at '==')
+

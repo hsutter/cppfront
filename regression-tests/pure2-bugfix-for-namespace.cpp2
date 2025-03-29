@@ -1,0 +1,9 @@
+crash_96: @print type = {
+    namespace_alias: namespace = type_alias: type == array<int,10>;
+}
+
+crash_96a: @print type = {
+    test: () = {
+        namespace_alias: namespace = type_alias: type == array<int,10>;
+    }
+}

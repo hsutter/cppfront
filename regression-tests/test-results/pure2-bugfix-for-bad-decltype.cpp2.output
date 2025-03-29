@@ -1,0 +1,6 @@
+pure2-bugfix-for-bad-decltype.cpp2...
+pure2-bugfix-for-bad-decltype.cpp2(3,14): error: 'decltype' must be followed by a single parenthesized expression
+pure2-bugfix-for-bad-decltype.cpp2(3,24): error: 'is' must be followed by a type-id or an expression
+pure2-bugfix-for-bad-decltype.cpp2(3,14): error: 'decltype' must be followed by a single parenthesized expression
+pure2-bugfix-for-bad-decltype.cpp2(3,24): error: 'is' must be followed by a type-id or an expression
+

@@ -5956,7 +5956,7 @@ auto pretty_print_visualize(
             + initializer;
     }
     else if (n.is_namespace()) {
-        auto& t = std::get<declaration_node::a_type>(n.type);
+        auto& t = std::get<declaration_node::a_namespace>(n.type);
         assert(t);
         ret += "namespace = "
             + initializer;
@@ -7253,6 +7253,7 @@ private:
             if (auto id = postfix_expression();
                 id
                 && id->ops.size() == 1
+                && id->ops[0].expr_list
                 && id->ops[0].expr_list->expressions.size() == 1
                 && id->ops[0].expr_list->open_paren->type() == lexeme::LeftParen
                 )
@@ -8805,7 +8806,6 @@ private:
         -> std::unique_ptr<contract_node>
     {
         auto n = std::make_unique<contract_node>(curr().position());
-        auto guard = capture_groups_stack_guard(this, &n->captures);
 
         if (
             curr() != "pre"
@@ -8816,6 +8816,13 @@ private:
             return {};
         }
         n->kind = &curr();
+
+        auto guard =
+            curr() == "post"
+            ? std::make_unique<capture_groups_stack_guard>(this, &n->captures)
+            : std::unique_ptr<capture_groups_stack_guard>()
+            ;
+
         next();
 
         //  Check if there's a <group,flags>
@@ -9292,6 +9299,10 @@ private:
         //  Or a namespace
         else if (curr() == "namespace")
         {
+            if (n->parent_is_type()) {
+                error("types cannot contain namespaces");
+                return {};
+            }
             n->type = std::make_unique<namespace_node>( &curr() );
             assert (n->type.index() == declaration_node::a_namespace);
             next();
