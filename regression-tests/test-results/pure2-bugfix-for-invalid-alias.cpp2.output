@@ -1,0 +1,3 @@
+pure2-bugfix-for-invalid-alias.cpp2...
+pure2-bugfix-for-invalid-alias.cpp2(2,25): error: invalid alias declaration - expected 'type', 'namespace', or a type-id after ':'
+

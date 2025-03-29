@@ -9835,10 +9835,13 @@ private:
             a->initializer = std::move(e);
         }
 
-        //  Anything else shouldn't be possible
+        //  Anything else is illegal
         else {
-            assert(false && "ICE: should be unreachable - invalid alias declaration");
-            return {};
+            errors.emplace_back(
+                curr().position(),
+                "invalid alias declaration - expected 'type', 'namespace', or a type-id after ':'"
+            );
+        return {};
         }
 
         //  And the final ceremonial semicolon

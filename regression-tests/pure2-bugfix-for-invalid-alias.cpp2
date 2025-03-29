@@ -1,0 +1,3 @@
+outer: type = {
+    x: requires true == 42;
+}
