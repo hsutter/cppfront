@@ -1,0 +1,3 @@
+pure2-bugfix-for-functions-before-superclasses.cpp2...
+pure2-bugfix-for-functions-before-superclasses.cpp2(7,3): error: a type cannot declare a parent after defining a function
+

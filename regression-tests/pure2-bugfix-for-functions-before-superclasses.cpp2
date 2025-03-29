@@ -1,0 +1,8 @@
+crash_m0b: type = {
+}
+
+crash_m0c: type = {
+  name: i32;
+  get_name: (this) -> i32 = { return name; }
+  this: crash_m0b;
+}

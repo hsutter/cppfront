@@ -2037,6 +2037,7 @@ public:
         if (n.is_type()) {
             auto compound_stmt = n.initializer->get_if<compound_statement_node>();
             assert (compound_stmt);
+            bool seen_function = false;
             for (auto& stmt : compound_stmt->statements) {
                 if (
                     !stmt->is_declaration()
@@ -2046,6 +2047,24 @@ public:
                     handle_error(
                         stmt->position(),
                         "a user-defined type body must contain only declarations or 'using' statements, not other code"
+                    );
+                    return false;
+                }
+                auto stmt_decl = stmt->get_if<declaration_node>();
+                //  If this is a declaration, check if it's a function
+                if (stmt_decl && stmt_decl->is_function())
+                    seen_function = true;
+
+                //  If this is called 'this', then make sure we haven't seen any functions
+                if (
+                    stmt_decl
+                    && stmt_decl->has_name("this")
+                    && seen_function
+                    )
+                {
+                    handle_error(
+                        stmt->position(),
+                        "a type cannot declare a parent after defining a function"
                     );
                     return false;
                 }
