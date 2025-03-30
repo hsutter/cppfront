@@ -1,0 +1,8 @@
+pure2-bugfix-for-naked-unsigned-char.cpp2...
+pure2-bugfix-for-naked-unsigned-char.cpp2(2,8): error: 'unsigned char' - did you mean 'u8' (usually best) or 'cpp2::_uchar'?
+pure2-bugfix-for-naked-unsigned-char.cpp2(2,8): error: 'unsigned char' is an old-style C/C++ multi-word keyword type
+    - most such types should be used only for interoperability with older code
+    - using those when you need them is fine, but name them with these short names instead:
+        short, ushort, int, uint, long, ulong, longlong, ulonglong, longdouble, _schar, _uchar
+    - see also cpp2util.h > "Convenience names for integer types"
+

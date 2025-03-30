@@ -8684,6 +8684,18 @@ private:
             }
         }
 
+        if (
+            !is_returns
+            && n->declaration->initializer
+            && !n->declaration->initializer->is_expression()
+            )
+        {
+            //  If the initializer is not an expression statement (like a function call),
+            //  then it can't be used as a parameter.
+            error("parameter must be initialized with an expression");
+            return {};
+        }
+
         return n;
     }
 

@@ -1,0 +1,5 @@
+mixed-bugfix-for-double-poundelse.cpp2...
+mixed-bugfix-for-double-poundelse.cpp2(2,1): error: #else does not match a prior #if
+mixed-bugfix-for-double-poundelse.cpp2(3,1): error: #else does not match a prior #if
+mixed-bugfix-for-double-poundelse.cpp2(3,1): error: #else already encountered for this #if
+
