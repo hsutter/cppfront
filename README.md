@@ -8,6 +8,18 @@ Copyright (c) Herb Sutter &#x2022; See [License](LICENSE)
 
 Cppfront is a compiler from an experimental C++ 'syntax 2' (Cpp2) to today's 'syntax 1' (Cpp1), to prove out some concepts, share some ideas, and prototype features that can also be proposed for evolving today's C++.
 
+Cpp2 today has
+
+- *guaranteed initialization safety* (stronger than in C# or Java),
+
+- *guaranteed type safety* (via `safe is` type queries and `as` casts),
+
+- *bounds safety* via subscript checking, banning pointer arithmetic, and safe-by-construction iteration such as range-for, and
+
+- *lifetime safety static analysis.*
+
+If CVEs in C++ code were 98% lower (2% of today) in the four key buckets -- initialization safety, type safety, bounds safety, and lifetime safety -- we could all sleep better. 
+
 ## Documentation: [available here](https://hsutter.github.io/cppfront/)
 
 ## What's different about this project?
