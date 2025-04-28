@@ -1453,11 +1453,12 @@ public:
                         ++ret.cpp1_lines;
                     }
 
+                    //  In Cpp2-only mode, there should be no nonblank Cpp1-content lines
                     if (
                         flag_cpp2_only
-                        && !line.text.empty()
                         && line.cat != source_line::category::comment
                         && line.cat != source_line::category::import
+                        && std::any_of(line.text.begin(), line.text.end(), [](auto c) { return !std::isspace(c); })
                         )
                     {
                         if (line.cat == source_line::category::preprocessor) {

@@ -1970,6 +1970,350 @@ noisy: (t: meta::type_declaration) =
 //
 //  autodiff - stub
 //
+
+autodiff_impl: type = {
+
+    private temporary_count : int = 0;
+
+    public diff : std::string = "";
+
+    gen_temporary : (inout this) -> std::string = {
+        temporary_count += 1;
+        return "temp_(temporary_count)$";
+    }
+
+    handle_expression_term :(inout this, inout _ /*mf*/, term) -> std::string = {
+        if term.is_identifier() {
+            return term.to_string();
+        }
+        else {
+            t := gen_temporary();
+            std::cout << "Handle generation for: (term.to_string())$" << std::endl;
+            //handle_expression_terms(mf, t, term..get_expression_list());
+            return t;
+        }
+    }
+
+    handle_expression_terms :(inout this, inout mf, lhs: std::string, terms) = {
+        //  Handle binary ||
+        logical_or_terms := terms;
+        if logical_or_terms.ssize() > 1
+        {
+            //  TODO: Do whatever is appropriate here...
+            //  For now, just list out what we found as a grammatical
+            //  identifier (this won't compile as Cpp1, but it will
+            //  be visible via @print for development/debugging)
+            diff += "found_logical_or_with_____";
+            count := 0;
+            for logical_or_terms do (term) {
+                if count++ > 1 {
+                    diff += term.get_op() + "___";
+                }
+                diff += term.get_term().to_string() + "___";
+            }
+            diff += ";";
+
+            return;
+        }
+
+        //  Handle binary &&
+        if logical_or_terms.ssize() != 1 {
+            mf.error( "ICE: there should be exactly one logical or term here" );
+        }
+        logical_and_terms := logical_or_terms.front().get_term().get_terms();
+        if logical_and_terms.ssize() > 1
+        {
+            //  TODO: Do whatever is appropriate here...
+            //  For now, just list out what we found (visible via @print)...
+            diff += "found_logical_and_with_____";
+            count := 0;
+            for logical_and_terms do (term) {
+                if count++ > 1 {
+                    diff += term.get_op() + "___";
+                }
+                diff += term.get_term().to_string() + "___";
+            }
+            diff += ";";
+
+            return;
+        }
+
+        //  Handle binary |
+        if logical_and_terms.ssize() != 1 {
+            mf.error( "ICE: there should be exactly one logical and term here" );
+        }
+        bit_or_terms := logical_and_terms.front().get_term().get_terms();
+        if bit_or_terms.ssize() > 1
+        {
+            //  TODO: Do whatever is appropriate here...
+            //  For now, just list out what we found (visible via @print)...
+            diff += "found_bit_or_with_____";
+            count := 0;
+            for bit_or_terms do (term) {
+                if count++ > 1 {
+                    diff += term.get_op() + "___";
+                }
+                diff += term.get_term().to_string() + "___";
+            }
+            diff += ";";
+
+            return;
+        }
+
+        //  Handle binary ^
+        if bit_or_terms.ssize() != 1 {
+            mf.error( "ICE: there should be exactly one bit or term here" );
+        }
+        bit_xor_terms := bit_or_terms.front().get_term().get_terms();
+        if bit_xor_terms.ssize() > 1
+        {
+            //  TODO: Do whatever is appropriate here...
+            //  For now, just list out what we found (visible via @print)...
+            diff += "found_bit_xor_with_____";
+            count := 0;
+            for bit_xor_terms do (term) {
+                if count++ > 1 {
+                    diff += term.get_op() + "___";
+                }
+                diff += term.get_term().to_string() + "___";
+            }
+            diff += ";";
+
+            return;
+        }
+
+        //  Handle binary &
+        if bit_xor_terms.ssize() != 1 {
+            mf.error( "ICE: there should be exactly one bit xor term here" );
+        }
+        bit_and_terms := bit_xor_terms.front().get_term().get_terms();
+        if bit_and_terms.ssize() > 1
+        {
+            //  TODO: Do whatever is appropriate here...
+            //  For now, just list out what we found (visible via @print)...
+            diff += "found_bit_and_with_____";
+            count := 0;
+            for bit_and_terms do (term) {
+                if count++ > 1 {
+                    diff += term.get_op() + "___";
+                }
+                diff += term.get_term().to_string() + "___";
+            }
+            diff += ";";
+
+            return;
+        }
+
+        //  Handle binary == and !=
+        if bit_and_terms.ssize() != 1 {
+            mf.error( "ICE: there should be exactly one bit and term here" );
+        }
+        equality_terms := bit_and_terms.front().get_term().get_terms();
+        if equality_terms.ssize() > 1
+        {
+            //  TODO: Do whatever is appropriate here...
+            //  For now, just list out what we found (visible via @print)...
+            diff += "found_equality_with_____";
+            count := 0;
+            for equality_terms do (term) {
+                if count++ > 1 {
+                    diff += term.get_op() + "___";
+                }
+                diff += term.get_term().to_string() + "___";
+            }
+            diff += ";";
+
+            return;
+        }
+
+        //  Handle binary < > <= >=
+        if equality_terms.ssize() != 1 {
+            mf.error( "ICE: there should be exactly one equality term here" );
+        }
+        relational_terms := equality_terms.front().get_term().get_terms();
+        if relational_terms.ssize() > 1
+        {
+            //  TODO: Do whatever is appropriate here...
+            //  For now, just list out what we found (visible via @print)...
+            diff += "found_relational_with_____";
+            count := 0;
+            for relational_terms do (term) {
+                if count++ > 1 {
+                    diff += term.get_op() + "___";
+                }
+                diff += term.get_term().to_string() + "___";
+            }
+            diff += ";";
+
+            return;
+        }
+
+        //  Handle binary <=>
+        if relational_terms.ssize() != 1 {
+            mf.error( "ICE: there should be exactly one relational term here" );
+        }
+        compare_terms := relational_terms.front().get_term().get_terms();
+        if compare_terms.ssize() > 1
+        {
+            //  TODO: Do whatever is appropriate here...
+            //  For now, just list out what we found (visible via @print)...
+            diff += "found_compare_with_____";
+            count := 0;
+            for compare_terms do (term) {
+                if count++ > 1 {
+                    diff += term.get_op() + "___";
+                }
+                diff += term.get_term().to_string() + "___";
+            }
+            diff += ";";
+
+            return;
+        }
+
+        //  Handle binary << and >>
+        if compare_terms.ssize() != 1 {
+            mf.error( "ICE: there should be exactly one compare term here" );
+        }
+        shift_terms := compare_terms.front().get_term().get_terms();
+        if shift_terms.ssize() > 1
+        {
+            //  TODO: Do whatever is appropriate here...
+            //  For now, just list out what we found (visible via @print)...
+            diff += "found_shift_with_____";
+            count := 0;
+            for shift_terms do (term) {
+                if count++ > 1 {
+                    diff += term.get_op() + "___";
+                }
+                diff += term.get_term().to_string() + "___";
+            }
+            diff += ";";
+
+            return;
+        }
+
+        //  Handle binary + and -
+        if shift_terms.ssize() != 1 {
+            mf.error( "ICE: there should be exactly one shift term here" );
+        }
+        additive_terms := shift_terms.front().get_term().get_terms();
+        if additive_terms.ssize() > 1
+        {
+            first := true;
+            fwd :   std::string = "(lhs)$_d = ";
+            primal: std::string = "(lhs)$   = ";
+            for additive_terms do (term) {
+                if !first {
+                    op := term.get_op().to_string();
+                    fwd    += " (op)$ ";
+                    primal += " (op)$ ";
+                }
+
+                var := handle_expression_term(mf, term.get_term());
+                fwd    += "(var)$_d";
+                primal += "(var)$";
+
+                first = false;
+            }
+
+            fwd    += ";";
+            primal += ";";
+
+            diff += fwd + primal;
+
+            return;
+        }
+
+        //  Handle binary * / %
+        if additive_terms.ssize() != 1 {
+            mf.error( "ICE: there should be exactly one additive term here" );
+        }
+        multiplicative_terms := additive_terms.front().get_term().get_terms();
+
+        //  Temporary test loop
+        if multiplicative_terms.ssize() > 1
+        {
+            std::cout << "debug: found (multiplicative_terms.ssize())$ is_as_expressions\n";
+            for multiplicative_terms do (isas) {
+                std::cout << "debug:   is_as term: \"(isas.get_term().to_string())$\"\n";
+                if isas.get_term().is_identifier() {
+                    std::cout << "debug:       identifier: (isas.get_term().get_identifier())$\n";
+                }
+            }
+        }
+
+        if multiplicative_terms.ssize() > 1
+        {
+            arg_a := handle_expression_term(mf, multiplicative_terms[0].get_term());
+
+            i : int = 1;
+            while i < multiplicative_terms.ssize() next i += 1 {
+                arg_b := handle_expression_term(mf, multiplicative_terms[i].get_term());
+
+                op := multiplicative_terms[i].get_op().to_string();
+
+                fwd    : std::string = "";
+                primal : std::string = "";
+
+                if "*" == op {
+                    fwd    = "(arg_a)$ * (arg_b)$_d + (arg_b)$ * (arg_a)$_d";
+                    primal = "(arg_a)$ * (arg_b)$";
+                }
+                else if "/" == op {
+                    fwd    = "(arg_a)$_d / (arg_b)$ - (arg_a)$ * (arg_b)$_d / ((arg_b)$ * (arg_b)$)";
+                    primal = "(arg_a)$ / (arg_b)$";
+                }
+                else {
+                    mf.error( "unkown multiplicative operator '(op)$'");
+                }
+
+
+                if i + 1 == multiplicative_terms.ssize() {
+                    // Last item
+                    diff += "(lhs)$_d = (fwd)$;";
+                    diff += "(lhs)$   = (primal)$;";
+                }
+                else {
+                    // Temporary
+                    t := gen_temporary();
+                    // TODO: Get type of expression, in order to define the type of t.
+                    diff += "(t)$_d := (fwd)$;";
+                    diff += "(t)$   := (primal)$;";
+
+                    arg_a = t;
+                }
+            }
+        }
+
+    }
+
+    handle_expression_statement : (inout this, inout mf, expr) = {
+        if expr.is_simple_assignment()
+        {
+            //  If this is not an assignment to a parameter or return object, skip it
+            lhs_rhs := expr.get_lhs_rhs_if_simple_assignment();
+            lhs     := lhs_rhs.lhs.get_first_token_ignoring_this();
+            if !mf.has_parameter_or_return_named(lhs)
+            {
+                return;
+            }
+
+            assignment := expr.get_assignment_expression();
+
+            //  Cpp2 doesn't allow chained assignment, so rhs must be a single logical_or_expression
+            assignment_terms := assignment.get_terms();
+            if assignment_terms.ssize() != 2 {
+                mf.error( "an assignment must have exactly one right-hand side expression" );
+            }
+
+            //  Now we handle sequences of binary "expr1 @ expr2 @ ..." where each
+            //  @ is one of a list of operators at the same grammar precedence
+
+            handle_expression_terms(mf, lhs.to_string(), assignment_terms[1].get_term().get_terms());
+        }
+    }
+}
+
 autodiff: (inout t: meta::type_declaration) =
 {
     for t.get_members()
@@ -2002,333 +2346,392 @@ autodiff: (inout t: meta::type_declaration) =
         //  Generate the body
 
         if !mf.has_compound_body() {
-            m.error( "temporary alpha limitation: a differentiable function must have a {}-enclosed body" );
+            mf.error( "temporary alpha limitation: a differentiable function must have a {}-enclosed body" );
             return;
         }
 
-        next_statement: for mf.get_compound_body().get_statements() do (stmt)
+        ad_impl : autodiff_impl = ();
+
+
+        for mf.get_compound_body().get_statements() do (stmt)
         {
             if stmt.is_expression_statement()
             {
-                expr := stmt.as_expression_statement().get_expression();
-                if expr.is_simple_assignment()
-                {
-                    //  If this is not an assignment to a parameter or return object, skip it
-                    lhs_rhs := expr.get_lhs_rhs_if_simple_assignment();
-                    lhs     := lhs_rhs.lhs.get_first_token_ignoring_this();
-                    if !mf.has_parameter_or_return_named(lhs)
-                    {
-                        continue next_statement;
-                    }
-
-                    //  We will need to split this assignment into two lines
-                    //  and build them up as we traverse the subexpressions
-                    line1: std::string = "(lhs)$_d = ";    // for the _d variable
-                    line2: std::string = "(lhs)$ = ";      // for the original variable
-
-                    assignment := expr.get_assignment_expression();
-
-                    //  Cpp2 doesn't allow chained assignment, so rhs must be a single logical_or_expression
-                    assignment_terms := assignment.get_terms();
-                    if assignment_terms.ssize() != 2 {
-                        m.error( "an assignment must have exactly one right-hand side expression" );
-                    }
-
-                    //  Now we handle sequences of binary "expr1 @ expr2 @ ..." where each
-                    //  @ is one of a list of operators at the same grammar precedence
-
-                    //  Handle binary ||
-                    logical_or_terms := assignment_terms[1].get_term().get_terms();
-                    if logical_or_terms.ssize() > 1
-                    {
-                        //  TODO: Do whatever is appropriate here...
-                        //  For now, just list out what we found as a grammatical
-                        //  identifier (this won't compile as Cpp1, but it will
-                        //  be visible via @print for development/debugging)
-                        diff += "found_logical_or_with_____";
-                        count := 0;
-                        for logical_or_terms do (term) {
-                            if count++ > 1 {
-                                diff += term.get_op() + "___";
-                            }
-                            diff += term.get_term().to_string() + "___";
-                        }
-                        diff += ";";
-
-                        continue next_statement;
-                    }
-
-                    //  Handle binary &&
-                    if logical_or_terms.ssize() != 1 {
-                        m.error( "ICE: there should be exactly one logical or term here" );
-                    }
-                    logical_and_terms := logical_or_terms.front().get_term().get_terms();
-                    if logical_and_terms.ssize() > 1
-                    {
-                        //  TODO: Do whatever is appropriate here...
-                        //  For now, just list out what we found (visible via @print)...
-                        diff += "found_logical_and_with_____";
-                        count := 0;
-                        for logical_and_terms do (term) {
-                            if count++ > 1 {
-                                diff += term.get_op() + "___";
-                            }
-                            diff += term.get_term().to_string() + "___";
-                        }
-                        diff += ";";
-
-                        continue next_statement;
-                    }
-
-                    //  Handle binary |
-                    if logical_and_terms.ssize() != 1 {
-                        m.error( "ICE: there should be exactly one logical and term here" );
-                    }
-                    bit_or_terms := logical_and_terms.front().get_term().get_terms();
-                    if bit_or_terms.ssize() > 1
-                    {
-                        //  TODO: Do whatever is appropriate here...
-                        //  For now, just list out what we found (visible via @print)...
-                        diff += "found_bit_or_with_____";
-                        count := 0;
-                        for bit_or_terms do (term) {
-                            if count++ > 1 {
-                                diff += term.get_op() + "___";
-                            }
-                            diff += term.get_term().to_string() + "___";
-                        }
-                        diff += ";";
-
-                        continue next_statement;
-                    }
-
-                    //  Handle binary ^
-                    if bit_or_terms.ssize() != 1 {
-                        m.error( "ICE: there should be exactly one bit or term here" );
-                    }
-                    bit_xor_terms := bit_or_terms.front().get_term().get_terms();
-                    if bit_xor_terms.ssize() > 1
-                    {
-                        //  TODO: Do whatever is appropriate here...
-                        //  For now, just list out what we found (visible via @print)...
-                        diff += "found_bit_xor_with_____";
-                        count := 0;
-                        for bit_xor_terms do (term) {
-                            if count++ > 1 {
-                                diff += term.get_op() + "___";
-                            }
-                            diff += term.get_term().to_string() + "___";
-                        }
-                        diff += ";";
-
-                        continue next_statement;
-                    }
-
-                    //  Handle binary &
-                    if bit_xor_terms.ssize() != 1 {
-                        m.error( "ICE: there should be exactly one bit xor term here" );
-                    }
-                    bit_and_terms := bit_xor_terms.front().get_term().get_terms();
-                    if bit_and_terms.ssize() > 1
-                    {
-                        //  TODO: Do whatever is appropriate here...
-                        //  For now, just list out what we found (visible via @print)...
-                        diff += "found_bit_and_with_____";
-                        count := 0;
-                        for bit_and_terms do (term) {
-                            if count++ > 1 {
-                                diff += term.get_op() + "___";
-                            }
-                            diff += term.get_term().to_string() + "___";
-                        }
-                        diff += ";";
-
-                        continue next_statement;
-                    }
-
-                    //  Handle binary == and !=
-                    if bit_and_terms.ssize() != 1 {
-                        m.error( "ICE: there should be exactly one bit and term here" );
-                    }
-                    equality_terms := bit_and_terms.front().get_term().get_terms();
-                    if equality_terms.ssize() > 1
-                    {
-                        //  TODO: Do whatever is appropriate here...
-                        //  For now, just list out what we found (visible via @print)...
-                        diff += "found_equality_with_____";
-                        count := 0;
-                        for equality_terms do (term) {
-                            if count++ > 1 {
-                                diff += term.get_op() + "___";
-                            }
-                            diff += term.get_term().to_string() + "___";
-                        }
-                        diff += ";";
-
-                        continue next_statement;
-                    }
-
-                    //  Handle binary < > <= >=
-                    if equality_terms.ssize() != 1 {
-                        m.error( "ICE: there should be exactly one equality term here" );
-                    }
-                    relational_terms := equality_terms.front().get_term().get_terms();
-                    if relational_terms.ssize() > 1
-                    {
-                        //  TODO: Do whatever is appropriate here...
-                        //  For now, just list out what we found (visible via @print)...
-                        diff += "found_relational_with_____";
-                        count := 0;
-                        for relational_terms do (term) {
-                            if count++ > 1 {
-                                diff += term.get_op() + "___";
-                            }
-                            diff += term.get_term().to_string() + "___";
-                        }
-                        diff += ";";
-
-                        continue next_statement;
-                    }
-
-                    //  Handle binary <=>
-                    if relational_terms.ssize() != 1 {
-                        m.error( "ICE: there should be exactly one relational term here" );
-                    }
-                    compare_terms := relational_terms.front().get_term().get_terms();
-                    if compare_terms.ssize() > 1
-                    {
-                        //  TODO: Do whatever is appropriate here...
-                        //  For now, just list out what we found (visible via @print)...
-                        diff += "found_compare_with_____";
-                        count := 0;
-                        for compare_terms do (term) {
-                            if count++ > 1 {
-                                diff += term.get_op() + "___";
-                            }
-                            diff += term.get_term().to_string() + "___";
-                        }
-                        diff += ";";
-
-                        continue next_statement;
-                    }
-
-                    //  Handle binary << and >>
-                    if compare_terms.ssize() != 1 {
-                        m.error( "ICE: there should be exactly one compare term here" );
-                    }
-                    shift_terms := compare_terms.front().get_term().get_terms();
-                    if shift_terms.ssize() > 1
-                    {
-                        //  TODO: Do whatever is appropriate here...
-                        //  For now, just list out what we found (visible via @print)...
-                        diff += "found_shift_with_____";
-                        count := 0;
-                        for shift_terms do (term) {
-                            if count++ > 1 {
-                                diff += term.get_op() + "___";
-                            }
-                            diff += term.get_term().to_string() + "___";
-                        }
-                        diff += ";";
-
-                        continue next_statement;
-                    }
-
-                    //  Handle binary + and -
-                    if shift_terms.ssize() != 1 {
-                        m.error( "ICE: there should be exactly one shift term here" );
-                    }
-                    additive_terms := shift_terms.front().get_term().get_terms();
-                    if additive_terms.ssize() > 1
-                    {
-                        first := true;
-                        for additive_terms do (term) {
-                            if !first {
-                                op := term.get_op().to_string();
-                                line1 += " (op)$ ";
-                                line2 += " (op)$ ";
-                            }
-
-                            var := term.get_term().to_string();
-                            if !mf.has_parameter_or_return_named(var) {
-                                m.error( "temporary alpha limitation: the addition's left-hand side '(var)$' must be a parameter or return name");
-                            }
-                            line1 += "(var)$_d";
-                            line2 += "(var)$";
-
-                            first = false;
-                        }
-
-                        line1 += ";";
-                        line2 += ";";
-
-                        diff += line1 + line2;
-
-                        continue next_statement;
-                    }
-
-                    //  Handle binary * / %
-                    if additive_terms.ssize() != 1 {
-                        m.error( "ICE: there should be exactly one additive term here" );
-                    }
-                    multiplicative_terms := additive_terms.front().get_term().get_terms();
-
-                    //  Temporary test loop
-                    if multiplicative_terms.ssize() > 1
-                    {
-                        std::cout << "debug: found (multiplicative_terms.ssize())$ is_as_expressions\n";
-                        for multiplicative_terms do (isas) {
-                            std::cout << "debug:   is_as term: \"(isas.get_term().to_string())$\"\n";
-                            if isas.get_term().is_identifier() {
-                                std::cout << "debug:       identifier: (isas.get_term().get_identifier())$\n";
-                            }
-                        }
-                    }
-
-                    if multiplicative_terms.ssize() > 1
-                    {
-                        if multiplicative_terms.ssize() != 2
-                        {
-                            m.error( "temporary alpha limitation: does not support chains of * and /");
-                        }
-
-                        lhs := multiplicative_terms[0].get_term().to_string();
-                        if !mf.has_parameter_or_return_named(lhs) {
-                            m.error( "temporary alpha limitation: the addition's left-hand side '(lhs)$' must be a parameter or return name");
-                        }
-
-                        rhs := multiplicative_terms[1].get_term().to_string();
-                        if !mf.has_parameter_or_return_named(rhs) {
-                            m.error( "temporary alpha limitation: the addition's right-hand side '(rhs)$' must be a parameter or return name");
-                        }
-
-                        op := multiplicative_terms[1].get_op().to_string();
-                        if "*" == op {
-                            line1 += "(lhs)$ * (rhs)$_d + (rhs)$ * (lhs)$_d;";
-                            line2 += "(lhs)$ * (rhs)$;";
-                        }
-                        else if "/" == op {
-                            line1 += "(lhs)$_d / (rhs)$ - (lhs)$ * (rhs)$_d / ((rhs)$ * (rhs)$);";
-                            line2 += "(lhs)$ / (rhs)$;";
-                        }
-                        else {
-                            m.error( "unkown multiplicative operator '(op)$'");
-                        }
-
-                        diff += line1 + line2;
-
-                        continue next_statement;
-                    }
-
-                }
+                ad_impl.handle_expression_statement(mf, stmt.as_expression_statement().get_expression());
             }
         }
+        diff += ad_impl.diff;
 
         diff += "}";
 
         t.add_member( diff );
     }
 }
+
+
+////-----------------------------------------------------------------------
+////
+////  autodiff - stub
+////
+//autodiff: (inout t: meta::type_declaration) =
+//{
+//    for t.get_members()
+//    do  (m)
+//    if  m.is_function()
+//    {
+//        mf := m.as_function();
+//
+//        diff: std::string = "    (mf.name())$_diff: (";
+//
+//        //  1. Generate the modified signature
+//        //  a) Parameters
+//
+//        for mf.get_parameters() do (param) {
+//            diff += "(param.name())$ : (param.type())$, ";
+//            diff += "(param.name())$_d : (param.type())$, ";
+//        }
+//
+//        diff += ") -> (";
+//
+//        //  b) Returns
+//
+//        for mf.get_returns() do (param) {
+//            diff += "(param.name())$ : (param.type())$ = 1, ";
+//            diff += "(param.name())$_d : (param.type())$ = 1, ";
+//        }
+//
+//        diff += ") = {";
+//
+//        //  Generate the body
+//
+//        if !mf.has_compound_body() {
+//            m.error( "temporary alpha limitation: a differentiable function must have a {}-enclosed body" );
+//            return;
+//        }
+//
+//        next_statement: for mf.get_compound_body().get_statements() do (stmt)
+//        {
+//            if stmt.is_expression_statement()
+//            {
+//                expr := stmt.as_expression_statement().get_expression();
+//                if expr.is_simple_assignment()
+//                {
+//                    //  If this is not an assignment to a parameter or return object, skip it
+//                    lhs_rhs := expr.get_lhs_rhs_if_simple_assignment();
+//                    lhs     := lhs_rhs.lhs.get_first_token_ignoring_this();
+//                    if !mf.has_parameter_or_return_named(lhs)
+//                    {
+//                        continue next_statement;
+//                    }
+//
+//                    //  We will need to split this assignment into two lines
+//                    //  and build them up as we traverse the subexpressions
+//                    line1: std::string = "(lhs)$_d = ";    // for the _d variable
+//                    line2: std::string = "(lhs)$ = ";      // for the original variable
+//
+//                    assignment := expr.get_assignment_expression();
+//
+//                    //  Cpp2 doesn't allow chained assignment, so rhs must be a single logical_or_expression
+//                    assignment_terms := assignment.get_terms();
+//                    if assignment_terms.ssize() != 2 {
+//                        m.error( "an assignment must have exactly one right-hand side expression" );
+//                    }
+//
+//                    //  Now we handle sequences of binary "expr1 @ expr2 @ ..." where each
+//                    //  @ is one of a list of operators at the same grammar precedence
+//
+//                    //  Handle binary ||
+//                    logical_or_terms := assignment_terms[1].get_term().get_terms();
+//                    if logical_or_terms.ssize() > 1
+//                    {
+//                        //  TODO: Do whatever is appropriate here...
+//                        //  For now, just list out what we found as a grammatical
+//                        //  identifier (this won't compile as Cpp1, but it will
+//                        //  be visible via @print for development/debugging)
+//                        diff += "found_logical_or_with_____";
+//                        count := 0;
+//                        for logical_or_terms do (term) {
+//                            if count++ > 1 {
+//                                diff += term.get_op() + "___";
+//                            }
+//                            diff += term.get_term().to_string() + "___";
+//                        }
+//                        diff += ";";
+//
+//                        continue next_statement;
+//                    }
+//
+//                    //  Handle binary &&
+//                    if logical_or_terms.ssize() != 1 {
+//                        m.error( "ICE: there should be exactly one logical or term here" );
+//                    }
+//                    logical_and_terms := logical_or_terms.front().get_term().get_terms();
+//                    if logical_and_terms.ssize() > 1
+//                    {
+//                        //  TODO: Do whatever is appropriate here...
+//                        //  For now, just list out what we found (visible via @print)...
+//                        diff += "found_logical_and_with_____";
+//                        count := 0;
+//                        for logical_and_terms do (term) {
+//                            if count++ > 1 {
+//                                diff += term.get_op() + "___";
+//                            }
+//                            diff += term.get_term().to_string() + "___";
+//                        }
+//                        diff += ";";
+//
+//                        continue next_statement;
+//                    }
+//
+//                    //  Handle binary |
+//                    if logical_and_terms.ssize() != 1 {
+//                        m.error( "ICE: there should be exactly one logical and term here" );
+//                    }
+//                    bit_or_terms := logical_and_terms.front().get_term().get_terms();
+//                    if bit_or_terms.ssize() > 1
+//                    {
+//                        //  TODO: Do whatever is appropriate here...
+//                        //  For now, just list out what we found (visible via @print)...
+//                        diff += "found_bit_or_with_____";
+//                        count := 0;
+//                        for bit_or_terms do (term) {
+//                            if count++ > 1 {
+//                                diff += term.get_op() + "___";
+//                            }
+//                            diff += term.get_term().to_string() + "___";
+//                        }
+//                        diff += ";";
+//
+//                        continue next_statement;
+//                    }
+//
+//                    //  Handle binary ^
+//                    if bit_or_terms.ssize() != 1 {
+//                        m.error( "ICE: there should be exactly one bit or term here" );
+//                    }
+//                    bit_xor_terms := bit_or_terms.front().get_term().get_terms();
+//                    if bit_xor_terms.ssize() > 1
+//                    {
+//                        //  TODO: Do whatever is appropriate here...
+//                        //  For now, just list out what we found (visible via @print)...
+//                        diff += "found_bit_xor_with_____";
+//                        count := 0;
+//                        for bit_xor_terms do (term) {
+//                            if count++ > 1 {
+//                                diff += term.get_op() + "___";
+//                            }
+//                            diff += term.get_term().to_string() + "___";
+//                        }
+//                        diff += ";";
+//
+//                        continue next_statement;
+//                    }
+//
+//                    //  Handle binary &
+//                    if bit_xor_terms.ssize() != 1 {
+//                        m.error( "ICE: there should be exactly one bit xor term here" );
+//                    }
+//                    bit_and_terms := bit_xor_terms.front().get_term().get_terms();
+//                    if bit_and_terms.ssize() > 1
+//                    {
+//                        //  TODO: Do whatever is appropriate here...
+//                        //  For now, just list out what we found (visible via @print)...
+//                        diff += "found_bit_and_with_____";
+//                        count := 0;
+//                        for bit_and_terms do (term) {
+//                            if count++ > 1 {
+//                                diff += term.get_op() + "___";
+//                            }
+//                            diff += term.get_term().to_string() + "___";
+//                        }
+//                        diff += ";";
+//
+//                        continue next_statement;
+//                    }
+//
+//                    //  Handle binary == and !=
+//                    if bit_and_terms.ssize() != 1 {
+//                        m.error( "ICE: there should be exactly one bit and term here" );
+//                    }
+//                    equality_terms := bit_and_terms.front().get_term().get_terms();
+//                    if equality_terms.ssize() > 1
+//                    {
+//                        //  TODO: Do whatever is appropriate here...
+//                        //  For now, just list out what we found (visible via @print)...
+//                        diff += "found_equality_with_____";
+//                        count := 0;
+//                        for equality_terms do (term) {
+//                            if count++ > 1 {
+//                                diff += term.get_op() + "___";
+//                            }
+//                            diff += term.get_term().to_string() + "___";
+//                        }
+//                        diff += ";";
+//
+//                        continue next_statement;
+//                    }
+//
+//                    //  Handle binary < > <= >=
+//                    if equality_terms.ssize() != 1 {
+//                        m.error( "ICE: there should be exactly one equality term here" );
+//                    }
+//                    relational_terms := equality_terms.front().get_term().get_terms();
+//                    if relational_terms.ssize() > 1
+//                    {
+//                        //  TODO: Do whatever is appropriate here...
+//                        //  For now, just list out what we found (visible via @print)...
+//                        diff += "found_relational_with_____";
+//                        count := 0;
+//                        for relational_terms do (term) {
+//                            if count++ > 1 {
+//                                diff += term.get_op() + "___";
+//                            }
+//                            diff += term.get_term().to_string() + "___";
+//                        }
+//                        diff += ";";
+//
+//                        continue next_statement;
+//                    }
+//
+//                    //  Handle binary <=>
+//                    if relational_terms.ssize() != 1 {
+//                        m.error( "ICE: there should be exactly one relational term here" );
+//                    }
+//                    compare_terms := relational_terms.front().get_term().get_terms();
+//                    if compare_terms.ssize() > 1
+//                    {
+//                        //  TODO: Do whatever is appropriate here...
+//                        //  For now, just list out what we found (visible via @print)...
+//                        diff += "found_compare_with_____";
+//                        count := 0;
+//                        for compare_terms do (term) {
+//                            if count++ > 1 {
+//                                diff += term.get_op() + "___";
+//                            }
+//                            diff += term.get_term().to_string() + "___";
+//                        }
+//                        diff += ";";
+//
+//                        continue next_statement;
+//                    }
+//
+//                    //  Handle binary << and >>
+//                    if compare_terms.ssize() != 1 {
+//                        m.error( "ICE: there should be exactly one compare term here" );
+//                    }
+//                    shift_terms := compare_terms.front().get_term().get_terms();
+//                    if shift_terms.ssize() > 1
+//                    {
+//                        //  TODO: Do whatever is appropriate here...
+//                        //  For now, just list out what we found (visible via @print)...
+//                        diff += "found_shift_with_____";
+//                        count := 0;
+//                        for shift_terms do (term) {
+//                            if count++ > 1 {
+//                                diff += term.get_op() + "___";
+//                            }
+//                            diff += term.get_term().to_string() + "___";
+//                        }
+//                        diff += ";";
+//
+//                        continue next_statement;
+//                    }
+//
+//                    //  Handle binary + and -
+//                    if shift_terms.ssize() != 1 {
+//                        m.error( "ICE: there should be exactly one shift term here" );
+//                    }
+//                    additive_terms := shift_terms.front().get_term().get_terms();
+//                    if additive_terms.ssize() > 1
+//                    {
+//                        first := true;
+//                        for additive_terms do (term) {
+//                            if !first {
+//                                op := term.get_op().to_string();
+//                                line1 += " (op)$ ";
+//                                line2 += " (op)$ ";
+//                            }
+//
+//                            var := term.get_term().to_string();
+//                            if !mf.has_parameter_or_return_named(var) {
+//                                m.error( "temporary alpha limitation: the addition's left-hand side '(var)$' must be a parameter or return name");
+//                            }
+//                            line1 += "(var)$_d";
+//                            line2 += "(var)$";
+//
+//                            first = false;
+//                        }
+//
+//                        line1 += ";";
+//                        line2 += ";";
+//
+//                        diff += line1 + line2;
+//
+//                        continue next_statement;
+//                    }
+//
+//                    //  Handle binary * / %
+//                    if additive_terms.ssize() != 1 {
+//                        m.error( "ICE: there should be exactly one additive term here" );
+//                    }
+//                    multiplicative_terms := additive_terms.front().get_term().get_terms();
+//
+//                    //  Temporary test loop
+//                    if multiplicative_terms.ssize() > 1
+//                    {
+//                        std::cout << "debug: found (multiplicative_terms.ssize())$ is_as_expressions\n";
+//                        for multiplicative_terms do (isas) {
+//                            std::cout << "debug:   is_as term: \"(isas.get_term().to_string())$\"\n";
+//                            if isas.get_term().is_identifier() {
+//                                std::cout << "debug:       identifier: (isas.get_term().get_identifier())$\n";
+//                            }
+//                        }
+//                    }
+//
+//                    if multiplicative_terms.ssize() > 1
+//                    {
+//                        if multiplicative_terms.ssize() != 2
+//                        {
+//                            m.error( "temporary alpha limitation: does not support chains of * and /");
+//                        }
+//
+//                        lhs := multiplicative_terms[0].get_term().to_string();
+//                        if !mf.has_parameter_or_return_named(lhs) {
+//                            m.error( "temporary alpha limitation: the addition's left-hand side '(lhs)$' must be a parameter or return name");
+//                        }
+//
+//                        rhs := multiplicative_terms[1].get_term().to_string();
+//                        if !mf.has_parameter_or_return_named(rhs) {
+//                            m.error( "temporary alpha limitation: the addition's right-hand side '(rhs)$' must be a parameter or return name");
+//                        }
+//
+//                        op := multiplicative_terms[1].get_op().to_string();
+//                        if "*" == op {
+//                            line1 += "(lhs)$ * (rhs)$_d + (rhs)$ * (lhs)$_d;";
+//                            line2 += "(lhs)$ * (rhs)$;";
+//                        }
+//                        else if "/" == op {
+//                            line1 += "(lhs)$_d / (rhs)$ - (lhs)$ * (rhs)$_d / ((rhs)$ * (rhs)$);";
+//                            line2 += "(lhs)$ / (rhs)$;";
+//                        }
+//                        else {
+//                            m.error( "unkown multiplicative operator '(op)$'");
+//                        }
+//
+//                        diff += line1 + line2;
+//
+//                        continue next_statement;
+//                    }
+//
+//                }
+//            }
+//        }
+//
+//        diff += "}";
+//
+//        t.add_member( diff );
+//    }
+//}
 
 
 //-----------------------------------------------------------------------
