@@ -161,6 +161,9 @@ struct primary_expression_node
     auto is_expression_list() const
         -> bool;
 
+    auto get_expression_list()
+        -> expression_list_node*;
+
     auto get_expression_list() const
         -> expression_list_node const*;
 
@@ -285,6 +288,9 @@ struct prefix_expression_node
 
     auto is_expression_list() const
         -> bool;
+
+    auto get_expression_list()
+        -> expression_list_node*;
 
     auto get_expression_list() const
         -> expression_list_node const*;
@@ -411,6 +417,15 @@ struct binary_expression_node
         -> bool
     {
         return terms.empty() && expr->is_expression_list();
+    }
+
+    auto get_expression_list()
+        -> expression_list_node*
+    {
+        if (is_expression_list()) {
+            return expr->get_expression_list();
+        }
+        return {};
     }
 
     auto get_expression_list() const
@@ -628,6 +643,15 @@ struct expression_node
         return expr->is_expression_list();
     }
 
+    auto get_expression_list()
+        -> expression_list_node *
+    {
+        if (is_expression_list()) {
+            return expr->get_expression_list();
+        }
+        return {};
+    }
+
     auto get_expression_list() const
         -> expression_list_node const*
     {
@@ -836,6 +860,15 @@ auto primary_expression_node::is_expression_list() const
     return expr.index() == expression_list;
 }
 
+auto primary_expression_node::get_expression_list()
+    -> expression_list_node *
+{
+    if (is_expression_list()) {
+        return std::get<expression_list>(expr).get();
+    }
+    return {};
+}
+
 auto primary_expression_node::get_expression_list() const
     -> expression_list_node const*
 {
@@ -1035,6 +1068,15 @@ struct postfix_expression_node
         return ops.empty() && expr->is_expression_list();
     }
 
+    auto get_expression_list() 
+        -> expression_list_node *
+    {
+        if (is_expression_list()) {
+            return expr->get_expression_list();
+        }
+        return {};
+    }
+
     auto get_expression_list() const
         -> expression_list_node const*
     {
@@ -1126,6 +1168,15 @@ auto prefix_expression_node::is_expression_list() const
     -> bool
 {
     return ops.empty() && expr->is_expression_list();
+}
+
+auto prefix_expression_node::get_expression_list() 
+    -> expression_list_node *
+{
+    if (is_expression_list()) {
+        return expr->get_expression_list();
+    }
+    return {};
 }
 
 auto prefix_expression_node::get_expression_list() const
@@ -1656,6 +1707,15 @@ struct is_as_expression_node
         -> bool
     {
         return ops.empty() && expr->is_expression_list();
+    }
+
+    auto get_expression_list() 
+        -> expression_list_node *
+    {
+        if (is_expression_list()) {
+            return expr->get_expression_list();
+        }
+        return {};
     }
 
     auto get_expression_list() const

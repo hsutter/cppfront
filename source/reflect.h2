@@ -735,7 +735,8 @@ postfix_expression: @copyable type =
     is_expression_list: (this) -> bool = n*.is_expression_list();
     is_literal        : (this) -> bool = n*.is_literal        ();
 
-    // get_expression_list          : (this) -> expression_list
+    as_expression_list: (this) -> expression_list  = (this.n*.get_expression_list(), this);
+
     // get_literal                  : (this) -> literal
 
     get_first_token_ignoring_this: (this) -> std::string_view = {
@@ -875,7 +876,8 @@ binary_expression: @copyable <Name: String, Term> type =
         }
     }
 
-    // get_expression_list          : (this) -> expression_list
+    as_expression_list: (this) -> expression_list  = (this.n*.get_expression_list(), this);
+
     // get_literal                  : (this) -> literal
 
     //  Get the postfix-expression, if that's the entire expression (not actually binary)
@@ -914,7 +916,7 @@ is_as_expression: @polymorphic_base @copyable type =
     is_expression_list      : (this) -> bool = this.n*.is_expression_list      ();
     is_literal              : (this) -> bool = this.n*.is_literal              ();
                             
-    // get_expression_list     : (this) -> expression_list  = (this.n*.get_expression_list(), this);
+    as_expression_list      : (this) -> expression_list  = (this.n*.get_expression_list(), this);
 
     get_identifier          : (this) -> std::string_view = { 
         ptok := this.n*.get_identifier();
@@ -1001,9 +1003,9 @@ expression: @polymorphic_base @copyable type =
         rhs = (ret.rhs, this);
     }
 
-    get_assignment_expression: (this) -> assignment_expression = (n*.expr.get(), this);
+    as_assignment_expression: (this) -> assignment_expression = (n*.expr.get(), this);
+    as_expression_list:       (this) -> expression_list       = (n*.get_expression_list(), this);
 
-    // get_expression_list: (this) -> expression_list
     // get_literal        : (this) -> literal
 
     to_string: (this) -> std::string = n*.to_string();
@@ -2298,7 +2300,7 @@ autodiff_impl: type = {
                 return;
             }
 
-            assignment := expr.get_assignment_expression();
+            assignment := expr.as_assignment_expression();
 
             //  Cpp2 doesn't allow chained assignment, so rhs must be a single logical_or_expression
             assignment_terms := assignment.get_terms();
@@ -2429,7 +2431,7 @@ autodiff: (inout t: meta::type_declaration) =
 //                    line1: std::string = "(lhs)$_d = ";    // for the _d variable
 //                    line2: std::string = "(lhs)$ = ";      // for the original variable
 //
-//                    assignment := expr.get_assignment_expression();
+//                    assignment := expr.as_assignment_expression();
 //
 //                    //  Cpp2 doesn't allow chained assignment, so rhs must be a single logical_or_expression
 //                    assignment_terms := assignment.get_terms();
