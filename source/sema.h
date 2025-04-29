@@ -2086,6 +2086,21 @@ public:
             }
         }
 
+        //  If the first parameter is 'out this', it must be a constructor.
+        if (
+            !n.is_constructor()
+            && (*n.parameters).ssize() > 0
+            && (*n.parameters)[0]->has_name("this")
+            && (*n.parameters)[0]->direction() == passing_style::out
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                "a function with an 'out this' parameter must be a constructor"
+            );
+            return false;
+        }
+
         return true;
     }
 
