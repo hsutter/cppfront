@@ -1,3 +1,0 @@
-pure2-bugfix-for-namespace.cpp2...
-pure2-bugfix-for-namespace.cpp2(2,22): error: types cannot contain namespaces (at 'namespace')
-
