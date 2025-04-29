@@ -1,0 +1,3 @@
+crash_10: (foo: i32) = {
+  assert( 10LL as i32 == foo$);
+}

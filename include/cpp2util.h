@@ -561,7 +561,7 @@ private:
         std::cerr << ": " << msg;
     }
     std::cerr << "\n";
-    std::terminate();
+    std::exit(EXIT_FAILURE);
 }
 
 auto inline cpp2_default = contract_group(
