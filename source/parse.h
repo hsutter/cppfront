@@ -2335,8 +2335,7 @@ struct using_statement_node
     auto for_namespace() const
         -> bool
     {
-        assert(id);
-        return id->to_string().ends_with("::_");
+        return (id && id->to_string().ends_with("::_"));
     }
 
     auto position() const
