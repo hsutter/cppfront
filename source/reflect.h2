@@ -735,9 +735,8 @@ postfix_expression: @copyable type =
     is_expression_list: (this) -> bool = n*.is_expression_list();
     is_literal        : (this) -> bool = n*.is_literal        ();
 
-    as_expression_list: (this) -> expression_list  = (this.n*.get_expression_list(), this);
-
-    // get_literal                  : (this) -> literal
+    as_expression_list: (this) -> expression_list = (this.n*.get_expression_list(), this);
+    as_literal        : (this) -> std::string     = n*.get_literal()*.to_string();
 
     get_first_token_ignoring_this: (this) -> std::string_view = {
         ptok := n*.get_first_token_ignoring_this();
@@ -876,9 +875,8 @@ binary_expression: @copyable <Name: String, Term> type =
         }
     }
 
-    as_expression_list: (this) -> expression_list  = (this.n*.get_expression_list(), this);
-
-    // get_literal                  : (this) -> literal
+    as_expression_list: (this) -> expression_list = (this.n*.get_expression_list(), this);
+    as_literal        : (this) -> std::string     = this.n*.get_literal()*.to_string();
 
     //  Get the postfix-expression, if that's the entire expression (not actually binary)
     get_if_only_a_postfix_expression: (this) -> postfix_expression = (this.n*.get_if_only_a_postfix_expression_node(), this);
@@ -916,7 +914,8 @@ is_as_expression: @polymorphic_base @copyable type =
     is_expression_list      : (this) -> bool = this.n*.is_expression_list      ();
     is_literal              : (this) -> bool = this.n*.is_literal              ();
                             
-    as_expression_list      : (this) -> expression_list  = (this.n*.get_expression_list(), this);
+    as_expression_list      : (this) -> expression_list = (this.n*.get_expression_list(), this);
+    as_literal              : (this) -> std::string     = n*.get_literal()*.to_string();
 
     get_identifier          : (this) -> std::string_view = { 
         ptok := this.n*.get_identifier();
@@ -1004,9 +1003,8 @@ expression: @polymorphic_base @copyable type =
     }
 
     as_assignment_expression: (this) -> assignment_expression = (n*.expr.get(), this);
-    as_expression_list:       (this) -> expression_list       = (n*.get_expression_list(), this);
-
-    // get_literal        : (this) -> literal
+    as_expression_list      : (this) -> expression_list       = (n*.get_expression_list(), this);
+    as_literal              : (this) -> std::string           = n*.get_literal()*.to_string();
 
     to_string: (this) -> std::string = n*.to_string();
 }
