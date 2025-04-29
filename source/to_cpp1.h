@@ -468,8 +468,9 @@ private:
                     )
                 {
                     print_comment( comments[next_comment] );
-                    if (!print_remaining_comments)
+                    if (!print_remaining_comments) {
                         assert(curr_pos.lineno <= pos.lineno);  // we shouldn't have overshot
+                    }
                 }
 
                 ++next_comment;
@@ -481,8 +482,9 @@ private:
             }
         }
         // And catch up.
-        while (curr_pos.lineno < pos.lineno)
+        while (curr_pos.lineno < pos.lineno) {
             print("\n");
+        }
     }
 
     auto print_unprinted_comments()

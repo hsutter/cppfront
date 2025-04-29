@@ -9853,7 +9853,7 @@ private:
                 curr().position(),
                 "invalid alias declaration - expected 'type', 'namespace', or a type-id after ':'"
             );
-        return {};
+            return {};
         }
 
         //  And the final ceremonial semicolon

@@ -718,13 +718,14 @@ auto lex_line(
         // the number of tokens has not gone down. So just push back as many
         // tokens as we merged. This will ensure that the token count remains
         // the same. 
-        for (auto i = 0; i < num_merged_tokens; i++)
+        for (auto i = 0; i < num_merged_tokens; i++) {
             tokens.push_back({
                 &generated_text.back()[0],
                 std::ssize(generated_text.back()),
                 pos,
                 lexeme::Keyword
                 });
+        }
 
         if (num_merged_tokens > 1)
         {

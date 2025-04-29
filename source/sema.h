@@ -2052,8 +2052,9 @@ public:
                 }
                 auto stmt_decl = stmt->get_if<declaration_node>();
                 //  If this is a declaration, check if it's a function
-                if (stmt_decl && stmt_decl->is_function())
+                if (stmt_decl && stmt_decl->is_function()) {
                     seen_function = true;
+                }
 
                 //  If this is called 'this', then make sure we haven't seen any functions
                 if (

@@ -561,8 +561,7 @@ private:
         std::cerr << ": " << msg;
     }
     std::cerr << "\n";
-    // Get outta here but don't raise a signal
-    std::exit(1);
+    std::exit(EXIT_FAILURE);
 }
 
 auto inline cpp2_default = contract_group(

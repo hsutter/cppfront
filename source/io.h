@@ -363,8 +363,9 @@ class braces_tracker
         }
 
         auto found_preprocessor_else_was_there_another() -> bool {
-            if (found_else)
+            if (found_else) {
                 return true; 
+            }
             found_else = true;
             return false;
         }
