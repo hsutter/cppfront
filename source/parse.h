@@ -4506,7 +4506,6 @@ auto function_type_node::is_constructor() const
         && my_decl->has_name("operator=")
         )
     {
-        //assert(my_decl && my_decl->has_name("operator="));
         return true;
     }
     return false;
