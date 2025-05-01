@@ -25,11 +25,6 @@ jobs:
         cxx_std: [c++2b]
         stdlib: [libstdc++]
         include:
-          - os: ubuntu-20.04
-            shortosname: ubu-20
-            compiler: g++-10
-            cxx_std: c++20
-            stdlib: libstdc++
           - os: ubuntu-24.04
             shortosname: ubu-24
             compiler: clang++-18
@@ -50,11 +45,6 @@ jobs:
             compiler: clang++-15
             cxx_std: c++20
             stdlib: libc++-15-dev
-          - os: ubuntu-20.04
-            shortosname: ubu-20
-            compiler: clang++-12
-            cxx_std: c++20
-            stdlib: libstdc++
           - os: macos-14
             shortosname: mac-14
             compiler: clang++
