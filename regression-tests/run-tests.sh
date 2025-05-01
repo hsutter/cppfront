@@ -169,8 +169,8 @@ else
         exec_out_dir="$expected_results_dir/clang-12"
     elif [[ "$compiler_version" == *"clang version 15.0"* ]]; then 
         exec_out_dir="$expected_results_dir/clang-15"
-    elif [[ "$compiler_version" == *"clang version 18.1"* ]]; then 
-        exec_out_dir="$expected_results_dir/clang-18"
+    elif [[ "$compiler_version" == *"clang version 19.1"* ]]; then 
+        exec_out_dir="$expected_results_dir/clang-19"
     elif [[ "$compiler_version" == *"g++-10"* ]]; then
         exec_out_dir="$expected_results_dir/gcc-10"
     elif [[ "$compiler_version" == *"g++-12"* ||
