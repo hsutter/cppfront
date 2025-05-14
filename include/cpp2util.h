@@ -301,6 +301,12 @@
     #include <vector>
 #endif
 
+// Required for pure Cpp2 tests to pass on MSVC
+// #include <cstdlib> causes C2995 of math tempaltes
+#ifndef EXIT_FAILURE
+    #define EXIT_FAILURE 1
+#endif
+
 //  cpp2util.h uses signed integer types for indices and container sizes
 //  so disable clang signed-to-unsigned conversion warnings in this header.
 #ifdef __clang__
