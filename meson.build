@@ -8,7 +8,7 @@ project(
 
 threads_dep = dependency('threads', required : true)
 
-executable('cppfront', './source/cppfront.cpp',
+cppfront = executable('cppfront', './source/cppfront.cpp',
   cpp_args : [
     '-Wall',
     '-Wextra',
@@ -28,3 +28,6 @@ install_headers([
     './include/cpp2regex.h2',
     './include/cpp2util.h'
 ])
+
+meson.override_find_program('cppfront', cppfront)
+cpp2_dep = declare_dependency(include_directories: 'include')
