@@ -4109,6 +4109,8 @@ public:
                         && (
                             x.op->type() == lexeme::Slash
                             || x.op->type() == lexeme::SlashEq
+                            || x.op->type() == lexeme::Modulo
+                            || x.op->type() == lexeme::ModuloEq
                             )
                         )
                     {
