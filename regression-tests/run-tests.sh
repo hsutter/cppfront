@@ -2,13 +2,15 @@
 
 ################
 usage() {
-    echo "Usage: $0 -c <compiler> [-l <run label>] [-t <tests to run>]"
+    echo "Usage: $0 -c <compiler> [-l <run label>] [-t <tests to run>] [-e <executable>]"
     echo "    -c <compiler>     The compiler to use for the test"
     echo "    -s <cxx_std>      The C++ standard to compile with (e.g. 'c++20', 'c++2b', 'c++latest' depending on the compiler)"
     echo "    -d <stdlib>       Clang-only: the C++ Standard Library to link with ('libstdc++', 'libc++', or 'default' for platform default)"
     echo "    -l <run label>    The label to use in output patch file name"
     echo "    -t <tests to run> Runs only the provided, comma-separated tests (filenames including .cpp2)"
     echo "                      If the argument is not used all tests are run"
+    echo "    -e <executable>   Use the provided cppfront executable for the test"
+    echo "                      If the argument is not used run-tests will build cppfront"
     exit 1
 }
 
@@ -89,7 +91,7 @@ check_file () {
     fi
 }
 
-optstring="c:s:d:l:t:"
+optstring="c:s:d:l:t:e:"
 while getopts ${optstring} arg; do
   case "${arg}" in
     c)
@@ -103,6 +105,9 @@ while getopts ${optstring} arg; do
         ;;
     l)
         label="${OPTARG}"
+        ;;
+    e)
+        executable="${OPTARG}"
         ;;
     t)
         # Replace commas with spaces
@@ -177,7 +182,9 @@ else
             "$compiler_version" == *"g++-13"*
          ]]; then
         exec_out_dir="$expected_results_dir/gcc-13"
-    elif [[ "$compiler_version" == *"g++-14"* ]]; then
+    elif [[ "$compiler_version" == *"g++-14"* ||
+            "$compiler_version" == *"g++ (Ubuntu 14"*
+         ]]; then
         exec_out_dir="$expected_results_dir/gcc-14"
     else
         printf "Unhandled compiler version:\n$compiler_version\n\n"
@@ -250,12 +257,16 @@ else
 fi
 
 ################
-cppfront_cmd="cppfront.exe"
-echo "Building cppfront"
-$compiler_cmd"$cppfront_cmd" ../source/cppfront.cpp
-if [[ $? -ne 0 ]]; then
-    echo "Compilation failed"
-    exit 2
+if [ -z "$executable" ]; then
+    cppfront_cmd="cppfront.exe"
+    echo "Building cppfront"
+    $compiler_cmd"$cppfront_cmd" ../source/cppfront.cpp
+    if [[ $? -ne 0 ]]; then
+        echo "Compilation failed"
+        exit 2
+    fi
+else
+    cppfront_cmd="$executable"
 fi
 
 ################
