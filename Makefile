@@ -13,6 +13,8 @@ all: cppfront.exe source/reflect.h include/cpp2regex.h
 CXX ?= g++
 CPPFRONT ?= ./cppfront.exe
 CFLAGS ?=
+REGRESS_LABEL ?= regress
+REGRESS_STD ?= c++2b
 
 CFLAGS += -Wall -Werror -Wextra -Wpedantic
 
@@ -40,6 +42,10 @@ include/cpp2regex.h: include/cpp2regex.h2
 
 source/reflect.h: source/reflect.h2
 	${CPPFRONT} source/reflect.h2 -o source/reflect.h
+
+regress: cppfront.exe
+	cd regression-tests && \
+	bash ./run-tests.sh -e ../cppfront.exe -c ${CXX} -l ${REGRESS_LABEL} -s ${REGRESS_STD}
 
 clean:
 	rm -f cppfront.exe
