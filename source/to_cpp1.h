@@ -1978,9 +1978,8 @@ public:
 
         //  Handle function types
         if (n.is_function_typeid()) {
-            //  If identifier is nonempty, we're doing a local variable with a (pointer to)
-            //  function typeid, so stick in the pointers here for inside-out Cpp1 declarations
-            if (!identifier.empty()) {
+            //  If there are qualifiers, stick in the pointers here for inside-out Cpp1 declarations
+            if (n.pc_qualifiers.size() > 0) {
                 for (auto q: n.pc_qualifiers) {
                     if (*q == "const") { identifier = " " + identifier; }
                     identifier = q->as_string_view() + identifier;
