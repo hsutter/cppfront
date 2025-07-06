@@ -26,7 +26,7 @@ meta: namespace = {
 //-----------------------------------------------------------------------
 //
 
-compiler_services: @polymorphic_base @copyable type =
+compiler_services: @polymorphic_base @copy_constructible type =
 {
     //  Common data members
     //
@@ -186,7 +186,7 @@ compiler_services: @polymorphic_base @copyable type =
 //-----------------------------------------------------------------------
 //
 
-reflection_base: @polymorphic_base @copyable <T> type =
+reflection_base: @polymorphic_base @copy_constructible <T> type =
 {
     this: compiler_services = ();
 
@@ -219,7 +219,7 @@ reflection_base: @polymorphic_base @copyable <T> type =
 //-----------------------------------------------------------------------
 //  All declarations
 //
-declaration: @polymorphic_base @copyable type =
+declaration: @polymorphic_base @copy_constructible type =
 {
     this: reflection_base<declaration_node> = ();
 
@@ -301,7 +301,7 @@ declaration: @polymorphic_base @copyable type =
 //-----------------------------------------------------------------------
 //  Function declarations
 //
-function_declaration: @copyable type =
+function_declaration: @copy_constructible type =
 {
     this: declaration = ();
 
@@ -405,7 +405,7 @@ function_declaration: @copyable type =
 //-----------------------------------------------------------------------
 //  Object declarations
 //
-object_declaration: @copyable type =
+object_declaration: @copy_constructible type =
 {
     this: declaration = ();
 
@@ -441,7 +441,7 @@ object_declaration: @copyable type =
 //-----------------------------------------------------------------------
 //  Type declarations
 //
-type_declaration: @copyable type =
+type_declaration: @copy_constructible type =
 {
     this: declaration = ();
 
@@ -579,7 +579,7 @@ type_declaration: @copyable type =
 //-----------------------------------------------------------------------
 //  Alias declarations
 //
-alias_declaration: @copyable type =
+alias_declaration: @copy_constructible type =
 {
     this: declaration = ();
 
@@ -605,7 +605,7 @@ alias_declaration: @copyable type =
 //-----------------------------------------------------------------------
 //  General statement
 //
-statement: @polymorphic_base @copyable type =
+statement: @polymorphic_base @copy_constructible type =
 {
     this: reflection_base<statement_node> = ();
 
@@ -647,7 +647,7 @@ statement: @polymorphic_base @copyable type =
 //-----------------------------------------------------------------------
 //  Expression statements
 //
-expression_statement: @copyable type =
+expression_statement: @copy_constructible type =
 {
     this: reflection_base<expression_statement_node> = ();
 
@@ -669,7 +669,7 @@ expression_statement: @copyable type =
 //-----------------------------------------------------------------------
 //  Compound statements
 //
-compound_statement: @copyable type =
+compound_statement: @copy_constructible type =
 {
     this: reflection_base<compound_statement_node> = ();
 
@@ -715,7 +715,7 @@ compound_statement: @copyable type =
 //-----------------------------------------------------------------------
 //  Postfix expressions
 //
-postfix_expression: @copyable type =
+postfix_expression: @copy_constructible type =
 {
     this: reflection_base<postfix_expression_node> = ();
 
@@ -767,7 +767,7 @@ logical_and_expression    : type == binary_expression< "logical-and"    , bit_or
 logical_or_expression     : type == binary_expression< "logical-or"     , logical_and_expression_node    >;
 assignment_expression     : type == binary_expression< "assignment"     , logical_or_expression_node     >;
 
-binary_expression: @copyable <Name: String, Term> type =
+binary_expression: @copy_constructible <Name: String, Term> type =
 {
     this: reflection_base<binary_expression_node<Name, Term>> = ();
 
@@ -894,7 +894,7 @@ binary_expression: @copyable <Name: String, Term> type =
 //-----------------------------------------------------------------------
 //  is_as_expression
 //
-is_as_expression: @polymorphic_base @copyable type =
+is_as_expression: @polymorphic_base @copy_constructible type =
 {
     this: reflection_base<is_as_expression_node> = ();
 
@@ -930,7 +930,7 @@ is_as_expression: @polymorphic_base @copyable type =
 //-----------------------------------------------------------------------
 //  Expression list
 //
-expression_list: @copyable type =
+expression_list: @copy_constructible type =
 {
     this: reflection_base<expression_list_node> = ();
 
@@ -963,7 +963,7 @@ expression_list: @copyable type =
 //-----------------------------------------------------------------------
 //  General expression
 //
-expression: @polymorphic_base @copyable type =
+expression: @polymorphic_base @copy_constructible type =
 {
     this: reflection_base<expression_node> = ();
 
@@ -1038,7 +1038,9 @@ add_virtual_destructor: (inout t: meta::type_declaration) =
 //
 //  interface
 //
-//  an abstract base class having only pure virtual functions
+//  an abstract base class having only pure virtual named functions,
+//  a public default constructor, a public virtual destructor, and
+//  protected copy/move operations
 //
 interface: (inout t: meta::type_declaration) =
 {
@@ -1061,6 +1063,11 @@ interface: (inout t: meta::type_declaration) =
         }
     }
 
+    //  Add public default constructor + protected copy/move operations
+    t.add_member( "operator=: (out this) = { }");
+    t.add_member( "protected operator=: (out this, that) = { }");
+
+    //  Add public virtual destructor
     if !has_dtor {
         t.add_virtual_destructor();
     }
@@ -1072,17 +1079,14 @@ interface: (inout t: meta::type_declaration) =
 //     "C.35: A base class destructor should be either public and
 //      virtual, or protected and non-virtual."
 //
-//     "[C.43] ... a base class should not be copyable, and so does not
-//      necessarily need a default constructor."
-//
 //          -- Stroustrup, Sutter, et al. (C++ Core Guidelines)
 //
 //-----------------------------------------------------------------------
 //
 //  polymorphic_base
 //
-//  A pure polymorphic base type that is not copyable, and whose
-//  destructor is either public and virtual or protected and nonvirtual.
+//  A polymorphic base type whose destructor is either public and virtual
+//  or else protected and nonvirtual.
 //
 //  Unlike an interface, it can have nonpublic and nonvirtual functions.
 //

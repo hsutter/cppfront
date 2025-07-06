@@ -30,11 +30,13 @@ class Cyborg;
 #line 2 "pure2-types-inheritance.cpp2"
 class Human {
     public: virtual auto speak() const -> void = 0;
-    public: virtual ~Human() noexcept;
+    public: explicit Human();
+protected: Human([[maybe_unused]] Human const& that);
 
-    public: Human() = default;
-    public: Human(Human const&) = delete; /* No 'that' constructor, suppress copy */
-    public: auto operator=(Human const&) -> void = delete;
+protected: auto operator=([[maybe_unused]] Human const& that) -> Human& ;
+protected: Human([[maybe_unused]] Human&& that) noexcept;
+protected: auto operator=([[maybe_unused]] Human&& that) noexcept -> Human& ;
+public: virtual ~Human() noexcept;
 
 #line 4 "pure2-types-inheritance.cpp2"
 };
@@ -91,6 +93,13 @@ auto main() -> int;
 #line 1 "pure2-types-inheritance.cpp2"
 
 
+Human::Human(){}
+Human::Human([[maybe_unused]] Human const& that){}
+auto Human::operator=([[maybe_unused]] Human const& that) -> Human& {
+                                          return *this;}
+Human::Human([[maybe_unused]] Human&& that) noexcept{}
+auto Human::operator=([[maybe_unused]] Human&& that) noexcept -> Human& {
+                                          return *this;}
 Human::~Human() noexcept{}
 #line 6 "pure2-types-inheritance.cpp2"
 namespace N {

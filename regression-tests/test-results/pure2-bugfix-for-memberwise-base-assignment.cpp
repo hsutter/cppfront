@@ -37,6 +37,8 @@ class Derived: public Base {
 
   public: explicit Derived();
   public: Derived(Derived const& that);
+#line 10 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
+  public: Derived(Derived&& that) noexcept;
   public: auto operator=(Derived&& that) noexcept -> Derived& ;
 };
 
@@ -70,6 +72,9 @@ auto main() -> int;
 #line 10 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
   Derived::Derived(Derived const& that)
                                     : Base{ static_cast<Base const&>(that) }{}
+#line 10 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
+  Derived::Derived(Derived&& that) noexcept
+                                    : Base{ static_cast<Base&&>(that) }{}
 #line 11 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
   auto Derived::operator=(Derived&& that) noexcept -> Derived& {
                                          Base::operator= ( static_cast<Base&&>(that) );

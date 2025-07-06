@@ -6614,8 +6614,7 @@ public:
                     //  either from the same type (aka copy/move) or another type (a conversion) --
                     //  so recurse to emit related functions if the user didn't write them by hand
                     if (
-                        !n.parent_is_polymorphic()
-                        && func->parameters->ssize() == 2
+                        func->parameters->ssize() == 2
                         && generating_assignment_from != &n
                         )
                     {
@@ -6635,8 +6634,11 @@ public:
                             ||
                             //  A3) This is '(out this, something-other-than-that)'
                             //  and the user didn't write an assignment from this type themselves
+                            //  and the type is not polymorphic (this generation is great for most types,
+                            //  but polymorphic base classes often have no meaningful way to write assignment)
                             (
-                                n.is_constructor()
+                                !n.parent_is_polymorphic()
+                                && n.is_constructor()
                                 && !n.is_constructor_with_that()
                                 && !contains( current_functions.back().declared_value_set_functions.assignments_from, n.nth_parameter_type_name(2) )
                                 )

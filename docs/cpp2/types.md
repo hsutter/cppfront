@@ -148,13 +148,13 @@ As mentioned above:
 
 This graphic summarizes these generalizations. For convenience I've numbered the (A)ssignment and (M)ove defaults.
 
-![image](https://github.com/user-attachments/assets/311f27df-17df-48c4-b0c9-b820afb5be0c)
+![image](generalized-copy-move-construction-assignment.png)
 
 In Cpp1 terms, they can be described as follows:
 
 - **(M)ove, M1, M2:** If you write a copy constructor or assignment operator, but not a corresponding move constructor or assignment operator, the latter is generated.
 
-- **(A)ssignment, A1, A3:** If you write a generalized constructor, but none of the three more-specific copy/move constructor/assignment functions, the latter three get generated. If you write a converting copy constructor, but no converting assignment operator for the same type, the latter is generated.
+- **(A)ssignment, A1, A3:** If you write a generalized constructor, but none of the three more-specific copy/move constructor/assignment functions, the latter three get generated. If you write a converting copy constructor, but no converting assignment operator for the same type and this is not a polymorphic type, the latter is generated.
 
 - **The arrows are transitive.** For example, if you write a copy constructor and nothing else, the move constructor, copy assignment operator, and move assignment operator are generated.
 
