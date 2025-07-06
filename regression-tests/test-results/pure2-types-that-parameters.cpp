@@ -22,13 +22,9 @@ class myclass {
     public: explicit myclass();
 
     public: myclass(myclass const& that);
-#line 6 "pure2-types-that-parameters.cpp2"
-    public: auto operator=(myclass const& that) -> myclass& ;
 
 #line 11 "pure2-types-that-parameters.cpp2"
     public: myclass(myclass&& that) noexcept;
-#line 11 "pure2-types-that-parameters.cpp2"
-    public: auto operator=(myclass&& that) noexcept -> myclass& ;
 
 #line 16 "pure2-types-that-parameters.cpp2"
     public: auto print() const& -> void;
@@ -55,27 +51,11 @@ auto main() -> int;
 
 #line 9 "pure2-types-that-parameters.cpp2"
     }
-#line 6 "pure2-types-that-parameters.cpp2"
-    auto myclass::operator=(myclass const& that) -> myclass& {
-        name = that.name;
-        addr = that.addr;
-        return *this;
-
-#line 9 "pure2-types-that-parameters.cpp2"
-    }
 
 #line 11 "pure2-types-that-parameters.cpp2"
     myclass::myclass(myclass&& that) noexcept
         : name{ cpp2::move(that).name }
         , addr{ cpp2::move(that).addr }{
-
-#line 14 "pure2-types-that-parameters.cpp2"
-    }
-#line 11 "pure2-types-that-parameters.cpp2"
-    auto myclass::operator=(myclass&& that) noexcept -> myclass& {
-        name = cpp2::move(that).name;
-        addr = cpp2::move(that).addr;
-        return *this;
 
 #line 14 "pure2-types-that-parameters.cpp2"
     }

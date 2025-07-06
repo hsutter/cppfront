@@ -148,17 +148,15 @@ As mentioned above:
 
 This graphic summarizes these generalizations. For convenience I've numbered the (A)ssignment and (M)ove defaults.
 
-![image](https://user-images.githubusercontent.com/1801526/226261443-03125a35-7890-4cc7-bf7d-f23b3a0bb0df.png)
+![image](https://github.com/user-attachments/assets/311f27df-17df-48c4-b0c9-b820afb5be0c)
 
 In Cpp1 terms, they can be described as follows:
 
 - **(M)ove, M1, M2:** If you write a copy constructor or assignment operator, but not a corresponding move constructor or assignment operator, the latter is generated.
 
-- **(A)ssignment, A1, A2, A3:** If you write a copy or move or converting constructor, but not a corresponding copy or move or converting assignment operator, the latter is generated.
+- **(A)ssignment, A1, A3:** If you write a generalized constructor, but none of the three more-specific copy/move constructor/assignment functions, the latter three get generated. If you write a converting copy constructor, but no converting assignment operator for the same type, the latter is generated.
 
 - **The arrows are transitive.** For example, if you write a copy constructor and nothing else, the move constructor, copy assignment operator, and move assignment operator are generated.
-
-- **M2 is preferred over A2.** Both M2 and A2 can generate a missing `#!cpp (inout this, move that)` function. If both options are available, Cpp2 prefers to use M2 (generate move assignment from copy assignment, which could itself have been generated from copy construction) rather than A2 (generate move assignment from move construction). This is because M2 is a better fit: Move assignment is more like copy assignment than like move construction, because assignments are designed structurally to set the value of an existing `#!cpp this` object.
 
 The most general `#!cpp operator=` with `that` is `#!cpp (out this, that)`. In Cpp1 terms, it generates all four combinations of { copy, move } x { constructor, assignment }. This is often sufficient, so you can write all these value-setting functions just once. If you do want to write a more specific version that does something else, though, you can always write it too.
 
@@ -218,7 +216,7 @@ mytype: type
         print();
     }
 
-    print: (this) = std::cout << "value is [(name)$] [(social_handle)$]\n";
+    print: (this) = { std::cout << "value is [(name)$] [(social_handle)$]\n"; }
 }
 
 //  The above definition of mytype allows all of the following...

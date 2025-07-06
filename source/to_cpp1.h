@@ -6610,10 +6610,9 @@ public:
                         prefix
                     );
 
-                    //  If there's no inheritance and this operator= has two parameters,
-                    //  it's setting from a single value -- either from the same type
-                    //  (aka copy/move) or another type (a conversion) -- so recurse to
-                    //  emit related functions if the user didn't write them by hand
+                    //  If this operator= has two parameters, it's setting from a single value --
+                    //  either from the same type (aka copy/move) or another type (a conversion) --
+                    //  so recurse to emit related functions if the user didn't write them by hand
                     if (
                         !n.parent_is_polymorphic()
                         && func->parameters->ssize() == 2
@@ -6623,33 +6622,19 @@ public:
                         assert(!current_functions.empty());
 
                         //  A)  Generate (A)ssignment from a constructor,
-                        //      if the user didn't write the assignment function themselves
+                        //      if the user didn't write a more-specific function themselves
                         if (
-                            //  A1) This is '(out   this, that)'
-                            //      and no  '(inout this, that)' was written by the user
+                            //  A1) This is '(out this, that)'
+                            //      and the user didn't write any other ctor/assignment function themselves
                             (
                                 &n == current_functions.back().declared_value_set_functions.out_this_in_that
+                                && !current_functions.back().declared_value_set_functions.out_this_move_that
                                 && !current_functions.back().declared_value_set_functions.inout_this_in_that
-                                )
-                            ||
-                            //  A2) This is '(out   this, move that)'
-                            //      and no  '(inout this, move that)' was written by the user
-                            //  (*) and no  '(inout this,      that)' was written by the user (*)
-                            //
-                            //  (*) This third test is to tie-break M2 and A2 in favor of M2. Both M2 and A2
-                            //      can generate a missing '(inout this, move that)', and if we have both
-                            //      options then we should prefer to use M2 (generate move assignment from
-                            //      copy assignment) rather than A2 (generate move assignment from move
-                            //      construction) as M2 is a better fit (move assignment is more like copy
-                            //      assignment than like move construction, because assignments are designed
-                            //      structurally to set the value of an existing 'this' object)
-                            (
-                                &n == current_functions.back().declared_value_set_functions.out_this_move_that
                                 && !current_functions.back().declared_value_set_functions.inout_this_move_that
-                                && !current_functions.back().declared_value_set_functions.inout_this_in_that
                                 )
                             ||
-                            //  A3) This is '(out   this, something-other-than-that)'
+                            //  A3) This is '(out this, something-other-than-that)'
+                            //  and the user didn't write an assignment from this type themselves
                             (
                                 n.is_constructor()
                                 && !n.is_constructor_with_that()
@@ -6915,8 +6900,8 @@ public:
                 generating_assignment_from = {};
             }
 
-            //  If this was a constructor and we want also want to emit
-            //  it as an assignment operator, do it via a recursive call
+            //  If this was a copy function and we want also want to emit
+            //  it as a move function, do it via a recursive call
             if (need_to_generate_move)
             {
                 //  Reset the 'emitted' flags

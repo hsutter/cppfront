@@ -156,8 +156,6 @@ class issue_857 {
   private: std::unique_ptr<int> a; 
   private: std::unique_ptr<int> b; 
   public: issue_857(issue_857&& that) noexcept;
-#line 172 "pure2-last-use.cpp2"
-  public: auto operator=(issue_857&& that) noexcept -> issue_857& ;
 //   operator=: (move this) = {
 //     f_inout(a);      // error, can't pass rvalue to inout param
 //     f_inout(this.b); // error, can't pass rvalue to inout param
@@ -724,11 +722,6 @@ auto issue_850() -> void{
   issue_857::issue_857(issue_857&& that) noexcept
                                        : a{ std::move(that).a }
                                        , b{ std::move(that).b }{}
-#line 172 "pure2-last-use.cpp2"
-  auto issue_857::operator=(issue_857&& that) noexcept -> issue_857& {
-                                       a = std::move(that).a;
-                                       b = std::move(that).b;
-                                       return *this; }
 
 #line 181 "pure2-last-use.cpp2"
   [[nodiscard]] auto issue_857::h() & -> decltype(auto) { return f_inout(a);  }

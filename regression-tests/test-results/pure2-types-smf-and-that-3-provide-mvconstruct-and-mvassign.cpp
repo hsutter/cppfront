@@ -20,8 +20,6 @@ class myclass;
 class myclass {
 
     public: myclass(myclass const& that);
-#line 4 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
-    public: auto operator=(myclass const& that) -> myclass& ;
 
 #line 8 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
     public: myclass(myclass&& that) noexcept;
@@ -64,15 +62,6 @@ auto main() -> int;
         , addr{ that.addr }{
 #line 5 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
         std::cout << "ctor - copy (GENERAL)";
-    }
-#line 4 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
-    auto myclass::operator=(myclass const& that) -> myclass& {
-        name = that.name;
-        addr = that.addr;
-#line 5 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
-        std::cout << "ctor - copy (GENERAL)";
-        return *this;
-#line 6 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
     }
 
 #line 8 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
@@ -140,9 +129,9 @@ auto main() -> int{
     CPP2_UFCS(print)(z, "   mv-construct  ", " <- ");
     CPP2_UFCS(print)(cpp2::move(x), "", "\n");
 
-    z = y;
-    CPP2_UFCS(print)(z, "   cp-assign     ", " <- ");
-    CPP2_UFCS(print)(y, "", "\n");
+    // z = y;
+    // z.print("   cp-assign     ", " <- ");
+    // y.print("", "\n");
 
     z = { std::move(y) };
     CPP2_UFCS(print)(cpp2::move(z), "   mv-assign     ", " <- ");
