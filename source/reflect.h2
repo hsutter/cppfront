@@ -1225,6 +1225,37 @@ copyable: (inout t: meta::type_declaration) =
     }
 }
 
+
+//  copy_constructible
+//
+//  A type with (copy and move) construction
+//
+copy_constructible: (inout t: meta::type_declaration) =
+{
+    //  If the user explicitly wrote any of the copy/move constructors,
+    //  they must also have written the most general one - we can't
+    //  assume we can safely generate it for them since they've opted
+    //  into customized semantics
+    smfs := t.query_declared_value_set_functions();
+    if  !smfs.out_this_in_that
+        && smfs.out_this_move_that
+    {
+        t.error( 
+            "this type is partially copy/move constructible - when you provide "
+            "the (out this, move that) operator= signature, you must also provide "
+            "the one with the general signature (out this, that)" 
+        );
+    }
+    else if 
+        !smfs.out_this_in_that
+        && !smfs.out_this_move_that
+    {
+        t.add_member( "operator=: (out this,      that) = { }");
+        t.add_member( "operator=: (out this, move that) = { }");
+    }
+}
+
+
 //-----------------------------------------------------------------------
 //
 //  hashable
@@ -5111,6 +5142,9 @@ apply_metafunctions: (
         }
         else if name == "copyable" {
             copyable( rtype );
+        }
+        else if name == "copy_constructible" {
+            copy_constructible( rtype );
         }
         else if name == "hashable" {
             hashable( rtype );
