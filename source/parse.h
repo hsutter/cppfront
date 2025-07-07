@@ -7266,7 +7266,8 @@ private:
     auto type_id(
         bool allow_omitting_type_name = false,
         bool allow_constraint         = false,
-        bool allow_function_type      = false
+        bool allow_function_type      = false,
+        bool allow_qualified_function_type = true
     )
         -> std::unique_ptr<type_id_node>
     {
@@ -7339,7 +7340,9 @@ private:
             assert (n->id.index() == type_id_node::unqualified);
         }
         else if (std::unique_ptr<function_type_node> id = {};
-            allow_function_type
+            (allow_function_type || 
+                (allow_qualified_function_type && 
+                !n->pc_qualifiers.empty()))
             && (id = function_type({})) != nullptr
             )
         {
