@@ -1,0 +1,71 @@
+pure2-regex_20_lookbehind.cpp
+cpp2regex.h2(591): error C2668: 'std::make_reverse_iterator': ambiguous call to overloaded function
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.43.34808\include\xutility(2020): note: could be 'std::reverse_iterator<std::_String_view_iterator<_Traits>> std::make_reverse_iterator<_T0>(_BidIt) noexcept(<expr>)' [found using argument-dependent lookup]
+        with
+        [
+            _Traits=std::char_traits<char>,
+            _T0=std::_String_view_iterator<std::char_traits<char>>,
+            _BidIt=std::_String_view_iterator<std::char_traits<char>>
+        ]
+cpp2regex.h2(188): note: or       'auto cpp2::regex::make_reverse_iterator<_T0>(const Iter &)'
+        with
+        [
+            _T0=std::_String_view_iterator<std::char_traits<char>>,
+            Iter=std::_String_view_iterator<std::char_traits<char>>
+        ]
+cpp2regex.h2(591): note: while trying to match the argument list '(const _T0)'
+        with
+        [
+            _T0=std::_String_view_iterator<std::char_traits<char>>
+        ]
+cpp2regex.h2(591): note: the template instantiation context (the oldest one first) is
+pure2-regex_20_lookbehind.cpp2(225): note: see reference to function template instantiation 'void test<cpp2::regex::regular_expression<char,test_tests_20_lookbehind::regex_01_matcher<char>>>(const M &,const std::string &,const std::string &,const std::string &,const std::string &,const std::string &,const std::string &)' being compiled
+        with
+        [
+            M=cpp2::regex::regular_expression<char,test_tests_20_lookbehind::regex_01_matcher<char>>
+        ]
+pure2-regex_20_lookbehind.cpp2(135): note: while compiling class template member function 'decltype(auto) test::<lambda_2>::operator ()(Obj &&,Params ...) noexcept(<expr>) const'
+pure2-regex_20_lookbehind.cpp2(135): note: while processing the default template argument of 'decltype(auto) test::<lambda_2>::operator ()(Obj &&,Params ...) noexcept(<expr>) const'
+cpp2regex.h2(872): note: see reference to function template instantiation 'cpp2::regex::regular_expression<char,test_tests_20_lookbehind::regex_01_matcher<char>>::search_return<std::_String_view_iterator<_Traits>> cpp2::regex::regular_expression<char,test_tests_20_lookbehind::regex_01_matcher<char>>::search(const std::basic_string_view<_Elem,_Traits> &) const &' being compiled
+        with
+        [
+            _Traits=std::char_traits<char>,
+            _Elem=char
+        ]
+pure2-regex_20_lookbehind.cpp2(135): note: see the first reference to 'cpp2::regex::regular_expression<char,test_tests_20_lookbehind::regex_01_matcher<char>>::search'
+cpp2regex.h2(872): note: see reference to function template instantiation 'cpp2::regex::regular_expression<char,test_tests_20_lookbehind::regex_01_matcher<char>>::search_return<std::_String_view_iterator<_Traits>> cpp2::regex::regular_expression<char,test_tests_20_lookbehind::regex_01_matcher<char>>::search<std::_String_view_iterator<_Traits>>(const Iter &,const Iter &) const &' being compiled
+        with
+        [
+            _Traits=std::char_traits<char>,
+            Iter=std::_String_view_iterator<std::char_traits<char>>
+        ]
+cpp2regex.h2(878): note: see reference to function template instantiation 'cpp2::regex::match_return<Iter> cpp2::regex::regular_expression<char,test_tests_20_lookbehind::regex_01_matcher<char>>::search_with_context<Iter>(cpp2::regex::match_context<CharT,Iter,1> &,const Iter &) const &' being compiled
+        with
+        [
+            Iter=std::_String_view_iterator<std::char_traits<char>>,
+            CharT=char
+        ]
+cpp2regex.h2(888): note: see reference to function template instantiation 'cpp2::regex::match_return<Iter> test_tests_20_lookbehind::regex_01_matcher<char>::entry<Iter>(const Iter &,cpp2::regex::match_context<CharT,Iter,1> &)' being compiled
+        with
+        [
+            Iter=std::_String_view_iterator<std::char_traits<char>>,
+            CharT=char
+        ]
+pure2-regex_20_lookbehind.cpp2(356): note: see reference to function template instantiation 'cpp2::regex::match_return<Iter> test_tests_20_lookbehind::regex_01_matcher<char>::func_0::operator ()<Iter,cpp2::regex::match_context<CharT,Iter,1>&,cpp2::regex::true_end_func>(const Iter &,_T0,const _T1 &) const &' being compiled
+        with
+        [
+            Iter=std::_String_view_iterator<std::char_traits<char>>,
+            CharT=char,
+            _T0=cpp2::regex::match_context<char,std::_String_view_iterator<std::char_traits<char>>,1> &,
+            _T1=cpp2::regex::true_end_func
+        ]
+pure2-regex_20_lookbehind.cpp2(324): note: see reference to function template instantiation 'bool cpp2::regex::lookbehind_token_matcher<char,true,Iter,cpp2::regex::match_context<CharT,Iter,1>,test_tests_20_lookbehind::regex_01_matcher<CharT>::func_1>(const _T0 &,_T1 &,const _T2 &)' being compiled
+        with
+        [
+            Iter=std::_String_view_iterator<std::char_traits<char>>,
+            CharT=char,
+            _T0=std::_String_view_iterator<std::char_traits<char>>,
+            _T1=cpp2::regex::match_context<char,std::_String_view_iterator<std::char_traits<char>>,1>,
+            _T2=test_tests_20_lookbehind::regex_01_matcher<char>::func_1
+        ]
+cpp2regex.h2(591): error C2119: 'r': the type for 'auto' cannot be deduced from an empty initializer
