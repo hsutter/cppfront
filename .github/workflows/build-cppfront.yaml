@@ -17,7 +17,7 @@ jobs:
       - name: Compiler name & version
         run: cl.exe
       - name: Build
-        run: cl.exe source/cppfront.cpp -std:c++latest -MD -EHsc -experimental:module -W4 -WX
+        run: cl.exe source/cppfront.cpp -std:c++latest -MD -EHsc -W4 -WX
   build-unix-like:
     strategy:
       fail-fast: false
