@@ -33,7 +33,7 @@ pure2-expected-is-as.cpp2:85:34: error: parse error in template argument list
 pure2-expected-is-as.cpp2:85:159: error: parse error in template argument list
 In file included from pure2-expected-is-as.cpp:7:
 pure2-expected-is-as.cpp2:85:309: error: parse error in template argument list
-../../../include/cpp2util.h:317:66: note: in definition of macro ‘CPP2_TYPEOF’
-  317 | #define CPP2_TYPEOF(x)              std::remove_cvref_t<decltype(x)>
+../../../include/cpp2util.h:323:66: note: in definition of macro ‘CPP2_TYPEOF’
+  323 | #define CPP2_TYPEOF(x)              std::remove_cvref_t<decltype(x)>
       |                                                                  ^
 pure2-expected-is-as.cpp2:85:430: error: parse error in template argument list
