@@ -7266,8 +7266,7 @@ private:
     auto type_id(
         bool allow_omitting_type_name = false,
         bool allow_constraint         = false,
-        bool allow_function_type      = false,
-        bool allow_qualified_function_type = true
+        bool allow_function_type      = false
     )
         -> std::unique_ptr<type_id_node>
     {
@@ -7341,11 +7340,13 @@ private:
         }
         else if (std::unique_ptr<function_type_node> id = {};
             (allow_function_type || 
-                (allow_qualified_function_type && 
-                !n->pc_qualifiers.empty()))
+                
+             !n->pc_qualifiers.empty())
             && (id = function_type({})) != nullptr
             )
         {
+            // Note that we allow function types with qualifiers even if 
+            // allow_function_type is false.
             n->pos = id->position();
             n->id  = std::move(id);
             assert (n->id.index() == type_id_node::function);
