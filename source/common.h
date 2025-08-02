@@ -1,5 +1,5 @@
 
-//  Copyright 2022-2024 Herb Sutter
+//  Copyright 2022-2025 Herb Sutter
 //  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //  
 //  Part of the Cppfront Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -913,7 +913,7 @@ public:
             #include "build.info"
         );
         print("\nSPDX-License-Identifier  Apache-2.0 WITH LLVM-exception");
-        print("\nCopyright (c) 2022-2024  Herb Sutter\n");
+        print("\nCopyright (c) 2022-2025  Herb Sutter\n");
     }
 
 } cmdline;

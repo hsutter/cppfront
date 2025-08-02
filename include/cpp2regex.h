@@ -82,7 +82,7 @@ template<typename CharT, typename matcher> class regular_expression;
 
 #line 1 "cpp2regex.h2"
 
-//  Copyright 2022-2024 Herb Sutter
+//  Copyright 2022-2025 Herb Sutter
 //  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //  
 //  Part of the Cppfront Project, under the Apache License v2.0 with LLVM Exceptions.

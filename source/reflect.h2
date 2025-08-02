@@ -1,5 +1,5 @@
 
-//  Copyright 2022-2024 Herb Sutter
+//  Copyright 2022-2025 Herb Sutter
 //  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //  
 //  Part of the Cppfront Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -255,6 +255,8 @@ declaration: @polymorphic_base @copy_constructible type =
 
     has_initializer: (this) -> bool = n*.has_initializer();
 
+    get_initializer: (this) -> statement = (n*.initializer.get(), this);
+
     is_global        : (this) -> bool = n*.is_global();
     is_function      : (this) -> bool = n*.is_function();
     is_object        : (this) -> bool = n*.is_object();
@@ -355,7 +357,8 @@ function_declaration: @copy_constructible type =
 
     has_compound_body            : (this) -> bool = n*.is_function_with_compound_body();
 
-    get_compound_body            : (this) -> compound_statement = (n*.get_compound_initializer(), this);
+    get_body                     : (this) -> statement          = (n*.get_function_body(), this);
+    get_compound_body            : (this) -> compound_statement = (n*.get_function_compound_body(), this);
     get_unnamed_return_type      : (this) -> std::string        = n*.unnamed_return_type_to_string();
     get_signature                : (this) -> std::string        = n*.signature_to_string();
 
@@ -597,159 +600,10 @@ alias_declaration: @copy_constructible type =
 
 //-----------------------------------------------------------------------
 // 
-//  Statements
-//
-//-----------------------------------------------------------------------
-//
-
-//-----------------------------------------------------------------------
-//  General statement
-//
-statement: @polymorphic_base @copy_constructible type =
-{
-    this: reflection_base<statement_node> = ();
-
-    operator=: (
-        out this,
-        n_: *statement_node,
-        s : compiler_services
-    )
-    = {
-        reflection_base<statement_node> = (n_, s);
-    }
-
-    is_expression_statement : (this) -> bool = n*.is_expression();
-    is_compound_statement   : (this) -> bool = n*.is_compound();
-    is_selection_statement  : (this) -> bool = n*.is_selection();
-    is_declaration_statement: (this) -> bool = n*.is_declaration();
-    is_return_statement     : (this) -> bool = n*.is_return();
-    is_iteration_statement  : (this) -> bool = n*.is_iteration();
-    is_using_statement      : (this) -> bool = n*.is_using();
-    is_contract             : (this) -> bool = n*.is_contract();
-    is_inspect_expression   : (this) -> bool = n*.is_inspect();
-    is_jump_statement       : (this) -> bool = n*.is_jump();
-
-    as_expression_statement : (this) -> expression_statement  = (n*.get_if<expression_statement_node>(), this);
-    as_compound_statement   : (this) -> compound_statement    = (n*.get_if<compound_statement_node>(), this);
-    //as_selection_statement  : (this) -> selection_statement   = selection_statement  (n*.get_if<selection_statement_node>(), this);
-    //as_declaration_statement: (this) -> declaration_statement = declaration_statement(n*.get_if<declaration_statement_node>(), this);
-    //as_return_statement     : (this) -> return_statement      = return_statement     (n*.get_if<return_statement_node>(), this);
-    //as_iteration_statement  : (this) -> iteration_statement   = iteration_statement  (n*.get_if<iteration_statement_node>(), this);
-    //as_using_statement      : (this) -> using_statement       = using_statement      (n*.get_if<using_statement_node>(), this);
-    //as_contract             : (this) -> contract              = contract             (n*.get_if<contract_node>(), this);
-    //as_inspect_expression   : (this) -> inspect_expression    = inspect_expression   (n*.get_if<inspect_expression_node>(), this);
-    //as_jump_statement       : (this) -> jump_statement        = jump_statement       (n*.get_if<jump_statement_node>(), this);
-
-    to_string: (this) -> std::string = n*.to_string();
-}
-
-
-//-----------------------------------------------------------------------
-//  Expression statements
-//
-expression_statement: @copy_constructible type =
-{
-    this: reflection_base<expression_statement_node> = ();
-
-    operator=: (
-        out this,
-        n_: *expression_statement_node,
-        s : compiler_services
-    )
-    = {
-        reflection_base<expression_statement_node> = (n_, s);
-    }
-
-    get_expression: (this) -> expression  = (n*.expr.get(), this);
-
-    to_string     : (this) -> std::string = n*.to_string();
-}
-
-
-//-----------------------------------------------------------------------
-//  Compound statements
-//
-compound_statement: @copy_constructible type =
-{
-    this: reflection_base<compound_statement_node> = ();
-
-    operator=: (
-        out this,
-        n_: *compound_statement_node,
-        s : compiler_services
-    )
-    = {
-        reflection_base<compound_statement_node> = (n_, s);
-    }
-
-    get_statements: (this)
-        -> std::vector<statement>
-    = {
-        ret: std::vector<statement> = ();
-        for n*.get_statements() do (stmt) {
-            _ = ret.emplace_back( stmt, this );
-        }
-        return ret;
-    }
-
-    add_statement: (inout this, source: std::string_view, before_position: int = 0)
-    = {
-        stmt := parse_statement(source);
-        if !(stmt as bool) {
-            error("the provided source string is not a valid statement");
-            return;
-        }
-        require( n*.add_statement(move stmt, before_position),
-                 std::string("unexpected error while attempting to add statement:\n") + source );
-    }
-}
-
-
-//-----------------------------------------------------------------------
-// 
 //  Expressions
 //
 //-----------------------------------------------------------------------
 //
-
-//-----------------------------------------------------------------------
-//  Postfix expressions
-//
-postfix_expression: @copy_constructible type =
-{
-    this: reflection_base<postfix_expression_node> = ();
-
-    operator=: (
-        out this,
-        n_: *postfix_expression_node,
-        s : compiler_services
-    )
-    = {
-        reflection_base<postfix_expression_node> = (n_, s);
-    }
-
-    is_fold_expression: (this) -> bool = n*.is_fold_expression();
-    is_identifier     : (this) -> bool = n*.is_identifier     ();
-    is_id_expression  : (this) -> bool = n*.is_id_expression  ();
-    is_unqualified_id : (this) -> bool = n*.is_unqualified_id ();
-    is_expression_list: (this) -> bool = n*.is_expression_list();
-    is_literal        : (this) -> bool = n*.is_literal        ();
-
-    as_expression_list: (this) -> expression_list = (this.n*.get_expression_list(), this);
-    as_literal        : (this) -> std::string     = n*.get_literal()*.to_string();
-
-    get_first_token_ignoring_this: (this) -> std::string_view = {
-        ptok := n*.get_first_token_ignoring_this();
-        if ptok { return ptok*; }
-        return "";
-    }
-
-    starts_with_function_call_with_num_parameters: (this, num: int) -> bool = n*.starts_with_function_call_with_n_parameters(num);
-    is_result_a_temporary_variable               : (this) -> bool           = n*.is_result_a_temporary_variable             ();
-
-    to_string: (this) -> std::string = n*.to_string();
-}
-
 
 //-----------------------------------------------------------------------
 //  Binary expressions
@@ -892,42 +746,6 @@ binary_expression: @copy_constructible <Name: String, Term> type =
 
 
 //-----------------------------------------------------------------------
-//  is_as_expression
-//
-is_as_expression: @polymorphic_base @copy_constructible type =
-{
-    this: reflection_base<is_as_expression_node> = ();
-
-    operator=: (
-        out this,
-        n_: *is_as_expression_node,
-        s : compiler_services
-    )
-    = {
-        reflection_base<is_as_expression_node> = (n_, s);
-    }
-
-    is_fold_expression      : (this) -> bool = this.n*.is_fold_expression      ();
-    is_identifier           : (this) -> bool = this.n*.is_identifier           ();
-    is_id_expression        : (this) -> bool = this.n*.is_id_expression        ();
-    is_unqualified_id       : (this) -> bool = this.n*.is_unqualified_id       ();
-    is_expression_list      : (this) -> bool = this.n*.is_expression_list      ();
-    is_literal              : (this) -> bool = this.n*.is_literal              ();
-                            
-    as_expression_list      : (this) -> expression_list = (this.n*.get_expression_list(), this);
-    as_literal              : (this) -> std::string     = n*.get_literal()*.to_string();
-
-    get_identifier          : (this) -> std::string_view = { 
-        ptok := this.n*.get_identifier();
-        if ptok { return ptok*; }
-        return "";
-    }
-
-    to_string: (this) -> std::string = this.n*.to_string();
-}
-
-
-//-----------------------------------------------------------------------
 //  Expression list
 //
 expression_list: @copy_constructible type =
@@ -955,6 +773,339 @@ expression_list: @copy_constructible type =
         }
         return ret;
     }
+
+    to_string: (this) -> std::string = n*.to_string();
+}
+
+
+//-----------------------------------------------------------------------
+//  Prefix expressions
+//
+prefix_expression: @polymorphic_base @copy_constructible type =
+{
+    this: reflection_base<prefix_expression_node> = ();
+
+    operator=: (
+        out this,
+        n_: *prefix_expression_node,
+        s : compiler_services
+    )
+    = {
+        reflection_base<prefix_expression_node> = (n_, s);
+    }
+
+    get_ops: (this) -> std::vector<std::string> = {
+        ret: std::vector<std::string> = ();
+        for n*.ops do (op) {
+            _ = ret.emplace_back(op*.to_string());
+        }
+        return ret;
+    }
+
+    get_postfix_expression: (this) -> postfix_expression = (this.n*.expr.get(), this);
+
+    is_fold_expression            : (this) -> bool = n*.is_fold_expression            ();
+    is_identifier                 : (this) -> bool = n*.is_identifier                 ();
+    is_id_expression              : (this) -> bool = n*.is_id_expression              ();
+    is_unqualified_id             : (this) -> bool = n*.is_unqualified_id             ();
+    is_expression_list            : (this) -> bool = n*.is_expression_list            ();
+    is_literal                    : (this) -> bool = n*.is_literal                    ();
+    is_result_a_temporary_variable: (this) -> bool = n*.is_result_a_temporary_variable();
+
+    as_expression_list: (this) -> expression_list = (this.n*.get_expression_list(), this);
+    as_literal        : (this) -> std::string     = n*.get_literal()*.to_string();
+    as_identifier     : (this) -> std::string     = n*.get_identifier()*.to_string();
+
+    to_string: (this) -> std::string = this.n*.to_string();
+}
+
+
+//-----------------------------------------------------------------------
+//  Postfix expressions
+//
+postfix_expression: @copy_constructible type =
+{
+    this: reflection_base<postfix_expression_node> = ();
+
+    operator=: (
+        out this,
+        n_: *postfix_expression_node,
+        s : compiler_services
+    )
+    = {
+        reflection_base<postfix_expression_node> = (n_, s);
+    }
+
+    get_primary_expression: (this) -> primary_expression = (this.n*.expr.get(), this);
+
+    term_t: @copy_constructible type = {
+        private term_: * const postfix_expression_node::term;
+        private cs_  : * const compiler_services;
+
+        operator=: (out this, forward term, forward cs) = { term_ = term; cs_ = cs; }
+
+        get_op            : (this) -> std::string_view  = term_*.op*.as_string_view();
+
+        //  If op is        More is contained in the        Notes
+        //
+        //  .               id_expression                   member selection
+        //  [ (             expression_list                 subscript or function call
+        //  ...             expression                      fold expression
+
+        is_id_expression   : (this) -> bool            = term_*.id_expr  .get() != nullptr;
+        is_expression_list : (this) -> bool            = term_*.expr_list.get() != nullptr;
+        is_expression      : (this) -> bool            = term_*.last_expr.get() != nullptr;
+
+        get_id_expression  : (this) -> id_expression   = (term_*.id_expr  .get(), cs_*);
+        get_expression_list: (this) -> expression_list = (term_*.expr_list.get(), cs_*);
+        get_expression     : (this) -> expression      = (term_*.last_expr.get(), cs_*);
+    }
+
+    get_terms: (this) -> _ = {
+        ret: std::vector<term_t> = ();
+        for this.n*.ops do (t) { _ = ret.emplace_back( t&, this& ); }
+        return ret;
+    }
+
+    is_fold_expression: (this) -> bool = n*.is_fold_expression();
+    is_identifier     : (this) -> bool = n*.is_identifier     ();
+    is_id_expression  : (this) -> bool = n*.is_id_expression  ();
+    is_unqualified_id : (this) -> bool = n*.is_unqualified_id ();
+    is_expression_list: (this) -> bool = n*.is_expression_list();
+    is_literal        : (this) -> bool = n*.is_literal        ();
+
+    as_identifier     : (this) -> std::string     = n*.get_identifier()*.to_string();
+    as_expression_list: (this) -> expression_list = (this.n*.get_expression_list(), this);
+    as_literal        : (this) -> std::string     = n*.get_literal()*.to_string();
+
+    get_first_token_ignoring_this: (this) -> std::string_view = {
+        ptok := n*.get_first_token_ignoring_this();
+        if ptok { return ptok*; }
+        return "";
+    }
+
+    starts_with_function_call_with_num_parameters: (this, num: int) -> bool = n*.starts_with_function_call_with_n_parameters(num);
+    is_result_a_temporary_variable               : (this) -> bool           = n*.is_result_a_temporary_variable             ();
+
+    to_string: (this) -> std::string = n*.to_string();
+}
+
+
+//-----------------------------------------------------------------------
+//  Template arguments
+//
+template_arg: @copy_constructible type =
+{
+    this: reflection_base<template_argument> = ();
+
+    operator=: (
+        out this,
+        n_: *template_argument,
+        s : compiler_services
+    )
+    = {
+        reflection_base<template_argument> = (n_, s);
+    }
+
+    is_expression: (this) -> bool = n*.is_expression();
+    is_type_id   : (this) -> bool = n*.is_type_id   ();
+
+    as_expression: (this) -> expression = (this.n*.get_expression(), this);
+    as_type_id   : (this) -> type_id    = (this.n*.get_type_id(),    this);
+
+    to_string: (this) -> std::string = n*.to_string();
+}
+
+
+//-----------------------------------------------------------------------
+//  Unqualified IDs
+//
+unqualified_id: @copy_constructible type =
+{
+    this: reflection_base<unqualified_id_node> = ();
+
+    operator=: (
+        out this,
+        n_: *unqualified_id_node,
+        s : compiler_services
+    )
+    = {
+        reflection_base<unqualified_id_node> = (n_, s);
+    }
+
+    is_identifier : (this) -> bool        = n*.is_identifier();
+
+    get_identifier: (this) -> std::string = n*.get_identifier()*.to_string();
+
+    //get_template_args: (this) -> std::vector<template_arg> = {
+    //    ret: std::vector<template_arg> = ();
+    //    for this.n*.template_arguments() do (t) { _ = ret.emplace_back( t&, this ); }
+    //    return ret;
+    //}
+
+    as_token : (this) -> std::string = n*.get_token()*.to_string();
+
+    to_string: (this) -> std::string = n*.to_string();
+}
+
+
+//-----------------------------------------------------------------------
+//  Qualified IDs
+//
+qualified_id: @copy_constructible type =
+{
+    this: reflection_base<qualified_id_node> = ();
+
+    operator=: (
+        out this,
+        n_: *qualified_id_node,
+        s : compiler_services
+    )
+    = {
+        reflection_base<qualified_id_node> = (n_, s);
+    }
+
+    term_t: @copy_constructible type = {
+        op:          std::string;
+        unqualified: unqualified_id;
+
+        operator=: (out this, forward o, forward ptr, forward cs) = { op = o; unqualified = (ptr, cs); }
+
+        get_op:          (this) -> std::string    = op;
+        get_unqualified: (this) -> unqualified_id = unqualified;
+    }
+
+    get_terms: (this) -> _ = {
+        ret: std::vector<term_t> = ();
+        for this.n*.ids do (t) { _ = ret.emplace_back( t.scope_op*, t.id.get(), this ); }
+        return ret;
+    }
+
+    //get_template_args: (this) -> std::vector<template_arg> = {
+    //    ret: std::vector<template_arg> = ();
+    //    for this.n*.template_arguments() do (t) { _ = ret.emplace_back( t&, this ); }
+    //    return ret;
+    //}
+
+    as_token : (this) -> std::string = n*.get_token()*.to_string();
+
+    to_string: (this) -> std::string = n*.to_string();
+}
+
+
+//-----------------------------------------------------------------------
+//  Type IDs
+//
+type_id: @copy_constructible type =
+{
+    this: reflection_base<type_id_node> = ();
+
+    operator=: (
+        out this,
+        n_: *type_id_node,
+        s : compiler_services
+    )
+    = {
+        reflection_base<type_id_node> = (n_, s);
+    }
+
+    //get_template_args: (this) -> std::vector<template_arg> = {
+    //    ret: std::vector<template_arg> = ();
+    //    for this.n*.template_arguments() do (t) { _ = ret.emplace_back( t&, this ); }
+    //    return ret;
+    //}
+
+    is_postfix_expression: (this) -> bool = this.n*.is_postfix_expression();
+    is_qualified_id      : (this) -> bool = this.n*.is_qualified_id      ();
+    is_unqualified_id    : (this) -> bool = this.n*.is_unqualified_id    ();
+    is_function_typeid   : (this) -> bool = this.n*.is_function_typeid   ();
+    is_keyword           : (this) -> bool = this.n*.is_keyword           ();
+    is_wildcard          : (this) -> bool = this.n*.is_wildcard          ();
+    is_pointer_qualified : (this) -> bool = this.n*.is_pointer_qualified ();
+    is_concept           : (this) -> bool = this.n*.is_concept           ();
+
+    as_postfix_expression: (this) -> postfix_expression = (n*.get_postfix_expression(), this);
+    as_qualified_id      : (this) -> qualified_id       = (n*.get_qualified_id(),       this);
+    as_unqualified_id    : (this) -> unqualified_id     = (n*.get_unqualified_id(),     this);
+    // TODO
+    //as_function_typeid   : (this) -> function_typeid    = (n*.get_function_typeid(),    this);
+    as_keyword           : (this) -> std::string        = n*.get_keyword()*.to_string();
+    as_token             : (this) -> std::string        = n*.get_token()*.to_string();
+
+    to_string: (this) -> std::string = n*.to_string();
+}
+
+
+//-----------------------------------------------------------------------
+//  Primary expressions
+//
+primary_expression: @copy_constructible type =
+{
+    this: reflection_base<primary_expression_node> = ();
+
+    operator=: (
+        out this,
+        n_: *primary_expression_node,
+        s : compiler_services
+    )
+    = {
+        reflection_base<primary_expression_node> = (n_, s);
+    }
+
+    //get_template_args: (this) -> std::vector<template_arg> = {
+    //    ret: std::vector<template_arg> = ();
+    //    for this.n*.template_arguments() do (t) { _ = ret.emplace_back( t&, this ); }
+    //    return ret;
+    //}
+
+    is_fold_expression: (this) -> bool = n*.is_fold_expression();
+    is_identifier     : (this) -> bool = n*.is_identifier     ();
+    is_id_expression  : (this) -> bool = n*.is_id_expression  ();
+    is_unqualified_id : (this) -> bool = n*.is_unqualified_id ();
+    is_expression_list: (this) -> bool = n*.is_expression_list();
+    is_literal        : (this) -> bool = n*.is_literal        ();
+    is_declaration    : (this) -> bool = n*.is_declaration    ();
+
+    as_identifier     : (this) -> std::string     = n*.get_identifier()*.to_string();
+    as_expression_list: (this) -> expression_list = (this.n*.get_expression_list(), this);
+    as_literal        : (this) -> std::string     = n*.get_literal()*.to_string();
+    as_declaration    : (this) -> declaration     = (this.n*.get_declaration(), this);
+
+    to_string: (this) -> std::string = n*.to_string();
+}
+
+
+//-----------------------------------------------------------------------
+//  ID expression
+//
+id_expression: @polymorphic_base @copy_constructible type =
+{
+    this: reflection_base<id_expression_node> = ();
+
+    operator=: (
+        out this,
+        n_: *id_expression_node,
+        s : compiler_services
+    )
+    = {
+        reflection_base<id_expression_node> = (n_, s);
+    }
+
+    //get_template_args: (this) -> std::vector<template_arg> = {
+    //    ret: std::vector<template_arg> = ();
+    //    for this.n*.template_arguments() do (t) { _ = ret.emplace_back( t&, this ); }
+    //    return ret;
+    //}
+
+    is_fold_expression: (this) -> bool = n*.is_fold_expression      ();
+    is_empty          : (this) -> bool = n*.is_empty                ();
+    is_identifier     : (this) -> bool = n*.is_identifier           ();
+    is_qualified      : (this) -> bool = n*.is_qualified            ();
+    is_unqualified    : (this) -> bool = n*.is_unqualified          ();
+
+    as_identifier     : (this) -> std::string    = n*.get_identifier()*.to_string();
+    as_qualified      : (this) -> qualified_id   = (n*.get_qualified_id(),   this);
+    as_unqualified    : (this) -> unqualified_id = (n*.get_unqualified_id(), this);
 
     to_string: (this) -> std::string = n*.to_string();
 }
@@ -1002,11 +1153,223 @@ expression: @polymorphic_base @copy_constructible type =
         rhs = (ret.rhs, this);
     }
 
-    as_assignment_expression: (this) -> assignment_expression = (n*.expr.get(), this);
+    as_assignment_expression: (this) -> assignment_expression = (n*.get_assignment_expression(), this);
     as_expression_list      : (this) -> expression_list       = (n*.get_expression_list(), this);
     as_literal              : (this) -> std::string           = n*.get_literal()*.to_string();
 
     to_string: (this) -> std::string = n*.to_string();
+}
+
+
+//-----------------------------------------------------------------------
+//  is_as_expression
+//
+is_as_expression: @polymorphic_base @copy_constructible type =
+{
+    this: reflection_base<is_as_expression_node> = ();
+
+    operator=: (
+        out this,
+        n_: *is_as_expression_node,
+        s : compiler_services
+    )
+    = {
+        reflection_base<is_as_expression_node> = (n_, s);
+    }
+
+    term_t: @copy_constructible type = {
+        op:   std::string;
+        expr: expression;
+
+        operator=: (out this, forward o, forward ptr, forward cs) = { op = o; expr = (ptr, cs); }
+
+        get_op:   (this) -> std::string = op;
+        get_expr: (this) -> expression  = expr;
+    }
+
+    get_expression: (this) -> prefix_expression = (n*.expr.get(), this);
+
+    get_terms: (this) -> _ = {
+        ret: std::vector<term_t> = ();
+        for this.n*.ops do (t) { _ = ret.emplace_back( t.op*, t.expr.get(), this ); }
+        return ret;
+    }
+
+    is_fold_expression: (this) -> bool = this.n*.is_fold_expression();
+    is_identifier     : (this) -> bool = this.n*.is_identifier     ();
+    is_id_expression  : (this) -> bool = this.n*.is_id_expression  ();
+    is_unqualified_id : (this) -> bool = this.n*.is_unqualified_id ();
+    is_expression_list: (this) -> bool = this.n*.is_expression_list();
+    is_literal        : (this) -> bool = this.n*.is_literal        ();
+                      
+    as_expression_list: (this) -> expression_list = (this.n*.get_expression_list(), this);
+    as_literal        : (this) -> std::string     = n*.get_literal()*.to_string();
+                      
+    get_identifier    : (this) -> std::string_view = { 
+        ptok := this.n*.get_identifier();
+        if ptok { return ptok*; }
+        return "";
+    }
+
+    to_string: (this) -> std::string = this.n*.to_string();
+}
+
+
+//-----------------------------------------------------------------------
+// 
+//  Statements
+//
+//-----------------------------------------------------------------------
+//
+
+//-----------------------------------------------------------------------
+//  General statement
+//
+statement: @polymorphic_base @copy_constructible type =
+{
+    this: reflection_base<statement_node> = ();
+
+    operator=: (
+        out this,
+        n_: *statement_node,
+        s : compiler_services
+    )
+    = {
+        reflection_base<statement_node> = (n_, s);
+    }
+
+    is_expression_statement : (this) -> bool = n*.is_expression();
+    is_compound_statement   : (this) -> bool = n*.is_compound();
+    is_selection_statement  : (this) -> bool = n*.is_selection();
+    is_declaration          : (this) -> bool = n*.is_declaration();
+    is_return_statement     : (this) -> bool = n*.is_return();
+    is_iteration_statement  : (this) -> bool = n*.is_iteration();
+    is_using_statement      : (this) -> bool = n*.is_using();
+    is_contract             : (this) -> bool = n*.is_contract();
+    is_inspect_expression   : (this) -> bool = n*.is_inspect();
+    is_jump_statement       : (this) -> bool = n*.is_jump();
+
+    as_expression_statement : (this) -> expression_statement  = (n*.get_if<expression_statement_node>(), this);
+    as_compound_statement   : (this) -> compound_statement    = (n*.get_if<compound_statement_node>(), this);
+    as_selection_statement  : (this) -> selection_statement   = selection_statement  (n*.get_if<selection_statement_node>(), this);
+    as_declaration          : (this) -> declaration           = declaration(n*.get_if<declaration_node>(), this);
+    as_return_statement     : (this) -> return_statement      = return_statement     (n*.get_if<return_statement_node>(), this);
+    //as_iteration_statement  : (this) -> iteration_statement   = iteration_statement  (n*.get_if<iteration_statement_node>(), this);
+    //as_using_statement      : (this) -> using_statement       = using_statement      (n*.get_if<using_statement_node>(), this);
+    //as_contract             : (this) -> contract              = contract             (n*.get_if<contract_node>(), this);
+    //as_inspect_expression   : (this) -> inspect_expression    = inspect_expression   (n*.get_if<inspect_expression_node>(), this);
+    //as_jump_statement       : (this) -> jump_statement        = jump_statement       (n*.get_if<jump_statement_node>(), this);
+
+    to_string: (this) -> std::string = n*.to_string();
+}
+
+
+//-----------------------------------------------------------------------
+//  Expression statements
+//
+expression_statement: @copy_constructible type =
+{
+    this: reflection_base<expression_statement_node> = ();
+
+    operator=: (
+        out this,
+        n_: *expression_statement_node,
+        s : compiler_services
+    )
+    = {
+        reflection_base<expression_statement_node> = (n_, s);
+    }
+
+    get_expression: (this) -> expression  = (n*.expr.get(), this);
+
+    to_string     : (this) -> std::string = n*.to_string();
+}
+
+
+//-----------------------------------------------------------------------
+//  Compound statements
+//
+compound_statement: @copy_constructible type =
+{
+    this: reflection_base<compound_statement_node> = ();
+
+    operator=: (
+        out this,
+        n_: *compound_statement_node,
+        s : compiler_services
+    )
+    = {
+        reflection_base<compound_statement_node> = (n_, s);
+    }
+
+    get_statements: (this)
+        -> std::vector<statement>
+    = {
+        ret: std::vector<statement> = ();
+        for n*.get_statements() do (stmt) {
+            _ = ret.emplace_back( stmt, this );
+        }
+        return ret;
+    }
+
+    add_statement: (inout this, source: std::string_view, before_position: int = 0)
+    = {
+        stmt := parse_statement(source);
+        if !(stmt as bool) {
+            error("the provided source string is not a valid statement");
+            return;
+        }
+        require( n*.add_statement(move stmt, before_position),
+                 std::string("unexpected error while attempting to add statement:\n") + source );
+    }
+}
+
+
+//-----------------------------------------------------------------------
+//  Selection statements
+//
+selection_statement: @copy_constructible type =
+{
+    this: reflection_base<selection_statement_node> = ();
+
+    operator=: (
+        out this,
+        n_: *selection_statement_node,
+        s : compiler_services
+    )
+    = {
+        reflection_base<selection_statement_node> = (n_, s);
+    }
+
+    has_false_branch_in_source_code: (this) -> bool = n*.has_false_branch_in_source_code();
+    has_false_branch               : (this) -> bool = n*.has_false_branch();
+
+    get_identifier  : (this) -> std::string_view      = n*.get_identifier()*.as_string_view();
+    get_expression  : (this) -> logical_or_expression = (n*.get_expression  (), this);
+    get_true_branch : (this) -> compound_statement    = (n*.get_true_branch (), this);
+    get_false_branch: (this) -> compound_statement    = (n*.get_false_branch(), this);
+}
+
+
+//-----------------------------------------------------------------------
+//  Return statements
+//
+return_statement: @copy_constructible type =
+{
+    this: reflection_base<return_statement_node> = ();
+
+    operator=: (
+        out this,
+        n_: *return_statement_node,
+        s : compiler_services
+    )
+    = {
+        reflection_base<return_statement_node> = (n_, s);
+    }
+
+    has_expression: (this) -> bool       = n*.has_expression();
+
+    get_expression: (this) -> expression = (n*.get_expression(), this);
 }
 
 
@@ -2003,247 +2366,716 @@ noisy: (t: meta::type_declaration) =
 
 //-----------------------------------------------------------------------
 //
-//  Temporary: intra-function reflection test case
+//  For reflection test cases
 //
-debug_visit_functions: (inout t: meta::type_declaration) =
+sample_print: (s: std::string_view, indent: i32) =
 {
-    for t.get_members()
-    do  (m)
-    if  m.is_function()
+    std::cout
+        << pre(indent)
+        << s
+        << "\n";
+}
+
+
+//-----------------------------------------------------------------------
+//
+//  sample_traverser serves two purposes:
+// 
+//      - infrastructure for writing reflection API test cases
+// 
+//      - a sample for how code can use the reflection API, notably
+//        for reflecting on function bodies (statements, expressions)
+//
+
+sample_traverser: (decl: meta::declaration, indent: i32) =
+{
+    sample_print("Declaration: (decl.name())$", indent);
+
+    if decl.is_function() {
+        sample_traverser(decl.as_function(), indent+1);
+    }
+
+    if decl.is_object() {
+        sample_traverser(decl.as_object(), indent+1);
+    }
+
+    if decl.is_type() {
+        sample_traverser(decl.as_type(), indent+1);
+    }
+
+    // ...
+    // ... extend as desired to namespace, alias, etc.
+    // ...
+}
+
+
+sample_traverser: (f: meta::function_declaration, indent: i32 = 0) =
+{
+    sample_print("Function: (f.name())$", indent+1);
+
+    parameters := f.get_parameters();
+    if !parameters.empty() {
+        sample_print("Parameters:", indent+2);
+        for parameters do (param) {
+            sample_traverser(param, indent+3);
+        }
+    }
+
+    returns := f.get_returns();
+    if !returns.empty() {
+        sample_print("Returns:", indent+2);
+        for returns do (param) {
+            sample_traverser(param, indent+3);
+        }
+    }
+
+    sample_print("Body:", indent+2);
+    if !f.has_compound_body() {
+        sample_traverser(f.get_body(), indent+3);
+    }
+    else {
+        sample_traverser(f.get_compound_body(), indent+3);
+    }
+}
+
+
+sample_traverser: (o: meta::object_declaration, indent: i32) =
+{
+    sample_print("Object: name (o.name())$, type (o.type())$", indent);
+    if o.has_initializer() {
+        sample_print("Initializer:", indent+1);
+        sample_traverser(o.get_initializer(), indent+2);
+    }
+}
+
+
+sample_traverser: (t: meta::type_declaration, indent: i32 = 0) =
+{
+    sample_print("Type: (t.name())$", indent);
+
+    for t.get_members() do (m) {
+        sample_traverser(m, indent+1);
+    }
+}
+
+
+sample_traverser: (stmt: meta::statement, indent: i32) =
+{
+    if stmt.is_expression_statement() {
+        sample_traverser(stmt.as_expression_statement().get_expression(), indent);
+    }
+
+    if stmt.is_compound_statement() {
+        sample_traverser(stmt.as_compound_statement(), indent);
+    }
+
+    if stmt.is_selection_statement()
     {
-        mf := m.as_function();
+        sel := stmt.as_selection_statement();
+        sample_print("(sel.get_identifier())$ statement", indent);
 
-        //  Print name and signature info
+        sample_print("condition:", indent+1);
+        sample_traverser(sel.get_expression(), indent+2);
 
-        std::cout << "Function: (mf.name())$\n";
-
-        for mf.get_parameters() do (param) {
-            std::cout << "    Parameter: name (param.name())$, type (param.type())$\n";
+        sample_print("true branch:", indent+1);
+        sample_traverser(sel.get_true_branch(), indent+2);
+        
+        if sel.has_false_branch() {
+            sample_print("false branch:", indent+1);
+            sample_traverser(sel.get_false_branch(), indent+2);
         }
+    }
 
-        for mf.get_returns() do (param) {
-            std::cout << "    Return: name (param.name())$, type (param.type())$\n";
-        }
+    if stmt.is_declaration() {
+        sample_traverser(stmt.as_declaration(), indent+1);
+    }
 
-        //  Now the body - unless it's a single statement, skip those for now
+    if stmt.is_return_statement() {
+        sample_traverser(stmt.as_return_statement(), indent+1);
+    }
 
-        if !mf.has_compound_body() {
-            std::cout << "    Body: A single statement (skipping further detail)\n";
-            return;
-        }
+    // TODO:
+    //  iteration
+    //  using
+    //  contract
+    //  inspect
+    //  jump
+}
 
-        std::cout << "    Body:\n";
 
-        next_statement: for mf.get_compound_body().get_statements() do (stmt)
+sample_traverser: (stmt: meta::compound_statement, indent: i32) =
+{
+    stmts := stmt.get_statements();
+
+    if stmts.empty() {
+        sample_print("compound statement (empty)", indent);
+        return;
+    }
+
+    // Else
+    sample_print("compound statement", indent);
+    for stmts do (stmt2) {
+        sample_traverser(stmt2, indent+1);
+    }
+}
+
+
+sample_traverser: (stmt: meta::return_statement, indent: i32) =
+{
+    sample_print("return statement", indent);
+    if stmt.has_expression() {
+        sample_print("expression", indent+1);
+        sample_traverser(stmt.get_expression(), indent+2);
+    }
+}
+
+
+sample_traverser: (expr: meta::expression, indent: i32) =
+{
+    //  An expression has other shortcuts to query deeper properties,
+    //  but let's just traverse all the nested grammer elements to
+    //  show how that traversal works
+
+    //  The expression's basic payload is just an assignment expression
+    sample_traverser(expr.as_assignment_expression(), indent);
+}
+
+
+sample_traverser: (binexpr: meta::assignment_expression, indent: i32) =
+{
+    terms := binexpr.get_terms();
+    assert(!terms.empty());
+
+    //  If this has only one term, it's not an actual assignment,
+    //  it's holding a lower grammar production so go traverse that
+    if terms.ssize() == 1 {
+        sample_traverser(terms.front().get_term(), indent);
+    }
+
+    //  Else we're at an actual binary expression with a rhs
+    else {
+        sample_print("assignment", indent);
+
+        (copy first := true)
+        for terms
+        do  (term)
         {
-            if stmt.is_expression_statement()
-            {
-                expr := stmt.as_expression_statement().get_expression();
-                if expr.is_simple_assignment()
-                {
-                    std::cout << "    simple assignment statement\n";
+            if !first {
+                sample_print("op: (term.get_op())$", indent+1);
+            }
+            first = false;
+            sample_print("term:", indent+1);
+            sample_traverser(term.get_term(), indent+2);
+        }
+    }
+}
 
-                    //  If this is not an assignment to a parameter or return object, skip it
-                    lhs_rhs := expr.get_lhs_rhs_if_simple_assignment();
-                    lhs     := lhs_rhs.lhs.get_first_token_ignoring_this();
-                    if !mf.has_parameter_or_return_named(lhs)
-                    {
-                        std::cout << "        assignment to a parameter or return object (skipping further detail)\n";
 
-                        continue next_statement;
-                    }
+sample_traverser: (binexpr: meta::logical_or_expression, indent: i32) =
+{
+    terms := binexpr.get_terms();
+    assert(!terms.empty());
 
-                    //assignment := expr.get_assignment_expression();
+    //  If this has only one term, it's not an actual logical-or,
+    //  it's holding a lower grammar production so go traverse that
+    if terms.ssize() == 1 {
+        sample_traverser(terms.front().get_term(), indent);
+    }
 
-                    ////  Cpp2 doesn't allow chained assignment, so rhs must be a single logical_or_expression
-                    //assignment_terms := assignment.get_terms();
-                    //if assignment_terms.ssize() != 2 {
-                    //    m.error( "an assignment must have exactly one right-hand side expression" );
-                    //}
+    //  Else we're at an actual binary expression with a rhs
+    else {
+        sample_print("logical-or", indent);
 
-                    ////  Now we handle sequences of binary "expr1 @ expr2 @ ..." where each
-                    ////  @ is one of a list of operators at the same grammar precedence
+        (copy first := true)
+        for terms
+        do  (term)
+        {
+            if !first {
+                sample_print("op: (term.get_op())$", indent+1);
+            }
+            first = false;
+            sample_print("term:", indent+1);
+            sample_traverser(term.get_term(), indent+2);
+        }
+    }
+}
 
-                    ////  Handle binary ||
-                    //logical_or_terms := assignment_terms[1].get_term().get_terms();
-                    //if logical_or_terms.ssize() > 1
-                    //{
-                    //    std::cout << "        logical or with terms:\n";
-                    //    for logical_or_terms do (term) {
-                    //        std::cout << "            " << term.get_term().to_string() + '\n';
-                    //    }
 
-                    //    continue next_statement;
-                    //}
+sample_traverser: (binexpr: meta::logical_and_expression, indent: i32) =
+{
+    terms := binexpr.get_terms();
+    assert(!terms.empty());
 
-                    ////  Handle binary &&
-                    //if logical_or_terms.ssize() != 1 {
-                    //    m.error( "ICE: there should be exactly one logical or term here" );
-                    //}
-                    //logical_and_terms := logical_or_terms.front().get_term().get_terms();
-                    //if logical_and_terms.ssize() > 1
-                    //{
-                    //    std::cout << "        logical and with terms:\n";
-                    //    for logical_and_terms do (term) {
-                    //        std::cout << "            " << term.get_term().to_string() + '\n';
-                    //    }
+    //  If this has only one term, it's not an actual logical-and,
+    //  it's holding a lower grammar production so go traverse that
+    if terms.ssize() == 1 {
+        sample_traverser(terms.front().get_term(), indent);
+    }
 
-                    //    continue next_statement;
-                    //}
+    //  Else we're at an actual binary expression with a rhs
+    else {
+        sample_print("logical-and", indent);
 
-                    ////  Handle binary |
-                    //if logical_and_terms.ssize() != 1 {
-                    //    m.error( "ICE: there should be exactly one logical and term here" );
-                    //}
-                    //bit_or_terms := logical_and_terms.front().get_term().get_terms();
-                    //if bit_or_terms.ssize() > 1
-                    //{
-                    //    std::cout << "        bit or with terms:\n";
-                    //    for bit_or_terms do (term) {
-                    //        std::cout << "            " << term.get_term().to_string() + '\n';
-                    //    }
+        (copy first := true)
+        for terms
+        do  (term)
+        {
+            if !first {
+                sample_print("op: (term.get_op())$", indent+1);
+            }
+            first = false;
+            sample_print("term:", indent+1);
+            sample_traverser(term.get_term(), indent+2);
+        }
+    }
+}
 
-                    //    continue next_statement;
-                    //}
 
-                    ////  Handle binary ^
-                    //if bit_or_terms.ssize() != 1 {
-                    //    m.error( "ICE: there should be exactly one bit or term here" );
-                    //}
-                    //bit_xor_terms := bit_or_terms.front().get_term().get_terms();
-                    //if bit_xor_terms.ssize() > 1
-                    //{
-                    //    std::cout << "        bit xor with terms:\n";
-                    //    for bit_xor_terms do (term) {
-                    //        std::cout << "            " << term.get_term().to_string() + '\n';
-                    //    }
+sample_traverser: (binexpr: meta::bit_or_expression, indent: i32) =
+{
+    terms := binexpr.get_terms();
+    assert(!terms.empty());
 
-                    //    continue next_statement;
-                    //}
+    //  If this has only one term, it's not an actual bit-or,
+    //  it's holding a lower grammar production so go traverse that
+    if terms.ssize() == 1 {
+        sample_traverser(terms.front().get_term(), indent);
+    }
 
-                    ////  Handle binary &
-                    //if bit_xor_terms.ssize() != 1 {
-                    //    m.error( "ICE: there should be exactly one bit xor term here" );
-                    //}
-                    //bit_and_terms := bit_xor_terms.front().get_term().get_terms();
-                    //if bit_and_terms.ssize() > 1
-                    //{
-                    //    std::cout << "        bit and with terms:\n";
-                    //    for bit_and_terms do (term) {
-                    //        std::cout << "            " << term.get_term().to_string() + '\n';
-                    //    }
+    //  Else we're at an actual binary expression with a rhs
+    else {
+        sample_print("bit-or", indent);
 
-                    //    continue next_statement;
-                    //}
+        (copy first := true)
+        for terms
+        do  (term)
+        {
+            if !first {
+                sample_print("op: (term.get_op())$", indent+1);
+            }
+            first = false;
+            sample_print("term:", indent+1);
+            sample_traverser(term.get_term(), indent+2);
+        }
+    }
+}
 
-                    ////  Handle binary == and !=
-                    //if bit_and_terms.ssize() != 1 {
-                    //    m.error( "ICE: there should be exactly one bit and term here" );
-                    //}
-                    //equality_terms := bit_and_terms.front().get_term().get_terms();
-                    //if equality_terms.ssize() > 1
-                    //{
-                    //    std::cout << "        equality comparison with terms:\n";
-                    //    for equality_terms do (term) {
-                    //        std::cout << "            " << term.get_term().to_string() + '\n';
-                    //    }
 
-                    //    continue next_statement;
-                    //}
+sample_traverser: (binexpr: meta::bit_xor_expression, indent: i32) =
+{
+    terms := binexpr.get_terms();
+    assert(!terms.empty());
 
-                    ////  Handle binary < > <= >=
-                    //if equality_terms.ssize() != 1 {
-                    //    m.error( "ICE: there should be exactly one equality term here" );
-                    //}
-                    //relational_terms := equality_terms.front().get_term().get_terms();
-                    //if relational_terms.ssize() > 1
-                    //{
-                    //    std::cout << "        relational comparison with terms:\n";
-                    //    for relational_terms do (term) {
-                    //        std::cout << "            " << term.get_term().to_string() + '\n';
-                    //    }
+    //  If this has only one term, it's not an actual bit-xor,
+    //  it's holding a lower grammar production so go traverse that
+    if terms.ssize() == 1 {
+        sample_traverser(terms.front().get_term(), indent);
+    }
 
-                    //    continue next_statement;
-                    //}
+    //  Else we're at an actual binary expression with a rhs
+    else {
+        sample_print("bit-xor", indent);
 
-                    ////  Handle binary <=>
-                    //if relational_terms.ssize() != 1 {
-                    //    m.error( "ICE: there should be exactly one relational term here" );
-                    //}
-                    //compare_terms := relational_terms.front().get_term().get_terms();
-                    //if compare_terms.ssize() > 1
-                    //{
-                    //    std::cout << "        spaceship comparison with terms:\n";
-                    //    for compare_terms do (term) {
-                    //        std::cout << "            " << term.get_term().to_string() + '\n';
-                    //    }
+        (copy first := true)
+        for terms
+        do  (term)
+        {
+            if !first {
+                sample_print("op: (term.get_op())$", indent+1);
+            }
+            first = false;
+            sample_print("term:", indent+1);
+            sample_traverser(term.get_term(), indent+2);
+        }
+    }
+}
 
-                    //    continue next_statement;
-                    //}
 
-                    ////  Handle binary << and >>
-                    //if compare_terms.ssize() != 1 {
-                    //    m.error( "ICE: there should be exactly one compare term here" );
-                    //}
-                    //shift_terms := compare_terms.front().get_term().get_terms();
-                    //if shift_terms.ssize() > 1
-                    //{
-                    //    std::cout << "        shift with terms:\n";
-                    //    for shift_terms do (term) {
-                    //        std::cout << "            " << term.get_term().to_string() + '\n';
-                    //    }
+sample_traverser: (binexpr: meta::bit_and_expression, indent: i32) =
+{
+    terms := binexpr.get_terms();
+    assert(!terms.empty());
 
-                    //    continue next_statement;
-                    //}
+    //  If this has only one term, it's not an actual bit-and,
+    //  it's holding a lower grammar production so go traverse that
+    if terms.ssize() == 1 {
+        sample_traverser(terms.front().get_term(), indent);
+    }
 
-                    ////  Handle binary + and -
-                    //if shift_terms.ssize() != 1 {
-                    //    m.error( "ICE: there should be exactly one shift term here" );
-                    //}
-                    //additive_terms := shift_terms.front().get_term().get_terms();
-                    //if additive_terms.ssize() > 1
-                    //{
-                    //    std::cout << "        addition with terms:\n";
-                    //    for additive_terms do (term) {
-                    //        std::cout << "            " << term.get_term().to_string() + '\n';
-                    //    }
+    //  Else we're at an actual binary expression with a rhs
+    else {
+        sample_print("bit-and", indent);
 
-                    //    continue next_statement;
-                    //}
+        (copy first := true)
+        for terms
+        do  (term)
+        {
+            if !first {
+                sample_print("op: (term.get_op())$", indent+1);
+            }
+            first = false;
+            sample_print("term:", indent+1);
+            sample_traverser(term.get_term(), indent+2);
+        }
+    }
+}
 
-                    ////  Handle binary * / %
-                    //if additive_terms.ssize() != 1 {
-                    //    m.error( "ICE: there should be exactly one additive term here" );
-                    //}
-                    //multiplicative_terms := additive_terms.front().get_term().get_terms();
-                    //if multiplicative_terms.ssize() > 1
-                    //{
-                    //    std::cout << "        multiplication with terms:\n";
-                    //    for multiplicative_terms do (term) {
-                    //        std::cout << "            " << term.get_term().to_string() + '\n';
-                    //    }
 
-                    //    continue next_statement;
-                    //}
+sample_traverser: (binexpr: meta::equality_expression, indent: i32) =
+{
+    terms := binexpr.get_terms();
+    assert(!terms.empty());
 
-                    ////  Handle is and as
-                    //if multiplicative_terms.ssize() != 1 {
-                    //    m.error( "ICE: there should be exactly one multiplicative term here" );
-                    //}
-                    //is_as_terms := additive_terms.front().get_term().get_terms();
-                    //if is_as_terms.ssize() > 1
-                    //{
-                    //    std::cout << "        is/as with terms:\n";
-                    //    for is_as_terms do (term) {
-                    //        std::cout << "            " << term.get_term().to_string() + '\n';
-                    //    }
+    //  If this has only one term, it's not an actual equality,
+    //  it's holding a lower grammar production so go traverse that
+    if terms.ssize() == 1 {
+        sample_traverser(terms.front().get_term(), indent);
+    }
 
-                    //    continue next_statement;
-                    //}
+    //  Else we're at an actual binary expression with a rhs
+    else {
+        sample_print("equality", indent);
 
-                }
+        (copy first := true)
+        for terms
+        do  (term)
+        {
+            if !first {
+                sample_print("op: (term.get_op())$", indent+1);
+            }
+            first = false;
+            sample_print("term:", indent+1);
+            sample_traverser(term.get_term(), indent+2);
+        }
+    }
+}
+
+
+sample_traverser: (binexpr: meta::relational_expression, indent: i32) =
+{
+    terms := binexpr.get_terms();
+    assert(!terms.empty());
+
+    //  If this has only one term, it's not an actual relational,
+    //  it's holding a lower grammar production so go traverse that
+    if terms.ssize() == 1 {
+        sample_traverser(terms.front().get_term(), indent);
+    }
+
+    //  Else we're at an actual binary expression with a rhs
+    else {
+        sample_print("relational", indent);
+
+        (copy first := true)
+        for terms
+        do  (term)
+        {
+            if !first {
+                sample_print("op: (term.get_op())$", indent+1);
+            }
+            first = false;
+            sample_print("term:", indent+1);
+            sample_traverser(term.get_term(), indent+2);
+        }
+    }
+}
+
+
+sample_traverser: (binexpr: meta::compare_expression, indent: i32) =
+{
+    terms := binexpr.get_terms();
+    assert(!terms.empty());
+
+    //  If this has only one term, it's not an actual compare,
+    //  it's holding a lower grammar production so go traverse that
+    if terms.ssize() == 1 {
+        sample_traverser(terms.front().get_term(), indent);
+    }
+
+    //  Else we're at an actual binary expression with a rhs
+    else {
+        sample_print("compare", indent);
+
+        (copy first := true)
+        for terms
+        do  (term)
+        {
+            if !first {
+                sample_print("op: (term.get_op())$", indent+1);
+            }
+            first = false;
+            sample_print("term:", indent+1);
+            sample_traverser(term.get_term(), indent+2);
+        }
+    }
+}
+
+
+sample_traverser: (binexpr: meta::shift_expression, indent: i32) =
+{
+    terms := binexpr.get_terms();
+    assert(!terms.empty());
+
+    //  If this has only one term, it's not an actual shift,
+    //  it's holding a lower grammar production so go traverse that
+    if terms.ssize() == 1 {
+        sample_traverser(terms.front().get_term(), indent);
+    }
+
+    //  Else we're at an actual binary expression with a rhs
+    else {
+        sample_print("shift", indent);
+
+        (copy first := true)
+        for terms
+        do  (term)
+        {
+            if !first {
+                sample_print("op: (term.get_op())$", indent+1);
+            }
+            first = false;
+            sample_print("term:", indent+1);
+            sample_traverser(term.get_term(), indent+2);
+        }
+    }
+}
+
+
+sample_traverser: (binexpr: meta::additive_expression, indent: i32) =
+{
+    terms := binexpr.get_terms();
+    assert(!terms.empty());
+
+    //  If this has only one term, it's not an actual additive,
+    //  it's holding a lower grammar production so go traverse that
+    if terms.ssize() == 1 {
+        sample_traverser(terms.front().get_term(), indent);
+    }
+
+    //  Else we're at an actual binary expression with a rhs
+    else {
+        sample_print("additive", indent);
+
+        (copy first := true)
+        for terms
+        do  (term)
+        {
+            if !first {
+                sample_print("op: (term.get_op())$", indent+1);
+            }
+            first = false;
+            sample_print("term:", indent+1);
+            sample_traverser(term.get_term(), indent+2);
+        }
+    }
+}
+
+
+sample_traverser: (binexpr: meta::multiplicative_expression, indent: i32) =
+{
+    terms := binexpr.get_terms();
+    assert(!terms.empty());
+
+    //  If this has only one term, it's not an actual multiplicative,
+    //  it's holding a lower grammar production so go traverse that
+    if terms.ssize() == 1 {
+        sample_traverser(terms.front().get_term(), indent);
+    }
+
+    //  Else we're at an actual binary expression with a rhs
+    else {
+        sample_print("multiplicative", indent);
+
+        (copy first := true)
+        for terms
+        do  (term)
+        {
+            if !first {
+                sample_print("op: (term.get_op())$", indent+1);
+            }
+            first = false;
+            sample_print("term:", indent+1);
+            sample_traverser(term.get_term(), indent+2);
+        }
+    }
+}
+
+
+sample_traverser: (isas: meta::is_as_expression, indent: i32) =
+{
+    terms := isas.get_terms();
+
+    //  If this has no additional terms, it's not an actual is-as,
+    //  it's holding a lower grammar production so go traverse that
+    if terms.empty() {
+        sample_traverser(isas.get_expression(), indent);
+    }
+
+    //  Else we're at an actual is-as expression with a rhs
+    else {
+        sample_print("is-as expression", indent);
+
+        sample_print("expression", indent+1);
+        sample_traverser(isas.get_expression(), indent+2);
+
+        for terms do (term) {
+            sample_print("op: (term.get_op())$", indent+1);
+            sample_print("term:", indent+1);
+            sample_traverser(term.get_expr(), indent+2);
+        }
+    }
+}
+
+
+sample_traverser: (exprs: meta::expression_list, indent: i32) =
+{
+    if exprs.is_empty() {
+        sample_print("()", indent);
+    }
+    else {
+        sample_print("(", indent);
+        for exprs.get_expressions() do (expr) {
+            sample_traverser(expr, indent+1);
+        }
+        sample_print(")", indent);
+    }
+}
+
+
+sample_traverser: (prefix: meta::prefix_expression, indent: i32) =
+{
+    ops := prefix.get_ops();
+
+    //  If this has no additional ops, it's not a naked prefix expr,
+    //  it's holding a lower grammar production so go traverse that
+    if ops.empty() {
+        sample_traverser(prefix.get_postfix_expression(), indent);
+    }
+
+    //  Else we're at an actual prefix expression with ops
+    else {
+        sample_print("prefix expression", indent);
+
+        for ops do (op) {
+            sample_print("op: (op)$", indent+1);
+        }
+
+        sample_print("expression", indent+1);
+        sample_traverser(prefix.get_postfix_expression(), indent+2);
+    }
+}
+
+
+sample_traverser: (postfix: meta::postfix_expression, indent: i32) =
+{
+    terms := postfix.get_terms();
+
+    //  If this has no additional terms, it's not a naked postfix expr,
+    //  it's holding a lower grammar production so go traverse that
+    if terms.empty() {
+        sample_traverser(postfix.get_primary_expression(), indent);
+    }
+
+    //  Else we're at an actual postfix expression with ops
+    else {
+        sample_print("postfix expression", indent);
+
+        sample_print("expression", indent+1);
+        sample_traverser(postfix.get_primary_expression(), indent+2);
+
+        for terms do (term) {
+            sample_print("op: (term.get_op())$", indent+1);
+            if term.is_id_expression() {
+                sample_traverser(term.get_id_expression(), indent+1);
+            }
+            else if term.is_expression_list() {
+                sample_traverser(term.get_expression_list(), indent+1);
+            }
+            else if term.is_expression() {
+                sample_traverser(term.get_expression(), indent+1);
             }
         }
+    }
+}
+
+
+sample_traverser: (uid: meta::unqualified_id, indent: i32) =
+{
+    if uid.is_identifier() {
+        sample_print(uid.get_identifier(), indent);
+    }
+    else {
+        sample_print(uid.to_string(), indent+1);
+    }
+}
+
+
+sample_traverser: (qid: meta::qualified_id, indent: i32) =
+{
+    (copy first := true)
+    for qid.get_terms()
+    do  (term)
+    {
+        if !first {
+            sample_print("op: (term.get_op())$", indent+1);
+        }
+        first = false;
+        sample_print("unqualified:", indent+1);
+        sample_traverser(term.get_unqualified(), indent+2);
+    }
+}
+
+
+sample_traverser: (tid: meta::type_id, indent: i32) =
+{
+    if tid.is_postfix_expression() {
+        sample_traverser(tid.as_postfix_expression(), indent);
+    }
+    else if tid.is_qualified_id() {
+        sample_traverser(tid.as_qualified_id(), indent);
+    }
+    else if tid.is_unqualified_id() {
+        sample_traverser(tid.as_unqualified_id(), indent);
+    }
+    else {
+        sample_print(tid.to_string(), indent);
+    }
+}
+
+
+sample_traverser: (primary: meta::primary_expression, indent: i32) =
+{
+    if primary.is_identifier() {
+        sample_print(primary.as_identifier(), indent+1);
+    }
+    else if primary.is_expression_list() {
+        sample_traverser(primary.as_expression_list(), indent+1);
+    }
+    else if primary.is_literal() {
+        sample_print(primary.as_literal(), indent+1);
+    }
+    else if primary.is_declaration() {
+        sample_traverser(primary.as_declaration(), indent+1);
+    }
+    else {
+        sample_print("TODO: other primary expression", indent+1);
+    }
+}
+
+
+sample_traverser: (idexpr: meta::id_expression, indent: i32) =
+{
+    if idexpr.is_identifier() {
+        sample_print(idexpr.as_identifier(), indent+1);
+    }
+    else if idexpr.is_qualified() {
+        sample_traverser(idexpr.as_qualified(), indent+1);
+    }
+    else if idexpr.is_unqualified() {
+        sample_traverser(idexpr.as_unqualified(), indent+1);
+    }
+    else {
+        sample_print("TODO: other id expression", indent+1);
     }
 }
 
@@ -5438,6 +6270,9 @@ apply_metafunctions: (
         }
         else if name == "regex" {
             regex_gen( rtype );
+        }
+        else if name == "sample_traverser" {
+            sample_traverser( rtype );
         }
         else {
             error( "unrecognized metafunction name: " + name );

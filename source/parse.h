@@ -1,5 +1,5 @@
 
-//  Copyright 2022-2024 Herb Sutter
+//  Copyright 2022-2025 Herb Sutter
 //  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //  
 //  Part of the Cppfront Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -166,6 +166,12 @@ struct primary_expression_node
 
     auto get_expression_list() const
         -> expression_list_node const*;
+
+    auto is_declaration() const
+        -> bool;
+
+    auto get_declaration()
+        -> declaration_node*;
 
     auto is_literal() const
         -> bool;
@@ -604,6 +610,13 @@ struct expression_node
         return expr->is_fold_expression();
     }
 
+    auto get_assignment_expression() const
+        -> assignment_expression_node*
+    {
+        assert(expr);
+        return expr.get();
+    }
+
     auto is_standalone_expression() const
         -> bool;
 
@@ -874,6 +887,21 @@ auto primary_expression_node::get_expression_list() const
 {
     if (is_expression_list()) {
         return std::get<expression_list>(expr).get();
+    }
+    return {};
+}
+
+auto primary_expression_node::is_declaration() const
+    -> bool
+{
+    return expr.index() == declaration;
+}
+
+auto primary_expression_node::get_declaration()
+    -> declaration_node *
+{
+    if (is_declaration()) {
+        return std::get<declaration>(expr).get();
     }
     return {};
 }
@@ -1298,6 +1326,38 @@ struct template_argument
         std::unique_ptr<type_id_node>
     > arg;
 
+    auto is_expression() const
+        -> bool
+    {
+        return arg.index() == expression;
+    }
+
+    auto is_type_id() const
+        -> bool
+    {
+        return arg.index() == type_id;
+    }
+
+    auto get_expression() const
+        -> expression_node*
+    {
+        if (is_expression()) {
+            return std::get<expression>(arg).get();
+        }
+        // Else
+        return nullptr;
+    }
+
+    auto get_type_id() const
+        -> type_id_node*
+    {
+        if (is_type_id()) {
+            return std::get<type_id>(arg).get();
+        }
+        // Else
+        return nullptr;
+    }
+
     // The type needs to be movable
     // The copy ctor+operator are implicitly deleted due to the std::unique_ptr member
     // Because a forward-declared type is used in a std::unique_ptr as a member an out-of-line dtor is necessary
@@ -1312,6 +1372,9 @@ struct template_argument
 
     auto to_string() const
         -> std::string;
+
+    auto position() const
+        -> source_position;
 };
 
 // Used by functions that must return a reference to an empty arg list
@@ -1508,10 +1571,84 @@ struct type_id_node
     // type(s) used in a std::unique_ptr as a member
     ~type_id_node();
 
+    auto is_postfix_expression() const
+        -> bool
+    {
+        return id.index() == postfix;
+    }
+
+    auto get_postfix_expression() const
+        -> postfix_expression_node*
+    {
+        if (is_postfix_expression()) {
+            return std::get<postfix>(id).get();
+        }
+        // Else
+        return nullptr;
+    }
+
+    auto is_qualified_id() const
+        -> bool
+    {
+        return id.index() == qualified;
+    }
+
+    auto get_qualified_id() const
+        -> qualified_id_node*
+    {
+        if (is_qualified_id()) {
+            return std::get<qualified>(id).get();
+        }
+        // Else
+        return nullptr;
+    }
+
+    auto is_unqualified_id() const
+        -> bool
+    {
+        return id.index() == unqualified;
+    }
+
+    auto get_unqualified_id() const
+        -> unqualified_id_node*
+    {
+        if (is_unqualified_id()) {
+            return std::get<unqualified>(id).get();
+        }
+        // Else
+        return nullptr;
+    }
+
     auto is_function_typeid() const
         -> bool
     {
         return id.index() == function;
+    }
+
+    auto get_function_typeid() const
+        -> function_type_node*
+    {
+        if (is_function_typeid()) {
+            return std::get<function>(id).get();
+        }
+        // Else
+        return nullptr;
+    }
+
+    auto is_keyword() const
+        -> bool
+    {
+        return id.index() == keyword;
+    }
+
+    auto get_keyword() const
+        -> token const*
+    {
+        if (is_keyword()) {
+            return std::get<keyword>(id);
+        }
+        // Else
+        return nullptr;
     }
 
     auto is_wildcard() const
@@ -1645,6 +1782,21 @@ auto template_argument::to_string() const
     }
     // else
     return {};
+}
+
+
+auto template_argument::position() const
+    -> source_position
+{
+    if (is_expression()) {
+        return get_expression()->position();
+    }
+    else if (is_type_id()) {
+        return get_type_id()->position();
+    }
+    else {
+        return source_position{};
+    }
 }
 
 
@@ -1887,10 +2039,30 @@ struct id_expression_node
         return id.index() == qualified;
     }
 
+    auto get_qualified_id() const
+        -> qualified_id_node*
+    {
+        if (auto pqid = std::get_if<qualified>(&id)) {
+            return (*pqid).get();
+        }
+        // Else
+        return nullptr;
+    }
+
     auto is_unqualified() const
         -> bool
     {
         return id.index() == unqualified;
+    }
+
+    auto get_unqualified_id() const
+        -> unqualified_id_node*
+    {
+        if (auto puid = std::get_if<unqualified>(&id)) {
+            return (*puid).get();
+        }
+        // Else
+        return nullptr;
     }
 
     auto get_token() const
@@ -2097,7 +2269,47 @@ struct selection_statement_node
     std::unique_ptr<logical_or_expression_node> expression;
     std::unique_ptr<compound_statement_node>    true_branch;
     std::unique_ptr<compound_statement_node>    false_branch;
-    bool                                        has_source_false_branch = false;
+    bool                                        has_source_false_branch = 
+false;
+
+    auto get_identifier() const
+        -> token const*
+    {
+        assert(identifier);
+        return identifier;
+    }
+
+    auto get_expression() const
+        -> logical_or_expression_node*
+    {
+        assert(expression);
+        return expression.get();
+    }
+
+    auto has_false_branch_in_source_code() const
+        -> bool
+    {
+        return has_source_false_branch;
+    }
+
+    auto has_false_branch() const
+        -> bool
+    {
+        return false_branch.get() != nullptr;
+    }
+
+    auto get_true_branch() const
+        -> compound_statement_node*
+    {
+        return true_branch.get();
+    }
+
+    auto get_false_branch() const
+        -> compound_statement_node*
+    {
+        assert(has_false_branch());
+        return false_branch.get();
+    }
 
     auto position() const
         -> source_position
@@ -2160,6 +2372,18 @@ struct return_statement_node
 {
     token const*                     identifier = {};
     std::unique_ptr<expression_node> expression;
+
+    auto has_expression() const
+        -> bool
+    {
+        return expression.get() != nullptr;
+    }
+
+    auto get_expression() const
+        -> expression_node*
+    {
+        return expression.get();
+    }
 
     auto position() const
         -> source_position
@@ -3877,16 +4101,32 @@ public:
         return ret;
     }
 
+    auto is_function_with_body() const
+        -> bool
+    {
+        return
+            is_function()
+            && initializer
+            ;
+    }
+
+    auto get_function_body() const
+        -> statement_node*
+    {
+        return initializer.get();
+    }
+
     auto is_function_with_compound_body() const
         -> bool
     {
-        return 
-            initializer 
+        return
+            is_function()
+            && initializer
             && initializer->is_compound()
             ;
     }
 
-    auto get_compound_initializer() const
+    auto get_function_compound_body() const
         -> compound_statement_node*
     {
         return initializer->get_if<compound_statement_node>();

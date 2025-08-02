@@ -1,0 +1,275 @@
+pure2-function-body-reflection.cpp2...Type: test
+  Declaration: one_liner
+      Function: one_liner
+        Parameters:
+          Object: name a, type double
+          Object: name b, type double
+          Object: name c, type double
+        Body:
+          multiplicative
+            term:
+                (
+                  additive
+                    term:
+                        a
+                    op: +
+                    term:
+                        c
+                )
+            op: *
+            term:
+                b
+  Declaration: return_list
+      Function: return_list
+        Returns:
+          Object: name r, type double
+          Object: name s, type float
+          Object: name t, type std::string
+        Body:
+          compound statement
+            assignment
+              term:
+                  r
+              op: =
+              term:
+                  42.0
+            assignment
+              term:
+                  s
+              op: =
+              term:
+                  2.71828f
+            assignment
+              term:
+                  t
+              op: =
+              term:
+                  "e times pi"
+              return statement
+  Declaration: branches
+      Function: branches
+        Parameters:
+          Object: name a, type double
+          Object: name b, type double
+          Object: name c, type double
+        Returns:
+          Object: name r, type double
+            Initializer:
+                3.14159
+        Body:
+          compound statement
+            if statement
+              condition:
+                  true
+              true branch:
+                compound statement
+                  assignment
+                    term:
+                        r
+                    op: =
+                    term:
+                      additive
+                        term:
+                            r
+                        op: +
+                        term:
+                            a
+              false branch:
+                compound statement (empty)
+            if statement
+              condition:
+                relational
+                  term:
+                    multiplicative
+                      term:
+                          a
+                      op: *
+                      term:
+                          b
+                  op: >
+                  term:
+                      c
+              true branch:
+                compound statement
+                  assignment
+                    term:
+                        r
+                    op: +=
+                    term:
+                      postfix expression
+                        expression
+                            sin
+                        op: (
+                        (
+                            b
+                        )
+              false branch:
+                compound statement
+                  assignment
+                    term:
+                        r
+                    op: =
+                    term:
+                        c
+              return statement
+  Declaration: binary_ops
+      Function: binary_ops
+        Parameters:
+          Object: name a, type double
+          Object: name b, type double
+          Object: name c, type double
+        Body:
+          compound statement
+            assignment
+              term:
+                  a
+              op: -=
+              term:
+                additive
+                  term:
+                    multiplicative
+                      term:
+                          b
+                      op: *
+                      term:
+                          c
+                  op: +
+                  term:
+                      (
+                        shift
+                          term:
+                              1
+                          op: <<
+                          term:
+                              2
+                      )
+              Declaration: test
+                Object: name test, type bool
+                  Initializer:
+                    logical-or
+                      term:
+                        logical-and
+                          term:
+                            relational
+                              term:
+                                  a
+                              op: <=
+                              term:
+                                  b
+                              op: <
+                              term:
+                                  c
+                          op: &&
+                          term:
+                              true
+                      op: ||
+                      term:
+                          false
+              Declaration: x
+                Object: name x, type _
+                  Initializer:
+                    bit-and
+                      term:
+                          1
+                      op: &
+                      term:
+                          2
+              Declaration: y
+                Object: name y, type _
+                  Initializer:
+                    bit-xor
+                      term:
+                          3
+                      op: ^
+                      term:
+                          4
+              Declaration: z
+                Object: name z, type _
+                  Initializer:
+                    bit-or
+                      term:
+                          5
+                      op: |
+                      term:
+                          6
+  Declaration: prefix
+      Function: prefix
+        Body:
+          compound statement
+              Declaration: a
+                Object: name a, type _
+                  Initializer:
+                    prefix expression
+                      op: -
+                      expression
+                          1
+              Declaration: b
+                Object: name b, type _
+                  Initializer:
+                    prefix expression
+                      op: +
+                      expression
+                          2
+            if statement
+              condition:
+                prefix expression
+                  op: !
+                  expression
+                      true
+              true branch:
+                compound statement
+                    return statement
+                      expression
+                          0
+              false branch:
+                compound statement (empty)
+              return statement
+                expression
+                  additive
+                    term:
+                        a
+                    op: +
+                    term:
+                        b
+  Declaration: postfix
+      Function: postfix
+        Parameters:
+          Object: name a, type double
+        Body:
+          compound statement
+              Declaration: ptr
+                Object: name ptr, type _
+                  Initializer:
+                    postfix expression
+                      expression
+                          a
+                      op: &
+            postfix expression
+              expression
+                  ptr
+              op: *
+              op: ++
+              op: --
+  Declaration: qualified_ids
+      Function: qualified_ids
+        Body:
+          compound statement
+              Declaration: v
+                Object: name v, type std::vector<int>
+                  Initializer:
+                      (
+                          1
+                          2
+                          3
+                      )
+              return statement
+                expression
+                  postfix expression
+                    expression
+                        v
+                    op: .
+                      ssize
+                    op: (
+                    ()
+ ok (all Cpp2, passes safety checks)
+
