@@ -365,21 +365,21 @@ function_declaration: @copy_constructible type =
     is_binary_comparison_function: (this) -> bool = n*.is_binary_comparison_function();
 
     get_parameters: (this)
-        -> std::vector<object_declaration>
+        -> std::vector<parameter_declaration>
     = {
-        ret: std::vector<object_declaration> = ();
+        ret: std::vector<parameter_declaration> = ();
         for n*.get_function_parameters() do (param) {
-            _ = ret.emplace_back( param*.declaration.get(), this );
+            _ = ret.emplace_back( param, this );
         }
         return ret;
     }
 
     get_returns: (this)
-        -> std::vector<object_declaration>
+        -> std::vector<parameter_declaration>
     = {
-        ret: std::vector<object_declaration> = ();
+        ret: std::vector<parameter_declaration> = ();
         for n*.get_function_returns() do (param) {
-            _ = ret.emplace_back( param*.declaration.get(), this );
+            _ = ret.emplace_back( param, this );
         }
         return ret;
     }
@@ -595,6 +595,32 @@ alias_declaration: @copy_constructible type =
         declaration = (n_, s);
         assert( n*.is_alias() );
     }
+}
+
+
+//-----------------------------------------------------------------------
+//  Parameter declarations
+//
+parameter_declaration: @copy_constructible type =
+{
+    this: reflection_base<parameter_declaration_node> = ();
+
+    operator=: (
+        out this,
+        n_: *parameter_declaration_node,
+        s : compiler_services
+    )
+    = {
+        reflection_base<parameter_declaration_node> = (n_, s);
+    }
+
+    get_declaration  : (this) -> object_declaration = (n*.declaration.get(), this);
+    get_passing_style: (this) -> passing_style      = n*.pass;
+
+    is_implicit: (this) -> bool = n*.mod == parameter_declaration_node::modifier::implicit ;
+    is_virtual : (this) -> bool = n*.mod == parameter_declaration_node::modifier::virtual_ ;
+    is_override: (this) -> bool = n*.mod == parameter_declaration_node::modifier::override_;
+    is_final   : (this) -> bool = n*.mod == parameter_declaration_node::modifier::final_   ;
 }
 
 
@@ -1254,7 +1280,7 @@ statement: @polymorphic_base @copy_constructible type =
     as_selection_statement  : (this) -> selection_statement   = selection_statement  (n*.get_if<selection_statement_node>(), this);
     as_declaration          : (this) -> declaration           = declaration(n*.get_if<declaration_node>(), this);
     as_return_statement     : (this) -> return_statement      = return_statement     (n*.get_if<return_statement_node>(), this);
-    //as_iteration_statement  : (this) -> iteration_statement   = iteration_statement  (n*.get_if<iteration_statement_node>(), this);
+    as_iteration_statement  : (this) -> iteration_statement   = iteration_statement  (n*.get_if<iteration_statement_node>(), this);
     //as_using_statement      : (this) -> using_statement       = using_statement      (n*.get_if<using_statement_node>(), this);
     //as_contract             : (this) -> contract              = contract             (n*.get_if<contract_node>(), this);
     //as_inspect_expression   : (this) -> inspect_expression    = inspect_expression   (n*.get_if<inspect_expression_node>(), this);
@@ -1370,6 +1396,37 @@ return_statement: @copy_constructible type =
     has_expression: (this) -> bool       = n*.has_expression();
 
     get_expression: (this) -> expression = (n*.get_expression(), this);
+}
+
+
+//-----------------------------------------------------------------------
+//  Iteration statements - for, do, while
+//
+iteration_statement: @copy_constructible type =
+{
+    this: reflection_base<iteration_statement_node> = ();
+
+    operator=: (
+        out this,
+        n_: *iteration_statement_node,
+        s : compiler_services
+    )
+    = {
+        reflection_base<iteration_statement_node> = (n_, s);
+    }
+
+    is_do   : (this) -> bool = n*.is_do   ();
+    is_while: (this) -> bool = n*.is_while();
+    is_for  : (this) -> bool = n*.is_for  ();
+    has_next: (this) -> bool = n*.has_next();
+
+    get_label             : (this) -> std::string           = n*.get_label().to_string();
+    get_next_expression   : (this) -> assignment_expression = (n*.get_next_expression(),    this);
+    get_do_while_condition: (this) -> logical_or_expression = (n*.get_do_while_condition(), this);
+    get_do_while_body     : (this) -> compound_statement    = (n*.get_do_while_body(),      this);
+    get_for_range         : (this) -> expression            = (n*.get_for_range(),          this);
+    get_for_parameter     : (this) -> parameter_declaration = (n*.get_for_parameter(),      this);
+    get_for_body          : (this) -> statement             = (n*.get_for_body(),           this);
 }
 
 
@@ -2459,6 +2516,25 @@ sample_traverser: (t: meta::type_declaration, indent: i32 = 0) =
 }
 
 
+sample_traverser: (t: meta::parameter_declaration, indent: i32 = 0) =
+{
+    sample_print("parameter:", indent);
+
+    pass := t.get_passing_style();
+    if pass == passing_style::in          { sample_print("passing style: in", indent+1 ); }
+    if pass == passing_style::in_ref      { sample_print("passing style: in_ref", indent+1 ); }
+    if pass == passing_style::copy        { sample_print("passing style: copy", indent+1 ); }
+    if pass == passing_style::inout       { sample_print("passing style: inout", indent+1 ); }
+    if pass == passing_style::out         { sample_print("passing style: out", indent+1 ); }
+    if pass == passing_style::move        { sample_print("passing style: move", indent+1 ); }
+    if pass == passing_style::forward     { sample_print("passing style: forward", indent+1 ); }
+    if pass == passing_style::forward_ref { sample_print("passing style: forward_ref", indent+1 ); }
+
+    sample_print("declaration:", indent+1);
+    sample_traverser(t.get_declaration(), indent+2);
+}
+
+
 sample_traverser: (stmt: meta::statement, indent: i32) =
 {
     if stmt.is_expression_statement() {
@@ -2494,8 +2570,11 @@ sample_traverser: (stmt: meta::statement, indent: i32) =
         sample_traverser(stmt.as_return_statement(), indent+1);
     }
 
+    if stmt.is_iteration_statement() {
+        sample_traverser(stmt.as_iteration_statement(), indent+1);
+    }
+
     // TODO:
-    //  iteration
     //  using
     //  contract
     //  inspect
@@ -2526,6 +2605,38 @@ sample_traverser: (stmt: meta::return_statement, indent: i32) =
     if stmt.has_expression() {
         sample_print("expression", indent+1);
         sample_traverser(stmt.get_expression(), indent+2);
+    }
+}
+
+
+sample_traverser: (stmt: meta::iteration_statement, indent: i32) =
+{
+    if stmt.is_do() || stmt.is_while() {
+        if stmt.is_do() {
+            sample_print("do loop:", indent);
+        }
+        else {
+            sample_print("while loop:", indent);
+        }
+        sample_print("condition:", indent+1);
+        sample_traverser(stmt.get_do_while_condition(), indent+2);
+        sample_print("body:", indent+1);
+        sample_traverser(stmt.get_do_while_body(), indent+2);
+    }
+    else {
+        assert(stmt.is_for());
+        sample_print("for loop:", indent);
+        sample_print("range:", indent+1);
+        sample_traverser(stmt.get_for_range(), indent+2);
+        sample_print("parameter:", indent+1);
+        sample_traverser(stmt.get_for_parameter(), indent+2);
+        sample_print("body:", indent+1);
+        sample_traverser(stmt.get_for_body(), indent+2);
+    }
+
+    if stmt.has_next() {
+        sample_print("next expression:", indent+1);
+        sample_traverser(stmt.get_next_expression(), indent+2);
     }
 }
 
@@ -3058,7 +3169,7 @@ sample_traverser: (primary: meta::primary_expression, indent: i32) =
         sample_traverser(primary.as_declaration(), indent+1);
     }
     else {
-        sample_print("TODO: other primary expression", indent+1);
+        sample_print(primary.to_string(), indent+1);
     }
 }
 
@@ -3075,7 +3186,7 @@ sample_traverser: (idexpr: meta::id_expression, indent: i32) =
         sample_traverser(idexpr.as_unqualified(), indent+1);
     }
     else {
-        sample_print("TODO: other id expression", indent+1);
+        sample_print(idexpr.to_string(), indent+1);
     }
 }
 
@@ -3442,8 +3553,8 @@ autodiff: (inout t: meta::type_declaration) =
         //  a) Parameters
 
         for mf.get_parameters() do (param) {
-            diff += "(param.name())$ : (param.type())$, ";
-            diff += "(param.name())$_d : (param.type())$, ";
+            diff += "(param.get_declaration().name())$ : (param.get_declaration().type())$, ";
+            diff += "(param.get_declaration().name())$_d : (param.get_declaration().type())$, ";
         }
 
         diff += ") -> (";
@@ -3451,8 +3562,8 @@ autodiff: (inout t: meta::type_declaration) =
         //  b) Returns
 
         for mf.get_returns() do (param) {
-            diff += "(param.name())$ : (param.type())$ = 1, ";
-            diff += "(param.name())$_d : (param.type())$ = 1, ";
+            diff += "(param.get_declaration().name())$ : (param.get_declaration().type())$ = 1, ";
+            diff += "(param.get_declaration().name())$_d : (param.get_declaration().type())$ = 1, ";
         }
 
         diff += ") = {";

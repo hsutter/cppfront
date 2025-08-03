@@ -2353,6 +2353,72 @@ struct iteration_statement_node
     // type(s) used in a std::unique_ptr as a member
     ~iteration_statement_node();
 
+    auto get_label() const
+        -> token const*
+    {
+        return label;
+    }
+
+    auto has_next() const
+        -> bool
+    {
+        return next_expression.get() != nullptr;
+    }
+
+    auto get_next_expression() const
+        -> assignment_expression_node*
+    {
+        return next_expression.get();
+    }
+
+    auto is_do() const
+        -> bool
+    {
+        return *identifier == "do";
+    }
+
+    auto is_while() const
+        -> bool
+    {
+        return *identifier == "while";
+    }
+
+    auto get_do_while_condition() const
+        -> logical_or_expression_node*
+    {
+        return condition.get();
+    }
+
+    auto get_do_while_body() const
+        -> compound_statement_node*
+    {
+        return statements.get();
+    }
+
+    auto is_for() const
+        -> bool
+    {
+        return *identifier == "for";
+    }
+
+    auto get_for_range() const
+        -> expression_node*
+    {
+        return range.get();
+    }
+
+    auto get_for_parameter() const
+        -> parameter_declaration_node*
+    {
+        return parameter.get();
+    }
+
+    auto get_for_body() const
+        -> statement_node*
+    {
+        return body.get();
+    }
+
     auto position() const
         -> source_position
     {
@@ -4420,13 +4486,13 @@ public:
     }
 
     auto get_function_parameters()
-        -> std::vector<parameter_declaration_node const*>
+        -> std::vector<parameter_declaration_node*>
     {
         if (!is_function()) {
             return {};
         }
 
-        auto ret = std::vector<parameter_declaration_node const*>{};
+        auto ret = std::vector<parameter_declaration_node*>{};
         for (auto& param : std::get<a_function>(type)->parameters->parameters) {
             ret.push_back( param.get() );
         }
@@ -4434,7 +4500,7 @@ public:
     }
 
     auto get_function_returns()
-        -> std::vector<parameter_declaration_node const*>
+        -> std::vector<parameter_declaration_node*>
     {
         if (!is_function()) {
             return {};
@@ -4445,7 +4511,7 @@ public:
             return {};
         }
 
-        auto ret = std::vector<parameter_declaration_node const*>{};
+        auto ret = std::vector<parameter_declaration_node*>{};
         for (auto& param : (*returns)->parameters) {
             ret.push_back( param.get() );
         }

@@ -43,12 +43,15 @@ using branches_ret = double;
 
 #line 54 "pure2-function-body-reflection.cpp2"
     public: [[nodiscard]] static auto qualified_ids() -> auto;
+
+#line 60 "pure2-function-body-reflection.cpp2"
+    public: static auto loops() -> void;
     public: test() = default;
     public: test(test const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(test const&) -> void = delete;
 
 
-#line 59 "pure2-function-body-reflection.cpp2"
+#line 71 "pure2-function-body-reflection.cpp2"
 };
 
 auto main() -> int;
@@ -126,6 +129,19 @@ auto main() -> int;
         return CPP2_UFCS(ssize)(cpp2::move(v)); 
     }
 
-#line 61 "pure2-function-body-reflection.cpp2"
+#line 60 "pure2-function-body-reflection.cpp2"
+    auto test::loops() -> void
+    {
+        std::vector v {1, 2, 3}; 
+
+        for ( auto const& value : cpp2::move(v) ) {std::cout << value << "\n"; }
+
+        auto i {0}; 
+        for( ; cpp2::impl::cmp_less(i,3); i += 1 ) {std::cout << i << "\n"; }
+
+        do {std::cout << "plugh\n"; } while ( false);
+    }
+
+#line 73 "pure2-function-body-reflection.cpp2"
 auto main() -> int{}
 

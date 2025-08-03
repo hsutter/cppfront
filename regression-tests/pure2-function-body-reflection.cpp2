@@ -56,6 +56,18 @@ test: @sample_traverser type =
         v : std::vector<int> = (1, 2, 3);
         return v.ssize();
     }
+
+    loops: ()
+    = {
+        v: std::vector = (1, 2, 3);
+
+        for v do (value) { std::cout << value << "\n"; }
+
+        i := 0;
+        while i < 3 next i += 1 { std::cout << i << "\n"; }
+
+        do { std::cout << "plugh\n"; } while false;
+    }
 }
 
 main: () = { }

@@ -2,9 +2,18 @@ pure2-function-body-reflection.cpp2...Type: test
   Declaration: one_liner
       Function: one_liner
         Parameters:
-          Object: name a, type double
-          Object: name b, type double
-          Object: name c, type double
+          parameter:
+            passing style: in
+            declaration:
+              Object: name a, type double
+          parameter:
+            passing style: in
+            declaration:
+              Object: name b, type double
+          parameter:
+            passing style: in
+            declaration:
+              Object: name c, type double
         Body:
           multiplicative
             term:
@@ -22,9 +31,18 @@ pure2-function-body-reflection.cpp2...Type: test
   Declaration: return_list
       Function: return_list
         Returns:
-          Object: name r, type double
-          Object: name s, type float
-          Object: name t, type std::string
+          parameter:
+            passing style: out
+            declaration:
+              Object: name r, type double
+          parameter:
+            passing style: out
+            declaration:
+              Object: name s, type float
+          parameter:
+            passing style: out
+            declaration:
+              Object: name t, type std::string
         Body:
           compound statement
             assignment
@@ -49,13 +67,25 @@ pure2-function-body-reflection.cpp2...Type: test
   Declaration: branches
       Function: branches
         Parameters:
-          Object: name a, type double
-          Object: name b, type double
-          Object: name c, type double
+          parameter:
+            passing style: in
+            declaration:
+              Object: name a, type double
+          parameter:
+            passing style: in
+            declaration:
+              Object: name b, type double
+          parameter:
+            passing style: in
+            declaration:
+              Object: name c, type double
         Returns:
-          Object: name r, type double
-            Initializer:
-                3.14159
+          parameter:
+            passing style: out
+            declaration:
+              Object: name r, type double
+                Initializer:
+                    3.14159
         Body:
           compound statement
             if statement
@@ -115,9 +145,18 @@ pure2-function-body-reflection.cpp2...Type: test
   Declaration: binary_ops
       Function: binary_ops
         Parameters:
-          Object: name a, type double
-          Object: name b, type double
-          Object: name c, type double
+          parameter:
+            passing style: inout
+            declaration:
+              Object: name a, type double
+          parameter:
+            passing style: in
+            declaration:
+              Object: name b, type double
+          parameter:
+            passing style: in
+            declaration:
+              Object: name c, type double
         Body:
           compound statement
             assignment
@@ -234,7 +273,10 @@ pure2-function-body-reflection.cpp2...Type: test
   Declaration: postfix
       Function: postfix
         Parameters:
-          Object: name a, type double
+          parameter:
+            passing style: inout
+            declaration:
+              Object: name a, type double
         Body:
           compound statement
               Declaration: ptr
@@ -271,5 +313,77 @@ pure2-function-body-reflection.cpp2...Type: test
                       ssize
                     op: (
                     ()
+  Declaration: loops
+      Function: loops
+        Body:
+          compound statement
+              Declaration: v
+                Object: name v, type std::vector
+                  Initializer:
+                      (
+                          1
+                          2
+                          3
+                      )
+              for loop:
+                range:
+                    v
+                parameter:
+                  parameter:
+                    passing style: in
+                    declaration:
+                      Object: name value, type _
+                body:
+                  compound statement
+                    shift
+                      term:
+                          std::cout
+                      op: <<
+                      term:
+                          value
+                      op: <<
+                      term:
+                          "\n"
+              Declaration: i
+                Object: name i, type _
+                  Initializer:
+                      0
+              while loop:
+                condition:
+                  relational
+                    term:
+                        i
+                    op: <
+                    term:
+                        3
+                body:
+                  compound statement
+                    shift
+                      term:
+                          std::cout
+                      op: <<
+                      term:
+                          i
+                      op: <<
+                      term:
+                          "\n"
+                next expression:
+                  assignment
+                    term:
+                        i
+                    op: +=
+                    term:
+                        1
+              do loop:
+                condition:
+                    false
+                body:
+                  compound statement
+                    shift
+                      term:
+                          std::cout
+                      op: <<
+                      term:
+                          "plugh\n"
  ok (all Cpp2, passes safety checks)
 
