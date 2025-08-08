@@ -183,10 +183,10 @@ make_reverse_match_context: <CharT, Iter, max_groups: int> (inout ctx: reverse_m
 
 //  Helpers for creating wrappers of the iterators.
 //
-make_forward_iterator: <Iter> (pos: Iter)                        -> _ = pos;
-make_forward_iterator: <Iter> (pos: std::reverse_iterator<Iter>) -> _  = pos.base();
-make_reverse_iterator: <Iter> (pos: Iter)                        -> _ = std::make_reverse_iterator(pos);
-make_reverse_iterator: <Iter> (pos: std::reverse_iterator<Iter>) -> _ = pos;
+cpp2_make_forward_iterator: <Iter> (pos: Iter)                        -> _ = pos;
+cpp2_make_forward_iterator: <Iter> (pos: std::reverse_iterator<Iter>) -> _ = pos.base();
+cpp2_make_reverse_iterator: <Iter> (pos: Iter)                        -> _ = std::make_reverse_iterator(pos);
+cpp2_make_reverse_iterator: <Iter> (pos: std::reverse_iterator<Iter>) -> _ = pos;
 
 
 //  End function that returns a valid match.
@@ -574,7 +574,7 @@ line_start_token_matcher: <CharT, match_new_line: bool> (cur, inout ctx) -> bool
 //
 lookahead_token_matcher: <CharT, positive: bool> (cur, inout ctx, func) -> bool =
 {
-    r := func(make_forward_iterator(cur), make_forward_match_context(ctx), true_end_func());
+    r := func(cpp2_make_forward_iterator(cur), make_forward_match_context(ctx), true_end_func());
     if !positive {
         r.matched = !r.matched;
     }
@@ -588,7 +588,7 @@ lookahead_token_matcher: <CharT, positive: bool> (cur, inout ctx, func) -> bool 
 //
 lookbehind_token_matcher: <CharT, positive: bool> (cur, inout ctx, func) -> bool =
 {
-    r := func(make_reverse_iterator(cur), make_reverse_match_context(ctx), true_end_func());
+    r := func(cpp2_make_reverse_iterator(cur), make_reverse_match_context(ctx), true_end_func());
     if !positive {
         r.matched = !r.matched;
     }

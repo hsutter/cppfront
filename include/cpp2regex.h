@@ -261,10 +261,10 @@ template<typename CharT, typename Iter, int max_groups> [[nodiscard]] auto make_
 #line 184 "cpp2regex.h2"
 //  Helpers for creating wrappers of the iterators.
 //
-template               <typename Iter> [[nodiscard]] auto make_forward_iterator(Iter const& pos) -> auto;
-template               <typename Iter> [[nodiscard]] auto make_forward_iterator(std::reverse_iterator<Iter> const& pos) -> auto;
-template               <typename Iter> [[nodiscard]] auto make_reverse_iterator(Iter const& pos) -> auto;
-template<typename Iter> [[nodiscard]] auto make_reverse_iterator(std::reverse_iterator<Iter> const& pos) -> auto;
+template                    <typename Iter> [[nodiscard]] auto cpp2_make_forward_iterator(Iter const& pos) -> auto;
+template<typename Iter> [[nodiscard]] auto cpp2_make_forward_iterator(std::reverse_iterator<Iter> const& pos) -> auto;
+template                    <typename Iter> [[nodiscard]] auto cpp2_make_reverse_iterator(Iter const& pos) -> auto;
+template<typename Iter> [[nodiscard]] auto cpp2_make_reverse_iterator(std::reverse_iterator<Iter> const& pos) -> auto;
 
 #line 192 "cpp2regex.h2"
 //  End function that returns a valid match.
@@ -927,13 +927,13 @@ template<typename CharT, typename Iter, int max_groups> [[nodiscard]] auto make_
 }
 
 #line 186 "cpp2regex.h2"
-template               <typename Iter> [[nodiscard]] auto make_forward_iterator(Iter const& pos) -> auto { return pos; }
+template                    <typename Iter> [[nodiscard]] auto cpp2_make_forward_iterator(Iter const& pos) -> auto { return pos; }
 #line 187 "cpp2regex.h2"
-template               <typename Iter> [[nodiscard]] auto make_forward_iterator(std::reverse_iterator<Iter> const& pos) -> auto { return CPP2_UFCS(base)(pos); }
+template<typename Iter> [[nodiscard]] auto cpp2_make_forward_iterator(std::reverse_iterator<Iter> const& pos) -> auto { return CPP2_UFCS(base)(pos);  }
 #line 188 "cpp2regex.h2"
-template               <typename Iter> [[nodiscard]] auto make_reverse_iterator(Iter const& pos) -> auto { return std::make_reverse_iterator(pos); }
+template                    <typename Iter> [[nodiscard]] auto cpp2_make_reverse_iterator(Iter const& pos) -> auto { return std::make_reverse_iterator(pos); }
 #line 189 "cpp2regex.h2"
-template<typename Iter> [[nodiscard]] auto make_reverse_iterator(std::reverse_iterator<Iter> const& pos) -> auto { return pos;  }
+template<typename Iter> [[nodiscard]] auto cpp2_make_reverse_iterator(std::reverse_iterator<Iter> const& pos) -> auto { return pos;  }
 
 #line 196 "cpp2regex.h2"
     [[nodiscard]] auto true_end_func::operator()(auto const& cur, auto& ctx) const& -> decltype(auto) { return ctx.pass(cur);  }
@@ -1153,7 +1153,7 @@ template<typename CharT, bool match_new_line> [[nodiscard]] auto line_start_toke
 #line 575 "cpp2regex.h2"
 template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_matcher(auto const& cur, auto& ctx, auto const& func) -> bool
 {
-    auto r {func(make_forward_iterator(cur), make_forward_match_context(ctx), true_end_func())}; 
+    auto r {func(cpp2_make_forward_iterator(cur), make_forward_match_context(ctx), true_end_func())}; 
     if (!(positive)) {
         r.matched = !(r.matched);
     }
@@ -1164,7 +1164,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
 #line 589 "cpp2regex.h2"
 template<typename CharT, bool positive> [[nodiscard]] auto lookbehind_token_matcher(auto const& cur, auto& ctx, auto const& func) -> bool
 {
-    auto r {func(make_reverse_iterator(cur), make_reverse_match_context(ctx), true_end_func())}; 
+    auto r {func(cpp2_make_reverse_iterator(cur), make_reverse_match_context(ctx), true_end_func())}; 
     if (!(positive)) {
         r.matched = !(r.matched);
     }
