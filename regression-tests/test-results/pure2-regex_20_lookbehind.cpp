@@ -1,4 +1,5 @@
 
+#define CPP2_IMPORT_STD          Yes
 #include "cpp2regex.h"
 
 //=== Cpp2 type declarations ====================================================
@@ -6,28 +7,28 @@
 
 #include "cpp2util.h"
 
-#line 1 "build/20_lookbehind.cpp2"
+#line 1 "pure2-regex_20_lookbehind.cpp2"
 
-#line 166 "build/20_lookbehind.cpp2"
+#line 166 "pure2-regex_20_lookbehind.cpp2"
 class test_tests_20_lookbehind;
   
 
 //=== Cpp2 type definitions and function declarations ===========================
 
-#line 1 "build/20_lookbehind.cpp2"
+#line 1 "pure2-regex_20_lookbehind.cpp2"
 [[nodiscard]] auto create_result(cpp2::impl::in<std::string> resultExpr, auto const& r) -> std::string;
 
-#line 113 "build/20_lookbehind.cpp2"
+#line 113 "pure2-regex_20_lookbehind.cpp2"
 [[nodiscard]] auto sanitize(std::string str) -> std::string;
 
-#line 125 "build/20_lookbehind.cpp2"
+#line 125 "pure2-regex_20_lookbehind.cpp2"
 template<typename M> auto test(M const& regex, cpp2::impl::in<std::string> id, cpp2::impl::in<std::string> regex_str, cpp2::impl::in<std::string> str, cpp2::impl::in<std::string> kind, cpp2::impl::in<std::string> resultExpr, 
            cpp2::impl::in<std::string> resultExpected) -> void;
 
-#line 166 "build/20_lookbehind.cpp2"
+#line 166 "pure2-regex_20_lookbehind.cpp2"
 class test_tests_20_lookbehind {
 
-#line 223 "build/20_lookbehind.cpp2"
+#line 223 "pure2-regex_20_lookbehind.cpp2"
   public: auto run() const& -> void;
   public: template<typename CharT> class regex_01_matcher {
   public: template<typename Iter> using context = cpp2::regex::match_context<CharT,Iter,1>;
@@ -1905,15 +1906,15 @@ public: [[nodiscard]] static auto to_string() -> std::string;
   public: auto operator=(test_tests_20_lookbehind const&) -> void = delete;
 
 
-#line 283 "build/20_lookbehind.cpp2"
+#line 283 "pure2-regex_20_lookbehind.cpp2"
 };
 auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
 
-#line 1 "build/20_lookbehind.cpp2"
+#line 1 "pure2-regex_20_lookbehind.cpp2"
 [[nodiscard]] auto create_result(cpp2::impl::in<std::string> resultExpr, auto const& r) -> std::string{
-#line 2 "build/20_lookbehind.cpp2"
+#line 2 "pure2-regex_20_lookbehind.cpp2"
   std::string result {""}; 
 
   auto get_next {[_0 = (&resultExpr)](auto const& iter) mutable -> auto{
@@ -2025,7 +2026,7 @@ auto main() -> int;
   return result; 
 }
 
-#line 113 "build/20_lookbehind.cpp2"
+#line 113 "pure2-regex_20_lookbehind.cpp2"
 [[nodiscard]] auto sanitize(std::string str) -> std::string
 {
   str = cpp2::string_util::replace_all(str, "\a", "\\a");
@@ -2038,7 +2039,7 @@ auto main() -> int;
   return cpp2::move(str); 
 }
 
-#line 125 "build/20_lookbehind.cpp2"
+#line 125 "pure2-regex_20_lookbehind.cpp2"
 template<typename M> auto test(M const& regex, cpp2::impl::in<std::string> id, cpp2::impl::in<std::string> regex_str, cpp2::impl::in<std::string> str, cpp2::impl::in<std::string> kind, cpp2::impl::in<std::string> resultExpr, 
            cpp2::impl::in<std::string> resultExpected) -> void{
 
@@ -2079,7 +2080,7 @@ template<typename M> auto test(M const& regex, cpp2::impl::in<std::string> id, c
   std::cout << "" + cpp2::to_string(id) + "_" + cpp2::to_string(kind) + ": " + cpp2::to_string(cpp2::move(status)) + " " + cpp2::to_string(cpp2::move(warning)) + "regex: " + cpp2::to_string(regex_str) + " parsed_regex: " + cpp2::to_string(CPP2_UFCS(to_string)(regex)) + " str: " + cpp2::to_string(sanitize(str)) + " result_expr: " + cpp2::to_string(resultExpr) + " expected_results " + cpp2::to_string(sanitize(resultExpected)) + "" << std::endl;
 }
 
-#line 223 "build/20_lookbehind.cpp2"
+#line 223 "pure2-regex_20_lookbehind.cpp2"
   auto test_tests_20_lookbehind::run() const& -> void{
     std::cout << "Running tests_20_lookbehind:" << std::endl;
     test(regex_01, "01", R"((?<=a)b)", "ab", "y", R"($&)", "b");
@@ -8982,7 +8983,7 @@ int i{0};
 template <typename CharT> [[nodiscard]] auto test_tests_20_lookbehind::regex_56_matcher<CharT>::to_string() -> std::string{return R"((?<=(?=(aaxy))aa))"; }
 
 
-#line 284 "build/20_lookbehind.cpp2"
+#line 284 "pure2-regex_20_lookbehind.cpp2"
 auto main() -> int{
     CPP2_UFCS(run)(test_tests_20_lookbehind());
 }
