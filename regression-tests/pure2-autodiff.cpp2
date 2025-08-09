@@ -1,0 +1,66 @@
+
+ad_test: @autodiff @print type = {
+
+    add_1: (x: double, y: double) -> (r: double) = {
+        r = x + y;
+    }
+
+    add_2: (x: double, y: double) -> (r: double) = {
+        r = x + y + x;
+    }
+
+    sub_1: (x: double, y: double) -> (r: double) = {
+        r = x - y;
+    }
+
+    sub_2: (x: double, y: double) -> (r: double) = {
+        r = x - y - x;
+    }
+
+    add_sub_2: (x: double, y: double) -> (r: double) = {
+        r = x + y - x;
+    }
+
+    mul_1: (x: double, y: double) -> (r: double) = {
+        r = x * y;
+    }
+
+    mul_2: (x: double, y: double) -> (r: double) = {
+        r = x * y * x;
+    }
+
+    div_1: (x: double, y: double) -> (r: double) = {
+        r = x / y;
+    }
+
+    div_2: (x: double, y: double) -> (r: double) = {
+        r = x / y / y;
+    }
+
+    mul_div_2: (x: double, y: double) -> (r: double) = {
+        r = x * y / x;
+    }
+}
+
+write_output: (func: std::string, x: double, x_d: double, y: double, y_d: double, ret) = {
+    std::cout << "diff((func)$) at (x = (x)$, x_d = (x_d)$, y = (y)$, y_d = (y_d)$) = (r = (ret.r)$, r_d = (ret.r_d)$)" << std::endl;
+}
+
+main: () = {
+
+    x:   double = 2.0;
+    x_d: double = 1.0;
+    y:   double = 3.0;
+    y_d: double = 2.0;
+
+    write_output("x + y", x, x_d, y, y_d, ad_test::add_1_diff(x, x_d, y, y_d));
+    write_output("x + y + x", x, x_d, y, y_d, ad_test::add_2_diff(x, x_d, y, y_d));
+    write_output("x - y", x, x_d, y, y_d, ad_test::sub_1_diff(x, x_d, y, y_d));
+    write_output("x - y - x", x, x_d, y, y_d, ad_test::sub_2_diff(x, x_d, y, y_d));
+    write_output("x + y - x", x, x_d, y, y_d, ad_test::add_sub_2_diff(x, x_d, y, y_d));
+    write_output("x * y", x, x_d, y, y_d, ad_test::mul_1_diff(x, x_d, y, y_d));
+    write_output("x * y * x", x, x_d, y, y_d, ad_test::mul_2_diff(x, x_d, y, y_d));
+    write_output("x / y", x, x_d, y, y_d, ad_test::div_1_diff(x, x_d, y, y_d));
+    write_output("x / y / y", x, x_d, y, y_d, ad_test::div_2_diff(x, x_d, y, y_d));
+    write_output("x * y / x", x, x_d, y, y_d, ad_test::mul_div_2_diff(x, x_d, y, y_d));
+}

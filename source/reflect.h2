@@ -2433,6 +2433,522 @@ sample_print: (s: std::string_view, indent: i32) =
         << "\n";
 }
 
+simple_traverser: type = {
+
+    traverse: (virtual inout this, expr: meta::expression) =
+    {
+        //  An expression has other shortcuts to query deeper properties,
+        //  but let's just traverse all the nested grammer elements to
+        //  show how that traversal works
+
+        // The expressions use the pre_traverse function to decide which expression
+        // they are. The correct one calls traverse only once.
+
+        //  The expression's basic payload is just an assignment expression
+        pre_traverse(expr.as_assignment_expression());
+    }
+
+
+    pre_traverse: (virtual inout this, binexpr: meta::assignment_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual assignment,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::assignment_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+    pre_traverse: (virtual inout this, binexpr: meta::logical_or_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual logical-or,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::logical_or_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+
+    pre_traverse: (virtual inout this, binexpr: meta::logical_and_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual logical-and,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::logical_and_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+    pre_traverse: (virtual inout this, binexpr: meta::bit_or_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual bit-or,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::bit_or_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+    pre_traverse: (virtual inout this, binexpr: meta::bit_xor_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual bit-xor,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::bit_xor_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+
+    pre_traverse: (virtual inout this, binexpr: meta::bit_and_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual bit-and,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::bit_and_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+
+    pre_traverse: (virtual inout this, binexpr: meta::equality_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual equality,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::equality_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+    pre_traverse: (virtual inout this, binexpr: meta::relational_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual relational,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::relational_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+    pre_traverse: (virtual inout this, binexpr: meta::compare_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual compare,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::compare_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+    pre_traverse: (virtual inout this, binexpr: meta::shift_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual shift,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::shift_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+    pre_traverse: (virtual inout this, binexpr: meta::additive_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual additive,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::additive_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+
+    pre_traverse: (virtual inout this, binexpr: meta::multiplicative_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual multiplicative,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::multiplicative_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+    pre_traverse: (virtual inout this, isas: meta::is_as_expression) =
+    {
+        terms := isas.get_terms();
+
+        //  If this has no additional terms, it's not an actual is-as,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.empty() {
+            pre_traverse(isas.get_expression());
+        }
+
+        //  Else we're at an actual is-as expression with a rhs
+        else {
+            traverse(isas);
+        }
+    }
+
+    traverse: (virtual inout this, isas: meta::is_as_expression) =
+    {
+        terms := isas.get_terms();
+
+        pre_traverse(isas.get_expression());
+
+        for terms do (term) {
+            traverse(term.get_expr());
+        }
+    }
+
+    traverse: (virtual inout this, exprs: meta::expression_list) =
+    {
+        for exprs.get_expressions() do (expr) {
+            traverse(expr);
+        }
+    }
+
+    pre_traverse: (virtual inout this, prefix: meta::prefix_expression) =
+    {
+        ops := prefix.get_ops();
+
+        //  If this has no additional ops, it's not a naked prefix expr,
+        //  it's holding a lower grammar production so go traverse that
+        if ops.empty() {
+            pre_traverse(prefix.get_postfix_expression(),);
+        }
+
+        //  Else we're at an actual prefix expression with ops
+        else {
+            traverse(prefix);
+        }
+    }
+
+    traverse: (virtual inout this, prefix: meta::prefix_expression) =
+    {
+        pre_traverse(prefix.get_postfix_expression());
+    }
+
+    pre_traverse: (virtual inout this, postfix: meta::postfix_expression) =
+    {
+        terms := postfix.get_terms();
+
+        //  If this has no additional terms, it's not a naked postfix expr,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.empty() {
+            traverse(postfix.get_primary_expression());
+        }
+
+        //  Else we're at an actual postfix expression with ops
+        else {
+            traverse(postfix);
+        }
+    }
+
+    traverse: (virtual inout this, postfix: meta::postfix_expression) =
+    {
+        terms := postfix.get_terms();
+
+        traverse(postfix.get_primary_expression());
+
+        for terms do (term) {
+            if term.is_id_expression() {
+                traverse(term.get_id_expression());
+            }
+            else if term.is_expression_list() {
+                traverse(term.get_expression_list());
+            }
+            else if term.is_expression() {
+                traverse(term.get_expression());
+            }
+        }
+    }
+
+    traverse: (virtual inout this, uid: meta::unqualified_id) =
+    {
+        _ = uid;
+    }
+
+
+    traverse: (virtual inout this, qid: meta::qualified_id) =
+    {
+        for qid.get_terms()
+        do  (term)
+        {
+            traverse(term.get_unqualified());
+        }
+    }
+
+
+    traverse: (virtual inout this, tid: meta::type_id) =
+    {
+        if tid.is_postfix_expression() {
+            traverse(tid.as_postfix_expression());
+        }
+        else if tid.is_qualified_id() {
+            traverse(tid.as_qualified_id());
+        }
+        else if tid.is_unqualified_id() {
+            traverse(tid.as_unqualified_id());
+        }
+        else {
+            // Regular type_id
+        }
+    }
+
+
+    traverse: (virtual inout this, primary: meta::primary_expression) =
+    {
+        if primary.is_identifier() {
+            // Regular identifier
+        }
+        else if primary.is_expression_list() {
+            traverse(primary.as_expression_list());
+        }
+        else if primary.is_literal() {
+            // Regular literal
+        }
+        else if primary.is_declaration() {
+            // TODO: traverse(primary.as_declaration());
+        }
+        else {
+            // Regular primary
+        }
+    }
+
+
+    traverse: (virtual inout this, idexpr: meta::id_expression) =
+    {
+        if idexpr.is_identifier() {
+            // Regular id
+        }
+        else if idexpr.is_qualified() {
+            traverse(idexpr.as_qualified());
+        }
+        else if idexpr.is_unqualified() {
+            traverse(idexpr.as_unqualified());
+        }
+        else {
+            // Regular id expr
+        }
+    }
+}
+
 
 //-----------------------------------------------------------------------
 //
@@ -3196,320 +3712,182 @@ sample_traverser: (idexpr: meta::id_expression, indent: i32) =
 //  autodiff - stub
 //
 
-autodiff_impl: type = {
-
+autodiff_context: type = {
     private temporary_count : int = 0;
-
-    public diff : std::string = "";
 
     gen_temporary : (inout this) -> std::string = {
         temporary_count += 1;
         return "temp_(temporary_count)$";
     }
+}
 
-    handle_expression_term :(inout this, inout _ /*mf*/, term) -> std::string = {
+autodiff_handler_base: type = {
+    public ctx: *autodiff_context;
+
+    public diff : std::string = "";
+
+    operator=: (out this, ctx_: *autodiff_context) = {
+        ctx = ctx_;
+    }
+
+    append: (inout this, in_ref o: autodiff_handler_base) = {
+        diff += o.diff;
+    }
+}
+
+autodiff_expression_handler: type = {
+    this: simple_traverser = ();
+    this: autodiff_handler_base;
+
+    base: type == simple_traverser;
+
+    public lhs: std::string;
+
+    operator=: (out this, ctx_: *autodiff_context, lhs_: std::string) = {
+        autodiff_handler_base = (ctx_);
+        lhs = lhs_;
+    }
+
+    handle_expression_term :(inout this, term) -> std::string = {
         if term.is_identifier() {
             return term.to_string();
         }
         else {
-            t := gen_temporary();
             std::cout << "Handle generation for: (term.to_string())$" << std::endl;
-            //handle_expression_terms(mf, t, term..get_expression_list());
+            t := ctx*.gen_temporary();
+            ad : autodiff_expression_handler = (ctx, t);
+            //ad..traverse(term..get_expression_list());
+
+            append(ad);
+
             return t;
         }
     }
 
-    handle_expression_terms :(inout this, inout mf, lhs: std::string, terms) = {
-        //  Handle binary ||
-        logical_or_terms := terms;
-        if logical_or_terms.ssize() > 1
-        {
-            //  TODO: Do whatever is appropriate here...
-            //  For now, just list out what we found as a grammatical
-            //  identifier (this won't compile as Cpp1, but it will
-            //  be visible via @print for development/debugging)
-            diff += "found_logical_or_with_____";
-            count := 0;
-            for logical_or_terms do (term) {
-                if count++ > 1 {
-                    diff += term.get_op() + "___";
-                }
-                diff += term.get_term().to_string() + "___";
-            }
-            diff += ";";
+    traverse: (override inout this, expr: meta::expression) = {
+        base::traverse(expr);
+    }
 
-            return;
-        }
+    traverse: (override inout this, binexpr: meta::assignment_expression) = {
+        binexpr.error( "AD: Assign expressions are not yet handled." );
+    }
 
-        //  Handle binary &&
-        if logical_or_terms.ssize() != 1 {
-            mf.error( "ICE: there should be exactly one logical or term here" );
-        }
-        logical_and_terms := logical_or_terms.front().get_term().get_terms();
-        if logical_and_terms.ssize() > 1
-        {
-            //  TODO: Do whatever is appropriate here...
-            //  For now, just list out what we found (visible via @print)...
-            diff += "found_logical_and_with_____";
-            count := 0;
-            for logical_and_terms do (term) {
-                if count++ > 1 {
-                    diff += term.get_op() + "___";
-                }
-                diff += term.get_term().to_string() + "___";
-            }
-            diff += ";";
+    traverse: (override inout this, binexpr: meta::logical_or_expression) = {
+        binexpr.error( "AD: Logical or expressions are not yet handled." );
+    }
 
-            return;
-        }
+    traverse: (override inout this, binexpr: meta::logical_and_expression) = {
+        binexpr.error( "AD: Logical and expressions are not yet handled." );
+    }
 
-        //  Handle binary |
-        if logical_and_terms.ssize() != 1 {
-            mf.error( "ICE: there should be exactly one logical and term here" );
-        }
-        bit_or_terms := logical_and_terms.front().get_term().get_terms();
-        if bit_or_terms.ssize() > 1
-        {
-            //  TODO: Do whatever is appropriate here...
-            //  For now, just list out what we found (visible via @print)...
-            diff += "found_bit_or_with_____";
-            count := 0;
-            for bit_or_terms do (term) {
-                if count++ > 1 {
-                    diff += term.get_op() + "___";
-                }
-                diff += term.get_term().to_string() + "___";
-            }
-            diff += ";";
+    traverse: (override inout this, binexpr: meta::bit_or_expression) = {
+        binexpr.error( "AD: Bit or expressions are not yet handled." );
+    }
 
-            return;
-        }
+    traverse: (override inout this, binexpr: meta::bit_xor_expression) = {
+        binexpr.error( "AD: Bit xor expressions are not yet handled." );
+    }
 
-        //  Handle binary ^
-        if bit_or_terms.ssize() != 1 {
-            mf.error( "ICE: there should be exactly one bit or term here" );
-        }
-        bit_xor_terms := bit_or_terms.front().get_term().get_terms();
-        if bit_xor_terms.ssize() > 1
-        {
-            //  TODO: Do whatever is appropriate here...
-            //  For now, just list out what we found (visible via @print)...
-            diff += "found_bit_xor_with_____";
-            count := 0;
-            for bit_xor_terms do (term) {
-                if count++ > 1 {
-                    diff += term.get_op() + "___";
-                }
-                diff += term.get_term().to_string() + "___";
-            }
-            diff += ";";
+    traverse: (override inout this, binexpr: meta::bit_and_expression) = {
+        binexpr.error( "AD: Bit and expressions are not yet handled." );
+    }
 
-            return;
-        }
+    traverse: (override inout this, binexpr: meta::equality_expression) = {
+        binexpr.error( "AD: Equality or expressions are not yet handled." );
+    }
 
-        //  Handle binary &
-        if bit_xor_terms.ssize() != 1 {
-            mf.error( "ICE: there should be exactly one bit xor term here" );
-        }
-        bit_and_terms := bit_xor_terms.front().get_term().get_terms();
-        if bit_and_terms.ssize() > 1
-        {
-            //  TODO: Do whatever is appropriate here...
-            //  For now, just list out what we found (visible via @print)...
-            diff += "found_bit_and_with_____";
-            count := 0;
-            for bit_and_terms do (term) {
-                if count++ > 1 {
-                    diff += term.get_op() + "___";
-                }
-                diff += term.get_term().to_string() + "___";
-            }
-            diff += ";";
+    traverse: (override inout this, binexpr: meta::relational_expression) = {
+        binexpr.error( "AD: Relational expressions are not yet handled." );
+    }
 
-            return;
-        }
+    traverse: (override inout this, binexpr: meta::compare_expression) = {
+        binexpr.error( "AD: Compare or expressions are not yet handled." );
+    }
 
-        //  Handle binary == and !=
-        if bit_and_terms.ssize() != 1 {
-            mf.error( "ICE: there should be exactly one bit and term here" );
-        }
-        equality_terms := bit_and_terms.front().get_term().get_terms();
-        if equality_terms.ssize() > 1
-        {
-            //  TODO: Do whatever is appropriate here...
-            //  For now, just list out what we found (visible via @print)...
-            diff += "found_equality_with_____";
-            count := 0;
-            for equality_terms do (term) {
-                if count++ > 1 {
-                    diff += term.get_op() + "___";
-                }
-                diff += term.get_term().to_string() + "___";
-            }
-            diff += ";";
+    traverse: (override inout this, binexpr: meta::shift_expression) = {
+        binexpr.error( "AD: Shift or expressions are not yet handled." );
+    }
 
-            return;
-        }
+    traverse: (override inout this, binexpr: meta::additive_expression) = {
+        terms := binexpr.get_terms();
 
-        //  Handle binary < > <= >=
-        if equality_terms.ssize() != 1 {
-            mf.error( "ICE: there should be exactly one equality term here" );
-        }
-        relational_terms := equality_terms.front().get_term().get_terms();
-        if relational_terms.ssize() > 1
-        {
-            //  TODO: Do whatever is appropriate here...
-            //  For now, just list out what we found (visible via @print)...
-            diff += "found_relational_with_____";
-            count := 0;
-            for relational_terms do (term) {
-                if count++ > 1 {
-                    diff += term.get_op() + "___";
-                }
-                diff += term.get_term().to_string() + "___";
-            }
-            diff += ";";
-
-            return;
-        }
-
-        //  Handle binary <=>
-        if relational_terms.ssize() != 1 {
-            mf.error( "ICE: there should be exactly one relational term here" );
-        }
-        compare_terms := relational_terms.front().get_term().get_terms();
-        if compare_terms.ssize() > 1
-        {
-            //  TODO: Do whatever is appropriate here...
-            //  For now, just list out what we found (visible via @print)...
-            diff += "found_compare_with_____";
-            count := 0;
-            for compare_terms do (term) {
-                if count++ > 1 {
-                    diff += term.get_op() + "___";
-                }
-                diff += term.get_term().to_string() + "___";
-            }
-            diff += ";";
-
-            return;
-        }
-
-        //  Handle binary << and >>
-        if compare_terms.ssize() != 1 {
-            mf.error( "ICE: there should be exactly one compare term here" );
-        }
-        shift_terms := compare_terms.front().get_term().get_terms();
-        if shift_terms.ssize() > 1
-        {
-            //  TODO: Do whatever is appropriate here...
-            //  For now, just list out what we found (visible via @print)...
-            diff += "found_shift_with_____";
-            count := 0;
-            for shift_terms do (term) {
-                if count++ > 1 {
-                    diff += term.get_op() + "___";
-                }
-                diff += term.get_term().to_string() + "___";
-            }
-            diff += ";";
-
-            return;
-        }
-
-        //  Handle binary + and -
-        if shift_terms.ssize() != 1 {
-            mf.error( "ICE: there should be exactly one shift term here" );
-        }
-        additive_terms := shift_terms.front().get_term().get_terms();
-        if additive_terms.ssize() > 1
-        {
-            first := true;
-            fwd :   std::string = "(lhs)$_d = ";
-            primal: std::string = "(lhs)$   = ";
-            for additive_terms do (term) {
-                if !first {
-                    op := term.get_op().to_string();
-                    fwd    += " (op)$ ";
-                    primal += " (op)$ ";
-                }
-
-                var := handle_expression_term(mf, term.get_term());
-                fwd    += "(var)$_d";
-                primal += "(var)$";
-
-                first = false;
+        first := true;
+        fwd :   std::string = "(lhs)$_d = ";
+        primal: std::string = "(lhs)$   = ";
+        for terms do (term) {
+            if !first {
+                op := term.get_op().to_string();
+                fwd    += " (op)$ ";
+                primal += " (op)$ ";
             }
 
-            fwd    += ";";
-            primal += ";";
+            var := handle_expression_term(term.get_term());
+            fwd    += "(var)$_d";
+            primal += "(var)$";
 
-            diff += fwd + primal;
-
-            return;
+            first = false;
         }
 
-        //  Handle binary * / %
-        if additive_terms.ssize() != 1 {
-            mf.error( "ICE: there should be exactly one additive term here" );
-        }
-        multiplicative_terms := additive_terms.front().get_term().get_terms();
+        fwd    += ";";
+        primal += ";";
 
-        //  Temporary test loop
-        if multiplicative_terms.ssize() > 1
-        {
-            std::cout << "debug: found (multiplicative_terms.ssize())$ is_as_expressions\n";
-            for multiplicative_terms do (isas) {
-                std::cout << "debug:   is_as term: \"(isas.get_term().to_string())$\"\n";
-                if isas.get_term().is_identifier() {
-                    std::cout << "debug:       identifier: (isas.get_term().get_identifier())$\n";
-                }
+        diff += fwd + primal;
+    }
+
+    traverse: (override inout this, binexpr: meta::multiplicative_expression) = {
+        terms := binexpr.get_terms();
+
+        arg_a := handle_expression_term(terms[0].get_term());
+
+        i : int = 1;
+        while i < terms.ssize() next i += 1 {
+            arg_b := handle_expression_term(terms[i].get_term());
+
+            op := terms[i].get_op().to_string();
+
+            fwd    : std::string = "";
+            primal : std::string = "";
+
+            if "*" == op {
+                fwd    = "(arg_a)$ * (arg_b)$_d + (arg_b)$ * (arg_a)$_d";
+                primal = "(arg_a)$ * (arg_b)$";
+            }
+            else if "/" == op {
+                fwd    = "(arg_a)$_d / (arg_b)$ - (arg_a)$ * (arg_b)$_d / ((arg_b)$ * (arg_b)$)";
+                primal = "(arg_a)$ / (arg_b)$";
+            }
+            else {
+                binexpr.error( "unkown multiplicative operator '(op)$'");
+            }
+
+
+            if i + 1 == terms.ssize() {
+                // Last item
+                diff += "(lhs)$_d = (fwd)$;";
+                diff += "(lhs)$   = (primal)$;";
+            }
+            else {
+                // Temporary
+                t := ctx*.gen_temporary();
+                // TODO: Get type of expression, in order to define the type of t.
+                diff += "(t)$_d := (fwd)$;";
+                diff += "(t)$   := (primal)$;";
+
+                arg_a = t;
             }
         }
+    }
 
-        if multiplicative_terms.ssize() > 1
-        {
-            arg_a := handle_expression_term(mf, multiplicative_terms[0].get_term());
+    traverse: (override inout this, isas: meta::is_as_expression) = {
+        isas.error( "AD: Is as expressions are not yet handled." );
+    }
+}
 
-            i : int = 1;
-            while i < multiplicative_terms.ssize() next i += 1 {
-                arg_b := handle_expression_term(mf, multiplicative_terms[i].get_term());
+autodiff_stmt_handler: type = {
+    this: autodiff_handler_base;
 
-                op := multiplicative_terms[i].get_op().to_string();
-
-                fwd    : std::string = "";
-                primal : std::string = "";
-
-                if "*" == op {
-                    fwd    = "(arg_a)$ * (arg_b)$_d + (arg_b)$ * (arg_a)$_d";
-                    primal = "(arg_a)$ * (arg_b)$";
-                }
-                else if "/" == op {
-                    fwd    = "(arg_a)$_d / (arg_b)$ - (arg_a)$ * (arg_b)$_d / ((arg_b)$ * (arg_b)$)";
-                    primal = "(arg_a)$ / (arg_b)$";
-                }
-                else {
-                    mf.error( "unkown multiplicative operator '(op)$'");
-                }
-
-
-                if i + 1 == multiplicative_terms.ssize() {
-                    // Last item
-                    diff += "(lhs)$_d = (fwd)$;";
-                    diff += "(lhs)$   = (primal)$;";
-                }
-                else {
-                    // Temporary
-                    t := gen_temporary();
-                    // TODO: Get type of expression, in order to define the type of t.
-                    diff += "(t)$_d := (fwd)$;";
-                    diff += "(t)$   := (primal)$;";
-
-                    arg_a = t;
-                }
-            }
-        }
-
+    operator=: (out this, ctx_: *autodiff_context) = {
+        autodiff_handler_base = (ctx_);
     }
 
     handle_expression_statement : (inout this, inout mf, expr) = {
@@ -3534,7 +3912,10 @@ autodiff_impl: type = {
             //  Now we handle sequences of binary "expr1 @ expr2 @ ..." where each
             //  @ is one of a list of operators at the same grammar precedence
 
-            handle_expression_terms(mf, lhs.to_string(), assignment_terms[1].get_term().get_terms());
+            h: autodiff_expression_handler = (ctx, lhs.to_string());
+            h.pre_traverse(assignment_terms[1].get_term());
+
+            append(h);
         }
     }
 }
@@ -3562,8 +3943,8 @@ autodiff: (inout t: meta::type_declaration) =
         //  b) Returns
 
         for mf.get_returns() do (param) {
-            diff += "(param.get_declaration().name())$ : (param.get_declaration().type())$ = 1, ";
-            diff += "(param.get_declaration().name())$_d : (param.get_declaration().type())$ = 1, ";
+            diff += "(param.get_declaration().name())$ : (param.get_declaration().type())$ = 0.0, ";
+            diff += "(param.get_declaration().name())$_d : (param.get_declaration().type())$ = 0.0, ";
         }
 
         diff += ") = {";
@@ -3575,7 +3956,8 @@ autodiff: (inout t: meta::type_declaration) =
             return;
         }
 
-        ad_impl : autodiff_impl = ();
+        ad_ctx: autodiff_context = ();
+        ad_impl : autodiff_stmt_handler = (ad_ctx&);
 
 
         for mf.get_compound_body().get_statements() do (stmt)
