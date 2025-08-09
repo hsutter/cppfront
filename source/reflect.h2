@@ -3742,25 +3742,44 @@ autodiff_expression_handler: type = {
     base: type == simple_traverser;
 
     public lhs: std::string;
+    public declare_p: std::string;
+    public declare_d: std::string;
 
-    operator=: (out this, ctx_: *autodiff_context, lhs_: std::string) = {
+    operator=: (out this, ctx_: *autodiff_context, lhs_: std::string, declare_: std::string = "") = {
         autodiff_handler_base = (ctx_);
         lhs = lhs_;
+        declare_p = declare_;
+        declare_d = declare_;
     }
 
     handle_expression_term :(inout this, term) -> std::string = {
         if term.is_identifier() {
             return term.to_string();
         }
-        else {
-            std::cout << "Handle generation for: (term.to_string())$" << std::endl;
-            t := ctx*.gen_temporary();
-            ad : autodiff_expression_handler = (ctx, t);
-            //ad..traverse(term..get_expression_list());
+        else if term.is_expression_list() {
+            exprs := term..as_expression_list()..get_expressions();
+            if exprs.ssize() != 1 {
+                term.error("Can not handle multiple expressions. (term.to_string())");
+                return "error";
+            }
+            expr := exprs[0];
+            bin_expr := expr..as_assignment_expression();
 
+            if bin_expr.terms_size() != 0 {
+                term.error("Can not handle assign expr inside of expression. (expr.to_string())$");
+                return "error";
+            }
+
+            t := ctx*.gen_temporary();
+            ad : autodiff_expression_handler = (ctx, t, ":"); // TODO: get type of expression
+            ad..pre_traverse(bin_expr.get_terms().front().get_term());
             append(ad);
 
             return t;
+        }
+        else {
+            term.error( "Do not know how to handle AD for: (term.to_string())$");
+            return "error";
         }
     }
 
@@ -3812,8 +3831,8 @@ autodiff_expression_handler: type = {
         terms := binexpr.get_terms();
 
         first := true;
-        fwd :   std::string = "(lhs)$_d = ";
-        primal: std::string = "(lhs)$   = ";
+        fwd :   std::string = "(lhs)$_d (declare_p)$= ";
+        primal: std::string = "(lhs)$   (declare_d)$= ";
         for terms do (term) {
             if !first {
                 op := term.get_op().to_string();
@@ -3863,8 +3882,8 @@ autodiff_expression_handler: type = {
 
             if i + 1 == terms.ssize() {
                 // Last item
-                diff += "(lhs)$_d = (fwd)$;";
-                diff += "(lhs)$   = (primal)$;";
+                diff += "(lhs)$_d (declare_p)$= (fwd)$;";
+                diff += "(lhs)$   (declare_d)$= (primal)$;";
             }
             else {
                 // Temporary

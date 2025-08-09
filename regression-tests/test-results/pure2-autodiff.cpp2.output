@@ -92,6 +92,15 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
+    mul_add:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x * (x + y);
+        return;
+    }
+
     add_1_diff:(
         in x: double, 
         in x_d: double, 
@@ -245,6 +254,23 @@ ad_test:/* @autodiff @print */ type =
         temp_1: _ = x * y;
         r_d = temp_1_d / x - temp_1 * x_d / (x * x);
         r = temp_1 / x;
+        return;
+    }
+
+    mul_add_diff:(
+        in x: double, 
+        in x_d: double, 
+        in y: double, 
+        in y_d: double, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: double = 0.0, 
+        ) = 
+    {
+        temp_1_d: _ = x_d + y_d;
+        temp_1: _ = x + y;
+        r_d = x * temp_1_d + temp_1 * x_d;
+        r = x * temp_1;
         return;
     }
 }
