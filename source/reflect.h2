@@ -3778,8 +3778,15 @@ autodiff_expression_handler: type = {
             return t;
         }
         else {
-            term.error( "Do not know how to handle AD for: (term.to_string())$");
-            return "error";
+            // Nothing special. A regular expression.
+            expr := term;
+
+            t := ctx*.gen_temporary();
+            ad : autodiff_expression_handler = (ctx, t, ":"); // TODO: get type of expression
+            ad..pre_traverse(expr);
+            append(ad);
+
+            return t;
         }
     }
 
