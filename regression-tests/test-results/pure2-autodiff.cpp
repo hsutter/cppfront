@@ -116,6 +116,21 @@ using intermediate_passive_var_ret = double;
 
 #line 92 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto intermediate_passive_var(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> intermediate_passive_var_ret;
+using intermediate_untyped_ret = double;
+
+
+#line 100 "pure2-autodiff.cpp2"
+    public: [[nodiscard]] static auto intermediate_untyped(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> intermediate_untyped_ret;
+using while_loop_ret = double;
+
+
+#line 107 "pure2-autodiff.cpp2"
+    public: [[nodiscard]] static auto while_loop(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> while_loop_ret;
+using do_while_loop_ret = double;
+
+
+#line 116 "pure2-autodiff.cpp2"
+    public: [[nodiscard]] static auto do_while_loop(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> do_while_loop_ret;
 struct add_1_diff_ret { double r; double r_d; };
 
 
@@ -197,17 +212,29 @@ struct intermediate_passive_var_diff_ret { double r; double r_d; };
 
 public: [[nodiscard]] static auto intermediate_passive_var_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> intermediate_passive_var_diff_ret;
 
+struct intermediate_untyped_diff_ret { double r; double r_d; };
+
+public: [[nodiscard]] static auto intermediate_untyped_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> intermediate_untyped_diff_ret;
+
+struct while_loop_diff_ret { double r; double r_d; };
+
+public: [[nodiscard]] static auto while_loop_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> while_loop_diff_ret;
+
+struct do_while_loop_diff_ret { double r; double r_d; };
+
+public: [[nodiscard]] static auto do_while_loop_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> do_while_loop_diff_ret;
+
     public: ad_test() = default;
     public: ad_test(ad_test const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(ad_test const&) -> void = delete;
 
 
-#line 99 "pure2-autodiff.cpp2"
+#line 126 "pure2-autodiff.cpp2"
 };
 
 auto write_output(cpp2::impl::in<std::string> func, cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d, auto const& ret) -> void;
 
-#line 105 "pure2-autodiff.cpp2"
+#line 132 "pure2-autodiff.cpp2"
 auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -367,6 +394,42 @@ auto main() -> int;
 
       static_cast<void>(cpp2::move(i));
     return std::move(r.value()); }
+
+#line 100 "pure2-autodiff.cpp2"
+    [[nodiscard]] auto ad_test::intermediate_untyped(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> intermediate_untyped_ret{
+          cpp2::impl::deferred_init<double> r;
+#line 101 "pure2-autodiff.cpp2"
+      auto t {0.0}; 
+      t = x + y;
+
+      r.construct(cpp2::move(t));
+    return std::move(r.value()); }
+
+#line 107 "pure2-autodiff.cpp2"
+    [[nodiscard]] auto ad_test::while_loop(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> while_loop_ret{
+          cpp2::impl::deferred_init<double> r;
+#line 108 "pure2-autodiff.cpp2"
+      int i {0}; 
+
+      r.construct(x);
+      for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
+        r.value() = r.value() + y;
+      }return std::move(r.value()); 
+    }
+
+#line 116 "pure2-autodiff.cpp2"
+    [[nodiscard]] auto ad_test::do_while_loop(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> do_while_loop_ret{
+          cpp2::impl::deferred_init<double> r;
+#line 117 "pure2-autodiff.cpp2"
+      int i {0}; 
+
+      r.construct(x);
+      do {
+        r.value() = r.value() + y;
+      } while ( [&]{ 
+      (i += 1) ; return true; }() && 
+      cpp2::impl::cmp_less(i,2));return std::move(r.value()); 
+    }
 
     [[nodiscard]] auto ad_test::add_1_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> add_1_diff_ret{
                                                                                                                       double r {0.0};
@@ -557,12 +620,60 @@ int i_d {};
     return  { std::move(r), std::move(r_d) }; 
     }
 
-#line 101 "pure2-autodiff.cpp2"
+    [[nodiscard]] auto ad_test::intermediate_untyped_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> intermediate_untyped_diff_ret{
+                                                                                                                                     double r {0.0};
+                                                                                                                                     double r_d {0.0};
+auto t_d {0.0}; 
+
+    auto t {0.0}; 
+    t_d = x_d + y_d;
+    t = x + y;
+    r_d = cpp2::move(t_d);
+    r = cpp2::move(t);
+    return  { std::move(r), std::move(r_d) }; 
+    }
+
+    [[nodiscard]] auto ad_test::while_loop_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> while_loop_diff_ret{
+                                                                                                                           double r {0.0};
+                                                                                                                           double r_d {0.0};
+int i_d {0}; 
+
+    int i {0}; 
+    r_d = x_d;
+    r = x;
+    for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
+    r_d = r_d + y_d;
+    r = r + y;
+    }
+    return  { std::move(r), std::move(r_d) }; 
+    }
+
+    [[nodiscard]] auto ad_test::do_while_loop_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> do_while_loop_diff_ret{
+                                                                                                                              double r {0.0};
+                                                                                                                              double r_d {0.0};
+int i_d {0}; 
+
+    int i {0}; 
+    r_d = x_d;
+    r = x;
+    do {
+    r_d = r_d + y_d;
+    r = r + y;
+    }
+     while ( [&]{ 
+    (i += 1)
+     ; return true; }() && 
+    cpp2::impl::cmp_less(i,2)
+    );
+    return  { std::move(r), std::move(r_d) }; 
+    }
+
+#line 128 "pure2-autodiff.cpp2"
 auto write_output(cpp2::impl::in<std::string> func, cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d, auto const& ret) -> void{
     std::cout << "diff(" + cpp2::to_string(func) + ") at (x = " + cpp2::to_string(x) + ", x_d = " + cpp2::to_string(x_d) + ", y = " + cpp2::to_string(y) + ", y_d = " + cpp2::to_string(y_d) + ") = (r = " + cpp2::to_string(ret.r) + ", r_d = " + cpp2::to_string(ret.r_d) + ")" << std::endl;
 }
 
-#line 105 "pure2-autodiff.cpp2"
+#line 132 "pure2-autodiff.cpp2"
 auto main() -> int{
 
     double x {2.0}; 
@@ -588,6 +699,9 @@ auto main() -> int{
     write_output("if else branch", x, x_d, y, y_d, ad_test::if_else_branch_diff(x, x_d, y, y_d));
     write_output("direct return", x, x_d, y, y_d, ad_test::direct_return_diff(x, x_d, y, y_d));
     write_output("intermediate var", x, x_d, y, y_d, ad_test::intermediate_var_diff(x, x_d, y, y_d));
-    write_output("intermediate passive var", x, x_d, y, y_d, ad_test::intermediate_passive_var_diff(cpp2::move(x), cpp2::move(x_d), cpp2::move(y), cpp2::move(y_d)));
+    write_output("intermediate passive var", x, x_d, y, y_d, ad_test::intermediate_passive_var_diff(x, x_d, y, y_d));
+    write_output("intermediate untyped", x, x_d, y, y_d, ad_test::intermediate_untyped_diff(x, x_d, y, y_d));
+    write_output("while loop", x, x_d, y, y_d, ad_test::while_loop_diff(x, x_d, y, y_d));
+    write_output("do while loop", x, x_d, y, y_d, ad_test::do_while_loop_diff(cpp2::move(x), cpp2::move(x_d), cpp2::move(y), cpp2::move(y_d)));
 }
 

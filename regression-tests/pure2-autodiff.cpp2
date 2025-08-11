@@ -96,6 +96,33 @@ ad_test: @autodiff @print type = {
 
       _ = i;
     }
+
+    intermediate_untyped: (x: double, y: double) -> (r: double) = {
+      t := 0.0;
+      t = x + y;
+
+      r = t;
+    }
+
+    while_loop: (x: double, y: double) -> (r: double) = {
+      i: int = 0;
+
+      r = x;
+      while i < 2 next (i += 1) {
+        r = r + y ;
+      }
+    }
+
+    do_while_loop: (x: double, y: double) -> (r: double) = {
+      i: int = 0;
+
+      r = x;
+      do {
+        r = r + y ;
+      }
+      next (i += 1)
+      while i < 2;
+    }
 }
 
 write_output: (func: std::string, x: double, x_d: double, y: double, y_d: double, ret) = {
@@ -128,4 +155,7 @@ main: () = {
     write_output("direct return", x, x_d, y, y_d, ad_test::direct_return_diff(x, x_d, y, y_d));
     write_output("intermediate var", x, x_d, y, y_d, ad_test::intermediate_var_diff(x, x_d, y, y_d));
     write_output("intermediate passive var", x, x_d, y, y_d, ad_test::intermediate_passive_var_diff(x, x_d, y, y_d));
+    write_output("intermediate untyped", x, x_d, y, y_d, ad_test::intermediate_untyped_diff(x, x_d, y, y_d));
+    write_output("while loop", x, x_d, y, y_d, ad_test::while_loop_diff(x, x_d, y, y_d));
+    write_output("do while loop", x, x_d, y, y_d, ad_test::do_while_loop_diff(x, x_d, y, y_d));
 }

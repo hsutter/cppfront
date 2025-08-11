@@ -4296,7 +4296,33 @@ autodiff_stmt_handler: type = {
 
 
     traverse: (override inout this, stmt: meta::iteration_statement) = {
-        stmt.error("AD: Do not know how to handle iteration_statement: (stmt.to_string())$");
+        if stmt.is_while() {
+            // TODO: Assumption is here that nothing is in the condition
+            diff += "while (stmt.get_do_while_condition().to_string())$ ";
+            if stmt.has_next() {
+                // TODO: Assumption is here that nothing is in the next expression
+                diff += "next (stmt.get_next_expression().to_string())$ ";
+            }
+
+            pre_traverse(stmt.get_do_while_body());
+        }
+        else if stmt.is_do() {
+            // TODO: Assumption is here that nothing is in the condition
+
+            diff += "do ";
+            pre_traverse(stmt.get_do_while_body());
+
+            if stmt.has_next() {
+                // TODO: Assumption is here that nothing is in the next expression
+                diff += "next (stmt.get_next_expression().to_string())$ ";
+            }
+            diff += "while (stmt.get_do_while_condition().to_string())$;";
+        }
+        else {
+            assert(stmt.is_for());
+
+            stmt.error("AD: Do not know how to handle for loops: (stmt.to_string())$");
+        }
     }
 
 

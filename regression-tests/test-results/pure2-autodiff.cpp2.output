@@ -197,6 +197,48 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
+    intermediate_untyped:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        t: _ = 0.0;
+        t = x + y;
+        r = t;
+        return;
+    }
+
+    while_loop:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        i: int = 0;
+        r = x;
+        while i < 2
+        next (i += 1)
+            {
+                r = r + y;
+            }
+        return;
+    }
+
+    do_while_loop:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        i: int = 0;
+        r = x;
+        do 
+            {
+                r = r + y;
+            }
+        next (i += 1)
+        while i < 2;
+        return;
+    }
+
     add_1_diff:(
         in x: double, 
         in x_d: double, 
@@ -535,6 +577,72 @@ ad_test:/* @autodiff @print */ type =
         i = 2;
         _ = i_d;
         _ = i;
+        return;
+    }
+
+    intermediate_untyped_diff:(
+        in x: double, 
+        in x_d: double, 
+        in y: double, 
+        in y_d: double, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: double = 0.0, 
+        ) = 
+    {
+        t_d: _ = 0.0;
+        t: _ = 0.0;
+        t_d = x_d + y_d;
+        t = x + y;
+        r_d = t_d;
+        r = t;
+        return;
+    }
+
+    while_loop_diff:(
+        in x: double, 
+        in x_d: double, 
+        in y: double, 
+        in y_d: double, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: double = 0.0, 
+        ) = 
+    {
+        i_d: int = 0;
+        i: int = 0;
+        r_d = x_d;
+        r = x;
+        while i < 2
+        next (i += 1)
+            {
+                r_d = r_d + y_d;
+                r = r + y;
+            }
+        return;
+    }
+
+    do_while_loop_diff:(
+        in x: double, 
+        in x_d: double, 
+        in y: double, 
+        in y_d: double, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: double = 0.0, 
+        ) = 
+    {
+        i_d: int = 0;
+        i: int = 0;
+        r_d = x_d;
+        r = x;
+        do 
+            {
+                r_d = r_d + y_d;
+                r = r + y;
+            }
+        next (i += 1)
+        while i < 2;
         return;
     }
 }
