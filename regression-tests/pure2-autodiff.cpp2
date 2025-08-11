@@ -88,6 +88,14 @@ ad_test: @autodiff @print type = {
 
       r = t;
     }
+
+    intermediate_passive_var: (x: double, y: double) -> (r: double) = {
+      i: int = (); // TODO: Handle as passive when type information on call side is available.
+      r = x + y;
+      i = 2;
+
+      _ = i;
+    }
 }
 
 write_output: (func: std::string, x: double, x_d: double, y: double, y_d: double, ret) = {
@@ -119,4 +127,5 @@ main: () = {
     write_output("if else branch", x, x_d, y, y_d, ad_test::if_else_branch_diff(x, x_d, y, y_d));
     write_output("direct return", x, x_d, y, y_d, ad_test::direct_return_diff(x, x_d, y, y_d));
     write_output("intermediate var", x, x_d, y, y_d, ad_test::intermediate_var_diff(x, x_d, y, y_d));
+    write_output("intermediate passive var", x, x_d, y, y_d, ad_test::intermediate_passive_var_diff(x, x_d, y, y_d));
 }

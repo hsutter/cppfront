@@ -111,6 +111,11 @@ using intermediate_var_ret = double;
 
 #line 85 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto intermediate_var(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> intermediate_var_ret;
+using intermediate_passive_var_ret = double;
+
+
+#line 92 "pure2-autodiff.cpp2"
+    public: [[nodiscard]] static auto intermediate_passive_var(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> intermediate_passive_var_ret;
 struct add_1_diff_ret { double r; double r_d; };
 
 
@@ -188,17 +193,21 @@ struct intermediate_var_diff_ret { double r; double r_d; };
 
 public: [[nodiscard]] static auto intermediate_var_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> intermediate_var_diff_ret;
 
+struct intermediate_passive_var_diff_ret { double r; double r_d; };
+
+public: [[nodiscard]] static auto intermediate_passive_var_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> intermediate_passive_var_diff_ret;
+
     public: ad_test() = default;
     public: ad_test(ad_test const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(ad_test const&) -> void = delete;
 
 
-#line 91 "pure2-autodiff.cpp2"
+#line 99 "pure2-autodiff.cpp2"
 };
 
 auto write_output(cpp2::impl::in<std::string> func, cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d, auto const& ret) -> void;
 
-#line 97 "pure2-autodiff.cpp2"
+#line 105 "pure2-autodiff.cpp2"
 auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -348,79 +357,120 @@ auto main() -> int;
       r.construct(cpp2::move(t));
     return std::move(r.value()); }
 
+#line 92 "pure2-autodiff.cpp2"
+    [[nodiscard]] auto ad_test::intermediate_passive_var(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> intermediate_passive_var_ret{
+          cpp2::impl::deferred_init<double> r;
+#line 93 "pure2-autodiff.cpp2"
+      int i {};    // TODO: Handle as passive when type information on call side is available.
+      r.construct(x + y);
+      i = 2;
+
+      static_cast<void>(cpp2::move(i));
+    return std::move(r.value()); }
+
     [[nodiscard]] auto ad_test::add_1_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> add_1_diff_ret{
                                                                                                                       double r {0.0};
-                                                                                                                      double r_d {0.0};r_d = x_d + y_d;r = x + y;return  { std::move(r), std::move(r_d) }; 
+                                                                                                                      double r_d {0.0};r_d = x_d + y_d;
+    r = x + y;
+    return  { std::move(r), std::move(r_d) }; 
     }
 
     [[nodiscard]] auto ad_test::add_2_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> add_2_diff_ret{
                                                                                                                       double r {0.0};
-                                                                                                                      double r_d {0.0};r_d = x_d + y_d + x_d;r = x + y + x;return  { std::move(r), std::move(r_d) }; 
+                                                                                                                      double r_d {0.0};r_d = x_d + y_d + x_d;
+    r = x + y + x;
+    return  { std::move(r), std::move(r_d) }; 
     }
 
     [[nodiscard]] auto ad_test::sub_1_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> sub_1_diff_ret{
                                                                                                                       double r {0.0};
-                                                                                                                      double r_d {0.0};r_d = x_d - y_d;r = x - y;return  { std::move(r), std::move(r_d) }; 
+                                                                                                                      double r_d {0.0};r_d = x_d - y_d;
+    r = x - y;
+    return  { std::move(r), std::move(r_d) }; 
     }
 
     [[nodiscard]] auto ad_test::sub_2_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> sub_2_diff_ret{
                                                                                                                       double r {0.0};
-                                                                                                                      double r_d {0.0};r_d = x_d - y_d - x_d;r = x - y - x;return  { std::move(r), std::move(r_d) }; 
+                                                                                                                      double r_d {0.0};r_d = x_d - y_d - x_d;
+    r = x - y - x;
+    return  { std::move(r), std::move(r_d) }; 
     }
 
     [[nodiscard]] auto ad_test::add_sub_2_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> add_sub_2_diff_ret{
                                                                                                                           double r {0.0};
-                                                                                                                          double r_d {0.0};r_d = x_d + y_d - x_d;r = x + y - x;return  { std::move(r), std::move(r_d) }; 
+                                                                                                                          double r_d {0.0};r_d = x_d + y_d - x_d;
+    r = x + y - x;
+    return  { std::move(r), std::move(r_d) }; 
     }
 
     [[nodiscard]] auto ad_test::mul_1_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> mul_1_diff_ret{
                                                                                                                       double r {0.0};
-                                                                                                                      double r_d {0.0};r_d = x * y_d + y * x_d;r = x * y;return  { std::move(r), std::move(r_d) }; 
+                                                                                                                      double r_d {0.0};r_d = x * y_d + y * x_d;
+    r = x * y;
+    return  { std::move(r), std::move(r_d) }; 
     }
 
     [[nodiscard]] auto ad_test::mul_2_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> mul_2_diff_ret{
                                                                                                                       double r {0.0};
                                                                                                                       double r_d {0.0};
 auto temp_1_d {x * y_d + y * x_d}; 
-auto temp_1 {x * y}; r_d = temp_1 * x_d + x * cpp2::move(temp_1_d);r = cpp2::move(temp_1) * x;return  { std::move(r), std::move(r_d) }; 
+auto temp_1 {x * y}; r_d = temp_1 * x_d + x * cpp2::move(temp_1_d);
+    r = cpp2::move(temp_1) * x;
+    return  { std::move(r), std::move(r_d) }; 
     }
 
     [[nodiscard]] auto ad_test::div_1_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> div_1_diff_ret{
                                                                                                                       double r {0.0};
-                                                                                                                      double r_d {0.0};r_d = x_d / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(x_d),y) - x * y_d / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(y_d),(y * y));r = x / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(x),y);return  { std::move(r), std::move(r_d) }; 
+                                                                                                                      double r_d {0.0};r_d = x_d / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(x_d),y) - x * y_d / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(y_d),(y * y));
+    r = x / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(x),y);
+    return  { std::move(r), std::move(r_d) }; 
     }
 
     [[nodiscard]] auto ad_test::div_2_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> div_2_diff_ret{
                                                                                                                       double r {0.0};
                                                                                                                       double r_d {0.0};
 auto temp_1_d {x_d / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(x_d),y) - x * y_d / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(y_d),(y * y))}; 
-auto temp_1 {x / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(x),y)}; r_d = cpp2::move(temp_1_d) / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(cpp2::move(temp_1_d)),y) - temp_1 * y_d / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(y_d),(y * y));r = cpp2::move(temp_1) / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(cpp2::move(temp_1)),y);return  { std::move(r), std::move(r_d) }; 
+auto temp_1 {x / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(x),y)}; r_d = cpp2::move(temp_1_d) / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(cpp2::move(temp_1_d)),y) - temp_1 * y_d / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(y_d),(y * y));
+    r = cpp2::move(temp_1) / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(cpp2::move(temp_1)),y);
+    return  { std::move(r), std::move(r_d) }; 
     }
 
     [[nodiscard]] auto ad_test::mul_div_2_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> mul_div_2_diff_ret{
                                                                                                                           double r {0.0};
                                                                                                                           double r_d {0.0};
 auto temp_1_d {x * y_d + y * x_d}; 
-auto temp_1 {x * y}; r_d = cpp2::move(temp_1_d) / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(cpp2::move(temp_1_d)),x) - temp_1 * x_d / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(x_d),(x * x));r = cpp2::move(temp_1) / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(cpp2::move(temp_1)),x);return  { std::move(r), std::move(r_d) }; 
+auto temp_1 {x * y}; r_d = cpp2::move(temp_1_d) / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(cpp2::move(temp_1_d)),x) - temp_1 * x_d / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(x_d),(x * x));
+    r = cpp2::move(temp_1) / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(cpp2::move(temp_1)),x);
+    return  { std::move(r), std::move(r_d) }; 
     }
 
     [[nodiscard]] auto ad_test::mul_add_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> mul_add_diff_ret{
                                                                                                                         double r {0.0};
                                                                                                                         double r_d {0.0};
 auto temp_1_d {x_d + y_d}; 
-auto temp_1 {x + y}; r_d = x * cpp2::move(temp_1_d) + temp_1 * x_d;r = x * cpp2::move(temp_1);return  { std::move(r), std::move(r_d) }; 
+
+    auto temp_1 {x + y}; 
+    r_d = x * cpp2::move(temp_1_d) + temp_1 * x_d;
+    r = x * cpp2::move(temp_1);
+    return  { std::move(r), std::move(r_d) }; 
     }
 
     [[nodiscard]] auto ad_test::add_mul_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> add_mul_diff_ret{
                                                                                                                         double r {0.0};
                                                                                                                         double r_d {0.0};
 auto temp_1_d {x * y_d + y * x_d}; 
-auto temp_1 {x * y}; r_d = x_d + cpp2::move(temp_1_d);r = x + cpp2::move(temp_1);return  { std::move(r), std::move(r_d) }; 
+
+    auto temp_1 {x * y}; 
+    r_d = x_d + cpp2::move(temp_1_d);
+    r = x + cpp2::move(temp_1);
+    return  { std::move(r), std::move(r_d) }; 
     }
 
     [[nodiscard]] auto ad_test::func_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> func_diff_ret{
                                                                                                                      double r {0.0};
-                                                                                                                     double r_d {0.0};r_d = x_d + y_d;r = x + y;return  { std::move(r), std::move(r_d) }; 
+                                                                                                                     double r_d {0.0};r_d = x_d + y_d;
+    r = x + y;
+    return  { std::move(r), std::move(r_d) }; 
     }
 
     [[nodiscard]] auto ad_test::func_call_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> func_call_diff_ret{
@@ -431,22 +481,30 @@ auto temp_2 {func_diff(x, x_d, y, y_d)};
     auto temp_1 {temp_2.r}; 
 
     auto temp_1_d {cpp2::move(temp_2).r_d}; 
-    r_d = x * cpp2::move(temp_1_d) + temp_1 * x_d;r = x * cpp2::move(temp_1);return  { std::move(r), std::move(r_d) }; 
+    r_d = x * cpp2::move(temp_1_d) + temp_1 * x_d;
+    r = x * cpp2::move(temp_1);
+    return  { std::move(r), std::move(r_d) }; 
     }
 
     [[nodiscard]] auto ad_test::sin_call_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> sin_call_diff_ret{
                                                                                                                          double r {0.0};
                                                                                                                          double r_d {0.0};
 auto temp_1_d {x_d - y_d}; 
-auto temp_1 {x - y}; r_d = cos(temp_1) * cpp2::move(temp_1_d);
+
+    auto temp_1 {x - y}; 
+    r_d = cos(temp_1) * cpp2::move(temp_1_d);
     r = sin(cpp2::move(temp_1));
     return  { std::move(r), std::move(r_d) }; 
     }
 
     [[nodiscard]] auto ad_test::if_branch_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> if_branch_diff_ret{
                                                                                                                           double r {0.0};
-                                                                                                                          double r_d {0.0};r_d = x_d;r = x;if (cpp2::impl::cmp_less(x,0.0)) {
-    r_d = y_d;r = y;}
+                                                                                                                          double r_d {0.0};r_d = x_d;
+    r = x;
+    if (cpp2::impl::cmp_less(x,0.0)) {
+    r_d = y_d;
+    r = y;
+    }
     else {
     }
     return  { std::move(r), std::move(r_d) }; 
@@ -455,32 +513,56 @@ auto temp_1 {x - y}; r_d = cos(temp_1) * cpp2::move(temp_1_d);
     [[nodiscard]] auto ad_test::if_else_branch_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> if_else_branch_diff_ret{
                                                                                                                                double r {0.0};
                                                                                                                                double r_d {0.0};if (cpp2::impl::cmp_less(x,0.0)) {
-    r_d = y_d;r = y;}
+    r_d = y_d;
+    r = y;
+    }
     else {
-    r_d = x_d;r = x;}
+    r_d = x_d;
+    r = x;
+    }
     return  { std::move(r), std::move(r_d) }; 
     }
 
     [[nodiscard]] auto ad_test::direct_return_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> direct_return_diff_ret{
                                                                                                                           double r {};
-                                                                                                                          double r_d {};r_d = x_d + y_d;r = x + y;
-    return  { std::move(r), std::move(r_d) }; 
-    }
-[[nodiscard]] auto ad_test::intermediate_var_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> intermediate_var_diff_ret{
+                                                                                                                          double r_d {};r_d = x_d + y_d;
+    r = x + y;
+    return  { std::move(r), std::move(r_d) }; }
+
+    [[nodiscard]] auto ad_test::intermediate_var_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> intermediate_var_diff_ret{
                                                                                                                                  double r {0.0};
                                                                                                                                  double r_d {0.0};
 double t_d {}; 
 
     double t {}; 
-    t_d = x_d + y_d;t = x + y;r_d = cpp2::move(t_d);r = cpp2::move(t);return  { std::move(r), std::move(r_d) }; 
+    t_d = x_d + y_d;
+    t = x + y;
+    r_d = cpp2::move(t_d);
+    r = cpp2::move(t);
+    return  { std::move(r), std::move(r_d) }; 
     }
 
-#line 93 "pure2-autodiff.cpp2"
+    [[nodiscard]] auto ad_test::intermediate_passive_var_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> intermediate_passive_var_diff_ret{
+                                                                                                                                         double r {0.0};
+                                                                                                                                         double r_d {0.0};
+int i_d {}; 
+
+    int i {}; 
+    r_d = x_d + y_d;
+    r = x + y;
+    i_d = {  };
+    i = 2;
+    static_cast<void>(cpp2::move(i_d));
+    static_cast<void>(cpp2::move(i));
+    return  { std::move(r), std::move(r_d) }; 
+    }
+
+#line 101 "pure2-autodiff.cpp2"
 auto write_output(cpp2::impl::in<std::string> func, cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d, auto const& ret) -> void{
     std::cout << "diff(" + cpp2::to_string(func) + ") at (x = " + cpp2::to_string(x) + ", x_d = " + cpp2::to_string(x_d) + ", y = " + cpp2::to_string(y) + ", y_d = " + cpp2::to_string(y_d) + ") = (r = " + cpp2::to_string(ret.r) + ", r_d = " + cpp2::to_string(ret.r_d) + ")" << std::endl;
 }
 
-#line 97 "pure2-autodiff.cpp2"
+#line 105 "pure2-autodiff.cpp2"
 auto main() -> int{
 
     double x {2.0}; 
@@ -505,6 +587,7 @@ auto main() -> int{
     write_output("if branch", x, x_d, y, y_d, ad_test::if_branch_diff(x, x_d, y, y_d));
     write_output("if else branch", x, x_d, y, y_d, ad_test::if_else_branch_diff(x, x_d, y, y_d));
     write_output("direct return", x, x_d, y, y_d, ad_test::direct_return_diff(x, x_d, y, y_d));
-    write_output("intermediate var", x, x_d, y, y_d, ad_test::intermediate_var_diff(cpp2::move(x), cpp2::move(x_d), cpp2::move(y), cpp2::move(y_d)));
+    write_output("intermediate var", x, x_d, y, y_d, ad_test::intermediate_var_diff(x, x_d, y, y_d));
+    write_output("intermediate passive var", x, x_d, y, y_d, ad_test::intermediate_passive_var_diff(cpp2::move(x), cpp2::move(x_d), cpp2::move(y), cpp2::move(y_d)));
 }
 

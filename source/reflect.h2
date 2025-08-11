@@ -3957,6 +3957,25 @@ autodiff_expression_handler: type = {
         declare_d = declare_;
     }
 
+    gen_lhs_assignment: (inout this, prim: std::string, fwd: std::string, primal_first: bool = false) = {
+        lhs_d : std::string = lhs + "_d";
+        if lhs == "_" {
+            // TODO: Maybe improve discard handling
+            lhs_d = lhs;
+        }
+
+        fwd_str    := "(lhs_d)$   (declare_d)$ = (fwd)$;\n";
+        primal_str := "(lhs)$   (declare_p)$ = (prim)$;\n";
+
+        if primal_first {
+            diff += primal_str;
+        }
+        diff += fwd_str;
+        if !primal_first {
+            diff += primal_str;
+        }
+    }
+
     handle_expression_list: (inout this, list: meta::expression_list) -> std::vector<std::string> = {
         args : std::vector<std::string> = ();
         for list.get_expressions() do (expr) {
@@ -4013,8 +4032,7 @@ autodiff_expression_handler: type = {
 
         func_diff := string_util::replace_all(pos*.second, "_x_", arg);
 
-        diff += "(lhs)$_d = (func_diff)$ * (arg)$_d;\n";
-        diff += "(lhs)$   = (func_name)$((arg)$);\n";
+        gen_lhs_assignment("(func_name)$((arg)$)", "(func_diff)$ * (arg)$_d");
 
         return true;
     }
@@ -4067,8 +4085,8 @@ autodiff_expression_handler: type = {
         terms := binexpr.get_terms();
 
         first := true;
-        fwd :   std::string = "(lhs)$_d (declare_p)$= ";
-        primal: std::string = "(lhs)$   (declare_d)$= ";
+        fwd :   std::string = "";
+        primal: std::string = "";
         for terms do (term) {
             if !first {
                 op := term.get_op().to_string();
@@ -4083,10 +4101,7 @@ autodiff_expression_handler: type = {
             first = false;
         }
 
-        fwd    += ";";
-        primal += ";";
-
-        diff += fwd + primal;
+        gen_lhs_assignment(primal, fwd);
     }
 
     traverse: (override inout this, binexpr: meta::multiplicative_expression) = {
@@ -4118,8 +4133,7 @@ autodiff_expression_handler: type = {
 
             if i + 1 == terms.ssize() {
                 // Last item
-                diff += "(lhs)$_d (declare_p)$= (fwd)$;";
-                diff += "(lhs)$   (declare_d)$= (primal)$;";
+                gen_lhs_assignment(primal, fwd);
             }
             else {
                 // Temporary
@@ -4181,8 +4195,7 @@ autodiff_expression_handler: type = {
 
         // Copy the return values
         // TODO: Look up return value name of function.
-        diff += "(lhs)$   (declare_p)$= (ret_temp)$.r;\n";
-        diff += "(lhs)$_d (declare_d)$= (ret_temp)$.r_d;\n";
+        gen_lhs_assignment("(ret_temp)$.r", "(ret_temp)$.r_d", true);
 
         // TODO: Add function to list of functions/objects for differentiation.
     }
@@ -4190,15 +4203,13 @@ autodiff_expression_handler: type = {
     traverse: (override inout this, primary: meta::primary_expression) =
     {
         if primary.is_identifier() {
-            diff += "(lhs)$_d (declare_p)$= (primary.to_string())$_d;";
-            diff += "(lhs)$   (declare_d)$= (primary.to_string())$;";
+            gen_lhs_assignment(primary.to_string(), primary.to_string() + "_d");
         }
         else if primary.is_expression_list() {
             primary.error("AD: Do not know how to handle expression list inside of primary_expression: (primary.to_string())$");
         }
         else if primary.is_literal() {
-            diff += "(lhs)$_d (declare_p)$= ();";
-            diff += "(lhs)$   (declare_d)$= (primary.to_string())$;";
+            gen_lhs_assignment(primary.to_string(), "()");
         }
         else if primary.is_declaration() {
             primary.error("AD: Do not know how to handle declaration inside of primary_expression: (primary.to_string())$");
