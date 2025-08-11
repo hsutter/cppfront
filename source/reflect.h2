@@ -2435,6 +2435,191 @@ sample_print: (s: std::string_view, indent: i32) =
 
 simple_traverser: type = {
 
+    pre_traverse: (virtual inout this, decl: meta::declaration) = {
+        traverse(decl);
+    }
+
+    traverse: (virtual inout this, decl: meta::declaration) =
+    {
+        if decl.is_function() {
+            pre_traverse(decl.as_function());
+        }
+
+        if decl.is_object() {
+            pre_traverse(decl.as_object());
+        }
+
+        if decl.is_type() {
+            pre_traverse(decl.as_type());
+        }
+
+        // ...
+        // ... extend as desired to namespace, alias, etc.
+        // ...
+    }
+
+
+    pre_traverse: (virtual inout this, f: meta::function_declaration) = {
+        traverse(f);
+    }
+
+    traverse: (virtual inout this, f: meta::function_declaration) =
+    {
+        parameters := f.get_parameters();
+        for parameters do (param) {
+            pre_traverse(param);
+        }
+
+        returns := f.get_returns();
+        for returns do (param) {
+            pre_traverse(param);
+        }
+
+        if !f.has_compound_body() {
+            pre_traverse(f.get_body());
+        }
+        else {
+            pre_traverse(f.get_compound_body());
+        }
+    }
+
+
+    pre_traverse: (virtual inout this, o: meta::object_declaration) = {
+        traverse(o);
+    }
+
+    traverse: (virtual inout this, o: meta::object_declaration) =
+    {
+        if o.has_initializer() {
+            pre_traverse(o.get_initializer());
+        }
+    }
+
+
+    pre_traverse: (virtual inout this, t: meta::type_declaration) = {
+        traverse(t);
+    }
+
+    traverse: (virtual inout this, t: meta::type_declaration) =
+    {
+        for t.get_members() do (m) {
+            pre_traverse(m);
+        }
+    }
+
+
+    pre_traverse: (virtual inout this, t: meta::parameter_declaration) = {
+        traverse(t);
+    }
+
+    traverse: (virtual inout this, t: meta::parameter_declaration) =
+    {
+        pre_traverse(t.get_declaration());
+    }
+
+    pre_traverse: (virtual inout this, stmt: meta::statement) = {
+        traverse(stmt);
+    }
+
+    traverse: (virtual inout this, stmt: meta::statement) =
+    {
+        if stmt.is_expression_statement() {
+            pre_traverse(stmt.as_expression_statement().get_expression());
+        }
+
+        if stmt.is_compound_statement() {
+            pre_traverse(stmt.as_compound_statement());
+        }
+
+        if stmt.is_selection_statement()
+        {
+            pre_traverse(stmt.as_selection_statement());
+        }
+
+        if stmt.is_declaration() {
+            pre_traverse(stmt.as_declaration());
+        }
+
+        if stmt.is_return_statement() {
+            pre_traverse(stmt.as_return_statement());
+        }
+
+        if stmt.is_iteration_statement() {
+            pre_traverse(stmt.as_iteration_statement());
+        }
+
+        // TODO:
+        //  using
+        //  contract
+        //  inspect
+        //  jump
+    }
+
+
+    pre_traverse: (virtual inout this, stmt: meta::compound_statement) = {
+        traverse(stmt);
+    }
+
+    traverse: (virtual inout this, stmt: meta::compound_statement) =
+    {
+        stmts := stmt.get_statements();
+
+        for stmts do (cur) {
+            pre_traverse(cur);
+        }
+    }
+
+
+    pre_traverse: (virtual inout this, stmt: meta::return_statement) = {
+        traverse(stmt);
+    }
+
+    traverse: (virtual inout this, stmt: meta::return_statement) =
+    {
+        if stmt.has_expression() {
+            pre_traverse(stmt.get_expression());
+        }
+    }
+
+
+    pre_traverse: (virtual inout this, stmt: meta::iteration_statement) = {
+        traverse(stmt);
+    }
+
+    traverse: (virtual inout this, stmt: meta::iteration_statement) =
+    {
+        if stmt.is_do() || stmt.is_while() {
+            pre_traverse(stmt.get_do_while_condition());
+            pre_traverse(stmt.get_do_while_body());
+        }
+        else {
+            assert(stmt.is_for());
+            pre_traverse(stmt.get_for_range());
+            pre_traverse(stmt.get_for_parameter());
+            pre_traverse(stmt.get_for_body());
+        }
+
+        if stmt.has_next() {
+            pre_traverse(stmt.get_next_expression());
+        }
+    }
+
+
+    pre_traverse: (virtual inout this, stmt: meta::selection_statement) = {
+        traverse(stmt);
+    }
+
+    traverse: (virtual inout this, stmt: meta::selection_statement) =
+    {
+        pre_traverse(stmt.get_expression());
+        pre_traverse(stmt.get_true_branch());
+
+        if stmt.has_false_branch() {
+            pre_traverse(stmt.get_false_branch());
+        }
+    }
+
+
     pre_traverse: (virtual inout this, expr: meta::expression) =
     {
         // Nothing to select here.
