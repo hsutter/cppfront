@@ -3720,6 +3720,12 @@ sample_traverser: (idexpr: meta::id_expression, indent: i32) =
 
 autodiff_context: type = {
     private temporary_count : int = 0;
+    public  math_funcs      : std::map<std::string, std::string> = (
+        std::make_pair("sin", "cos(_x_)"),
+        std::make_pair("cos", "-sin(_x_)"),
+        std::make_pair("exp", "exp(_x_)"),
+        // TODO: Extend
+    );
 
     gen_temporary : (inout this) -> std::string = {
         temporary_count += 1;
@@ -3803,6 +3809,21 @@ autodiff_expression_handler: type = {
 
             return t;
         }
+    }
+
+    handle_math_func :(inout this, func_name: std::string, arg: std::string) -> bool = {
+        pos := ctx*.math_funcs.find(func_name);
+
+        if pos == ctx*.math_funcs.end() {
+            return false;
+        }
+
+        func_diff := string_util::replace_all(pos*.second, "_x_", arg);
+
+        diff += "(lhs)$_d = (func_diff)$ * (arg)$_d;\n";
+        diff += "(lhs)$   = (func_name)$((arg)$);\n";
+
+        return true;
     }
 
     traverse: (override inout this, expr: meta::expression) = {
@@ -3938,6 +3959,9 @@ autodiff_expression_handler: type = {
             return;
         }
 
+        primary := postfix.get_primary_expression();
+        func_name := primary.to_string();
+
         // First handle all arguments
         term := terms[0];
         args : std::vector<std::string> = ();
@@ -3948,9 +3972,15 @@ autodiff_expression_handler: type = {
             args.push_back(handle_expression_term(term.get_expression()));
         }
 
+        // Check if this is a special function, with a user defined handling.
+        // TODO: Extend to a generalized version and not only functions with one argument.
+        if handle_math_func(func_name, args[0]) {
+            return;
+        }
+
         // All arguments have now been handled. Form the function call
         ret_temp := ctx*.gen_temporary();
-        diff += "(ret_temp)$ := (postfix.get_primary_expression().to_string())$_diff(";
+        diff += "(ret_temp)$ := (func_name)$_diff(";
         for args do (arg) {
             diff += "(arg)$, (arg)$_d,";
         }
@@ -3960,6 +3990,8 @@ autodiff_expression_handler: type = {
         // TODO: Look up return value name of function.
         diff += "(lhs)$   (declare_p)$= (ret_temp)$.r;\n";
         diff += "(lhs)$_d (declare_d)$= (ret_temp)$.r_d;\n";
+
+        // TODO: Add function to list of functions/objects for differentiation.
     }
 }
 
