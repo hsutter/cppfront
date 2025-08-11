@@ -137,6 +137,35 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
+    if_branch:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x;
+        if x < 0.0
+        {
+            r = y;
+        }
+        return;
+    }
+
+    if_else_branch:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        if x < 0.0
+        {
+            r = y;
+        }
+        else 
+        {
+            r = x;
+        }
+        return;
+    }
+
     add_1_diff:(
         in x: double, 
         in x_d: double, 
@@ -374,6 +403,52 @@ ad_test:/* @autodiff @print */ type =
         temp_1: _ = x - y;
         r_d = cos(temp_1) * temp_1_d;
         r = sin(temp_1);
+        return;
+    }
+
+    if_branch_diff:(
+        in x: double, 
+        in x_d: double, 
+        in y: double, 
+        in y_d: double, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: double = 0.0, 
+        ) = 
+    {
+        r_d = x_d;
+        r = x;
+        if x < 0.0
+        {
+            r_d = y_d;
+            r = y;
+        }
+        else 
+        {
+        }
+        return;
+    }
+
+    if_else_branch_diff:(
+        in x: double, 
+        in x_d: double, 
+        in y: double, 
+        in y_d: double, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: double = 0.0, 
+        ) = 
+    {
+        if x < 0.0
+        {
+            r_d = y_d;
+            r = y;
+        }
+        else 
+        {
+            r_d = x_d;
+            r = x;
+        }
         return;
     }
 }

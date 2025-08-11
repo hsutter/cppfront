@@ -4178,16 +4178,113 @@ autodiff_expression_handler: type = {
 
         // TODO: Add function to list of functions/objects for differentiation.
     }
+
+    traverse: (override inout this, primary: meta::primary_expression) =
+    {
+        if primary.is_identifier() {
+            diff += "(lhs)$_d (declare_p)$= (primary.to_string())$_d;";
+            diff += "(lhs)$   (declare_d)$= (primary.to_string())$;";
+        }
+        else if primary.is_expression_list() {
+            primary.error("AD: Do not know how to handle expression list inside of primary_expression: (primary.to_string())$");
+        }
+        else if primary.is_literal() {
+            diff += "(lhs)$_d (declare_p)$= ();";
+            diff += "(lhs)$   (declare_d)$= (primary.to_string())$;";
+        }
+        else if primary.is_declaration() {
+            primary.error("AD: Do not know how to handle declaration inside of primary_expression: (primary.to_string())$");
+        }
+        else {
+            primary.error("AD: Unknown primary expression kind: (primary.to_string())$");
+        }
+    }
 }
 
 autodiff_stmt_handler: type = {
+    this: simple_traverser      = ();
     this: autodiff_handler_base;
 
-    operator=: (out this, ctx_: *autodiff_context) = {
+    base: type == simple_traverser;
+
+    mf: meta::function_declaration;
+
+    operator=: (out this, ctx_: *autodiff_context, mf_: meta::function_declaration) = {
         autodiff_handler_base = (ctx_);
+        mf = mf_;
     }
 
-    handle_expression_statement : (inout this, inout mf, expr) = {
+    traverse: (override inout this, decl: meta::declaration) = {
+        decl.error("AD: Do not know how to handle declaration: (decl.to_string())$");
+    }
+
+
+    traverse: (override inout this, f: meta::function_declaration) = {
+        f.error("AD: Do not know how to handle function_declaration: (f.to_string())$");
+    }
+
+
+    traverse: (override inout this, o: meta::object_declaration) = {
+        o.error("AD: Do not know how to handle object_declaration: (o.to_string())$");
+    }
+
+
+    traverse: (override inout this, t: meta::type_declaration) = {
+        t.error("AD: Do not know how to handle type_declaration: (t.to_string())$");
+    }
+
+
+    traverse: (override inout this, t: meta::parameter_declaration) = {
+        t.error("AD: Do not know how to handle parameter_declaration: (t.to_string())$");
+    }
+
+
+    traverse: (override inout this, stmt: meta::statement) = {
+        base::traverse(stmt);
+    }
+
+
+    traverse: (override inout this, stmt: meta::compound_statement) = {
+        // Brackets are handled by the
+        diff += "{\n";
+        base::traverse(stmt);
+        diff += "}\n";
+    }
+
+
+    traverse: (override inout this, stmt: meta::return_statement) = {
+        if stmt.has_expression() {
+            // Return with expression.
+            // TODO: Remove assumptions
+            //     - Return expression is always active. (Look this up in mf or so.)
+            //     - Return was converted to a two parameter return with the name r.
+            ad: autodiff_expression_handler = (ctx, "r");
+            ad..pre_traverse(stmt.get_expression());
+            append(ad);
+        }
+        else {
+            diff += "return;\n";
+        }
+    }
+
+
+    traverse: (override inout this, stmt: meta::iteration_statement) = {
+        stmt.error("AD: Do not know how to handle iteration_statement: (stmt.to_string())$");
+    }
+
+
+    traverse: (override inout this, stmt: meta::selection_statement) = {
+        // TODO: Currently assuming that nothing bad happens in the condition
+        diff += "if (stmt.get_expression().to_string())$";
+        pre_traverse(stmt.get_true_branch());
+
+        if stmt.has_false_branch() {
+            diff += "else ";
+            pre_traverse(stmt.get_false_branch());
+        }
+    }
+
+    traverse : (override inout this, expr: meta::expression) = {
         if expr.is_simple_assignment()
         {
             //  If this is not an assignment to a parameter or return object, skip it
@@ -4213,6 +4310,9 @@ autodiff_stmt_handler: type = {
             h.pre_traverse(assignment_terms[1].get_term());
 
             append(h);
+        }
+        else {
+            mf.error("AD: Do not know how to handle: (expr.to_string())$");
         }
     }
 }
@@ -4254,15 +4354,12 @@ autodiff: (inout t: meta::type_declaration) =
         }
 
         ad_ctx: autodiff_context = ();
-        ad_impl : autodiff_stmt_handler = (ad_ctx&);
+        ad_impl : autodiff_stmt_handler = (ad_ctx&, mf);
 
 
         for mf.get_compound_body().get_statements() do (stmt)
         {
-            if stmt.is_expression_statement()
-            {
-                ad_impl.handle_expression_statement(mf, stmt.as_expression_statement().get_expression());
-            }
+            ad_impl..pre_traverse(stmt);
         }
         diff += ad_impl.diff;
 
