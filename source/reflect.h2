@@ -2435,6 +2435,12 @@ sample_print: (s: std::string_view, indent: i32) =
 
 simple_traverser: type = {
 
+    pre_traverse: (virtual inout this, expr: meta::expression) =
+    {
+        // Nothing to select here.
+        traverse(expr);
+    }
+
     traverse: (virtual inout this, expr: meta::expression) =
     {
         //  An expression has other shortcuts to query deeper properties,
@@ -3752,6 +3758,15 @@ autodiff_expression_handler: type = {
         declare_d = declare_;
     }
 
+    handle_expression_list: (inout this, list: meta::expression_list) -> std::vector<std::string> = {
+        args : std::vector<std::string> = ();
+        for list.get_expressions() do (expr) {
+            args.push_back(handle_expression_term(expr));
+        }
+
+        return args;
+    }
+
     handle_expression_term :(inout this, term) -> std::string = {
         if term.is_identifier() {
             return term.to_string();
@@ -3906,6 +3921,45 @@ autodiff_expression_handler: type = {
 
     traverse: (override inout this, isas: meta::is_as_expression) = {
         isas.error( "AD: Is as expressions are not yet handled." );
+    }
+
+    traverse: (override inout this, postfix: meta::prefix_expression) =
+    {
+        postfix.error( "AD: Prefix expressions are not yet handled." );
+    }
+
+    traverse: (override inout this, postfix: meta::postfix_expression) =
+    {
+        terms := postfix.get_terms();
+
+        // Check for function call, everything else is not handled.
+        if terms.ssize() != 1 && terms[0].get_op() != "(" {
+            postfix.error( "AD: Postfix expressions  are only handled for function calls. Do not know how to handle: (postfix.to_string())$" );
+            return;
+        }
+
+        // First handle all arguments
+        term := terms[0];
+        args : std::vector<std::string> = ();
+        if term.is_expression_list() {
+            args = handle_expression_list(term.get_expression_list());
+        }
+        else {
+            args.push_back(handle_expression_term(term.get_expression()));
+        }
+
+        // All arguments have now been handled. Form the function call
+        ret_temp := ctx*.gen_temporary();
+        diff += "(ret_temp)$ := (postfix.get_primary_expression().to_string())$_diff(";
+        for args do (arg) {
+            diff += "(arg)$, (arg)$_d,";
+        }
+        diff += ");\n";
+
+        // Copy the return values
+        // TODO: Look up return value name of function.
+        diff += "(lhs)$   (declare_p)$= (ret_temp)$.r;\n";
+        diff += "(lhs)$_d (declare_d)$= (ret_temp)$.r_d;\n";
     }
 }
 
