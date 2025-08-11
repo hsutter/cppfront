@@ -4339,9 +4339,21 @@ autodiff: (inout t: meta::type_declaration) =
 
         //  b) Returns
 
-        for mf.get_returns() do (param) {
-            diff += "(param.get_declaration().name())$ : (param.get_declaration().type())$ = 0.0, ";
-            diff += "(param.get_declaration().name())$_d : (param.get_declaration().type())$ = 0.0, ";
+        if mf.has_non_void_return_type() && mf.get_returns().empty() { // TODO: has_non_void_return_type is true for return lists: (r: double) bug/feature?
+            // TODO: check if name "r" is available. (Also needs inspection of functions at call sides.)
+            if mf.has_deduced_return_type() {
+                // TODO: Take care of initialization order error.
+                diff += "r, r_d, ";
+            }
+            else {
+                diff += "r: (mf.get_unnamed_return_type())$ = (), r_d: (mf.get_unnamed_return_type())$ = (), ";
+            }
+        }
+        else {
+            for mf.get_returns() do (param) {
+                diff += "(param.get_declaration().name())$ : (param.get_declaration().type())$ = 0.0, ";
+                diff += "(param.get_declaration().name())$_d : (param.get_declaration().type())$ = 0.0, ";
+            }
         }
 
         diff += ") = {";

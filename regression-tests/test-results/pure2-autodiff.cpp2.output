@@ -166,6 +166,14 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
+    direct_return:(
+        in x: double, 
+        in y: double, 
+    ) -> move double = 
+    {
+        return x + y;
+    }
+
     add_1_diff:(
         in x: double, 
         in x_d: double, 
@@ -449,6 +457,21 @@ ad_test:/* @autodiff @print */ type =
             r_d = x_d;
             r = x;
         }
+        return;
+    }
+
+    direct_return_diff:(
+        in x: double, 
+        in x_d: double, 
+        in y: double, 
+        in y_d: double, 
+    ) -> (
+            out r: double = (), 
+            out r_d: double = (), 
+        ) = 
+    {
+        r_d = x_d + y_d;
+        r = x + y;
         return;
     }
 }

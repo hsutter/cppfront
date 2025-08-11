@@ -103,6 +103,9 @@ using if_else_branch_ret = double;
 
 #line 72 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto if_else_branch(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> if_else_branch_ret;
+
+#line 81 "pure2-autodiff.cpp2"
+    public: [[nodiscard]] static auto direct_return(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> double;
 struct add_1_diff_ret { double r; double r_d; };
 
 
@@ -172,17 +175,21 @@ struct if_else_branch_diff_ret { double r; double r_d; };
 
 public: [[nodiscard]] static auto if_else_branch_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> if_else_branch_diff_ret;
 
+struct direct_return_diff_ret { double r; double r_d; };
+
+public: [[nodiscard]] static auto direct_return_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> direct_return_diff_ret;
+
     public: ad_test() = default;
     public: ad_test(ad_test const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(ad_test const&) -> void = delete;
 
 
-#line 80 "pure2-autodiff.cpp2"
+#line 84 "pure2-autodiff.cpp2"
 };
 
 auto write_output(cpp2::impl::in<std::string> func, cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d, auto const& ret) -> void;
 
-#line 86 "pure2-autodiff.cpp2"
+#line 90 "pure2-autodiff.cpp2"
 auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -317,6 +324,11 @@ auto main() -> int;
       }return std::move(r.value()); 
     }
 
+#line 81 "pure2-autodiff.cpp2"
+    [[nodiscard]] auto ad_test::direct_return(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> double{
+      return x + y; 
+    }
+
     [[nodiscard]] auto ad_test::add_1_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> add_1_diff_ret{
                                                                                                                       double r {0.0};
                                                                                                                       double r_d {0.0};r_d = x_d + y_d;r = x + y;return  { std::move(r), std::move(r_d) }; 
@@ -430,12 +442,18 @@ auto temp_1 {x - y}; r_d = cos(temp_1) * cpp2::move(temp_1_d);
     return  { std::move(r), std::move(r_d) }; 
     }
 
-#line 82 "pure2-autodiff.cpp2"
+    [[nodiscard]] auto ad_test::direct_return_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> direct_return_diff_ret{
+                                                                                                                          double r {};
+                                                                                                                          double r_d {};r_d = x_d + y_d;r = x + y;
+    return  { std::move(r), std::move(r_d) }; 
+    }
+
+#line 86 "pure2-autodiff.cpp2"
 auto write_output(cpp2::impl::in<std::string> func, cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d, auto const& ret) -> void{
     std::cout << "diff(" + cpp2::to_string(func) + ") at (x = " + cpp2::to_string(x) + ", x_d = " + cpp2::to_string(x_d) + ", y = " + cpp2::to_string(y) + ", y_d = " + cpp2::to_string(y_d) + ") = (r = " + cpp2::to_string(ret.r) + ", r_d = " + cpp2::to_string(ret.r_d) + ")" << std::endl;
 }
 
-#line 86 "pure2-autodiff.cpp2"
+#line 90 "pure2-autodiff.cpp2"
 auto main() -> int{
 
     double x {2.0}; 
@@ -458,6 +476,7 @@ auto main() -> int{
     write_output("x * func(x, y)", x, x_d, y, y_d, ad_test::func_call_diff(x, x_d, y, y_d));
     write_output("sin(x + y)", x, x_d, y, y_d, ad_test::sin_call_diff(x, x_d, y, y_d));
     write_output("if branch", x, x_d, y, y_d, ad_test::if_branch_diff(x, x_d, y, y_d));
-    write_output("if else branch", x, x_d, y, y_d, ad_test::if_else_branch_diff(cpp2::move(x), cpp2::move(x_d), cpp2::move(y), cpp2::move(y_d)));
+    write_output("if else branch", x, x_d, y, y_d, ad_test::if_else_branch_diff(x, x_d, y, y_d));
+    write_output("direct return", x, x_d, y, y_d, ad_test::direct_return_diff(cpp2::move(x), cpp2::move(x_d), cpp2::move(y), cpp2::move(y_d)));
 }
 

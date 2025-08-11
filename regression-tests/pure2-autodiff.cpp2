@@ -77,6 +77,10 @@ ad_test: @autodiff @print type = {
         r = x;
       }
     }
+
+    direct_return: (x: double, y: double) -> double = {
+      return x + y;
+    }
 }
 
 write_output: (func: std::string, x: double, x_d: double, y: double, y_d: double, ret) = {
@@ -106,4 +110,5 @@ main: () = {
     write_output("sin(x + y)", x, x_d, y, y_d, ad_test::sin_call_diff(x, x_d, y, y_d));
     write_output("if branch", x, x_d, y, y_d, ad_test::if_branch_diff(x, x_d, y, y_d));
     write_output("if else branch", x, x_d, y, y_d, ad_test::if_else_branch_diff(x, x_d, y, y_d));
+    write_output("direct return", x, x_d, y, y_d, ad_test::direct_return_diff(x, x_d, y, y_d));
 }
