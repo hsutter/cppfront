@@ -1993,7 +1993,7 @@ public:
             }
         }
 
-        for (auto& decl : n.get_type_scope_declarations())
+        for (auto& decl : n.get_nested_declarations())
         {
             if (decl->has_name("that"))
             {

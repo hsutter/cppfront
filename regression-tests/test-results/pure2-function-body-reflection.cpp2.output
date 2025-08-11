@@ -1,4 +1,6 @@
 pure2-function-body-reflection.cpp2...Type: test
+  is a member of namespace xyzzy which contains the following names:
+    sample_function_before_type
   Declaration: one_liner
       Function: one_liner
         Parameters:
