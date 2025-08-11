@@ -106,6 +106,11 @@ using if_else_branch_ret = double;
 
 #line 81 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto direct_return(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> double;
+using intermediate_var_ret = double;
+
+
+#line 85 "pure2-autodiff.cpp2"
+    public: [[nodiscard]] static auto intermediate_var(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> intermediate_var_ret;
 struct add_1_diff_ret { double r; double r_d; };
 
 
@@ -179,17 +184,21 @@ struct direct_return_diff_ret { double r; double r_d; };
 
 public: [[nodiscard]] static auto direct_return_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> direct_return_diff_ret;
 
+struct intermediate_var_diff_ret { double r; double r_d; };
+
+public: [[nodiscard]] static auto intermediate_var_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> intermediate_var_diff_ret;
+
     public: ad_test() = default;
     public: ad_test(ad_test const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(ad_test const&) -> void = delete;
 
 
-#line 84 "pure2-autodiff.cpp2"
+#line 91 "pure2-autodiff.cpp2"
 };
 
 auto write_output(cpp2::impl::in<std::string> func, cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d, auto const& ret) -> void;
 
-#line 90 "pure2-autodiff.cpp2"
+#line 97 "pure2-autodiff.cpp2"
 auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -329,6 +338,16 @@ auto main() -> int;
       return x + y; 
     }
 
+#line 85 "pure2-autodiff.cpp2"
+    [[nodiscard]] auto ad_test::intermediate_var(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> intermediate_var_ret{
+          cpp2::impl::deferred_init<double> r;
+#line 86 "pure2-autodiff.cpp2"
+      double t {};    // TODO: change to x initializer when we have access to the initializer expression.
+      t = x + y;
+
+      r.construct(cpp2::move(t));
+    return std::move(r.value()); }
+
     [[nodiscard]] auto ad_test::add_1_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> add_1_diff_ret{
                                                                                                                       double r {0.0};
                                                                                                                       double r_d {0.0};r_d = x_d + y_d;r = x + y;return  { std::move(r), std::move(r_d) }; 
@@ -447,13 +466,21 @@ auto temp_1 {x - y}; r_d = cos(temp_1) * cpp2::move(temp_1_d);
                                                                                                                           double r_d {};r_d = x_d + y_d;r = x + y;
     return  { std::move(r), std::move(r_d) }; 
     }
+[[nodiscard]] auto ad_test::intermediate_var_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> intermediate_var_diff_ret{
+                                                                                                                                 double r {0.0};
+                                                                                                                                 double r_d {0.0};
+double t_d {}; 
 
-#line 86 "pure2-autodiff.cpp2"
+    double t {}; 
+    t_d = x_d + y_d;t = x + y;r_d = cpp2::move(t_d);r = cpp2::move(t);return  { std::move(r), std::move(r_d) }; 
+    }
+
+#line 93 "pure2-autodiff.cpp2"
 auto write_output(cpp2::impl::in<std::string> func, cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d, auto const& ret) -> void{
     std::cout << "diff(" + cpp2::to_string(func) + ") at (x = " + cpp2::to_string(x) + ", x_d = " + cpp2::to_string(x_d) + ", y = " + cpp2::to_string(y) + ", y_d = " + cpp2::to_string(y_d) + ") = (r = " + cpp2::to_string(ret.r) + ", r_d = " + cpp2::to_string(ret.r_d) + ")" << std::endl;
 }
 
-#line 90 "pure2-autodiff.cpp2"
+#line 97 "pure2-autodiff.cpp2"
 auto main() -> int{
 
     double x {2.0}; 
@@ -477,6 +504,7 @@ auto main() -> int{
     write_output("sin(x + y)", x, x_d, y, y_d, ad_test::sin_call_diff(x, x_d, y, y_d));
     write_output("if branch", x, x_d, y, y_d, ad_test::if_branch_diff(x, x_d, y, y_d));
     write_output("if else branch", x, x_d, y, y_d, ad_test::if_else_branch_diff(x, x_d, y, y_d));
-    write_output("direct return", x, x_d, y, y_d, ad_test::direct_return_diff(cpp2::move(x), cpp2::move(x_d), cpp2::move(y), cpp2::move(y_d)));
+    write_output("direct return", x, x_d, y, y_d, ad_test::direct_return_diff(x, x_d, y, y_d));
+    write_output("intermediate var", x, x_d, y, y_d, ad_test::intermediate_var_diff(cpp2::move(x), cpp2::move(x_d), cpp2::move(y), cpp2::move(y_d)));
 }
 

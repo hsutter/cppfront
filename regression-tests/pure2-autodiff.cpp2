@@ -81,6 +81,13 @@ ad_test: @autodiff @print type = {
     direct_return: (x: double, y: double) -> double = {
       return x + y;
     }
+
+    intermediate_var: (x: double, y: double) -> (r: double) = {
+      t: double = (); // TODO: change to x initializer when we have access to the initializer expression.
+      t = x + y;
+
+      r = t;
+    }
 }
 
 write_output: (func: std::string, x: double, x_d: double, y: double, y_d: double, ret) = {
@@ -111,4 +118,5 @@ main: () = {
     write_output("if branch", x, x_d, y, y_d, ad_test::if_branch_diff(x, x_d, y, y_d));
     write_output("if else branch", x, x_d, y, y_d, ad_test::if_else_branch_diff(x, x_d, y, y_d));
     write_output("direct return", x, x_d, y, y_d, ad_test::direct_return_diff(x, x_d, y, y_d));
+    write_output("intermediate var", x, x_d, y, y_d, ad_test::intermediate_var_diff(x, x_d, y, y_d));
 }

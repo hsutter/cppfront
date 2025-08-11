@@ -3916,6 +3916,14 @@ autodiff_context: type = {
         temporary_count += 1;
         return "temp_(temporary_count)$";
     }
+
+    // TODO: Have the proper type declaration here.
+    get_ad_type: (inout this, type: std::string) -> std::string = {
+
+        // TODO: Add type to required generation for AD.
+
+        return type; // Use the same type for now.
+    }
 }
 
 autodiff_handler_base: type = {
@@ -4215,7 +4223,7 @@ autodiff_stmt_handler: type = {
     }
 
     traverse: (override inout this, decl: meta::declaration) = {
-        decl.error("AD: Do not know how to handle declaration: (decl.to_string())$");
+        base::traverse(decl);
     }
 
 
@@ -4225,7 +4233,15 @@ autodiff_stmt_handler: type = {
 
 
     traverse: (override inout this, o: meta::object_declaration) = {
-        o.error("AD: Do not know how to handle object_declaration: (o.to_string())$");
+        lhs := o.name();
+        type :=  o.type();
+
+        ad_type := ctx*.get_ad_type(type);
+
+        // TODO: Get initializer as expression and handle it.
+        init := o.initializer();
+        diff += "(lhs)$_d : (ad_type)$ = (init)$;\n";
+        diff += "(lhs)$   : (ad_type)$ = (init)$;\n";
     }
 
 
@@ -4290,10 +4306,6 @@ autodiff_stmt_handler: type = {
             //  If this is not an assignment to a parameter or return object, skip it
             lhs_rhs := expr.get_lhs_rhs_if_simple_assignment();
             lhs     := lhs_rhs.lhs.get_first_token_ignoring_this();
-            if !mf.has_parameter_or_return_named(lhs)
-            {
-                return;
-            }
 
             assignment := expr.as_assignment_expression();
 
