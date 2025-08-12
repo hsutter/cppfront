@@ -4073,6 +4073,107 @@ autodiff_expression_handler: type = {
         }
     }
 
+    handle_function_call: (inout this, postfix: meta::postfix_expression, has_return: bool) = {
+        terms := postfix.get_terms();
+
+        is_func  := true;
+
+        (copy i := 0)
+        for terms next i += 1 do (term)  {
+            if term.get_op() == "." {
+                continue;
+            }
+            if term.get_op() == "(" && i + 1 == terms.ssize() { // Function operator has to be the last
+                continue;
+            }
+
+            is_func = false;
+        }
+
+        // Check for function call, everything else is not handled.
+        if !(is_func) {
+            postfix.error( "AD: Postfix expressions are only handled for function calls, or member function calls. Do not know how to handle: (postfix.to_string())$" );
+            return;
+        }
+
+        object         : std::string = "";
+        object_d       : std::string = "";
+        function_name : std::string = "";
+        args          : std::vector<std::string> = ();
+
+        primary := postfix.get_primary_expression();
+
+        if 1 != terms.ssize() {
+            object   = primary.to_string();
+            object_d = primary.to_string() + "_d";
+        }
+        else {
+            function_name = primary.to_string();
+        }
+
+        (copy i := 0)
+        for terms next i += 1 do (term)  {
+            if term.get_op() == "." {
+                assert(term.is_id_expression());
+                name := term.get_id_expression().to_string();
+
+                if i + 2 == terms.ssize() { // Second last term is function name, last term is function argument list
+                    function_name = name;
+                }
+                else {
+                    object   += "." + name;
+                    object_d += "." + name;
+                }
+            }
+            else if term.get_op() == "(" {
+                assert(term.is_expression_list());
+
+                args = handle_expression_list(term.get_expression_list());
+            }
+            else {
+                postfix.error("AD: Do not know how to handle postfix term: (term.to_string())$");
+            }
+        }
+
+        r_arg := lhs;
+        if !has_return {
+            r_arg = "";
+        }
+        if handle_special_function(object, object_d, function_name, args, r_arg) {
+            return;
+        }
+        // TODO: Extend to a generalized version and not only functions with one argument.
+        if handle_math_func(function_name, args[0]) {
+            return;
+        }
+
+        // No special handling, currently only allow direct function calls
+        if !object.empty() {
+            postfix.error("AD: Can currently only handle direct function calls and no member function calls.: (postfix.to_string())$");
+        }
+
+        // All arguments have now been handled. Form the function call
+        ret_temp : std::string = "";
+        if has_return {
+            ret_temp = ctx*.gen_temporary();
+            diff += "(ret_temp)$ := ";
+        }
+
+        // TODO: This is untested for functions with no return value. Requires handling of out and inout parameters in functions.
+        diff += "(function_name)$_diff(";
+        for args do (arg) {
+            diff += "(arg)$, (arg)$_d,";
+        }
+        diff += ");\n";
+
+        if has_return {
+            // TODO: Look up return value name of function.
+            gen_lhs_assignment("(ret_temp)$.r", "(ret_temp)$.r_d", /* switch order = */ true);
+        }
+
+        // TODO: Add function to list of functions/objects for differentiation.
+    }
+
     handle_math_func :(inout this, func_name: std::string, arg: std::string) -> bool = {
         pos := ctx*.math_funcs.find(func_name);
 
@@ -4083,6 +4184,39 @@ autodiff_expression_handler: type = {
         func_diff := string_util::replace_all(pos*.second, "_x_", arg);
 
         gen_lhs_assignment("(func_name)$((arg)$)", "(func_diff)$ * (arg)$_d");
+
+        return true;
+    }
+
+    handle_special_function: (inout this, object: std::string, object_d: std::string, function_name: std::string, args: std::vector<std::string>, ret: std::string) -> bool = {
+
+        r := ctx*.lookup_special_function_handling(function_name, args.ssize(), !ret.empty(), !object.empty());
+
+        if !r.m {
+            return false; // No match
+        }
+
+        // Have a match, do the replacement
+        code: std::string = "";
+        code = r.code; // TODO: Direct initialization gives error: no matching function for call to ‘std::__cxx11::basic_string<char>::basic_string(<brace-enclosed initializer list>)’
+
+        if !object.empty() {
+            code = string_util::replace_all(code, "_o_", object);
+            code = string_util::replace_all(code, "_od_", object_d);
+        }
+
+        if !ret.empty() {
+            code = string_util::replace_all(code, "_r_", ret);
+            code = string_util::replace_all(code, "_rd_", ret + "_d");
+        }
+
+        (copy i := 1)
+        for args do (arg) {
+            code = string_util::replace_all(code, "_a(i)$_", arg);
+            code = string_util::replace_all(code, "_ad(i)$_", arg + "_d");
+        }
+
+        diff += code;
 
         return true;
     }
@@ -4210,44 +4344,27 @@ autodiff_expression_handler: type = {
     {
         terms := postfix.get_terms();
 
+        is_func  := true;
+
+        (copy i := 0)
+        for terms next i += 1 do (term)  {
+            if term.get_op() == "." {
+                continue;
+            }
+            if term.get_op() == "(" && i + 1 == terms.ssize() { // Function operator has to be the last
+                continue;
+            }
+
+            is_func = false;
+        }
+
         // Check for function call, everything else is not handled.
-        if terms.ssize() != 1 && terms[0].get_op() != "(" {
-            postfix.error( "AD: Postfix expressions  are only handled for function calls. Do not know how to handle: (postfix.to_string())$" );
+        if !(is_func) {
+            postfix.error( "AD: Postfix expressions are only handled for function calls, or member function calls. Do not know how to handle: (postfix.to_string())$" );
             return;
         }
 
-        primary := postfix.get_primary_expression();
-        func_name := primary.to_string();
-
-        // First handle all arguments
-        term := terms[0];
-        args : std::vector<std::string> = ();
-        if term.is_expression_list() {
-            args = handle_expression_list(term.get_expression_list());
-        }
-        else {
-            args.push_back(handle_expression_term(term.get_expression()));
-        }
-
-        // Check if this is a special function, with a user defined handling.
-        // TODO: Extend to a generalized version and not only functions with one argument.
-        if handle_math_func(func_name, args[0]) {
-            return;
-        }
-
-        // All arguments have now been handled. Form the function call
-        ret_temp := ctx*.gen_temporary();
-        diff += "(ret_temp)$ := (func_name)$_diff(";
-        for args do (arg) {
-            diff += "(arg)$, (arg)$_d,";
-        }
-        diff += ");\n";
-
-        // Copy the return values
-        // TODO: Look up return value name of function.
-        gen_lhs_assignment("(ret_temp)$.r", "(ret_temp)$.r_d", true);
-
-        // TODO: Add function to list of functions/objects for differentiation.
+        handle_function_call(postfix, true);
     }
 
     traverse: (override inout this, primary: meta::primary_expression) =
@@ -4281,32 +4398,6 @@ autodiff_stmt_handler: type = {
     operator=: (out this, ctx_: *autodiff_context, mf_: meta::function_declaration) = {
         autodiff_handler_base = (ctx_);
         mf = mf_;
-    }
-
-    handle_special_function: (inout this, object: std::string, object_d: std::string, function_name: std::string, args: std::vector<std::string>) -> bool = {
-
-        r := ctx*.lookup_special_function_handling(function_name, args.ssize(), false, !object.empty());
-
-        if !r.m {
-            return false; // No match
-        }
-
-        // Have a match, do the replacement
-        code: std::string = "";
-        code = r.code; // TODO: Direct initialization gives error: no matching function for call to ‘std::__cxx11::basic_string<char>::basic_string(<brace-enclosed initializer list>)’
-
-        code = string_util::replace_all(code, "_o_", object);
-        code = string_util::replace_all(code, "_od_", object_d);
-
-        (copy i := 1)
-        for args do (arg) {
-            code = string_util::replace_all(code, "_a(i)$_", arg);
-            code = string_util::replace_all(code, "_ad(i)$_", arg + "_d");
-        }
-
-        diff += code;
-
-        return true;
     }
 
     traverse: (override inout this, decl: meta::declaration) = {
@@ -4517,7 +4608,6 @@ autodiff_stmt_handler: type = {
 
     traverse: (override inout this, postfix: meta::postfix_expression) =
     {
-        // TODO: Unify with autodiff_expression_handler implementation
         terms := postfix.get_terms();
 
         is_func  := true;
@@ -4536,69 +4626,13 @@ autodiff_stmt_handler: type = {
 
         // Check for function call, everything else is not handled.
         if !(is_func) {
-            postfix.error( "AD: Postfix expressions  are only handled for function calls, or member function calls. Do not know how to handle: (postfix.to_string())$" );
+            postfix.error( "AD: Postfix expressions are only handled for function calls, or member function calls. Do not know how to handle: (postfix.to_string())$" );
             return;
         }
 
-        object         : std::string = "";
-        object_d       : std::string = "";
-        function_name : std::string = "";
-        args          : std::vector<std::string> = ();
-
-        primary := postfix.get_primary_expression();
-
-
-        if 1 != terms.ssize() {
-            object   = primary.to_string();
-            object_d = primary.to_string() + "_d";
-        }
-        else {
-            function_name = primary.to_string();
-        }
-
-        (copy i := 0)
-        for terms next i += 1 do (term)  {
-            if term.get_op() == "." {
-                assert(term.is_id_expression());
-                name := term.get_id_expression().to_string();
-
-                if i + 2 == terms.ssize() { // Second last term is function name, last term is function argument list
-                    function_name = name;
-                }
-                else {
-                    object   += "." + name;
-                    object_d += "." + name;
-                }
-            }
-            else if term.get_op() == "(" {
-                assert(term.is_expression_list());
-
-                ad: autodiff_expression_handler = (ctx, "");
-                args = ad.handle_expression_list(term.get_expression_list());
-                append(ad);
-            }
-            else {
-                postfix.error("AD: Do not know how to handle postfix term: (term.to_string())$");
-            }
-        }
-
-        if handle_special_function(object, object_d, function_name, args) {
-            return;
-        }
-
-        // No special handling, currently only allow direct function calls
-        if !object.empty() {
-            postfix.error("AD: Can currently only handle direct function calls and no member function calls.: (postfix.to_string())$");
-        }
-
-        // TODO: This is untested. Requires handling of out and inout parameters in functions.
-        // All arguments have now been handled. Form the function call
-        diff += "(function_name)$_diff(";
-        for args do (arg) {
-            diff += "(arg)$, (arg)$_d,";
-        }
-        diff += ");\n";
-
+        ad: autodiff_expression_handler = (ctx, "");
+        ad.handle_function_call(postfix, false);
+        append(ad);
     }
 
     traverse: (override inout this, primary: meta::primary_expression) =
