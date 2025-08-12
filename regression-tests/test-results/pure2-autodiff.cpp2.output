@@ -179,8 +179,7 @@ ad_test:/* @autodiff @print */ type =
         in y: double, 
     ) -> (out r: double, ) = 
     {
-        t: double = ();
-        t = x + y;
+        t: double = x + y;
         r = t;
         return;
     }
@@ -203,6 +202,29 @@ ad_test:/* @autodiff @print */ type =
     ) -> (out r: double, ) = 
     {
         t: _ = 0.0;
+        t = x + y;
+        r = t;
+        return;
+    }
+
+    intermediate_default_init:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        t: double = ();
+        t = x + y;
+        r = t;
+        return;
+    }
+
+    intermediate_no_init:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = 0.0;
+        t: double;
         t = x + y;
         r = t;
         return;
@@ -567,10 +589,8 @@ ad_test:/* @autodiff @print */ type =
             out r_d: double = 0.0, 
         ) = 
     {
-        t_d: double = ();
-        t: double = ();
-        t_d = x_d + y_d;
-        t = x + y;
+        t_d: double = x_d + y_d;
+        t: double = x + y;
         r_d = t_d;
         r = t;
         return;
@@ -590,7 +610,7 @@ ad_test:/* @autodiff @print */ type =
         i: int = ();
         r_d = x_d + y_d;
         r = x + y;
-        i_d = ();
+        i_d = 0.0;
         i = 2;
         _ = i_d;
         _ = i;
@@ -616,6 +636,46 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
+    intermediate_default_init_diff:(
+        in x: double, 
+        in x_d: double, 
+        in y: double, 
+        in y_d: double, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: double = 0.0, 
+        ) = 
+    {
+        t_d: double = ();
+        t: double = ();
+        t_d = x_d + y_d;
+        t = x + y;
+        r_d = t_d;
+        r = t;
+        return;
+    }
+
+    intermediate_no_init_diff:(
+        in x: double, 
+        in x_d: double, 
+        in y: double, 
+        in y_d: double, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: double = 0.0, 
+        ) = 
+    {
+        r_d = 0.0;
+        r = 0.0;
+        t_d: double;
+        t: double;
+        t_d = x_d + y_d;
+        t = x + y;
+        r_d = t_d;
+        r = t;
+        return;
+    }
+
     while_loop_diff:(
         in x: double, 
         in x_d: double, 
@@ -626,7 +686,7 @@ ad_test:/* @autodiff @print */ type =
             out r_d: double = 0.0, 
         ) = 
     {
-        i_d: int = 0;
+        i_d: int = 0.0;
         i: int = 0;
         r_d = x_d;
         r = x;
@@ -649,7 +709,7 @@ ad_test:/* @autodiff @print */ type =
             out r_d: double = 0.0, 
         ) = 
     {
-        i_d: int = 0;
+        i_d: int = 0.0;
         i: int = 0;
         r_d = x_d;
         r = x;
@@ -679,7 +739,7 @@ ad_test:/* @autodiff @print */ type =
         v_d.push_back(x_d);
         v.push_back(y);
         v_d.push_back(y_d);
-        r_d = ();
+        r_d = 0.0;
         r = 0.0;
         (copy t_d_iter: _ = v_d.begin(), )
         for v

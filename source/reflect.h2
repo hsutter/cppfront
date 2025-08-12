@@ -4000,11 +4000,15 @@ autodiff_expression_handler: type = {
     public declare_p: std::string;
     public declare_d: std::string;
 
-    operator=: (out this, ctx_: *autodiff_context, lhs_: std::string, declare_: std::string = "") = {
+    operator=: (out this, ctx_: *autodiff_context, lhs_: std::string, declare_p_: std::string = "", declare_d_: std::string = "") = {
         autodiff_handler_base = (ctx_);
         lhs = lhs_;
-        declare_p = declare_;
-        declare_d = declare_;
+        declare_p = declare_p_;
+        declare_d = declare_d_;
+
+        if declare_d.empty() && !declare_p.empty() {
+            declare_d = declare_p;
+        }
     }
 
     gen_lhs_assignment: (inout this, prim: std::string, fwd: std::string, primal_first: bool = false) = {
@@ -4373,10 +4377,15 @@ autodiff_expression_handler: type = {
             gen_lhs_assignment(primary.to_string(), primary.to_string() + "_d");
         }
         else if primary.is_expression_list() {
-            primary.error("AD: Do not know how to handle expression list inside of primary_expression: (primary.to_string())$");
+            if primary.as_expression_list().is_empty() {
+                gen_lhs_assignment("()", "()");
+            }
+            else {
+                primary.error("AD: Do not know how to handle non empty expression list inside of primary_expression: (primary.to_string())$");
+            }
         }
         else if primary.is_literal() {
-            gen_lhs_assignment(primary.to_string(), "()");
+            gen_lhs_assignment(primary.to_string(), "0.0");
         }
         else if primary.is_declaration() {
             primary.error("AD: Do not know how to handle declaration inside of primary_expression: (primary.to_string())$");
@@ -4411,15 +4420,20 @@ autodiff_stmt_handler: type = {
 
 
     traverse: (override inout this, o: meta::object_declaration) = {
-        lhs := o.name();
-        type :=  o.type();
+        lhs  : std::string = o.name();
+        type :             =  o.type();
 
-        ad_type := ctx*.get_ad_type(type);
+        ad_type : = ctx*.get_ad_type(type);
 
-        // TODO: Get initializer as expression and handle it.
-        init := o.initializer();
-        diff += "(lhs)$_d : (ad_type)$ = (init)$;\n";
-        diff += "(lhs)$   : (ad_type)$ = (init)$;\n";
+        if o.has_initializer() {
+            ad: autodiff_expression_handler = (ctx, lhs, ": " + type, ": " + ad_type);
+            ad.pre_traverse(o.get_initializer());
+            append(ad);
+        }
+        else {
+            diff += "(lhs)$_d : (ad_type)$;\n";
+            diff += "(lhs)$   : (type)$;\n";
+        }
     }
 
 

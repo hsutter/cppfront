@@ -83,8 +83,7 @@ ad_test: @autodiff @print type = {
     }
 
     intermediate_var: (x: double, y: double) -> (r: double) = {
-      t: double = (); // TODO: change to x initializer when we have access to the initializer expression.
-      t = x + y;
+      t: double = x + y;
 
       r = t;
     }
@@ -99,6 +98,21 @@ ad_test: @autodiff @print type = {
 
     intermediate_untyped: (x: double, y: double) -> (r: double) = {
       t := 0.0;
+      t = x + y;
+
+      r = t;
+    }
+
+    intermediate_default_init: (x: double, y: double) -> (r: double) = {
+      t: double = ();
+      t = x + y;
+
+      r = t;
+    }
+
+    intermediate_no_init: (x: double, y: double) -> (r: double) = {
+      r = 0.0; // TODO: r has to be initialized before t (create issue or wait for fix)
+      t: double;
       t = x + y;
 
       r = t;
@@ -170,6 +184,8 @@ main: () = {
     write_output("intermediate var", x, x_d, y, y_d, ad_test::intermediate_var_diff(x, x_d, y, y_d));
     write_output("intermediate passive var", x, x_d, y, y_d, ad_test::intermediate_passive_var_diff(x, x_d, y, y_d));
     write_output("intermediate untyped", x, x_d, y, y_d, ad_test::intermediate_untyped_diff(x, x_d, y, y_d));
+    write_output("intermediate default init", x, x_d, y, y_d, ad_test::intermediate_default_init_diff(x, x_d, y, y_d));
+    write_output("intermediate no init", x, x_d, y, y_d, ad_test::intermediate_no_init_diff(x, x_d, y, y_d));
     write_output("while loop", x, x_d, y, y_d, ad_test::while_loop_diff(x, x_d, y, y_d));
     write_output("do while loop", x, x_d, y, y_d, ad_test::do_while_loop_diff(x, x_d, y, y_d));
     write_output("for loop", x, x_d, y, y_d, ad_test::for_loop_diff(x, x_d, y, y_d));
