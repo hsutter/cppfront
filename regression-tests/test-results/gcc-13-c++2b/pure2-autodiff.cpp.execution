@@ -18,6 +18,8 @@ diff(direct return) at (x = 2.000000, x_d = 1.000000, y = 3.000000, y_d = 2.0000
 diff(intermediate var) at (x = 2.000000, x_d = 1.000000, y = 3.000000, y_d = 2.000000) = (r = 5.000000, r_d = 3.000000)
 diff(intermediate passive var) at (x = 2.000000, x_d = 1.000000, y = 3.000000, y_d = 2.000000) = (r = 5.000000, r_d = 3.000000)
 diff(intermediate untyped) at (x = 2.000000, x_d = 1.000000, y = 3.000000, y_d = 2.000000) = (r = 5.000000, r_d = 3.000000)
+diff(intermediate default init) at (x = 2.000000, x_d = 1.000000, y = 3.000000, y_d = 2.000000) = (r = 5.000000, r_d = 3.000000)
+diff(intermediate no init) at (x = 2.000000, x_d = 1.000000, y = 3.000000, y_d = 2.000000) = (r = 5.000000, r_d = 3.000000)
 diff(while loop) at (x = 2.000000, x_d = 1.000000, y = 3.000000, y_d = 2.000000) = (r = 8.000000, r_d = 5.000000)
 diff(do while loop) at (x = 2.000000, x_d = 1.000000, y = 3.000000, y_d = 2.000000) = (r = 8.000000, r_d = 5.000000)
 diff(for loop) at (x = 2.000000, x_d = 1.000000, y = 3.000000, y_d = 2.000000) = (r = 5.000000, r_d = 3.000000)

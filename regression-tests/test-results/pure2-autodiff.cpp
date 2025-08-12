@@ -675,7 +675,7 @@ int i_d {};
     int i {}; 
     r_d = x_d + y_d;
     r = x + y;
-    i_d = 0.0;
+    i_d = {  };
     i = 2;
     static_cast<void>(cpp2::move(i_d));
     static_cast<void>(cpp2::move(i));
@@ -710,7 +710,7 @@ double t_d {};
 
     [[nodiscard]] auto ad_test::intermediate_no_init_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> intermediate_no_init_diff_ret{
                                                                                                                                      double r {0.0};
-                                                                                                                                     double r_d {0.0};r_d = 0.0;
+                                                                                                                                     double r_d {0.0};r_d = {  };
     r = 0.0;
 
     cpp2::impl::deferred_init<double> t_d; 
@@ -726,7 +726,7 @@ double t_d {};
     [[nodiscard]] auto ad_test::while_loop_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> while_loop_diff_ret{
                                                                                                                            double r {0.0};
                                                                                                                            double r_d {0.0};
-int i_d {0.0}; 
+int i_d {}; 
 
     int i {0}; 
     r_d = x_d;
@@ -741,7 +741,7 @@ int i_d {0.0};
     [[nodiscard]] auto ad_test::do_while_loop_diff(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> do_while_loop_diff_ret{
                                                                                                                               double r {0.0};
                                                                                                                               double r_d {0.0};
-int i_d {0.0}; 
+int i_d {}; 
 
     int i {0}; 
     r_d = x_d;
@@ -768,7 +768,7 @@ std::vector<double> v_d {};
     CPP2_UFCS(push_back)(v_d, x_d);
     CPP2_UFCS(push_back)(v, y);
     CPP2_UFCS(push_back)(v_d, y_d);
-    r_d = 0.0;
+    r_d = {  };
     r = 0.0;
 {
 auto t_d_iter{CPP2_UFCS(begin)(cpp2::move(v_d))};

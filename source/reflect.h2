@@ -3928,21 +3928,29 @@ autodiff_special_func: type = {
 
 autodiff_context: type = {
     private temporary_count : int = 0;
-    public  math_funcs      : std::map<std::string, std::string> = (
-        std::make_pair("sin", "cos(_x_)"),
-        std::make_pair("cos", "-sin(_x_)"),
-        std::make_pair("exp", "exp(_x_)"),
-        // TODO: Extend
-    );
 
     // Code in special function is replaced. Placeholders are:
     //   _o_  : name of object for member functions.
     //   _o_  : name of derivative object for member functions.
+    //   _r_  : name of the return value.
+    //   _rd_ : name of derivative return value.
     //   _a1_ : First argument value
     //   _ad1_: First derivative argument value
     //   _a2_ : Second argument value
     //   _ad2_: Second derivative argument value
     public special_funcs : std::vector<autodiff_special_func> = (
+        autodiff_special_func("sin", 1, /* has_return = */ true, /* is_member = */ false,
+            "_rd_ = cos(_a1_) * _ad1_;\n"
+            "_r_  = sin(_a1_);\n"
+        ),
+        autodiff_special_func("cos", 1, /* has_return = */ true, /* is_member = */ false,
+            "_rd_ = -sin(_a1_) * _ad1_;\n"
+            "_r_  = cos(_a1_);\n"
+        ),
+        autodiff_special_func("exp", 1, /* has_return = */ true, /* is_member = */ false,
+            "_rd_ = exp(_a1_) * _ad1_;\n"
+            "_r_  = exp(_a1_);\n"
+        ),
         autodiff_special_func("push_back", 1, /* has_return = */ false, /* is_member = */ true,
             "_o_.push_back(_a1_);\n"
             "_od_.push_back(_ad1_);\n")
@@ -4146,10 +4154,6 @@ autodiff_expression_handler: type = {
         if handle_special_function(object, object_d, function_name, args, r_arg) {
             return;
         }
-        // TODO: Extend to a generalized version and not only functions with one argument.
-        if handle_math_func(function_name, args[0]) {
-            return;
-        }
 
         // No special handling, currently only allow direct function calls
         if !object.empty() {
@@ -4176,20 +4180,6 @@ autodiff_expression_handler: type = {
         }
 
         // TODO: Add function to list of functions/objects for differentiation.
-    }
-
-    handle_math_func :(inout this, func_name: std::string, arg: std::string) -> bool = {
-        pos := ctx*.math_funcs.find(func_name);
-
-        if pos == ctx*.math_funcs.end() {
-            return false;
-        }
-
-        func_diff := string_util::replace_all(pos*.second, "_x_", arg);
-
-        gen_lhs_assignment("(func_name)$((arg)$)", "(func_diff)$ * (arg)$_d");
-
-        return true;
     }
 
     handle_special_function: (inout this, object: std::string, object_d: std::string, function_name: std::string, args: std::vector<std::string>, ret: std::string) -> bool = {
@@ -4385,7 +4375,12 @@ autodiff_expression_handler: type = {
             }
         }
         else if primary.is_literal() {
-            gen_lhs_assignment(primary.to_string(), "0.0");
+            // TODO: Determine propre zero initializer from type of literal.
+            ad_init : std::string = "()";
+            if declare_d == ":" || declare_d == ": _" {
+                ad_init = "0.0";
+            }
+            gen_lhs_assignment(primary.to_string(), ad_init);
         }
         else if primary.is_declaration() {
             primary.error("AD: Do not know how to handle declaration inside of primary_expression: (primary.to_string())$");

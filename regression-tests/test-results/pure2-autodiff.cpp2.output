@@ -610,7 +610,7 @@ ad_test:/* @autodiff @print */ type =
         i: int = ();
         r_d = x_d + y_d;
         r = x + y;
-        i_d = 0.0;
+        i_d = ();
         i = 2;
         _ = i_d;
         _ = i;
@@ -665,7 +665,7 @@ ad_test:/* @autodiff @print */ type =
             out r_d: double = 0.0, 
         ) = 
     {
-        r_d = 0.0;
+        r_d = ();
         r = 0.0;
         t_d: double;
         t: double;
@@ -686,7 +686,7 @@ ad_test:/* @autodiff @print */ type =
             out r_d: double = 0.0, 
         ) = 
     {
-        i_d: int = 0.0;
+        i_d: int = ();
         i: int = 0;
         r_d = x_d;
         r = x;
@@ -709,7 +709,7 @@ ad_test:/* @autodiff @print */ type =
             out r_d: double = 0.0, 
         ) = 
     {
-        i_d: int = 0.0;
+        i_d: int = ();
         i: int = 0;
         r_d = x_d;
         r = x;
@@ -739,7 +739,7 @@ ad_test:/* @autodiff @print */ type =
         v_d.push_back(x_d);
         v.push_back(y);
         v_d.push_back(y_d);
-        r_d = 0.0;
+        r_d = ();
         r = 0.0;
         (copy t_d_iter: _ = v_d.begin(), )
         for v
