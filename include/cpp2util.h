@@ -1,5 +1,5 @@
 
-//  Copyright 2022-2024 Herb Sutter
+//  Copyright 2022-2025 Herb Sutter
 //  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //  
 //  Part of the Cppfront Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -301,6 +301,12 @@
     #include <vector>
 #endif
 
+// Required for pure Cpp2 tests to pass on MSVC
+// #include <cstdlib> causes C2995 of math tempaltes
+#ifndef EXIT_FAILURE
+    #define EXIT_FAILURE 1
+#endif
+
 //  cpp2util.h uses signed integer types for indices and container sizes
 //  so disable clang signed-to-unsigned conversion warnings in this header.
 #ifdef __clang__
@@ -561,7 +567,7 @@ private:
         std::cerr << ": " << msg;
     }
     std::cerr << "\n";
-    std::terminate();
+    std::exit(EXIT_FAILURE);
 }
 
 auto inline cpp2_default = contract_group(
@@ -1328,7 +1334,7 @@ constexpr auto type_name() -> std::string_view {
         err += std::string{" and the message \""} + msg + "\"";
     }
     type_safety.report_violation( err.c_str() );
-    std::terminate();
+    std::exit(EXIT_FAILURE);
 #else
     throw CPP2_FORWARD(x);
 #endif

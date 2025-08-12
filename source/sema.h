@@ -1,5 +1,5 @@
 
-//  Copyright 2022-2024 Herb Sutter
+//  Copyright 2022-2025 Herb Sutter
 //  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //  
 //  Part of the Cppfront Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -1993,7 +1993,7 @@ public:
             }
         }
 
-        for (auto& decl : n.get_type_scope_declarations())
+        for (auto& decl : n.get_nested_declarations())
         {
             if (decl->has_name("that"))
             {
@@ -2037,6 +2037,7 @@ public:
         if (n.is_type()) {
             auto compound_stmt = n.initializer->get_if<compound_statement_node>();
             assert (compound_stmt);
+            bool seen_function = false;
             for (auto& stmt : compound_stmt->statements) {
                 if (
                     !stmt->is_declaration()
@@ -2046,6 +2047,25 @@ public:
                     handle_error(
                         stmt->position(),
                         "a user-defined type body must contain only declarations or 'using' statements, not other code"
+                    );
+                    return false;
+                }
+                auto stmt_decl = stmt->get_if<declaration_node>();
+                //  If this is a declaration, check if it's a function
+                if (stmt_decl && stmt_decl->is_function()) {
+                    seen_function = true;
+                }
+
+                //  If this is called 'this', then make sure we haven't seen any functions
+                if (
+                    stmt_decl
+                    && stmt_decl->has_name("this")
+                    && seen_function
+                    )
+                {
+                    handle_error(
+                        stmt->position(),
+                        "a type cannot declare a parent after defining a function"
                     );
                     return false;
                 }
@@ -2084,6 +2104,21 @@ public:
                 );
                 return false;
             }
+        }
+
+        //  If the first parameter is 'out this', it must be a constructor.
+        if (
+            !n.is_constructor()
+            && (*n.parameters).ssize() > 0
+            && (*n.parameters)[0]->has_name("this")
+            && (*n.parameters)[0]->direction() == passing_style::out
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                "a function with an 'out this' parameter must be a constructor"
+            );
+            return false;
         }
 
         return true;

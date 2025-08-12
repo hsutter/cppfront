@@ -45,6 +45,12 @@ struct values_ret { int offset; std::string name; };
         public: explicit mytype();
 
         public: mytype([[maybe_unused]] mytype const& that);
+#line 63 "pure2-print.cpp2"
+        public: auto operator=([[maybe_unused]] mytype const& that) -> mytype& ;
+#line 63 "pure2-print.cpp2"
+        public: mytype([[maybe_unused]] mytype&& that) noexcept;
+#line 63 "pure2-print.cpp2"
+        public: auto operator=([[maybe_unused]] mytype&& that) noexcept -> mytype& ;
 
         public: mytype([[maybe_unused]] cpp2::impl::in<int> unnamed_param_2);
 
@@ -160,6 +166,14 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias{ 42 };
 
 #line 63 "pure2-print.cpp2"
         outer::mytype::mytype([[maybe_unused]] mytype const& that){}
+#line 63 "pure2-print.cpp2"
+        auto outer::mytype::operator=([[maybe_unused]] mytype const& that) -> mytype& {
+                                        return *this; }
+#line 63 "pure2-print.cpp2"
+        outer::mytype::mytype([[maybe_unused]] mytype&& that) noexcept{}
+#line 63 "pure2-print.cpp2"
+        auto outer::mytype::operator=([[maybe_unused]] mytype&& that) noexcept -> mytype& {
+                                        return *this; }
 
 #line 65 "pure2-print.cpp2"
         outer::mytype::mytype([[maybe_unused]] cpp2::impl::in<int> unnamed_param_2){}

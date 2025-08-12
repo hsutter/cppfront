@@ -55,9 +55,9 @@ main: () = {
     z.print("   mv-construct  ", " <- ");
     x.print("", "\n");
 
-    z = y;
-    z.print("   cp-assign     ", " <- ");
-    y.print("", "\n");
+    // z = y;
+    // z.print("   cp-assign     ", " <- ");
+    // y.print("", "\n");
 
     z = (move y);
     z.print("   mv-assign     ", " <- ");

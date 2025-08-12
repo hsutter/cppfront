@@ -1,5 +1,5 @@
 
-//  Copyright 2022-2024 Herb Sutter
+//  Copyright 2022-2025 Herb Sutter
 //  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //  
 //  Part of the Cppfront Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -161,8 +161,17 @@ struct primary_expression_node
     auto is_expression_list() const
         -> bool;
 
+    auto get_expression_list()
+        -> expression_list_node*;
+
     auto get_expression_list() const
         -> expression_list_node const*;
+
+    auto is_declaration() const
+        -> bool;
+
+    auto get_declaration()
+        -> declaration_node*;
 
     auto is_literal() const
         -> bool;
@@ -285,6 +294,9 @@ struct prefix_expression_node
 
     auto is_expression_list() const
         -> bool;
+
+    auto get_expression_list()
+        -> expression_list_node*;
 
     auto get_expression_list() const
         -> expression_list_node const*;
@@ -411,6 +423,15 @@ struct binary_expression_node
         -> bool
     {
         return terms.empty() && expr->is_expression_list();
+    }
+
+    auto get_expression_list()
+        -> expression_list_node*
+    {
+        if (is_expression_list()) {
+            return expr->get_expression_list();
+        }
+        return {};
     }
 
     auto get_expression_list() const
@@ -589,6 +610,21 @@ struct expression_node
         return expr->is_fold_expression();
     }
 
+    auto is_assignment_expression() const
+        -> bool
+    {
+        //  For now this is always true; in the future I plan to add
+        //  a sibling grammar production for try-expressions
+        return true;
+    }
+
+    auto get_assignment_expression() const
+        -> assignment_expression_node*
+    {
+        assert(expr);
+        return expr.get();
+    }
+
     auto is_standalone_expression() const
         -> bool;
 
@@ -626,6 +662,15 @@ struct expression_node
         -> bool
     {
         return expr->is_expression_list();
+    }
+
+    auto get_expression_list()
+        -> expression_list_node *
+    {
+        if (is_expression_list()) {
+            return expr->get_expression_list();
+        }
+        return {};
     }
 
     auto get_expression_list() const
@@ -836,11 +881,35 @@ auto primary_expression_node::is_expression_list() const
     return expr.index() == expression_list;
 }
 
+auto primary_expression_node::get_expression_list()
+    -> expression_list_node *
+{
+    if (is_expression_list()) {
+        return std::get<expression_list>(expr).get();
+    }
+    return {};
+}
+
 auto primary_expression_node::get_expression_list() const
     -> expression_list_node const*
 {
     if (is_expression_list()) {
         return std::get<expression_list>(expr).get();
+    }
+    return {};
+}
+
+auto primary_expression_node::is_declaration() const
+    -> bool
+{
+    return expr.index() == declaration;
+}
+
+auto primary_expression_node::get_declaration()
+    -> declaration_node *
+{
+    if (is_declaration()) {
+        return std::get<declaration>(expr).get();
     }
     return {};
 }
@@ -1035,6 +1104,15 @@ struct postfix_expression_node
         return ops.empty() && expr->is_expression_list();
     }
 
+    auto get_expression_list() 
+        -> expression_list_node *
+    {
+        if (is_expression_list()) {
+            return expr->get_expression_list();
+        }
+        return {};
+    }
+
     auto get_expression_list() const
         -> expression_list_node const*
     {
@@ -1126,6 +1204,15 @@ auto prefix_expression_node::is_expression_list() const
     -> bool
 {
     return ops.empty() && expr->is_expression_list();
+}
+
+auto prefix_expression_node::get_expression_list() 
+    -> expression_list_node *
+{
+    if (is_expression_list()) {
+        return expr->get_expression_list();
+    }
+    return {};
 }
 
 auto prefix_expression_node::get_expression_list() const
@@ -1247,6 +1334,38 @@ struct template_argument
         std::unique_ptr<type_id_node>
     > arg;
 
+    auto is_expression() const
+        -> bool
+    {
+        return arg.index() == expression;
+    }
+
+    auto is_type_id() const
+        -> bool
+    {
+        return arg.index() == type_id;
+    }
+
+    auto get_expression() const
+        -> expression_node*
+    {
+        if (is_expression()) {
+            return std::get<expression>(arg).get();
+        }
+        // Else
+        return nullptr;
+    }
+
+    auto get_type_id() const
+        -> type_id_node*
+    {
+        if (is_type_id()) {
+            return std::get<type_id>(arg).get();
+        }
+        // Else
+        return nullptr;
+    }
+
     // The type needs to be movable
     // The copy ctor+operator are implicitly deleted due to the std::unique_ptr member
     // Because a forward-declared type is used in a std::unique_ptr as a member an out-of-line dtor is necessary
@@ -1261,6 +1380,9 @@ struct template_argument
 
     auto to_string() const
         -> std::string;
+
+    auto position() const
+        -> source_position;
 };
 
 // Used by functions that must return a reference to an empty arg list
@@ -1457,10 +1579,84 @@ struct type_id_node
     // type(s) used in a std::unique_ptr as a member
     ~type_id_node();
 
+    auto is_postfix_expression() const
+        -> bool
+    {
+        return id.index() == postfix;
+    }
+
+    auto get_postfix_expression() const
+        -> postfix_expression_node*
+    {
+        if (is_postfix_expression()) {
+            return std::get<postfix>(id).get();
+        }
+        // Else
+        return nullptr;
+    }
+
+    auto is_qualified_id() const
+        -> bool
+    {
+        return id.index() == qualified;
+    }
+
+    auto get_qualified_id() const
+        -> qualified_id_node*
+    {
+        if (is_qualified_id()) {
+            return std::get<qualified>(id).get();
+        }
+        // Else
+        return nullptr;
+    }
+
+    auto is_unqualified_id() const
+        -> bool
+    {
+        return id.index() == unqualified;
+    }
+
+    auto get_unqualified_id() const
+        -> unqualified_id_node*
+    {
+        if (is_unqualified_id()) {
+            return std::get<unqualified>(id).get();
+        }
+        // Else
+        return nullptr;
+    }
+
     auto is_function_typeid() const
         -> bool
     {
         return id.index() == function;
+    }
+
+    auto get_function_typeid() const
+        -> function_type_node*
+    {
+        if (is_function_typeid()) {
+            return std::get<function>(id).get();
+        }
+        // Else
+        return nullptr;
+    }
+
+    auto is_keyword() const
+        -> bool
+    {
+        return id.index() == keyword;
+    }
+
+    auto get_keyword() const
+        -> token const*
+    {
+        if (is_keyword()) {
+            return std::get<keyword>(id);
+        }
+        // Else
+        return nullptr;
     }
 
     auto is_wildcard() const
@@ -1597,6 +1793,21 @@ auto template_argument::to_string() const
 }
 
 
+auto template_argument::position() const
+    -> source_position
+{
+    if (is_expression()) {
+        return get_expression()->position();
+    }
+    else if (is_type_id()) {
+        return get_type_id()->position();
+    }
+    else {
+        return source_position{};
+    }
+}
+
+
 struct is_as_expression_node
 {
     std::unique_ptr<prefix_expression_node> expr;
@@ -1656,6 +1867,15 @@ struct is_as_expression_node
         -> bool
     {
         return ops.empty() && expr->is_expression_list();
+    }
+
+    auto get_expression_list() 
+        -> expression_list_node *
+    {
+        if (is_expression_list()) {
+            return expr->get_expression_list();
+        }
+        return {};
     }
 
     auto get_expression_list() const
@@ -1827,10 +2047,30 @@ struct id_expression_node
         return id.index() == qualified;
     }
 
+    auto get_qualified_id() const
+        -> qualified_id_node*
+    {
+        if (auto pqid = std::get_if<qualified>(&id)) {
+            return (*pqid).get();
+        }
+        // Else
+        return nullptr;
+    }
+
     auto is_unqualified() const
         -> bool
     {
         return id.index() == unqualified;
+    }
+
+    auto get_unqualified_id() const
+        -> unqualified_id_node*
+    {
+        if (auto puid = std::get_if<unqualified>(&id)) {
+            return (*puid).get();
+        }
+        // Else
+        return nullptr;
     }
 
     auto get_token() const
@@ -2037,7 +2277,47 @@ struct selection_statement_node
     std::unique_ptr<logical_or_expression_node> expression;
     std::unique_ptr<compound_statement_node>    true_branch;
     std::unique_ptr<compound_statement_node>    false_branch;
-    bool                                        has_source_false_branch = false;
+    bool                                        has_source_false_branch = 
+false;
+
+    auto get_identifier() const
+        -> token const*
+    {
+        assert(identifier);
+        return identifier;
+    }
+
+    auto get_expression() const
+        -> logical_or_expression_node*
+    {
+        assert(expression);
+        return expression.get();
+    }
+
+    auto has_false_branch_in_source_code() const
+        -> bool
+    {
+        return has_source_false_branch;
+    }
+
+    auto has_false_branch() const
+        -> bool
+    {
+        return false_branch.get() != nullptr;
+    }
+
+    auto get_true_branch() const
+        -> compound_statement_node*
+    {
+        return true_branch.get();
+    }
+
+    auto get_false_branch() const
+        -> compound_statement_node*
+    {
+        assert(has_false_branch());
+        return false_branch.get();
+    }
 
     auto position() const
         -> source_position
@@ -2081,6 +2361,72 @@ struct iteration_statement_node
     // type(s) used in a std::unique_ptr as a member
     ~iteration_statement_node();
 
+    auto get_label() const
+        -> token const*
+    {
+        return label;
+    }
+
+    auto has_next() const
+        -> bool
+    {
+        return next_expression.get() != nullptr;
+    }
+
+    auto get_next_expression() const
+        -> assignment_expression_node*
+    {
+        return next_expression.get();
+    }
+
+    auto is_do() const
+        -> bool
+    {
+        return *identifier == "do";
+    }
+
+    auto is_while() const
+        -> bool
+    {
+        return *identifier == "while";
+    }
+
+    auto get_do_while_condition() const
+        -> logical_or_expression_node*
+    {
+        return condition.get();
+    }
+
+    auto get_do_while_body() const
+        -> compound_statement_node*
+    {
+        return statements.get();
+    }
+
+    auto is_for() const
+        -> bool
+    {
+        return *identifier == "for";
+    }
+
+    auto get_for_range() const
+        -> expression_node*
+    {
+        return range.get();
+    }
+
+    auto get_for_parameter() const
+        -> parameter_declaration_node*
+    {
+        return parameter.get();
+    }
+
+    auto get_for_body() const
+        -> statement_node*
+    {
+        return body.get();
+    }
+
     auto position() const
         -> source_position
     {
@@ -2100,6 +2446,18 @@ struct return_statement_node
 {
     token const*                     identifier = {};
     std::unique_ptr<expression_node> expression;
+
+    auto has_expression() const
+        -> bool
+    {
+        return expression.get() != nullptr;
+    }
+
+    auto get_expression() const
+        -> expression_node*
+    {
+        return expression.get();
+    }
 
     auto position() const
         -> source_position
@@ -2275,8 +2633,7 @@ struct using_statement_node
     auto for_namespace() const
         -> bool
     {
-        assert(id);
-        return id->to_string().ends_with("::_");
+        return (id && id->to_string().ends_with("::_"));
     }
 
     auto position() const
@@ -3548,7 +3905,7 @@ public:
     auto is_polymorphic() const // has base types or virtual functions
         -> bool
     {
-        for (auto& decl : get_type_scope_declarations()) {
+        for (auto& decl : get_nested_declarations()) {
             if (
                 decl->has_name("this")
                 || decl->is_virtual_function()
@@ -3575,7 +3932,7 @@ public:
         }
 
         //  Else if we have a copy constructor, we're copyable
-        for (auto& decl : get_type_scope_declarations())
+        for (auto& decl : get_nested_declarations())
         if  (decl->is_constructor_with_that())
         {
             return false;
@@ -3585,15 +3942,17 @@ public:
         return true;
     }
 
-    auto parent_is_function   () const -> bool
+    auto parent_is_function           () const -> bool
         { return  parent_declaration && parent_declaration->type.index() == a_function;  }
-    auto parent_is_object     () const -> bool
+    auto parent_is_object             () const -> bool
         { return  parent_declaration && parent_declaration->type.index() == an_object;   }
-    auto parent_is_type       () const -> bool
+    auto parent_is_type               () const -> bool
         { return  parent_declaration && parent_declaration->type.index() == a_type;      }
-    auto parent_is_namespace  () const -> bool
+    auto parent_is_namespace          () const -> bool
         { return !parent_declaration || parent_declaration->type.index() == a_namespace; }
-    auto parent_is_alias      () const -> bool
+    auto parent_is_nonglobal_namespace() const -> bool
+        { return parent_declaration && parent_declaration->type.index() == a_namespace; }
+    auto parent_is_alias              () const -> bool
         { return  parent_declaration && parent_declaration->type.index() == an_alias;    }
 
     auto parent_is_type_alias     () const -> bool
@@ -3629,11 +3988,11 @@ private:
     //  think of right now to write the following two get_
     //  functions (without duplicating their bodies, and
     //  without resorting to const_casts)
-    auto gather_type_scope_declarations(which w) const
+    auto gather_nested_declarations(which w) const
         -> std::vector<declaration_node*>
     {
         if (
-            !is_type()
+            (!is_type() && !is_namespace())
             || !initializer
             || !initializer->is_compound()
             )
@@ -3650,10 +4009,6 @@ private:
             auto decl = o->get_if<declaration_node>();
             if (decl)
             {
-                assert(
-                    !decl->is_namespace()
-                    && "ICE: a type shouldn't be able to contain a namespace"
-                );
                 if (
                     (w & functions  && decl->is_function())
                     || (w & objects && decl->is_object()  )
@@ -3670,19 +4025,19 @@ private:
     }
 
 public:
-    auto get_type_scope_declarations(which w = all)
+    auto get_nested_declarations(which w = all)
         -> std::vector<declaration_node*>
     {
         //  Only want to return the gather_ results as
         //  non-const* in a non-const function
-        return gather_type_scope_declarations(w);
+        return gather_nested_declarations(w);
     }
 
-    auto get_type_scope_declarations(which w = all) const
+    auto get_nested_declarations(which w = all) const
         -> std::vector<declaration_node const*>
     {
         //  Convert the gather_ results to const*
-        auto tmp = gather_type_scope_declarations(w);
+        auto tmp = gather_nested_declarations(w);
         return {tmp.begin(), tmp.end()};
     }
 
@@ -3762,7 +4117,7 @@ public:
 
         //  Look for a name match and if so remember the type,
         //  and look for a base type after that match
-        auto objects               = decl->get_type_scope_declarations();
+        auto objects               = decl->get_nested_declarations();
         auto found_name            = false;
         auto found_later_base_type = false;
 
@@ -3818,16 +4173,32 @@ public:
         return ret;
     }
 
+    auto is_function_with_body() const
+        -> bool
+    {
+        return
+            is_function()
+            && initializer
+            ;
+    }
+
+    auto get_function_body() const
+        -> statement_node*
+    {
+        return initializer.get();
+    }
+
     auto is_function_with_compound_body() const
         -> bool
     {
-        return 
-            initializer 
+        return
+            is_function()
+            && initializer
             && initializer->is_compound()
             ;
     }
 
-    auto get_compound_initializer() const
+    auto get_function_compound_body() const
         -> compound_statement_node*
     {
         return initializer->get_if<compound_statement_node>();
@@ -4121,13 +4492,13 @@ public:
     }
 
     auto get_function_parameters()
-        -> std::vector<parameter_declaration_node const*>
+        -> std::vector<parameter_declaration_node*>
     {
         if (!is_function()) {
             return {};
         }
 
-        auto ret = std::vector<parameter_declaration_node const*>{};
+        auto ret = std::vector<parameter_declaration_node*>{};
         for (auto& param : std::get<a_function>(type)->parameters->parameters) {
             ret.push_back( param.get() );
         }
@@ -4135,7 +4506,7 @@ public:
     }
 
     auto get_function_returns()
-        -> std::vector<parameter_declaration_node const*>
+        -> std::vector<parameter_declaration_node*>
     {
         if (!is_function()) {
             return {};
@@ -4146,7 +4517,7 @@ public:
             return {};
         }
 
-        auto ret = std::vector<parameter_declaration_node const*>{};
+        auto ret = std::vector<parameter_declaration_node*>{};
         for (auto& param : (*returns)->parameters) {
             ret.push_back( param.get() );
         }
@@ -4502,9 +4873,10 @@ auto function_type_node::is_constructor() const
         (*parameters).ssize() > 0
         && (*parameters)[0]->has_name("this")
         && (*parameters)[0]->direction() == passing_style::out
+        && my_decl
+        && my_decl->has_name("operator=")
         )
     {
-        assert(my_decl && my_decl->has_name("operator="));
         return true;
     }
     return false;
@@ -5956,7 +6328,7 @@ auto pretty_print_visualize(
             + initializer;
     }
     else if (n.is_namespace()) {
-        auto& t = std::get<declaration_node::a_type>(n.type);
+        auto& t = std::get<declaration_node::a_namespace>(n.type);
         assert(t);
         ret += "namespace = "
             + initializer;
@@ -6212,7 +6584,7 @@ public:
 
 
     //-----------------------------------------------------------------------
-    //  parse_one_statement
+    //  parse_one_declaration
     //
     //  tokens              input tokens for this section of Cpp2 source code
     //  generated_tokens    a shared place to store generated tokens
@@ -6236,8 +6608,10 @@ public:
             //  and there were no new errors, and all tokens were consumed
             auto errors_size = std::ssize(errors);
             pos = 0;
-            if (auto d = statement();
-                d
+
+            auto d = std::unique_ptr<statement_node>{};
+            statement(d);
+            if (d
                 && std::ssize(errors) == errors_size
                 && done()
                 )
@@ -7253,6 +7627,7 @@ private:
             if (auto id = postfix_expression();
                 id
                 && id->ops.size() == 1
+                && id->ops[0].expr_list
                 && id->ops[0].expr_list->expressions.size() == 1
                 && id->ops[0].expr_list->open_paren->type() == lexeme::LeftParen
                 )
@@ -7753,10 +8128,7 @@ private:
             return {};
         }
 
-        if (auto s = compound_statement()) {
-            n->true_branch = std::move(s);
-        }
-        else {
+        if (!compound_statement(n->true_branch)) {
             error("invalid if branch body", true, {}, true);
             return {};
         }
@@ -7784,8 +8156,8 @@ private:
                 return {};
             }
 
-            if (auto s = compound_statement( source_position{}, true )) {
-                n->false_branch = std::move(s);
+            compound_statement(n->false_branch, source_position{}, true );
+            if (n->false_branch) {
                 n->has_source_false_branch = true;
             }
             else {
@@ -7913,7 +8285,8 @@ private:
         };
 
         auto handle_compound_statement = [&]() -> bool {
-            auto s = compound_statement();
+            auto s = std::unique_ptr<compound_statement_node>{};
+            compound_statement(s);
             if (!s) {
                 error("invalid while loop body", true, {}, true);
                 return false;
@@ -8003,7 +8376,7 @@ private:
             }
             next();     // eat ')'
 
-            n->body = statement();
+            statement(n->body);
             if (!n->body) {
                 error("invalid for..do loop body", false, source_position{}, true);
                 return {};
@@ -8076,7 +8449,9 @@ private:
         n->equal_sign = curr().position();
         next();
 
-        if (auto s = statement(true, n->equal_sign)) {
+        auto s = std::unique_ptr<statement_node>{};
+        statement(s, true, n->equal_sign);
+        if (s) {
             n->statement = std::move(s);
         }
         else {
@@ -8292,20 +8667,22 @@ private:
     //GTODO     try-block
     //G
     auto statement(
-        bool                     semicolon_required    = true,
-        source_position          equal_sign            = source_position{},
-        bool                     parameters_allowed    = false,
-        compound_statement_node* compound_parent       = nullptr,
-        bool                     allow_angle_operators = true
+        std::unique_ptr<statement_node>& n, // using an inout param makes partial parses available to reflection
+        bool                             semicolon_required    = true,
+        source_position                  equal_sign            = source_position{},
+        bool                             parameters_allowed    = false,
+        compound_statement_node*         compound_parent       = nullptr,
+        bool                             allow_angle_operators = true
     )
-        -> std::unique_ptr<statement_node>
+        -> void
     {
+        n = std::make_unique<statement_node>(compound_parent);
+
         if (!done() && curr().type() == lexeme::Semicolon) {
             error("empty statement is not allowed - remove extra semicolon");
-            return {};
+            n = nullptr;
+            return;
         }
-
-        auto n = std::make_unique<statement_node>(compound_parent);
 
         //  If a parameter list is allowed here, try to parse one
         if (parameters_allowed) {
@@ -8319,7 +8696,8 @@ private:
                         )
                     {
                         error("(temporary alpha limitation) parameters scoped to a block/statement must be 'in' (the default), 'copy', or 'inout'", false);
-                        return {};
+                        n = nullptr;
+                        return;
                     }
                 }
             }
@@ -8330,70 +8708,75 @@ private:
         if (auto s = selection_statement()) {
             n->statement = std::move(s);
             assert (n->is_selection());
-            return n;
+            return;
         }
 
         else if (auto s = using_statement()) {
             n->statement = std::move(s);
             assert (n->is_using());
-            return n;
+            return;
         }
 
         else if (auto i = inspect_expression(false)) {
             n->statement = std::move(i);
             assert (n->is_inspect());
-            return n;
+            return;
         }
 
         else if (auto s = return_statement()) {
             n->statement = std::move(s);
             assert (n->is_return());
-            return n;
+            return;
         }
-
+        
         else if (auto s = jump_statement()) {
             n->statement = std::move(s);
             assert (n->is_jump());
-            return n;
+            return;
         }
 
         else if (auto s = iteration_statement()) {
             n->statement = std::move(s);
             assert (n->is_iteration());
-            return n;
+            return;
         }
 
-        else if (auto s = compound_statement(equal_sign)) {
-            n->statement = std::move(s);
+        else if (   // here we are careful to pass through the actual statement, so reflection can see it being built
+            (n->statement = std::unique_ptr<compound_statement_node>{}).index() == statement_node::compound
+            && compound_statement(std::get<statement_node::compound>(n->statement), equal_sign)
+            )
+        {
             assert (n->is_compound());
-            return n;
+            return;
         }
 
         else if (auto s = contract()) {
             if (*s->kind != "assert") {
                 error("only 'assert' contracts are allowed at statement scope");
-                return {};
+                n = nullptr;
+                return;
             }
             if (curr().type() != lexeme::Semicolon) {
                 error("missing ';' after contract-statement");
-                return {};
+                n = nullptr;
+                return;
             }
             next();
             n->statement = std::move(s);
             assert (n->is_contract());
-            return n;
+            return;
         }
 
         else if (auto s = declaration(semicolon_required, false, false, n.get())) {
             n->statement = std::move(s);
             assert (n->is_declaration());
-            return n;
+            return;
         }
 
         else if (auto s = expression_statement(semicolon_required, allow_angle_operators)) {
             n->statement = std::move(s);
             assert (n->is_expression());
-            return n;
+            return;
         }
 
         else {
@@ -8405,7 +8788,8 @@ private:
             {
                 error("declaring multiple names at once is not currently supported");
             }
-            return {};
+            n = nullptr;
+            return;
         }
     }
 
@@ -8418,10 +8802,11 @@ private:
     //G     statement-seq statement
     //G
     auto compound_statement(
-        source_position equal_sign                      = source_position{},
-        bool            allow_single_unbraced_statement = false
+        std::unique_ptr<compound_statement_node>& n, // using an inout param makes partial parses available to reflection
+        source_position                           equal_sign                      = source_position{},
+        bool                                      allow_single_unbraced_statement = false
     )
-        -> std::unique_ptr<compound_statement_node>
+        -> bool
     {
         const bool is_braced = curr().type() == lexeme::LeftBrace;
         if (
@@ -8429,10 +8814,10 @@ private:
             && !allow_single_unbraced_statement
             )
         {
-            return {};
+            return false;
         }
 
-        auto n = std::make_unique<compound_statement_node>();
+        n = std::make_unique<compound_statement_node>();
         if (!is_braced) {
             n->body_indent = curr().position().colno-1;
         }
@@ -8465,14 +8850,15 @@ private:
         {
             //  Only inside a compound-statement, a
             //  contained statement() may have parameters
-            auto s = statement(true, source_position{}, true, n.get());
+            auto s = std::unique_ptr<statement_node>{};
+            statement(s, true, source_position{}, true, n.get());
             if (!s) {
 
                 // Only add a general error when no specific one already exists
                 if(!has_error()) {
                     error("invalid statement encountered inside a compound-statement", true);
                 }
-                return {};
+                return false;
             }
             n->statements.push_back( std::move(s) );
         }
@@ -8482,7 +8868,7 @@ private:
             n->close_brace = curr().position();
             next();
         }
-        return n;
+        return true;
     }
 
 
@@ -8683,6 +9069,18 @@ private:
             }
         }
 
+        if (
+            !is_returns
+            && n->declaration->initializer
+            && !n->declaration->initializer->is_expression()
+            )
+        {
+            //  If the initializer is not an expression statement (like a function call),
+            //  then it can't be used as a parameter.
+            error("parameter must be initialized with an expression");
+            return {};
+        }
+
         return n;
     }
 
@@ -8805,7 +9203,6 @@ private:
         -> std::unique_ptr<contract_node>
     {
         auto n = std::make_unique<contract_node>(curr().position());
-        auto guard = capture_groups_stack_guard(this, &n->captures);
 
         if (
             curr() != "pre"
@@ -8816,6 +9213,13 @@ private:
             return {};
         }
         n->kind = &curr();
+
+        auto guard =
+            curr() == "post"
+            ? std::make_unique<capture_groups_stack_guard>(this, &n->captures)
+            : std::unique_ptr<capture_groups_stack_guard>()
+            ;
+
         next();
 
         //  Check if there's a <group,flags>
@@ -9292,6 +9696,10 @@ private:
         //  Or a namespace
         else if (curr() == "namespace")
         {
+            if (n->parent_is_type()) {
+                error("types cannot contain namespaces");
+                return {};
+            }
             n->type = std::make_unique<namespace_node>( &curr() );
             assert (n->type.index() == declaration_node::a_namespace);
             next();
@@ -9490,13 +9898,15 @@ private:
                     }
                 }
 
-                if (!(n->initializer = statement(
+                statement(
+                    n->initializer,
                     semicolon_required,
                     n->equal_sign,
                     false,
                     nullptr,
                     !is_template_parameter
-                )))
+                );
+                if (!n->initializer)
                 {
                     error(
                         "ill-formed initializer",
@@ -9534,7 +9944,8 @@ private:
             )
         {
             auto start_pos = pos;
-            auto stmt = statement();
+            auto stmt = std::unique_ptr<statement_node>{};
+            statement(stmt);
             auto at_a_statement = stmt != nullptr && !stmt->is_declaration();
             pos = start_pos;    // backtrack no matter what, we're just peeking here
 
@@ -9824,9 +10235,12 @@ private:
             a->initializer = std::move(e);
         }
 
-        //  Anything else shouldn't be possible
+        //  Anything else is illegal
         else {
-            assert(false && "ICE: should be unreachable - invalid alias declaration");
+            errors.emplace_back(
+                curr().position(),
+                "invalid alias declaration - expected 'type', 'namespace', or a type-id after ':'"
+            );
             return {};
         }
 

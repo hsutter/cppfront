@@ -1,5 +1,5 @@
 
-//  Copyright 2022-2024 Herb Sutter
+//  Copyright 2022-2025 Herb Sutter
 //  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //  
 //  Part of the Cppfront Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -432,7 +432,7 @@ private:
         c.dbg_was_printed = true;
     }
 
-    auto flush_comments( source_position pos )
+    auto flush_comments( source_position pos, bool print_remaining_comments = false )
         -> void
     {
         if (!pcomments) {
@@ -444,7 +444,7 @@ private:
 
         //  Add unprinted comments and blank lines as needed to catch up vertically
         //
-        while (curr_pos.lineno < pos.lineno)
+        while (print_remaining_comments ? (next_comment < std::ssize(comments)) : (curr_pos.lineno < pos.lineno))
         {
             //  If a comment goes on this line, print it
             if (
@@ -468,7 +468,9 @@ private:
                     )
                 {
                     print_comment( comments[next_comment] );
-                    assert(curr_pos.lineno <= pos.lineno);  // we shouldn't have overshot
+                    if (!print_remaining_comments) {
+                        assert(curr_pos.lineno <= pos.lineno);  // we shouldn't have overshot
+                    }
                 }
 
                 ++next_comment;
@@ -478,6 +480,10 @@ private:
             else {
                 print("\n");
             }
+        }
+        // And catch up.
+        while (curr_pos.lineno < pos.lineno) {
+            print("\n");
         }
     }
 
@@ -589,7 +595,7 @@ public:
             && psource->has_cpp2()
             )
         {
-            flush_comments( {curr_pos.lineno+1, 1} );
+            flush_comments( {curr_pos.lineno+1, 1}, print_remaining_comments );
 
             if (print_remaining_comments) {
                 print_unprinted_comments();
@@ -1453,11 +1459,12 @@ public:
                         ++ret.cpp1_lines;
                     }
 
+                    //  In Cpp2-only mode, there should be no nonblank Cpp1-content lines
                     if (
                         flag_cpp2_only
-                        && !line.text.empty()
                         && line.cat != source_line::category::comment
                         && line.cat != source_line::category::import
+                        && std::any_of(line.text.begin(), line.text.end(), [](auto c) { return !std::isspace(c); })
                         )
                     {
                         if (line.cat == source_line::category::preprocessor) {
@@ -4565,7 +4572,7 @@ public:
             //  [[maybe_unused]] to silence Cpp1 compiler warnings
             assert(!current_functions.empty());
             auto maybe_unused = std::string{};
-            if (current_functions.back().decl->get_parent()->get_type_scope_declarations(declaration_node::objects).empty()) {
+            if (current_functions.back().decl->get_parent()->get_nested_declarations(declaration_node::objects).empty()) {
                 maybe_unused = "[[maybe_unused]] ";
             }
 
@@ -5192,7 +5199,7 @@ public:
                         )
                         {
                             //  ... for each of its type scope decls...
-                            for (auto const& decl : (*parent)->get_type_scope_declarations())
+                            for (auto const& decl : (*parent)->get_nested_declarations())
                             {
                                 //  ... check the name
                                 if (decl->has_name(s))
@@ -5376,7 +5383,7 @@ public:
             //  If this constructor's type has data members, handle their initialization
             //      - objects is the list of this type's declarations
             //      - statements is the list of this constructor's statements
-            auto objects    = n.parent_declaration->get_type_scope_declarations(n.objects);
+            auto objects    = n.parent_declaration->get_nested_declarations(n.objects);
             auto statements = n.get_initializer_statements();
             auto out_inits  = std::vector<std::string>{};
 
@@ -6603,48 +6610,35 @@ public:
                         prefix
                     );
 
-                    //  If there's no inheritance and this operator= has two parameters,
-                    //  it's setting from a single value -- either from the same type
-                    //  (aka copy/move) or another type (a conversion) -- so recurse to
-                    //  emit related functions if the user didn't write them by hand
+                    //  If this operator= has two parameters, it's setting from a single value --
+                    //  either from the same type (aka copy/move) or another type (a conversion) --
+                    //  so recurse to emit related functions if the user didn't write them by hand
                     if (
-                        !n.parent_is_polymorphic()
-                        && func->parameters->ssize() == 2
+                        func->parameters->ssize() == 2
                         && generating_assignment_from != &n
                         )
                     {
                         assert(!current_functions.empty());
 
                         //  A)  Generate (A)ssignment from a constructor,
-                        //      if the user didn't write the assignment function themselves
+                        //      if the user didn't write a more-specific function themselves
                         if (
-                            //  A1) This is '(out   this, that)'
-                            //      and no  '(inout this, that)' was written by the user
+                            //  A1) This is '(out this, that)'
+                            //      and the user didn't write any other ctor/assignment function themselves
                             (
                                 &n == current_functions.back().declared_value_set_functions.out_this_in_that
+                                && !current_functions.back().declared_value_set_functions.out_this_move_that
                                 && !current_functions.back().declared_value_set_functions.inout_this_in_that
-                                )
-                            ||
-                            //  A2) This is '(out   this, move that)'
-                            //      and no  '(inout this, move that)' was written by the user
-                            //  (*) and no  '(inout this,      that)' was written by the user (*)
-                            //
-                            //  (*) This third test is to tie-break M2 and A2 in favor of M2. Both M2 and A2
-                            //      can generate a missing '(inout this, move that)', and if we have both
-                            //      options then we should prefer to use M2 (generate move assignment from
-                            //      copy assignment) rather than A2 (generate move assignment from move
-                            //      construction) as M2 is a better fit (move assignment is more like copy
-                            //      assignment than like move construction, because assignments are designed
-                            //      structurally to set the value of an existing 'this' object)
-                            (
-                                &n == current_functions.back().declared_value_set_functions.out_this_move_that
                                 && !current_functions.back().declared_value_set_functions.inout_this_move_that
-                                && !current_functions.back().declared_value_set_functions.inout_this_in_that
                                 )
                             ||
-                            //  A3) This is '(out   this, something-other-than-that)'
+                            //  A3) This is '(out this, something-other-than-that)'
+                            //  and the user didn't write an assignment from this type themselves
+                            //  and the type is not polymorphic (this generation is great for most types,
+                            //  but polymorphic base classes often have no meaningful way to write assignment)
                             (
-                                n.is_constructor()
+                                !n.parent_is_polymorphic()
+                                && n.is_constructor()
                                 && !n.is_constructor_with_that()
                                 && !contains( current_functions.back().declared_value_set_functions.assignments_from, n.nth_parameter_type_name(2) )
                                 )
@@ -6908,8 +6902,8 @@ public:
                 generating_assignment_from = {};
             }
 
-            //  If this was a constructor and we want also want to emit
-            //  it as an assignment operator, do it via a recursive call
+            //  If this was a copy function and we want also want to emit
+            //  it as a move function, do it via a recursive call
             if (need_to_generate_move)
             {
                 //  Reset the 'emitted' flags

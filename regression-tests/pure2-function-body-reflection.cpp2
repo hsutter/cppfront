@@ -1,0 +1,83 @@
+
+xyzzy: namespace = {
+
+// This function will be visible as a namespace member while reflecting on xyzzy::test
+sample_function_before_type: () = { }
+
+test: @sample_traverser type =
+{
+    one_liner: (a: double, b: double, c: double) = (a + c) * b;
+
+    return_list: () 
+        -> (r: double, s: float, t: std::string)
+    = {
+        r = 42.0;
+        s = 2.71828f;
+        t = "e times pi";
+    }
+
+    branches: (a: double, b: double, c: double)
+        -> (r: double = 3.14159)
+    = {
+        if true {
+            r = r + a;
+        }
+
+        if a * b > c {
+            r += sin(b);
+        }
+        else {
+            r = c;
+        }
+    }
+
+    binary_ops: (inout a: double, b: double, c: double)
+    = {
+        a -= b * c + (1 << 2);
+        test: bool = a <= b < c && true || false;
+        x := 1 & 2;
+        y := 3 ^ 4;
+        z := 5 | 6;
+    }
+
+    prefix: () -> int
+    = {
+        a := -1;
+        b := +2;
+        if !true {
+            return 0;
+        }
+        return a+b;
+    }
+
+    postfix: (inout a: double)
+    = {
+        ptr := a&;
+        ptr*++--;
+    }
+
+    qualified_ids: () -> _
+    = {
+        v : std::vector<int> = (1, 2, 3);
+        return v.ssize();
+    }
+
+    loops: ()
+    = {
+        v: std::vector = (1, 2, 3);
+
+        for v do (value) { std::cout << value << "\n"; }
+
+        i := 0;
+        while i < 3 next i += 1 { std::cout << i << "\n"; }
+
+        do { std::cout << "plugh\n"; } while false;
+    }
+}
+
+// This function will not be visible as a namespace member while reflecting on xyzzy::test
+sample_function_after_type: () = { }
+
+}
+
+main: () = { }

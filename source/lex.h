@@ -1,5 +1,5 @@
 
-//  Copyright 2022-2024 Herb Sutter
+//  Copyright 2022-2025 Herb Sutter
 //  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //  
 //  Part of the Cppfront Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -713,13 +713,19 @@ auto lex_line(
             tokens.pop_back();
             ++num_merged_tokens;
         }
-
-        tokens.push_back({
-            &generated_text.back()[0],
-            std::ssize(generated_text.back()),
-            pos,
-            lexeme::Keyword
-            });
+ 
+        // It's an error to have more than one of these, but we require that
+        // the number of tokens has not gone down. So just push back as many
+        // tokens as we merged. This will ensure that the token count remains
+        // the same. 
+        for (auto i = 0; i < num_merged_tokens; i++) {
+            tokens.push_back({
+                &generated_text.back()[0],
+                std::ssize(generated_text.back()),
+                pos,
+                lexeme::Keyword
+                });
+        }
 
         if (num_merged_tokens > 1)
         {
@@ -750,8 +756,6 @@ auto lex_line(
                 "        short, ushort, int, uint, long, ulong, longlong, ulonglong, longdouble, _schar, _uchar\n"
                 "    - see also cpp2util.h > \"Convenience names for integer types\""
             );
-
-            return;
         }
 
         tokens.push_back(last_token);

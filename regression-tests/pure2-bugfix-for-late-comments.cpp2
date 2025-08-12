@@ -1,0 +1,11 @@
+
+main: () -> int = {
+  x := crash_m0();
+  _ = x;
+}
+
+crash_m0: type = {
+  operator-: (this, _) -> int = 0;/* Comment starts here
+And continues here
+*/
+}

@@ -25,19 +25,14 @@ jobs:
         cxx_std: [c++2b]
         stdlib: [libstdc++]
         include:
-          - os: ubuntu-20.04
-            shortosname: ubu-20
-            compiler: g++-10
+          - os: ubuntu-24.04
+            shortosname: ubu-24
+            compiler: clang++-19
             cxx_std: c++20
             stdlib: libstdc++
           - os: ubuntu-24.04
             shortosname: ubu-24
-            compiler: clang++-18
-            cxx_std: c++20
-            stdlib: libstdc++
-          - os: ubuntu-24.04
-            shortosname: ubu-24
-            compiler: clang++-18
+            compiler: clang++-19
             cxx_std: c++23
             stdlib: libc++-18-dev
           - os: ubuntu-22.04
@@ -50,11 +45,6 @@ jobs:
             compiler: clang++-15
             cxx_std: c++20
             stdlib: libc++-15-dev
-          - os: ubuntu-20.04
-            shortosname: ubu-20
-            compiler: clang++-12
-            cxx_std: c++20
-            stdlib: libstdc++
           - os: macos-14
             shortosname: mac-14
             compiler: clang++
@@ -84,11 +74,16 @@ jobs:
     - name: Checkout repo
       uses: actions/checkout@v4
 
-    - name: Prepare compilers
+    - name: Prepare compilers - macOS
       if: matrix.os == 'macos-13'
       run: |
         sudo xcode-select --switch /Applications/Xcode_14.3.1.app
         sudo ln -s "$(brew --prefix llvm@15)/bin/clang" /usr/local/bin/clang++-15
+
+    - name: Prepare compilers - Ubuntu 24.04
+      if: matrix.os == 'ubuntu-24.04'
+      run: |
+        sudo sudo apt-get install clang-19
 
     - name: Run regression tests - Linux and macOS version
       if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')

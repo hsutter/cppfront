@@ -1,5 +1,5 @@
 
-//  Copyright 2022-2024 Herb Sutter
+//  Copyright 2022-2025 Herb Sutter
 //  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //  
 //  Part of the Cppfront Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -362,9 +362,12 @@ class braces_tracker
             else             { --else_net_braces; }
         }
 
-        auto found_preprocessor_else() -> void {
-            assert (!found_else);
+        auto found_preprocessor_else_was_there_another() -> bool {
+            if (found_else) {
+                return true; 
+            }
             found_else = true;
+            return false;
         }
 
         //  If the "if" and "else" branches opened/closed the same net number
@@ -469,7 +472,14 @@ public:
             );
         }
 
-        preprocessor.back().found_preprocessor_else();
+        if (preprocessor.back().found_preprocessor_else_was_there_another()) {
+            //  If this is the second or subsequent #else, it doesn't match
+            //  the prior #if, so report an error
+            errors.emplace_back(
+                lineno,
+                "#else already encountered for this #if"
+            );
+        };
     }
 
     //  Exiting an #endif

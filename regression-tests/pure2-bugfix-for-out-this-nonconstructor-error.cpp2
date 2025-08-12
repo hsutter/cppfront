@@ -1,0 +1,4 @@
+
+Machine: @polymorphic_base <I:int> type = {
+    operator%: (out this, _: std::string) = {}
+}
