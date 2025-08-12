@@ -3956,6 +3956,8 @@ autodiff_context: type = {
             "_od_.push_back(_ad1_);\n")
     );
 
+    public suffix: std::string = "_d";
+
     gen_temporary : (inout this) -> std::string = {
         temporary_count += 1;
         return "temp_(temporary_count)$";
@@ -4020,7 +4022,7 @@ autodiff_expression_handler: type = {
     }
 
     gen_lhs_assignment: (inout this, prim: std::string, fwd: std::string, primal_first: bool = false) = {
-        lhs_d : std::string = lhs + "_d";
+        lhs_d : std::string = lhs + ctx*.suffix;
         if lhs == "_" {
             // TODO: Maybe improve discard handling
             lhs_d = lhs;
@@ -4117,7 +4119,7 @@ autodiff_expression_handler: type = {
 
         if 1 != terms.ssize() {
             object   = primary.to_string();
-            object_d = primary.to_string() + "_d";
+            object_d = primary.to_string() + ctx*.suffix;
         }
         else {
             function_name = primary.to_string();
@@ -4168,15 +4170,15 @@ autodiff_expression_handler: type = {
         }
 
         // TODO: This is untested for functions with no return value. Requires handling of out and inout parameters in functions.
-        diff += "(function_name)$_diff(";
+        diff += "(function_name)$(ctx*.suffix)$(";
         for args do (arg) {
-            diff += "(arg)$, (arg)$_d,";
+            diff += "(arg)$, (arg)$(ctx*.suffix)$,";
         }
         diff += ");\n";
 
         if has_return {
             // TODO: Look up return value name of function.
-            gen_lhs_assignment("(ret_temp)$.r", "(ret_temp)$.r_d", /* switch order = */ true);
+            gen_lhs_assignment("(ret_temp)$.r", "(ret_temp)$.r(ctx*.suffix)$", /* switch order = */ true);
         }
 
         // TODO: Add function to list of functions/objects for differentiation.
@@ -4201,13 +4203,13 @@ autodiff_expression_handler: type = {
 
         if !ret.empty() {
             code = string_util::replace_all(code, "_r_", ret);
-            code = string_util::replace_all(code, "_rd_", ret + "_d");
+            code = string_util::replace_all(code, "_rd_", ret + ctx*.suffix);
         }
 
         (copy i := 1)
         for args do (arg) {
             code = string_util::replace_all(code, "_a(i)$_", arg);
-            code = string_util::replace_all(code, "_ad(i)$_", arg + "_d");
+            code = string_util::replace_all(code, "_ad(i)$_", arg + ctx*.suffix);
         }
 
         diff += code;
@@ -4273,7 +4275,7 @@ autodiff_expression_handler: type = {
             }
 
             var := handle_expression_term(term.get_term());
-            fwd    += "(var)$_d";
+            fwd    += "(var)$(ctx*.suffix)$";
             primal += "(var)$";
 
             first = false;
@@ -4297,11 +4299,11 @@ autodiff_expression_handler: type = {
             primal : std::string = "";
 
             if "*" == op {
-                fwd    = "(arg_a)$ * (arg_b)$_d + (arg_b)$ * (arg_a)$_d";
+                fwd    = "(arg_a)$ * (arg_b)$(ctx*.suffix)$ + (arg_b)$ * (arg_a)$(ctx*.suffix)$";
                 primal = "(arg_a)$ * (arg_b)$";
             }
             else if "/" == op {
-                fwd    = "(arg_a)$_d / (arg_b)$ - (arg_a)$ * (arg_b)$_d / ((arg_b)$ * (arg_b)$)";
+                fwd    = "(arg_a)$(ctx*.suffix)$ / (arg_b)$ - (arg_a)$ * (arg_b)$(ctx*.suffix)$ / ((arg_b)$ * (arg_b)$)";
                 primal = "(arg_a)$ / (arg_b)$";
             }
             else {
@@ -4317,7 +4319,7 @@ autodiff_expression_handler: type = {
                 // Temporary
                 t := ctx*.gen_temporary();
                 // TODO: Get type of expression, in order to define the type of t.
-                diff += "(t)$_d := (fwd)$;";
+                diff += "(t)$(ctx*.suffix)$ := (fwd)$;";
                 diff += "(t)$   := (primal)$;";
 
                 arg_a = t;
@@ -4364,7 +4366,7 @@ autodiff_expression_handler: type = {
     traverse: (override inout this, primary: meta::primary_expression) =
     {
         if primary.is_identifier() {
-            gen_lhs_assignment(primary.to_string(), primary.to_string() + "_d");
+            gen_lhs_assignment(primary.to_string(), primary.to_string() + ctx*.suffix);
         }
         else if primary.is_expression_list() {
             if primary.as_expression_list().is_empty() {
@@ -4426,7 +4428,7 @@ autodiff_stmt_handler: type = {
             append(ad);
         }
         else {
-            diff += "(lhs)$_d : (ad_type)$;\n";
+            diff += "(lhs)$(ctx*.suffix)$ : (ad_type)$;\n";
             diff += "(lhs)$   : (type)$;\n";
         }
     }
@@ -4503,7 +4505,7 @@ autodiff_stmt_handler: type = {
             param := stmt.get_for_parameter();
             param_style := to_string_view(param.get_passing_style());
             param_decl := param.get_declaration();
-            diff += "(copy (param_decl.name())$_d_iter := (range)$_d.begin())\n";
+            diff += "(copy (param_decl.name())$_d_iter := (range)$(ctx*.suffix)$.begin())\n";
             diff += "for (range)$ next (";
             if stmt.has_next() {
                 // TODO: Assumption is here that nothing is in the next expression
@@ -4511,7 +4513,7 @@ autodiff_stmt_handler: type = {
             }
             diff += "(param_decl.name())$_d_iter++";
             diff += ") do ((param_style)$ (param_decl.name())$: (param_decl.type())$) {\n";
-            diff += "((param_style)$ (param_decl.name())$_d: (param_decl.type())$ = (param_decl.name())$_d_iter*)";
+            diff += "((param_style)$ (param_decl.name())$(ctx*.suffix)$: (param_decl.type())$ = (param_decl.name())$_d_iter*)";
             pre_traverse(stmt.get_for_body());
             diff += "}\n";
         }
@@ -4652,20 +4654,40 @@ autodiff_stmt_handler: type = {
 
 autodiff: (inout t: meta::type_declaration) =
 {
+
+    suffix_token : std::string_view == "suffix=";
+
+    args := t.get_arguments();
+
+    suffix : std::string = "_d";
+    for args do (arg_str) {
+        if arg_str.starts_with("\"") && arg_str.ends_with("\"") {
+            arg := arg_str.substr(1, arg_str.ssize() - 2);
+
+            if arg.starts_with(suffix_token) {
+                suffix = arg.substr(suffix_token.size());
+                continue;
+            }
+        }
+
+        t.error("AD: Unknown argument: (arg_str)$");
+        return;
+    }
+
     for t.get_members()
     do  (m)
     if  m.is_function()
     {
         mf := m.as_function();
 
-        diff: std::string = "    (mf.name())$_diff: (";
+        diff: std::string = "    (mf.name())$(suffix)$: (";
 
         //  1. Generate the modified signature
         //  a) Parameters
 
         for mf.get_parameters() do (param) {
             diff += "(param.get_declaration().name())$ : (param.get_declaration().type())$, ";
-            diff += "(param.get_declaration().name())$_d : (param.get_declaration().type())$, ";
+            diff += "(param.get_declaration().name())$(suffix)$ : (param.get_declaration().type())$, ";
         }
 
         diff += ") -> (";
@@ -4676,16 +4698,16 @@ autodiff: (inout t: meta::type_declaration) =
             // TODO: check if name "r" is available. (Also needs inspection of functions at call sides.)
             if mf.has_deduced_return_type() {
                 // TODO: Take care of initialization order error.
-                diff += "r, r_d, ";
+                diff += "r, r(suffix)$, ";
             }
             else {
-                diff += "r: (mf.get_unnamed_return_type())$ = (), r_d: (mf.get_unnamed_return_type())$ = (), ";
+                diff += "r: (mf.get_unnamed_return_type())$ = (), r(suffix)$: (mf.get_unnamed_return_type())$ = (), ";
             }
         }
         else {
             for mf.get_returns() do (param) {
                 diff += "(param.get_declaration().name())$ : (param.get_declaration().type())$ = 0.0, ";
-                diff += "(param.get_declaration().name())$_d : (param.get_declaration().type())$ = 0.0, ";
+                diff += "(param.get_declaration().name())$(suffix)$ : (param.get_declaration().type())$ = 0.0, ";
             }
         }
 
@@ -4699,6 +4721,7 @@ autodiff: (inout t: meta::type_declaration) =
         }
 
         ad_ctx: autodiff_context = ();
+        ad_ctx.suffix = suffix;
         ad_impl : autodiff_stmt_handler = (ad_ctx&, mf);
 
 

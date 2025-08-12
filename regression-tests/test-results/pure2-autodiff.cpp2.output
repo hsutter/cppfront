@@ -278,7 +278,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    add_1_diff:(
+    add_1_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -293,7 +293,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    add_2_diff:(
+    add_2_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -308,7 +308,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    sub_1_diff:(
+    sub_1_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -323,7 +323,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    sub_2_diff:(
+    sub_2_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -338,7 +338,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    add_sub_2_diff:(
+    add_sub_2_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -353,7 +353,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    mul_1_diff:(
+    mul_1_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -368,7 +368,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    mul_2_diff:(
+    mul_2_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -385,7 +385,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    div_1_diff:(
+    div_1_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -400,7 +400,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    div_2_diff:(
+    div_2_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -417,7 +417,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    mul_div_2_diff:(
+    mul_div_2_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -434,7 +434,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    mul_add_diff:(
+    mul_add_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -451,7 +451,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    add_mul_diff:(
+    add_mul_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -468,7 +468,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    func_diff:(
+    func_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -483,7 +483,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    func_call_diff:(
+    func_call_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -493,7 +493,7 @@ ad_test:/* @autodiff @print */ type =
             out r_d: double = 0.0, 
         ) = 
     {
-        temp_2: _ = func_diff(x, x_d, y, y_d);
+        temp_2: _ = func_d(x, x_d, y, y_d);
         temp_1: _ = temp_2.r;
         temp_1_d: _ = temp_2.r_d;
         r_d = x * temp_1_d + temp_1 * x_d;
@@ -501,7 +501,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    sin_call_diff:(
+    sin_call_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -518,7 +518,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    if_branch_diff:(
+    if_branch_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -541,7 +541,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    if_else_branch_diff:(
+    if_else_branch_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -564,7 +564,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    direct_return_diff:(
+    direct_return_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -579,7 +579,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    intermediate_var_diff:(
+    intermediate_var_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -596,7 +596,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    intermediate_passive_var_diff:(
+    intermediate_passive_var_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -617,7 +617,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    intermediate_untyped_diff:(
+    intermediate_untyped_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -636,7 +636,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    intermediate_default_init_diff:(
+    intermediate_default_init_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -655,7 +655,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    intermediate_no_init_diff:(
+    intermediate_no_init_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -676,7 +676,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    while_loop_diff:(
+    while_loop_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -699,7 +699,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    do_while_loop_diff:(
+    do_while_loop_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
@@ -723,7 +723,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
-    for_loop_diff:(
+    for_loop_d:(
         in x: double, 
         in x_d: double, 
         in y: double, 
