@@ -755,5 +755,64 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 }
+
+
+ad_test_twice:/* @autodiff @autodiff<"suffix=_d2"> @print */ type = 
+{
+    mul_1:(in x: double, ) -> (out r: double, ) = 
+    {
+        r = x * x;
+        return;
+    }
+
+    mul_1_d:(
+        in x: double, 
+        in x_d: double, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: double = 0.0, 
+        ) = 
+    {
+        r_d = x * x_d + x * x_d;
+        r = x * x;
+        return;
+    }
+
+    mul_1_d2:(
+        in x: double, 
+        in x_d2: double, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d2: double = 0.0, 
+        ) = 
+    {
+        r_d2 = x * x_d2 + x * x_d2;
+        r = x * x;
+        return;
+    }
+
+    mul_1_d_d2:(
+        in x: double, 
+        in x_d2: double, 
+        in x_d: double, 
+        in x_d_d2: double, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d2: double = 0.0, 
+            out r_d: double = 0.0, 
+            out r_d_d2: double = 0.0, 
+        ) = 
+    {
+        temp_1_d2: _ = x * x_d_d2 + x_d * x_d2;
+        temp_1: _ = x * x_d;
+        temp_2_d2: _ = x * x_d_d2 + x_d * x_d2;
+        temp_2: _ = x * x_d;
+        r_d_d2 = temp_1_d2 + temp_2_d2;
+        r_d = temp_1 + temp_2;
+        r_d2 = x * x_d2 + x * x_d2;
+        r = x * x;
+        return;
+    }
+}
  ok (all Cpp2, passes safety checks)
 

@@ -153,6 +153,11 @@ ad_test: @autodiff @print type = {
     }
 }
 
+ad_test_twice: @autodiff @autodiff<"suffix=_d2"> @print type = {
+    mul_1: (x: double) -> (r: double) = {
+        r = x * x;
+    }
+}
 
 write_output: (func: std::string, x: double, x_d: double, y: double, y_d: double, ret) = {
     std::cout << "diff((func)$) at (x = (x)$, x_d = (x_d)$, y = (y)$, y_d = (y_d)$) = (r = (ret.r)$, r_d = (ret.r_d)$)" << std::endl;
@@ -190,4 +195,7 @@ main: () = {
     write_output("while loop", x, x_d, y, y_d, ad_test::while_loop_d(x, x_d, y, y_d));
     write_output("do while loop", x, x_d, y, y_d, ad_test::do_while_loop_d(x, x_d, y, y_d));
     write_output("for loop", x, x_d, y, y_d, ad_test::for_loop_d(x, x_d, y, y_d));
+
+    r_twice := ad_test_twice::mul_1_d_d2(x, x_d, x_d, 0.0);
+    std::cout << "2nd order diff of x*x at (x)$ = (r_twice.r_d_d2)$" << std::endl;
 }

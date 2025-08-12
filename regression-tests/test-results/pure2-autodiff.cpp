@@ -11,6 +11,9 @@
 #line 2 "pure2-autodiff.cpp2"
 class ad_test;
 
+#line 156 "pure2-autodiff.cpp2"
+class ad_test_twice;
+    
 
 //=== Cpp2 type definitions and function declarations ===========================
 
@@ -259,10 +262,35 @@ public: [[nodiscard]] static auto for_loop_d(cpp2::impl::in<double> x, cpp2::imp
 #line 154 "pure2-autodiff.cpp2"
 };
 
+class ad_test_twice {
+using mul_1_ret = double;
+
 #line 157 "pure2-autodiff.cpp2"
+    public: [[nodiscard]] static auto mul_1(cpp2::impl::in<double> x) -> mul_1_ret;
+struct mul_1_d_ret { double r; double r_d; };
+
+
+    public: [[nodiscard]] static auto mul_1_d(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d) -> mul_1_d_ret;
+
+struct mul_1_d2_ret { double r; double r_d2; };
+
+public: [[nodiscard]] static auto mul_1_d2(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d2) -> mul_1_d2_ret;
+
+struct mul_1_d_d2_ret { double r; double r_d2; double r_d; double r_d_d2; };
+
+public: [[nodiscard]] static auto mul_1_d_d2(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d2, cpp2::impl::in<double> x_d, cpp2::impl::in<double> x_d_d2) -> mul_1_d_d2_ret;
+
+    public: ad_test_twice() = default;
+    public: ad_test_twice(ad_test_twice const&) = delete; /* No 'that' constructor, suppress copy */
+    public: auto operator=(ad_test_twice const&) -> void = delete;
+
+
+#line 160 "pure2-autodiff.cpp2"
+};
+
 auto write_output(cpp2::impl::in<std::string> func, cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d, auto const& ret) -> void;
 
-#line 161 "pure2-autodiff.cpp2"
+#line 166 "pure2-autodiff.cpp2"
 auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -788,11 +816,51 @@ auto const& t_d{*cpp2::impl::assert_not_null(t_d_iter)};
     }
 
 #line 157 "pure2-autodiff.cpp2"
+    [[nodiscard]] auto ad_test_twice::mul_1(cpp2::impl::in<double> x) -> mul_1_ret{
+            cpp2::impl::deferred_init<double> r;
+#line 158 "pure2-autodiff.cpp2"
+        r.construct(x * x);
+    return std::move(r.value()); }
+
+    [[nodiscard]] auto ad_test_twice::mul_1_d(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d) -> mul_1_d_ret{
+                                                                                         double r {0.0};
+                                                                                         double r_d {0.0};r_d = x * x_d + x * x_d;
+    r = x * x;
+    return  { std::move(r), std::move(r_d) }; 
+    }
+
+    [[nodiscard]] auto ad_test_twice::mul_1_d2(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d2) -> mul_1_d2_ret{
+                                                                                            double r {0.0};
+                                                                                            double r_d2 {0.0};r_d2 = x * x_d2 + x * x_d2;
+    r = x * x;
+    return  { std::move(r), std::move(r_d2) }; 
+    }
+
+    [[nodiscard]] auto ad_test_twice::mul_1_d_d2(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d2, cpp2::impl::in<double> x_d, cpp2::impl::in<double> x_d_d2) -> mul_1_d_d2_ret{
+                                                                                                                                                                        double r {0.0};
+                                                                                                                                                                        double r_d2 {0.0};
+                                                                                                                                                                        double r_d {0.0};
+                                                                                                                                                                        double r_d_d2 {0.0};
+auto temp_1_d2 {x * x_d_d2 + x_d * x_d2}; 
+
+    auto temp_1 {x * x_d}; 
+
+    auto temp_2_d2 {x * x_d_d2 + x_d * x_d2}; 
+
+    auto temp_2 {x * x_d}; 
+    r_d_d2 = cpp2::move(temp_1_d2) + cpp2::move(temp_2_d2);
+    r_d = cpp2::move(temp_1) + cpp2::move(temp_2);
+    r_d2 = x * x_d2 + x * x_d2;
+    r = x * x;
+    return  { std::move(r), std::move(r_d2), std::move(r_d), std::move(r_d_d2) }; 
+    }
+
+#line 162 "pure2-autodiff.cpp2"
 auto write_output(cpp2::impl::in<std::string> func, cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d, auto const& ret) -> void{
     std::cout << "diff(" + cpp2::to_string(func) + ") at (x = " + cpp2::to_string(x) + ", x_d = " + cpp2::to_string(x_d) + ", y = " + cpp2::to_string(y) + ", y_d = " + cpp2::to_string(y_d) + ") = (r = " + cpp2::to_string(ret.r) + ", r_d = " + cpp2::to_string(ret.r_d) + ")" << std::endl;
 }
 
-#line 161 "pure2-autodiff.cpp2"
+#line 166 "pure2-autodiff.cpp2"
 auto main() -> int{
 
     double x {2.0}; 
@@ -824,6 +892,9 @@ auto main() -> int{
     write_output("intermediate no init", x, x_d, y, y_d, ad_test::intermediate_no_init_d(x, x_d, y, y_d));
     write_output("while loop", x, x_d, y, y_d, ad_test::while_loop_d(x, x_d, y, y_d));
     write_output("do while loop", x, x_d, y, y_d, ad_test::do_while_loop_d(x, x_d, y, y_d));
-    write_output("for loop", x, x_d, y, y_d, ad_test::for_loop_d(cpp2::move(x), cpp2::move(x_d), cpp2::move(y), cpp2::move(y_d)));
+    write_output("for loop", x, x_d, y, y_d, ad_test::for_loop_d(x, x_d, cpp2::move(y), cpp2::move(y_d)));
+
+    auto r_twice {ad_test_twice::mul_1_d_d2(x, x_d, cpp2::move(x_d), 0.0)}; 
+    std::cout << "2nd order diff of x*x at " + cpp2::to_string(cpp2::move(x)) + " = " + cpp2::to_string(cpp2::move(r_twice).r_d_d2) + "" << std::endl;
 }
 
