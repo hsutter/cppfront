@@ -123,6 +123,20 @@ ad_test: @autodiff @print type = {
       next (i += 1)
       while i < 2;
     }
+
+    for_loop: (x: double, y: double) -> (r: double) = {
+      v: std::vector<double> = ();
+
+      v.push_back(x);
+      v.push_back(y);
+
+      r = 0.0;
+      for v
+      do (t)
+      {
+        r = r + t;
+      }
+    }
 }
 
 write_output: (func: std::string, x: double, x_d: double, y: double, y_d: double, ret) = {
@@ -158,4 +172,5 @@ main: () = {
     write_output("intermediate untyped", x, x_d, y, y_d, ad_test::intermediate_untyped_diff(x, x_d, y, y_d));
     write_output("while loop", x, x_d, y, y_d, ad_test::while_loop_diff(x, x_d, y, y_d));
     write_output("do while loop", x, x_d, y, y_d, ad_test::do_while_loop_diff(x, x_d, y, y_d));
+    write_output("for loop", x, x_d, y, y_d, ad_test::for_loop_diff(x, x_d, y, y_d));
 }

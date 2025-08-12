@@ -3903,6 +3903,29 @@ sample_traverser: (idexpr: meta::id_expression, indent: i32) =
 //  autodiff - stub
 //
 
+autodiff_special_func: type = {
+    public name      : std::string;
+    public n_args    : int;
+    public has_return: bool;
+    public is_member : bool;
+
+    public code: std::string;
+
+    operator=: (out this, name_: std::string, n_args_: int, has_return_: bool, is_member_: bool, code_: std::string = "") = {
+        name       = name_;
+        n_args     = n_args_;
+        has_return = has_return_;
+        is_member  = is_member_;
+        code       = code_;
+    }
+
+    operator=: (out this, that) = {} // Default copy.
+
+    is_match: (this, o: autodiff_special_func) -> bool = {
+        return name == o.name && n_args == o.n_args && has_return == o.has_return && is_member == o.is_member;
+    }
+}
+
 autodiff_context: type = {
     private temporary_count : int = 0;
     public  math_funcs      : std::map<std::string, std::string> = (
@@ -3910,6 +3933,19 @@ autodiff_context: type = {
         std::make_pair("cos", "-sin(_x_)"),
         std::make_pair("exp", "exp(_x_)"),
         // TODO: Extend
+    );
+
+    // Code in special function is replaced. Placeholders are:
+    //   _o_  : name of object for member functions.
+    //   _o_  : name of derivative object for member functions.
+    //   _a1_ : First argument value
+    //   _ad1_: First derivative argument value
+    //   _a2_ : Second argument value
+    //   _ad2_: Second derivative argument value
+    public special_funcs : std::vector<autodiff_special_func> = (
+        autodiff_special_func("push_back", 1, /* has_return = */ false, /* is_member = */ true,
+            "_o_.push_back(_a1_);\n"
+            "_od_.push_back(_ad1_);\n")
     );
 
     gen_temporary : (inout this) -> std::string = {
@@ -3923,6 +3959,20 @@ autodiff_context: type = {
         // TODO: Add type to required generation for AD.
 
         return type; // Use the same type for now.
+    }
+
+    lookup_special_function_handling: (this, func_name: std::string, n_args: int, has_return: bool, is_member: bool) -> (m: bool, code: std::string) = {
+        lookup : autodiff_special_func = (func_name, n_args, has_return, is_member);
+
+        m = false;
+        code = "";
+        for special_funcs do (func) {
+            if func.is_match(lookup) {
+                m = true;
+                code = func.code;
+                return;
+            }
+        }
     }
 }
 
@@ -4151,9 +4201,9 @@ autodiff_expression_handler: type = {
         isas.error( "AD: Is as expressions are not yet handled." );
     }
 
-    traverse: (override inout this, postfix: meta::prefix_expression) =
+    traverse: (override inout this, prefix: meta::prefix_expression) =
     {
-        postfix.error( "AD: Prefix expressions are not yet handled." );
+        prefix.error( "AD: Prefix expressions are not yet handled." );
     }
 
     traverse: (override inout this, postfix: meta::postfix_expression) =
@@ -4233,6 +4283,32 @@ autodiff_stmt_handler: type = {
         mf = mf_;
     }
 
+    handle_special_function: (inout this, object: std::string, object_d: std::string, function_name: std::string, args: std::vector<std::string>) -> bool = {
+
+        r := ctx*.lookup_special_function_handling(function_name, args.ssize(), false, !object.empty());
+
+        if !r.m {
+            return false; // No match
+        }
+
+        // Have a match, do the replacement
+        code: std::string = "";
+        code = r.code; // TODO: Direct initialization gives error: no matching function for call to ‘std::__cxx11::basic_string<char>::basic_string(<brace-enclosed initializer list>)’
+
+        code = string_util::replace_all(code, "_o_", object);
+        code = string_util::replace_all(code, "_od_", object_d);
+
+        (copy i := 1)
+        for args do (arg) {
+            code = string_util::replace_all(code, "_a(i)$_", arg);
+            code = string_util::replace_all(code, "_ad(i)$_", arg + "_d");
+        }
+
+        diff += code;
+
+        return true;
+    }
+
     traverse: (override inout this, decl: meta::declaration) = {
         base::traverse(decl);
     }
@@ -4308,7 +4384,6 @@ autodiff_stmt_handler: type = {
         }
         else if stmt.is_do() {
             // TODO: Assumption is here that nothing is in the condition
-
             diff += "do ";
             pre_traverse(stmt.get_do_while_body());
 
@@ -4320,8 +4395,25 @@ autodiff_stmt_handler: type = {
         }
         else {
             assert(stmt.is_for());
+            // No zip view available in cpp 20 do a piggy back for range
 
-            stmt.error("AD: Do not know how to handle for loops: (stmt.to_string())$");
+            // TODO: Assumption that this is just an id expression.
+            range := stmt.get_for_range().to_string();
+
+            param := stmt.get_for_parameter();
+            param_style := to_string_view(param.get_passing_style());
+            param_decl := param.get_declaration();
+            diff += "(copy (param_decl.name())$_d_iter := (range)$_d.begin())\n";
+            diff += "for (range)$ next (";
+            if stmt.has_next() {
+                // TODO: Assumption is here that nothing is in the next expression
+                diff += "(stmt.get_next_expression().to_string())$, ";
+            }
+            diff += "(param_decl.name())$_d_iter++";
+            diff += ") do ((param_style)$ (param_decl.name())$: (param_decl.type())$) {\n";
+            diff += "((param_style)$ (param_decl.name())$_d: (param_decl.type())$ = (param_decl.name())$_d_iter*)";
+            pre_traverse(stmt.get_for_body());
+            diff += "}\n";
         }
     }
 
@@ -4361,8 +4453,157 @@ autodiff_stmt_handler: type = {
             append(h);
         }
         else {
-            mf.error("AD: Do not know how to handle: (expr.to_string())$");
+            base::traverse(expr);
         }
+    }
+
+    traverse: (override inout this, binexpr: meta::assignment_expression) = {
+        // TDOO: Move meta::expression logic here
+        binexpr.error( "AD: Assign expressions are not yet handled as standalone statements.." );
+    }
+
+    traverse: (override inout this, binexpr: meta::logical_or_expression) = {
+        binexpr.error( "AD: Logical or expressions are not yet handled as standalone statements.." );
+    }
+
+    traverse: (override inout this, binexpr: meta::logical_and_expression) = {
+        binexpr.error( "AD: Logical and expressions are not yet handled as standalone statements.." );
+    }
+
+    traverse: (override inout this, binexpr: meta::bit_or_expression) = {
+        binexpr.error( "AD: Bit or expressions are not yet handled as standalone statements.." );
+    }
+
+    traverse: (override inout this, binexpr: meta::bit_xor_expression) = {
+        binexpr.error( "AD: Bit xor expressions are not yet handled as standalone statements.." );
+    }
+
+    traverse: (override inout this, binexpr: meta::bit_and_expression) = {
+        binexpr.error( "AD: Bit and expressions are not yet handled as standalone statements.." );
+    }
+
+    traverse: (override inout this, binexpr: meta::equality_expression) = {
+        binexpr.error( "AD: Equality or expressions are not yet handled as standalone statements.." );
+    }
+
+    traverse: (override inout this, binexpr: meta::relational_expression) = {
+        binexpr.error( "AD: Relational expressions are not yet handled as standalone statements.." );
+    }
+
+    traverse: (override inout this, binexpr: meta::compare_expression) = {
+        binexpr.error( "AD: Compare or expressions are not yet handled as standalone statements.." );
+    }
+
+    traverse: (override inout this, binexpr: meta::shift_expression) = {
+        binexpr.error( "AD: Shift or expressions are not yet handled as standalone statements.." );
+    }
+
+    traverse: (override inout this, binexpr: meta::additive_expression) = {
+        binexpr.error( "AD: Additive expressions are not yet handled as standalone statements." );
+    }
+
+    traverse: (override inout this, binexpr: meta::multiplicative_expression) = {
+        binexpr.error( "AD: Multiplicative expressions are not yet handled as standalone statements." );
+    }
+
+    traverse: (override inout this, isas: meta::is_as_expression) = {
+        isas.error( "AD: Is as expressions are not yet handled as standalone statements." );
+    }
+
+    traverse: (override inout this, prefix: meta::prefix_expression) =
+    {
+        prefix.error( "AD: Prefix expressions are not yet handled as standalone statements." );
+    }
+
+    traverse: (override inout this, postfix: meta::postfix_expression) =
+    {
+        // TODO: Unify with autodiff_expression_handler implementation
+        terms := postfix.get_terms();
+
+        is_func  := true;
+
+        (copy i := 0)
+        for terms next i += 1 do (term)  {
+            if term.get_op() == "." {
+                continue;
+            }
+            if term.get_op() == "(" && i + 1 == terms.ssize() { // Function operator has to be the last
+                continue;
+            }
+
+            is_func = false;
+        }
+
+        // Check for function call, everything else is not handled.
+        if !(is_func) {
+            postfix.error( "AD: Postfix expressions  are only handled for function calls, or member function calls. Do not know how to handle: (postfix.to_string())$" );
+            return;
+        }
+
+        object         : std::string = "";
+        object_d       : std::string = "";
+        function_name : std::string = "";
+        args          : std::vector<std::string> = ();
+
+        primary := postfix.get_primary_expression();
+
+
+        if 1 != terms.ssize() {
+            object   = primary.to_string();
+            object_d = primary.to_string() + "_d";
+        }
+        else {
+            function_name = primary.to_string();
+        }
+
+        (copy i := 0)
+        for terms next i += 1 do (term)  {
+            if term.get_op() == "." {
+                assert(term.is_id_expression());
+                name := term.get_id_expression().to_string();
+
+                if i + 2 == terms.ssize() { // Second last term is function name, last term is function argument list
+                    function_name = name;
+                }
+                else {
+                    object   += "." + name;
+                    object_d += "." + name;
+                }
+            }
+            else if term.get_op() == "(" {
+                assert(term.is_expression_list());
+
+                ad: autodiff_expression_handler = (ctx, "");
+                args = ad.handle_expression_list(term.get_expression_list());
+                append(ad);
+            }
+            else {
+                postfix.error("AD: Do not know how to handle postfix term: (term.to_string())$");
+            }
+        }
+
+        if handle_special_function(object, object_d, function_name, args) {
+            return;
+        }
+
+        // No special handling, currently only allow direct function calls
+        if !object.empty() {
+            postfix.error("AD: Can currently only handle direct function calls and no member function calls.: (postfix.to_string())$");
+        }
+
+        // TODO: This is untested. Requires handling of out and inout parameters in functions.
+        // All arguments have now been handled. Form the function call
+        diff += "(function_name)$_diff(";
+        for args do (arg) {
+            diff += "(arg)$, (arg)$_d,";
+        }
+        diff += ");\n";
+
+    }
+
+    traverse: (override inout this, primary: meta::primary_expression) =
+    {
+        primary.error( "AD: Primary expressions are not yet handled as standalone statements." );
     }
 }
 

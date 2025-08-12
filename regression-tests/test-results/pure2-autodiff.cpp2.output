@@ -239,6 +239,23 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
+    for_loop:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        v: std::vector<double> = ();
+        v.push_back(x);
+        v.push_back(y);
+        r = 0.0;
+        for v
+        do (in t: _)
+            {
+                r = r + t;
+            }
+        return;
+    }
+
     add_1_diff:(
         in x: double, 
         in x_d: double, 
@@ -643,6 +660,38 @@ ad_test:/* @autodiff @print */ type =
             }
         next (i += 1)
         while i < 2;
+        return;
+    }
+
+    for_loop_diff:(
+        in x: double, 
+        in x_d: double, 
+        in y: double, 
+        in y_d: double, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: double = 0.0, 
+        ) = 
+    {
+        v_d: std::vector<double> = ();
+        v: std::vector<double> = ();
+        v.push_back(x);
+        v_d.push_back(x_d);
+        v.push_back(y);
+        v_d.push_back(y_d);
+        r_d = ();
+        r = 0.0;
+        (copy t_d_iter: _ = v_d.begin(), )
+        for v
+        next (t_d_iter++)
+        do (in t: _)
+            {
+                (in t_d: _ = t_d_iter*, )
+                {
+                    r_d = r_d + t_d;
+                    r = r + t;
+                }
+            }
         return;
     }
 }
