@@ -1160,6 +1160,7 @@ private:
     ) const
         -> bool
     {
+        assert(decl);
         auto name = decl->identifier->to_string();
 
         struct selection_stack_entry{
@@ -1230,9 +1231,9 @@ private:
                 auto const& sym = std::get<symbol::active::identifier>(symbols[pos].sym);
                 assert (sym.identifier);
 
-                if (
-                    sym.is_use()
+                if (sym.is_use()
                     && is_definite_initialization(sym.identifier)
+                    && !decl->return_param
                     )
                 {
                     errors.emplace_back(
@@ -1993,7 +1994,7 @@ public:
             }
         }
 
-        for (auto& decl : n.get_type_scope_declarations())
+        for (auto& decl : n.get_nested_declarations())
         {
             if (decl->has_name("that"))
             {
@@ -2375,7 +2376,7 @@ public:
         }
 
         if (n.pass != passing_style::out) {
-            push_activation( declaration_sym( true, n.declaration.get(), n.declaration->name(), n.declaration->initializer.get(), &n, inside_returns_list));
+            push_activation( declaration_sym( true, n.declaration.get(), n.declaration->name(), n.declaration->initializer.get(), &n, false, inside_returns_list));
             current_declarations.push_back( &symbols.back().as_declaration() );
         }
     }

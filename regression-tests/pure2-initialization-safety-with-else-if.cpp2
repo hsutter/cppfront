@@ -24,6 +24,14 @@ main: (args) = {
     std::cout << p* << std::endl;
 }
 
+ad_test: type = {
+  intermediate_default_no_init: (x: double, y: double) -> (r: double) = {
+    t: double;
+    t = x + y;
+
+    r = t;              // OK, after t but it's a return value
+  }
+}
 
 ok: () = {
     i: int;

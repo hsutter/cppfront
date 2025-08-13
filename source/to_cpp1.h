@@ -4572,7 +4572,7 @@ public:
             //  [[maybe_unused]] to silence Cpp1 compiler warnings
             assert(!current_functions.empty());
             auto maybe_unused = std::string{};
-            if (current_functions.back().decl->get_parent()->get_type_scope_declarations(declaration_node::objects).empty()) {
+            if (current_functions.back().decl->get_parent()->get_nested_declarations(declaration_node::objects).empty()) {
                 maybe_unused = "[[maybe_unused]] ";
             }
 
@@ -5199,7 +5199,7 @@ public:
                         )
                         {
                             //  ... for each of its type scope decls...
-                            for (auto const& decl : (*parent)->get_type_scope_declarations())
+                            for (auto const& decl : (*parent)->get_nested_declarations())
                             {
                                 //  ... check the name
                                 if (decl->has_name(s))
@@ -5383,7 +5383,7 @@ public:
             //  If this constructor's type has data members, handle their initialization
             //      - objects is the list of this type's declarations
             //      - statements is the list of this constructor's statements
-            auto objects    = n.parent_declaration->get_type_scope_declarations(n.objects);
+            auto objects    = n.parent_declaration->get_nested_declarations(n.objects);
             auto statements = n.get_initializer_statements();
             auto out_inits  = std::vector<std::string>{};
 

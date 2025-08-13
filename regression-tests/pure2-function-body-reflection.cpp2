@@ -1,4 +1,9 @@
 
+xyzzy: namespace = {
+
+// This function will be visible as a namespace member while reflecting on xyzzy::test
+sample_function_before_type: () = { }
+
 test: @sample_traverser type =
 {
     one_liner: (a: double, b: double, c: double) = (a + c) * b;
@@ -68,6 +73,11 @@ test: @sample_traverser type =
 
         do { std::cout << "plugh\n"; } while false;
     }
+}
+
+// This function will not be visible as a namespace member while reflecting on xyzzy::test
+sample_function_after_type: () = { }
+
 }
 
 main: () = { }

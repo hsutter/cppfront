@@ -9,7 +9,13 @@
 #line 1 "pure2-function-body-reflection.cpp2"
 
 #line 2 "pure2-function-body-reflection.cpp2"
+namespace xyzzy {
+
+#line 7 "pure2-function-body-reflection.cpp2"
 class test;
+
+#line 81 "pure2-function-body-reflection.cpp2"
+}
 
 
 //=== Cpp2 type definitions and function declarations ===========================
@@ -17,6 +23,11 @@ class test;
 #line 1 "pure2-function-body-reflection.cpp2"
 
 #line 2 "pure2-function-body-reflection.cpp2"
+namespace xyzzy {
+
+// This function will be visible as a namespace member while reflecting on xyzzy::test
+auto sample_function_before_type() -> void;
+
 class test
  {
     public: [[nodiscard]] static auto one_liner(cpp2::impl::in<double> a, cpp2::impl::in<double> b, cpp2::impl::in<double> c) -> decltype(auto);
@@ -24,35 +35,40 @@ struct return_list_ret { double r; float s; std::string t; };
 
 
 
-#line 6 "pure2-function-body-reflection.cpp2"
+#line 11 "pure2-function-body-reflection.cpp2"
     public: [[nodiscard]] static auto return_list() -> return_list_ret;
 using branches_ret = double;
 
 
-#line 14 "pure2-function-body-reflection.cpp2"
+#line 19 "pure2-function-body-reflection.cpp2"
     public: [[nodiscard]] static auto branches(cpp2::impl::in<double> a, cpp2::impl::in<double> b, cpp2::impl::in<double> c) -> branches_ret;
 
-#line 29 "pure2-function-body-reflection.cpp2"
+#line 34 "pure2-function-body-reflection.cpp2"
     public: static auto binary_ops(double& a, cpp2::impl::in<double> b, cpp2::impl::in<double> c) -> void;
 
-#line 38 "pure2-function-body-reflection.cpp2"
+#line 43 "pure2-function-body-reflection.cpp2"
     public: [[nodiscard]] static auto prefix() -> int;
 
-#line 48 "pure2-function-body-reflection.cpp2"
+#line 53 "pure2-function-body-reflection.cpp2"
     public: static auto postfix(double& a) -> void;
 
-#line 54 "pure2-function-body-reflection.cpp2"
+#line 59 "pure2-function-body-reflection.cpp2"
     public: [[nodiscard]] static auto qualified_ids() -> auto;
 
-#line 60 "pure2-function-body-reflection.cpp2"
+#line 65 "pure2-function-body-reflection.cpp2"
     public: static auto loops() -> void;
     public: test() = default;
     public: test(test const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(test const&) -> void = delete;
 
 
-#line 71 "pure2-function-body-reflection.cpp2"
+#line 76 "pure2-function-body-reflection.cpp2"
 };
+
+// This function will not be visible as a namespace member while reflecting on xyzzy::test
+auto sample_function_after_type() -> void;
+
+}
 
 auto main() -> int;
 
@@ -60,28 +76,34 @@ auto main() -> int;
 
 #line 1 "pure2-function-body-reflection.cpp2"
 
-#line 4 "pure2-function-body-reflection.cpp2"
+#line 2 "pure2-function-body-reflection.cpp2"
+namespace xyzzy {
+
+#line 5 "pure2-function-body-reflection.cpp2"
+auto sample_function_before_type() -> void{}
+
+#line 9 "pure2-function-body-reflection.cpp2"
     [[nodiscard]] auto test::one_liner(cpp2::impl::in<double> a, cpp2::impl::in<double> b, cpp2::impl::in<double> c) -> decltype(auto) { return (a + c) * b;  }
 
-#line 6 "pure2-function-body-reflection.cpp2"
+#line 11 "pure2-function-body-reflection.cpp2"
     [[nodiscard]] auto test::return_list() -> return_list_ret
 
     {
             cpp2::impl::deferred_init<double> r;
             cpp2::impl::deferred_init<float> s;
             cpp2::impl::deferred_init<std::string> t;
-#line 9 "pure2-function-body-reflection.cpp2"
+#line 14 "pure2-function-body-reflection.cpp2"
         r.construct(42.0);
         s.construct(2.71828f);
         t.construct("e times pi");
     return  { std::move(r.value()), std::move(s.value()), std::move(t.value()) }; }
 
-#line 14 "pure2-function-body-reflection.cpp2"
+#line 19 "pure2-function-body-reflection.cpp2"
     [[nodiscard]] auto test::branches(cpp2::impl::in<double> a, cpp2::impl::in<double> b, cpp2::impl::in<double> c) -> branches_ret
 
     {
         double r {3.14159};
-#line 17 "pure2-function-body-reflection.cpp2"
+#line 22 "pure2-function-body-reflection.cpp2"
         if (true) {
             r = r + a;
         }
@@ -94,7 +116,7 @@ auto main() -> int;
         }return r; 
     }
 
-#line 29 "pure2-function-body-reflection.cpp2"
+#line 34 "pure2-function-body-reflection.cpp2"
     auto test::binary_ops(double& a, cpp2::impl::in<double> b, cpp2::impl::in<double> c) -> void
     {
         a -= b * c + (1 << 2);
@@ -104,7 +126,7 @@ auto main() -> int;
         auto z {5 | 6}; 
     }
 
-#line 38 "pure2-function-body-reflection.cpp2"
+#line 43 "pure2-function-body-reflection.cpp2"
     [[nodiscard]] auto test::prefix() -> int
     {
         auto a {-1}; 
@@ -115,21 +137,21 @@ auto main() -> int;
         return cpp2::move(a) + cpp2::move(b); 
     }
 
-#line 48 "pure2-function-body-reflection.cpp2"
+#line 53 "pure2-function-body-reflection.cpp2"
     auto test::postfix(double& a) -> void
     {
         auto ptr {&a}; 
         --++*cpp2::impl::assert_not_null(cpp2::move(ptr));
     }
 
-#line 54 "pure2-function-body-reflection.cpp2"
+#line 59 "pure2-function-body-reflection.cpp2"
     [[nodiscard]] auto test::qualified_ids() -> auto
     {
         std::vector<int> v {1, 2, 3}; 
         return CPP2_UFCS(ssize)(cpp2::move(v)); 
     }
 
-#line 60 "pure2-function-body-reflection.cpp2"
+#line 65 "pure2-function-body-reflection.cpp2"
     auto test::loops() -> void
     {
         std::vector v {1, 2, 3}; 
@@ -142,6 +164,11 @@ auto main() -> int;
         do {std::cout << "plugh\n"; } while ( false);
     }
 
-#line 73 "pure2-function-body-reflection.cpp2"
+#line 79 "pure2-function-body-reflection.cpp2"
+auto sample_function_after_type() -> void{}
+
+}
+
+#line 83 "pure2-function-body-reflection.cpp2"
 auto main() -> int{}
 

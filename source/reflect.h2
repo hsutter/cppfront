@@ -272,18 +272,19 @@ declaration: @polymorphic_base @copy_constructible type =
 
     is_function_expression : (this) -> bool = n*.is_function_expression();
 
-    as_function : (this) -> function_declaration = (n, this);
-    as_object   : (this) -> object_declaration   = (n, this);
-    as_type     : (this) -> type_declaration     = (n, this);
-    as_alias    : (this) -> alias_declaration    = (n, this);
+    as_function           : (this) -> function_declaration  = (n, this);
+    as_object             : (this) -> object_declaration    = (n, this);
+    as_type               : (this) -> type_declaration      = (n, this);
+    as_nonglobal_namespace: (this) -> namespace_declaration = (n, this);
+    as_alias              : (this) -> alias_declaration     = (n, this);
 
-    get_parent  : (this) -> declaration          = declaration(n*.parent_declaration, this);
+    get_parent  : (this) -> declaration           = declaration(n*.parent_declaration, this);
 
-    parent_is_function   : (this) -> bool = n*.parent_is_function();
-    parent_is_object     : (this) -> bool = n*.parent_is_object();
-    parent_is_type       : (this) -> bool = n*.parent_is_type();
-    parent_is_namespace  : (this) -> bool = n*.parent_is_namespace();
-    parent_is_alias      : (this) -> bool = n*.parent_is_alias();
+    parent_is_function           : (this) -> bool = n*.parent_is_function();
+    parent_is_object             : (this) -> bool = n*.parent_is_object();
+    parent_is_type               : (this) -> bool = n*.parent_is_type();
+    parent_is_nonglobal_namespace: (this) -> bool = n*.parent_is_nonglobal_namespace();
+    parent_is_alias              : (this) -> bool = n*.parent_is_alias();
 
     parent_is_type_alias      : (this) -> bool = n*.parent_is_type_alias();
     parent_is_namespace_alias : (this) -> bool = n*.parent_is_namespace_alias();
@@ -442,9 +443,9 @@ object_declaration: @copy_constructible type =
 
 
 //-----------------------------------------------------------------------
-//  Type declarations
+//  Type and namespace declarations
 //
-type_declaration: @copy_constructible type =
+type_or_namespace_declaration: @copy_constructible type =
 {
     this: declaration = ();
 
@@ -455,7 +456,7 @@ type_declaration: @copy_constructible type =
     ) =
     {
         declaration = (n_, s);
-        assert( n*.is_type() );
+        assert( n*.is_type() || n*.is_namespace() );
     }
 
     reserve_names: (this, name: std::string_view, forward etc...) =
@@ -472,15 +473,11 @@ type_declaration: @copy_constructible type =
         }
     }
 
-    is_polymorphic: (this)       -> bool = n*.is_polymorphic();
-    is_final      : (this)       -> bool = n*.is_type_final();
-    make_final    : (inout this) -> bool = n*.make_type_final();
-
     get_member_functions: (this)
         -> std::vector<function_declaration>
     = {
         ret: std::vector<function_declaration> = ();
-        for n*.get_type_scope_declarations(declaration_node::functions)
+        for n*.get_nested_declarations(declaration_node::functions)
         do  (d) {
             _ = ret.emplace_back( d, this );
         }
@@ -491,7 +488,7 @@ type_declaration: @copy_constructible type =
         -> std::vector<function_declaration>
     = {
         ret: std::vector<function_declaration> = ();
-        for n*.get_type_scope_declarations(declaration_node::functions)
+        for n*.get_nested_declarations(declaration_node::functions)
         do  (d)
         if  !d*.has_initializer()
             && !d*.is_virtual_function()
@@ -506,7 +503,7 @@ type_declaration: @copy_constructible type =
         -> std::vector<object_declaration>
     = {
         ret: std::vector<object_declaration> = ();
-        for n*.get_type_scope_declarations(declaration_node::objects) do (d) {
+        for n*.get_nested_declarations(declaration_node::objects) do (d) {
             _ = ret.emplace_back( d, this );
         }
         return ret;
@@ -516,7 +513,7 @@ type_declaration: @copy_constructible type =
         -> std::vector<type_declaration>
     = {
         ret: std::vector<type_declaration> = ();
-        for n*.get_type_scope_declarations(declaration_node::types) do (d) {
+        for n*.get_nested_declarations(declaration_node::types) do (d) {
             _ = ret.emplace_back( d, this );
         }
         return ret;
@@ -526,7 +523,7 @@ type_declaration: @copy_constructible type =
         -> std::vector<alias_declaration>
     = {
         ret: std::vector<alias_declaration> = ();
-        for n*.get_type_scope_declarations(declaration_node::aliases) do (d) {
+        for n*.get_nested_declarations(declaration_node::aliases) do (d) {
             _ = ret.emplace_back( d, this );
         }
         return ret;
@@ -536,11 +533,46 @@ type_declaration: @copy_constructible type =
         -> std::vector<declaration>
     = {
         ret: std::vector<declaration> = ();
-        for n*.get_type_scope_declarations(declaration_node::all) do (d) {
+        for n*.get_nested_declarations(declaration_node::all) do (d) {
             _ = ret.emplace_back( d, this );
         }
         return ret;
     }
+
+    add_member: (inout this, source: std::string_view)
+    = {
+        decl := parse_statement(source);
+        if !(decl as bool) {
+            error("the provided source string is not a valid statement");
+            return;
+        }
+        if !decl*.is_declaration() {
+            error("cannot add a member that is not a declaration");
+        }
+        require( n*.add_type_member(move decl),
+                 std::string("unexpected error while attempting to add member:\n") + source );
+    }
+}
+
+
+type_declaration: @copy_constructible type =
+{
+    this: type_or_namespace_declaration = ();
+
+    operator=: (
+        out this,
+        n_: *declaration_node,
+        s : compiler_services
+    ) =
+    {
+        type_or_namespace_declaration = (n_, s);
+        assert( n*.is_type() );
+    }
+
+
+    is_polymorphic: (this)       -> bool = n*.is_polymorphic();
+    is_final      : (this)       -> bool = n*.is_type_final();
+    make_final    : (inout this) -> bool = n*.make_type_final();
 
     query_declared_value_set_functions: (this)
         -> (
@@ -558,24 +590,27 @@ type_declaration: @copy_constructible type =
         // NOLINT(performance-move-const-arg)
     }
 
-    add_member: (inout this, source: std::string_view)
-    = {
-        decl := parse_statement(source);
-        if !(decl as bool) {
-            error("the provided source string is not a valid statement");
-            return;
-        }
-        if !decl*.is_declaration() {
-            error("cannot add a member that is not a declaration");
-        }
-        require( n*.add_type_member(move decl),
-                 std::string("unexpected error while attempting to add member:\n") + source );
-    }
+    disable_member_function_generation: (inout this) = n*.type_disable_member_function_generation();
 
+    //  At some point we may want to allow this also for namespaces, but for now only types
     remove_marked_members: (inout this) = n*.type_remove_marked_members();
     remove_all_members   : (inout this) = n*.type_remove_all_members();
+}
 
-    disable_member_function_generation: (inout this) = n*.type_disable_member_function_generation();
+
+namespace_declaration: @copy_constructible type =
+{
+    this: type_or_namespace_declaration = ();
+
+    operator=: (
+        out this,
+        n_: *declaration_node,
+        s : compiler_services
+    ) =
+    {
+        type_or_namespace_declaration = (n_, s);
+        assert( n*.is_namespace() );
+    }
 }
 
 
@@ -1162,6 +1197,7 @@ expression: @polymorphic_base @copy_constructible type =
     is_expression_list      : (this) -> bool = n*.is_expression_list      ();
     is_empty_expression_list: (this) -> bool = n*.is_empty_expression_list();
     is_literal              : (this) -> bool = n*.is_literal              ();
+    is_assignment_expression: (this) -> bool = n*.is_assignment_expression();
 
     is_simple_assignment    : (this) -> bool = {
         ret := n*.get_lhs_rhs_if_simple_assignment();
@@ -3217,6 +3253,15 @@ sample_traverser: (t: meta::type_declaration, indent: i32 = 0) =
 {
     sample_print("Type: (t.name())$", indent);
 
+    if t.parent_is_nonglobal_namespace() 
+    {
+        ns := t.get_parent().as_nonglobal_namespace();
+        sample_print("is a member of namespace (ns.name())$ which contains the following names:", indent+1);
+        for ns.get_members() do (m) {
+            sample_print(m.name(), indent+2);
+        }
+    }
+
     for t.get_members() do (m) {
         sample_traverser(m, indent+1);
     }
@@ -3351,11 +3396,14 @@ sample_traverser: (stmt: meta::iteration_statement, indent: i32) =
 sample_traverser: (expr: meta::expression, indent: i32) =
 {
     //  An expression has other shortcuts to query deeper properties,
-    //  but let's just traverse all the nested grammer elements to
+    //  but let's just traverse all the nested grammar elements to
     //  show how that traversal works
 
     //  The expression's basic payload is just an assignment expression
-    sample_traverser(expr.as_assignment_expression(), indent);
+    //  today - this can change when we add try-expressions
+    if expr.is_assignment_expression() {
+        sample_traverser(expr.as_assignment_expression(), indent);
+    }
 }
 
 
@@ -4736,371 +4784,6 @@ autodiff: (inout t: meta::type_declaration) =
         t.add_member( diff );
     }
 }
-
-
-////-----------------------------------------------------------------------
-////
-////  autodiff - stub
-////
-//autodiff: (inout t: meta::type_declaration) =
-//{
-//    for t.get_members()
-//    do  (m)
-//    if  m.is_function()
-//    {
-//        mf := m.as_function();
-//
-//        diff: std::string = "    (mf.name())$_diff: (";
-//
-//        //  1. Generate the modified signature
-//        //  a) Parameters
-//
-//        for mf.get_parameters() do (param) {
-//            diff += "(param.name())$ : (param.type())$, ";
-//            diff += "(param.name())$_d : (param.type())$, ";
-//        }
-//
-//        diff += ") -> (";
-//
-//        //  b) Returns
-//
-//        for mf.get_returns() do (param) {
-//            diff += "(param.name())$ : (param.type())$ = 1, ";
-//            diff += "(param.name())$_d : (param.type())$ = 1, ";
-//        }
-//
-//        diff += ") = {";
-//
-//        //  Generate the body
-//
-//        if !mf.has_compound_body() {
-//            m.error( "temporary alpha limitation: a differentiable function must have a {}-enclosed body" );
-//            return;
-//        }
-//
-//        next_statement: for mf.get_compound_body().get_statements() do (stmt)
-//        {
-//            if stmt.is_expression_statement()
-//            {
-//                expr := stmt.as_expression_statement().get_expression();
-//                if expr.is_simple_assignment()
-//                {
-//                    //  If this is not an assignment to a parameter or return object, skip it
-//                    lhs_rhs := expr.get_lhs_rhs_if_simple_assignment();
-//                    lhs     := lhs_rhs.lhs.get_first_token_ignoring_this();
-//                    if !mf.has_parameter_or_return_named(lhs)
-//                    {
-//                        continue next_statement;
-//                    }
-//
-//                    //  We will need to split this assignment into two lines
-//                    //  and build them up as we traverse the subexpressions
-//                    line1: std::string = "(lhs)$_d = ";    // for the _d variable
-//                    line2: std::string = "(lhs)$ = ";      // for the original variable
-//
-//                    assignment := expr.as_assignment_expression();
-//
-//                    //  Cpp2 doesn't allow chained assignment, so rhs must be a single logical_or_expression
-//                    assignment_terms := assignment.get_terms();
-//                    if assignment_terms.ssize() != 2 {
-//                        m.error( "an assignment must have exactly one right-hand side expression" );
-//                    }
-//
-//                    //  Now we handle sequences of binary "expr1 @ expr2 @ ..." where each
-//                    //  @ is one of a list of operators at the same grammar precedence
-//
-//                    //  Handle binary ||
-//                    logical_or_terms := assignment_terms[1].get_term().get_terms();
-//                    if logical_or_terms.ssize() > 1
-//                    {
-//                        //  TODO: Do whatever is appropriate here...
-//                        //  For now, just list out what we found as a grammatical
-//                        //  identifier (this won't compile as Cpp1, but it will
-//                        //  be visible via @print for development/debugging)
-//                        diff += "found_logical_or_with_____";
-//                        count := 0;
-//                        for logical_or_terms do (term) {
-//                            if count++ > 1 {
-//                                diff += term.get_op() + "___";
-//                            }
-//                            diff += term.get_term().to_string() + "___";
-//                        }
-//                        diff += ";";
-//
-//                        continue next_statement;
-//                    }
-//
-//                    //  Handle binary &&
-//                    if logical_or_terms.ssize() != 1 {
-//                        m.error( "ICE: there should be exactly one logical or term here" );
-//                    }
-//                    logical_and_terms := logical_or_terms.front().get_term().get_terms();
-//                    if logical_and_terms.ssize() > 1
-//                    {
-//                        //  TODO: Do whatever is appropriate here...
-//                        //  For now, just list out what we found (visible via @print)...
-//                        diff += "found_logical_and_with_____";
-//                        count := 0;
-//                        for logical_and_terms do (term) {
-//                            if count++ > 1 {
-//                                diff += term.get_op() + "___";
-//                            }
-//                            diff += term.get_term().to_string() + "___";
-//                        }
-//                        diff += ";";
-//
-//                        continue next_statement;
-//                    }
-//
-//                    //  Handle binary |
-//                    if logical_and_terms.ssize() != 1 {
-//                        m.error( "ICE: there should be exactly one logical and term here" );
-//                    }
-//                    bit_or_terms := logical_and_terms.front().get_term().get_terms();
-//                    if bit_or_terms.ssize() > 1
-//                    {
-//                        //  TODO: Do whatever is appropriate here...
-//                        //  For now, just list out what we found (visible via @print)...
-//                        diff += "found_bit_or_with_____";
-//                        count := 0;
-//                        for bit_or_terms do (term) {
-//                            if count++ > 1 {
-//                                diff += term.get_op() + "___";
-//                            }
-//                            diff += term.get_term().to_string() + "___";
-//                        }
-//                        diff += ";";
-//
-//                        continue next_statement;
-//                    }
-//
-//                    //  Handle binary ^
-//                    if bit_or_terms.ssize() != 1 {
-//                        m.error( "ICE: there should be exactly one bit or term here" );
-//                    }
-//                    bit_xor_terms := bit_or_terms.front().get_term().get_terms();
-//                    if bit_xor_terms.ssize() > 1
-//                    {
-//                        //  TODO: Do whatever is appropriate here...
-//                        //  For now, just list out what we found (visible via @print)...
-//                        diff += "found_bit_xor_with_____";
-//                        count := 0;
-//                        for bit_xor_terms do (term) {
-//                            if count++ > 1 {
-//                                diff += term.get_op() + "___";
-//                            }
-//                            diff += term.get_term().to_string() + "___";
-//                        }
-//                        diff += ";";
-//
-//                        continue next_statement;
-//                    }
-//
-//                    //  Handle binary &
-//                    if bit_xor_terms.ssize() != 1 {
-//                        m.error( "ICE: there should be exactly one bit xor term here" );
-//                    }
-//                    bit_and_terms := bit_xor_terms.front().get_term().get_terms();
-//                    if bit_and_terms.ssize() > 1
-//                    {
-//                        //  TODO: Do whatever is appropriate here...
-//                        //  For now, just list out what we found (visible via @print)...
-//                        diff += "found_bit_and_with_____";
-//                        count := 0;
-//                        for bit_and_terms do (term) {
-//                            if count++ > 1 {
-//                                diff += term.get_op() + "___";
-//                            }
-//                            diff += term.get_term().to_string() + "___";
-//                        }
-//                        diff += ";";
-//
-//                        continue next_statement;
-//                    }
-//
-//                    //  Handle binary == and !=
-//                    if bit_and_terms.ssize() != 1 {
-//                        m.error( "ICE: there should be exactly one bit and term here" );
-//                    }
-//                    equality_terms := bit_and_terms.front().get_term().get_terms();
-//                    if equality_terms.ssize() > 1
-//                    {
-//                        //  TODO: Do whatever is appropriate here...
-//                        //  For now, just list out what we found (visible via @print)...
-//                        diff += "found_equality_with_____";
-//                        count := 0;
-//                        for equality_terms do (term) {
-//                            if count++ > 1 {
-//                                diff += term.get_op() + "___";
-//                            }
-//                            diff += term.get_term().to_string() + "___";
-//                        }
-//                        diff += ";";
-//
-//                        continue next_statement;
-//                    }
-//
-//                    //  Handle binary < > <= >=
-//                    if equality_terms.ssize() != 1 {
-//                        m.error( "ICE: there should be exactly one equality term here" );
-//                    }
-//                    relational_terms := equality_terms.front().get_term().get_terms();
-//                    if relational_terms.ssize() > 1
-//                    {
-//                        //  TODO: Do whatever is appropriate here...
-//                        //  For now, just list out what we found (visible via @print)...
-//                        diff += "found_relational_with_____";
-//                        count := 0;
-//                        for relational_terms do (term) {
-//                            if count++ > 1 {
-//                                diff += term.get_op() + "___";
-//                            }
-//                            diff += term.get_term().to_string() + "___";
-//                        }
-//                        diff += ";";
-//
-//                        continue next_statement;
-//                    }
-//
-//                    //  Handle binary <=>
-//                    if relational_terms.ssize() != 1 {
-//                        m.error( "ICE: there should be exactly one relational term here" );
-//                    }
-//                    compare_terms := relational_terms.front().get_term().get_terms();
-//                    if compare_terms.ssize() > 1
-//                    {
-//                        //  TODO: Do whatever is appropriate here...
-//                        //  For now, just list out what we found (visible via @print)...
-//                        diff += "found_compare_with_____";
-//                        count := 0;
-//                        for compare_terms do (term) {
-//                            if count++ > 1 {
-//                                diff += term.get_op() + "___";
-//                            }
-//                            diff += term.get_term().to_string() + "___";
-//                        }
-//                        diff += ";";
-//
-//                        continue next_statement;
-//                    }
-//
-//                    //  Handle binary << and >>
-//                    if compare_terms.ssize() != 1 {
-//                        m.error( "ICE: there should be exactly one compare term here" );
-//                    }
-//                    shift_terms := compare_terms.front().get_term().get_terms();
-//                    if shift_terms.ssize() > 1
-//                    {
-//                        //  TODO: Do whatever is appropriate here...
-//                        //  For now, just list out what we found (visible via @print)...
-//                        diff += "found_shift_with_____";
-//                        count := 0;
-//                        for shift_terms do (term) {
-//                            if count++ > 1 {
-//                                diff += term.get_op() + "___";
-//                            }
-//                            diff += term.get_term().to_string() + "___";
-//                        }
-//                        diff += ";";
-//
-//                        continue next_statement;
-//                    }
-//
-//                    //  Handle binary + and -
-//                    if shift_terms.ssize() != 1 {
-//                        m.error( "ICE: there should be exactly one shift term here" );
-//                    }
-//                    additive_terms := shift_terms.front().get_term().get_terms();
-//                    if additive_terms.ssize() > 1
-//                    {
-//                        first := true;
-//                        for additive_terms do (term) {
-//                            if !first {
-//                                op := term.get_op().to_string();
-//                                line1 += " (op)$ ";
-//                                line2 += " (op)$ ";
-//                            }
-//
-//                            var := term.get_term().to_string();
-//                            if !mf.has_parameter_or_return_named(var) {
-//                                m.error( "temporary alpha limitation: the addition's left-hand side '(var)$' must be a parameter or return name");
-//                            }
-//                            line1 += "(var)$_d";
-//                            line2 += "(var)$";
-//
-//                            first = false;
-//                        }
-//
-//                        line1 += ";";
-//                        line2 += ";";
-//
-//                        diff += line1 + line2;
-//
-//                        continue next_statement;
-//                    }
-//
-//                    //  Handle binary * / %
-//                    if additive_terms.ssize() != 1 {
-//                        m.error( "ICE: there should be exactly one additive term here" );
-//                    }
-//                    multiplicative_terms := additive_terms.front().get_term().get_terms();
-//
-//                    //  Temporary test loop
-//                    if multiplicative_terms.ssize() > 1
-//                    {
-//                        std::cout << "debug: found (multiplicative_terms.ssize())$ is_as_expressions\n";
-//                        for multiplicative_terms do (isas) {
-//                            std::cout << "debug:   is_as term: \"(isas.get_term().to_string())$\"\n";
-//                            if isas.get_term().is_identifier() {
-//                                std::cout << "debug:       identifier: (isas.get_term().get_identifier())$\n";
-//                            }
-//                        }
-//                    }
-//
-//                    if multiplicative_terms.ssize() > 1
-//                    {
-//                        if multiplicative_terms.ssize() != 2
-//                        {
-//                            m.error( "temporary alpha limitation: does not support chains of * and /");
-//                        }
-//
-//                        lhs := multiplicative_terms[0].get_term().to_string();
-//                        if !mf.has_parameter_or_return_named(lhs) {
-//                            m.error( "temporary alpha limitation: the addition's left-hand side '(lhs)$' must be a parameter or return name");
-//                        }
-//
-//                        rhs := multiplicative_terms[1].get_term().to_string();
-//                        if !mf.has_parameter_or_return_named(rhs) {
-//                            m.error( "temporary alpha limitation: the addition's right-hand side '(rhs)$' must be a parameter or return name");
-//                        }
-//
-//                        op := multiplicative_terms[1].get_op().to_string();
-//                        if "*" == op {
-//                            line1 += "(lhs)$ * (rhs)$_d + (rhs)$ * (lhs)$_d;";
-//                            line2 += "(lhs)$ * (rhs)$;";
-//                        }
-//                        else if "/" == op {
-//                            line1 += "(lhs)$_d / (rhs)$ - (lhs)$ * (rhs)$_d / ((rhs)$ * (rhs)$);";
-//                            line2 += "(lhs)$ / (rhs)$;";
-//                        }
-//                        else {
-//                            m.error( "unkown multiplicative operator '(op)$'");
-//                        }
-//
-//                        diff += line1 + line2;
-//
-//                        continue next_statement;
-//                    }
-//
-//                }
-//            }
-//        }
-//
-//        diff += "}";
-//
-//        t.add_member( diff );
-//    }
-//}
 
 
 //-----------------------------------------------------------------------
