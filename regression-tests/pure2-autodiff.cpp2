@@ -111,7 +111,6 @@ ad_test: @autodiff @print type = {
     }
 
     intermediate_no_init: (x: double, y: double) -> (r: double) = {
-      r = 0.0; // TODO: r has to be initialized before t (create issue or wait for fix)
       t: double;
       t = x + y;
 
