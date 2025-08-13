@@ -3957,14 +3957,20 @@ autodiff_special_func: type = {
     public has_return: bool;
     public is_member : bool;
 
-    public code: std::string;
+    public code             : std::string;
+    public code_higher_order: std::string;
 
-    operator=: (out this, name_: std::string, n_args_: int, has_return_: bool, is_member_: bool, code_: std::string = "") = {
-        name       = name_;
-        n_args     = n_args_;
-        has_return = has_return_;
-        is_member  = is_member_;
-        code       = code_;
+    operator=: (out this, name_: std::string, n_args_: int, has_return_: bool, is_member_: bool, code_: std::string = "", code_higher_order_: std::string = "") = {
+        name              = name_;
+        n_args            = n_args_;
+        has_return        = has_return_;
+        is_member         = is_member_;
+        code              = code_;
+        code_higher_order = code_higher_order_;
+
+        if code_higher_order.empty() {
+            code_higher_order = code;
+        }
     }
 
     operator=: (out this, that) = {} // Default copy.
@@ -3989,15 +3995,23 @@ autodiff_context: type = {
     public special_funcs : std::vector<autodiff_special_func> = (
         autodiff_special_func("sin", 1, /* has_return = */ true, /* is_member = */ false,
             "_rd_ = cos(_a1_) * _ad1_;\n"
-            "_r_  = sin(_a1_);\n"
+            "_r_  = sin(_a1_);\n",
+            "_rd_ = _ad1_.sin(_a1_);\n"
+            "_r_  = sin(_a1_);\n",
+
         ),
         autodiff_special_func("cos", 1, /* has_return = */ true, /* is_member = */ false,
             "_rd_ = -sin(_a1_) * _ad1_;\n"
-            "_r_  = cos(_a1_);\n"
+            "_r_  = cos(_a1_);\n",
+            "_rd_ = _ad1_.cos(_a1_);\n"
+            "_r_  = cos(_a1_);\n",
+
         ),
         autodiff_special_func("exp", 1, /* has_return = */ true, /* is_member = */ false,
             "_rd_ = exp(_a1_) * _ad1_;\n"
-            "_r_  = exp(_a1_);\n"
+            "_r_  = exp(_a1_);\n",
+            "_rd_ = _ad1_.exp(_a1_);\n"
+            "_r_  = exp(_a1_);\n",
         ),
         autodiff_special_func("push_back", 1, /* has_return = */ false, /* is_member = */ true,
             "_o_.push_back(_a1_);\n"
@@ -4046,7 +4060,12 @@ autodiff_context: type = {
         for special_funcs do (func) {
             if func.is_match(lookup) {
                 m = true;
-                code = func.code;
+                if is_taylor() {
+                    code = func.code_higher_order;
+                }
+                else {
+                    code = func.code;
+                }
                 return;
             }
         }

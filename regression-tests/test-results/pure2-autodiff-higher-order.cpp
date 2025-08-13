@@ -82,6 +82,21 @@ using add_mul_ret = double;
 
 #line 51 "pure2-autodiff-higher-order.cpp2"
     public: [[nodiscard]] static auto add_mul(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> add_mul_ret;
+using func_ret = double;
+
+
+#line 55 "pure2-autodiff-higher-order.cpp2"
+    public: [[nodiscard]] static auto func(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> func_ret;
+using func_call_ret = double;
+
+
+#line 59 "pure2-autodiff-higher-order.cpp2"
+    public: [[nodiscard]] static auto func_call(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> func_call_ret;
+using sin_call_ret = double;
+
+
+#line 63 "pure2-autodiff-higher-order.cpp2"
+    public: [[nodiscard]] static auto sin_call(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> sin_call_ret;
 struct add_1_d_ret { double r; cpp2::taylor<double,6> r_d; };
 
 
@@ -131,17 +146,29 @@ struct add_mul_d_ret { double r; cpp2::taylor<double,6> r_d; };
 
 public: [[nodiscard]] static auto add_mul_d(cpp2::impl::in<double> x, cpp2::impl::in<cpp2::taylor<double,6>> x_d, cpp2::impl::in<double> y, cpp2::impl::in<cpp2::taylor<double,6>> y_d) -> add_mul_d_ret;
 
+struct func_d_ret { double r; cpp2::taylor<double,6> r_d; };
+
+public: [[nodiscard]] static auto func_d(cpp2::impl::in<double> x, cpp2::impl::in<cpp2::taylor<double,6>> x_d, cpp2::impl::in<double> y, cpp2::impl::in<cpp2::taylor<double,6>> y_d) -> func_d_ret;
+
+struct func_call_d_ret { double r; cpp2::taylor<double,6> r_d; };
+
+public: [[nodiscard]] static auto func_call_d(cpp2::impl::in<double> x, cpp2::impl::in<cpp2::taylor<double,6>> x_d, cpp2::impl::in<double> y, cpp2::impl::in<cpp2::taylor<double,6>> y_d) -> func_call_d_ret;
+
+struct sin_call_d_ret { double r; cpp2::taylor<double,6> r_d; };
+
+public: [[nodiscard]] static auto sin_call_d(cpp2::impl::in<double> x, cpp2::impl::in<cpp2::taylor<double,6>> x_d, cpp2::impl::in<double> y, cpp2::impl::in<cpp2::taylor<double,6>> y_d) -> sin_call_d_ret;
+
     public: ad_test() = default;
     public: ad_test(ad_test const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(ad_test const&) -> void = delete;
 
 
-#line 54 "pure2-autodiff-higher-order.cpp2"
+#line 66 "pure2-autodiff-higher-order.cpp2"
 };
 
 auto write_output(cpp2::impl::in<std::string> func, cpp2::impl::in<double> x, cpp2::impl::in<ad_type> x_d, cpp2::impl::in<double> y, cpp2::impl::in<ad_type> y_d, auto const& ret) -> void;
 
-#line 65 "pure2-autodiff-higher-order.cpp2"
+#line 77 "pure2-autodiff-higher-order.cpp2"
 auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -230,6 +257,27 @@ auto main() -> int;
             cpp2::impl::deferred_init<double> r;
 #line 52 "pure2-autodiff-higher-order.cpp2"
         r.construct(x + x * y);
+    return std::move(r.value()); }
+
+#line 55 "pure2-autodiff-higher-order.cpp2"
+    [[nodiscard]] auto ad_test::func(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> func_ret{
+          cpp2::impl::deferred_init<double> r;
+#line 56 "pure2-autodiff-higher-order.cpp2"
+      r.construct(x + y);
+    return std::move(r.value()); }
+
+#line 59 "pure2-autodiff-higher-order.cpp2"
+    [[nodiscard]] auto ad_test::func_call(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> func_call_ret{
+          cpp2::impl::deferred_init<double> r;
+#line 60 "pure2-autodiff-higher-order.cpp2"
+      r.construct(x * func(x, y));
+    return std::move(r.value()); }
+
+#line 63 "pure2-autodiff-higher-order.cpp2"
+    [[nodiscard]] auto ad_test::sin_call(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> sin_call_ret{
+          cpp2::impl::deferred_init<double> r;
+#line 64 "pure2-autodiff-higher-order.cpp2"
+      r.construct(sin(x - y));
     return std::move(r.value()); }
 
     [[nodiscard]] auto ad_test::add_1_d(cpp2::impl::in<double> x, cpp2::impl::in<cpp2::taylor<double,6>> x_d, cpp2::impl::in<double> y, cpp2::impl::in<cpp2::taylor<double,6>> y_d) -> add_1_d_ret{
@@ -330,25 +378,56 @@ auto temp_1_d {CPP2_UFCS(mul)(x_d, y_d, x, y)};
     return  { std::move(r), std::move(r_d) }; 
     }
 
-#line 56 "pure2-autodiff-higher-order.cpp2"
+    [[nodiscard]] auto ad_test::func_d(cpp2::impl::in<double> x, cpp2::impl::in<cpp2::taylor<double,6>> x_d, cpp2::impl::in<double> y, cpp2::impl::in<cpp2::taylor<double,6>> y_d) -> func_d_ret{
+                                                                                                                                                                     double r {0.0};
+                                                                                                                                                                     cpp2::taylor<double,6> r_d {0.0};r_d = x_d + y_d;
+    r = x + y;
+    return  { std::move(r), std::move(r_d) }; 
+    }
+
+    [[nodiscard]] auto ad_test::func_call_d(cpp2::impl::in<double> x, cpp2::impl::in<cpp2::taylor<double,6>> x_d, cpp2::impl::in<double> y, cpp2::impl::in<cpp2::taylor<double,6>> y_d) -> func_call_d_ret{
+                                                                                                                                                                          double r {0.0};
+                                                                                                                                                                          cpp2::taylor<double,6> r_d {0.0};
+auto temp_2 {func_d(x, x_d, y, y_d)}; 
+
+    auto temp_1 {temp_2.r}; 
+
+    auto temp_1_d {cpp2::move(temp_2).r_d}; 
+    r_d = CPP2_UFCS(mul)(x_d, cpp2::move(temp_1_d), x, temp_1);
+    r = x * cpp2::move(temp_1);
+    return  { std::move(r), std::move(r_d) }; 
+    }
+
+    [[nodiscard]] auto ad_test::sin_call_d(cpp2::impl::in<double> x, cpp2::impl::in<cpp2::taylor<double,6>> x_d, cpp2::impl::in<double> y, cpp2::impl::in<cpp2::taylor<double,6>> y_d) -> sin_call_d_ret{
+                                                                                                                                                                         double r {0.0};
+                                                                                                                                                                         cpp2::taylor<double,6> r_d {0.0};
+auto temp_1_d {x_d - y_d}; 
+
+    auto temp_1 {x - y}; 
+    r_d = CPP2_UFCS(sin)(cpp2::move(temp_1_d), temp_1);
+    r = sin(cpp2::move(temp_1));
+    return  { std::move(r), std::move(r_d) }; 
+    }
+
+#line 68 "pure2-autodiff-higher-order.cpp2"
 auto write_output(cpp2::impl::in<std::string> func, cpp2::impl::in<double> x, cpp2::impl::in<ad_type> x_d, cpp2::impl::in<double> y, cpp2::impl::in<ad_type> y_d, auto const& ret) -> void{
     std::cout << "diff(" + cpp2::to_string(func) + ") at (x = " + cpp2::to_string(x) + ", x_d = " + cpp2::to_string(x_d) + ", y = " + cpp2::to_string(y) + ", y_d = " + cpp2::to_string(y_d) + "):" << std::endl;
     std::cout << "  r = " + cpp2::to_string(ret.r) + "" << std::endl;
 {
 auto i{1};
 
-#line 60 "pure2-autodiff-higher-order.cpp2"
+#line 72 "pure2-autodiff-higher-order.cpp2"
     for( ; cpp2::impl::cmp_less_eq(i,ad_order); i += 1 ) {
       std::cout << "  d" + cpp2::to_string(i) + " = " + cpp2::to_string(CPP2_ASSERT_IN_BOUNDS(ret.r_d, i)) + "" << std::endl;
     }
 }
-#line 63 "pure2-autodiff-higher-order.cpp2"
+#line 75 "pure2-autodiff-higher-order.cpp2"
 }
 
-#line 65 "pure2-autodiff-higher-order.cpp2"
+#line 77 "pure2-autodiff-higher-order.cpp2"
 auto main() -> int{
 
-#line 68 "pure2-autodiff-higher-order.cpp2"
+#line 80 "pure2-autodiff-higher-order.cpp2"
     double x {2.0}; 
     ad_type x_d {1.0}; 
     double y {3.0}; 
@@ -365,9 +444,9 @@ auto main() -> int{
     write_output("x / y / y", x, x_d, y, y_d, ad_test::div_2_d(x, x_d, y, y_d));
     write_output("x * y / x", x, x_d, y, y_d, ad_test::mul_div_2_d(x, x_d, y, y_d));
     write_output("x * (x + y)", x, x_d, y, y_d, ad_test::mul_add_d(x, x_d, y, y_d));
-    write_output("x + x * y", x, x_d, y, y_d, ad_test::add_mul_d(cpp2::move(x), cpp2::move(x_d), cpp2::move(y), cpp2::move(y_d)));
-//    write_output("x * func(x, y)", x, x_d, y, y_d, ad_test::func_call_d(x, x_d, y, y_d));
-//    write_output("sin(x + y)", x, x_d, y, y_d, ad_test::sin_call_d(x, x_d, y, y_d));
+    write_output("x + x * y", x, x_d, y, y_d, ad_test::add_mul_d(x, x_d, y, y_d));
+    write_output("x * func(x, y)", x, x_d, y, y_d, ad_test::func_call_d(x, x_d, y, y_d));
+    write_output("sin(x - y)", x, x_d, y, y_d, ad_test::sin_call_d(cpp2::move(x), cpp2::move(x_d), cpp2::move(y), cpp2::move(y_d)));
 //    write_output("if branch", x, x_d, y, y_d, ad_test::if_branch_d(x, x_d, y, y_d));
 //    write_output("if else branch", x, x_d, y, y_d, ad_test::if_else_branch_d(x, x_d, y, y_d));
 //    write_output("direct return", x, x_d, y, y_d, ad_test::direct_return_d(x, x_d, y, y_d));
