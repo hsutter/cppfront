@@ -23,6 +23,34 @@ ad_test: @autodiff<"order=6"> @print type = {
     add_sub_2: (x: double, y: double) -> (r: double) = {
         r = x + y - x;
     }
+
+    mul_1: (x: double, y: double) -> (r: double) = {
+        r = x * y;
+    }
+
+    mul_2: (x: double, y: double) -> (r: double) = {
+        r = x * y * x;
+    }
+
+    div_1: (x: double, y: double) -> (r: double) = {
+        r = x / y;
+    }
+
+    div_2: (x: double, y: double) -> (r: double) = {
+        r = x / y / y;
+    }
+
+    mul_div_2: (x: double, y: double) -> (r: double) = {
+        r = x * y / x;
+    }
+
+    mul_add: (x: double, y: double) -> (r: double) = {
+        r = x * (x + y);
+    }
+
+    add_mul: (x: double, y: double) -> (r: double) = {
+        r = x + x * y;
+    }
 }
 
 write_output: (func: std::string, x: double, x_d: ad_type, y: double, y_d: ad_type, ret) = {
@@ -47,13 +75,13 @@ main: () = {
     write_output("x - y", x, x_d, y, y_d, ad_test::sub_1_d(x, x_d, y, y_d));
     write_output("x - y - x", x, x_d, y, y_d, ad_test::sub_2_d(x, x_d, y, y_d));
     write_output("x + y - x", x, x_d, y, y_d, ad_test::add_sub_2_d(x, x_d, y, y_d));
-//    write_output("x * y", x, x_d, y, y_d, ad_test::mul_1_d(x, x_d, y, y_d));
-//    write_output("x * y * x", x, x_d, y, y_d, ad_test::mul_2_d(x, x_d, y, y_d));
-//    write_output("x / y", x, x_d, y, y_d, ad_test::div_1_d(x, x_d, y, y_d));
-//    write_output("x / y / y", x, x_d, y, y_d, ad_test::div_2_d(x, x_d, y, y_d));
-//    write_output("x * y / x", x, x_d, y, y_d, ad_test::mul_div_2_d(x, x_d, y, y_d));
-//    write_output("x * (x + y)", x, x_d, y, y_d, ad_test::mul_add_d(x, x_d, y, y_d));
-//    write_output("x + x * y", x, x_d, y, y_d, ad_test::add_mul_d(x, x_d, y, y_d));
+    write_output("x * y", x, x_d, y, y_d, ad_test::mul_1_d(x, x_d, y, y_d));
+    write_output("x * y * x", x, x_d, y, y_d, ad_test::mul_2_d(x, x_d, y, y_d));
+    write_output("x / y", x, x_d, y, y_d, ad_test::div_1_d(x, x_d, y, y_d));
+    write_output("x / y / y", x, x_d, y, y_d, ad_test::div_2_d(x, x_d, y, y_d));
+    write_output("x * y / x", x, x_d, y, y_d, ad_test::mul_div_2_d(x, x_d, y, y_d));
+    write_output("x * (x + y)", x, x_d, y, y_d, ad_test::mul_add_d(x, x_d, y, y_d));
+    write_output("x + x * y", x, x_d, y, y_d, ad_test::add_mul_d(x, x_d, y, y_d));
 //    write_output("x * func(x, y)", x, x_d, y, y_d, ad_test::func_call_d(x, x_d, y, y_d));
 //    write_output("sin(x + y)", x, x_d, y, y_d, ad_test::sin_call_d(x, x_d, y, y_d));
 //    write_output("if branch", x, x_d, y, y_d, ad_test::if_branch_d(x, x_d, y, y_d));
