@@ -4485,10 +4485,13 @@ autodiff_expression_handler: type = {
             }
         }
         else if primary.is_literal() {
-            // TODO: Determine propre zero initializer from type of literal.
+            literal_str := primary.to_string();
+
             ad_init : std::string = "()";
+
+            // TODO: Determine propre zero initializer from type of literal.
             if declare_d == ":" || declare_d == ": _" {
-                ad_init = "0.0";
+                ad_init = ctx*.get_ad_type("double") + "()";
             }
             gen_lhs_assignment(primary.to_string(), ad_init);
         }
@@ -4824,7 +4827,7 @@ autodiff: (inout t: meta::type_declaration) =
                 diff += "r, r(suffix)$, ";
             }
             else {
-                diff += "r: (mf.get_unnamed_return_type())$ = (), r(suffix)$: (mf.get_unnamed_return_type())$ = (), ";
+                diff += "r: (mf.get_unnamed_return_type())$ = (), r(suffix)$: (ad_ctx.get_ad_type(mf.get_unnamed_return_type()))$ = (), ";
             }
         }
         else {

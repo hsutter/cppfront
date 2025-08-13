@@ -12,6 +12,13 @@ taylor: <R, dim: int> type  = {
     }
     operator=:(out this, that) = {}
 
+    operator=:(out this, l: std::initializer_list<R>) = {
+        (copy i := 1)
+        for l do (cur) {
+            set(i, cur);
+        }
+    }
+
     // C++ interface
 
     operator[]: (this, k: int) -> R = {

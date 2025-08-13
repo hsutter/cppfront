@@ -713,7 +713,7 @@ int i_d {};
     [[nodiscard]] auto ad_test::intermediate_untyped_d(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> intermediate_untyped_d_ret{
                                                                                                                                   double r {0.0};
                                                                                                                                   double r_d {0.0};
-auto t_d {0.0}; 
+auto t_d {double()}; 
 
     auto t {0.0}; 
     t_d = x_d + y_d;

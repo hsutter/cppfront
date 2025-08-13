@@ -63,6 +63,96 @@ ad_test: @autodiff<"order=6"> @print type = {
     sin_call: (x: double, y: double) -> (r: double) = {
       r = sin(x - y);
     }
+
+    if_branch: (x: double, y: double) -> (r: double) = {
+      r = x;
+
+      if x < 0.0 {
+        r = y;
+      }
+    }
+
+    if_else_branch: (x: double, y: double) -> (r: double) = {
+      if x < 0.0 {
+        r = y;
+      }
+      else {
+        r = x;
+      }
+    }
+
+    direct_return: (x: double, y: double) -> double = {
+      return x + y;
+    }
+
+    intermediate_var: (x: double, y: double) -> (r: double) = {
+      t: double = x + y;
+
+      r = t;
+    }
+
+    intermediate_passive_var: (x: double, y: double) -> (r: double) = {
+      i: int = (); // TODO: Handle as passive when type information on call side is available.
+      r = x + y;
+      i = 2;
+
+      _ = i;
+    }
+
+    intermediate_untyped: (x: double, y: double) -> (r: double) = {
+      t := 0.0;
+      t = x + y;
+
+      r = t;
+    }
+
+    intermediate_default_init: (x: double, y: double) -> (r: double) = {
+      t: double = ();
+      t = x + y;
+
+      r = t;
+    }
+
+    intermediate_no_init: (x: double, y: double) -> (r: double) = {
+      t: double;
+      t = x + y;
+
+      r = t;
+    }
+
+    while_loop: (x: double, y: double) -> (r: double) = {
+      i: int = 0;
+
+      r = x;
+      while i < 2 next (i += 1) {
+        r = r + y ;
+      }
+    }
+
+    do_while_loop: (x: double, y: double) -> (r: double) = {
+      i: int = 0;
+
+      r = x;
+      do {
+        r = r + y ;
+      }
+      next (i += 1)
+      while i < 2;
+    }
+
+    for_loop: (x: double, y: double) -> (r: double) = {
+      v: std::vector<double> = ();
+
+      v.push_back(x);
+      v.push_back(y);
+
+      r = 0.0;
+      for v
+      do (t)
+      {
+        r = r + t;
+      }
+    }
 }
 
 write_output: (func: std::string, x: double, x_d: ad_type, y: double, y_d: ad_type, ret) = {
@@ -96,15 +186,15 @@ main: () = {
     write_output("x + x * y", x, x_d, y, y_d, ad_test::add_mul_d(x, x_d, y, y_d));
     write_output("x * func(x, y)", x, x_d, y, y_d, ad_test::func_call_d(x, x_d, y, y_d));
     write_output("sin(x - y)", x, x_d, y, y_d, ad_test::sin_call_d(x, x_d, y, y_d));
-//    write_output("if branch", x, x_d, y, y_d, ad_test::if_branch_d(x, x_d, y, y_d));
-//    write_output("if else branch", x, x_d, y, y_d, ad_test::if_else_branch_d(x, x_d, y, y_d));
-//    write_output("direct return", x, x_d, y, y_d, ad_test::direct_return_d(x, x_d, y, y_d));
-//    write_output("intermediate var", x, x_d, y, y_d, ad_test::intermediate_var_d(x, x_d, y, y_d));
-//    write_output("intermediate passive var", x, x_d, y, y_d, ad_test::intermediate_passive_var_d(x, x_d, y, y_d));
-//    write_output("intermediate untyped", x, x_d, y, y_d, ad_test::intermediate_untyped_d(x, x_d, y, y_d));
-//    write_output("intermediate default init", x, x_d, y, y_d, ad_test::intermediate_default_init_d(x, x_d, y, y_d));
-//    write_output("intermediate no init", x, x_d, y, y_d, ad_test::intermediate_no_init_d(x, x_d, y, y_d));
-//    write_output("while loop", x, x_d, y, y_d, ad_test::while_loop_d(x, x_d, y, y_d));
-//    write_output("do while loop", x, x_d, y, y_d, ad_test::do_while_loop_d(x, x_d, y, y_d));
-//    write_output("for loop", x, x_d, y, y_d, ad_test::for_loop_d(x, x_d, y, y_d));
+    write_output("if branch", x, x_d, y, y_d, ad_test::if_branch_d(x, x_d, y, y_d));
+    write_output("if else branch", x, x_d, y, y_d, ad_test::if_else_branch_d(x, x_d, y, y_d));
+    write_output("direct return", x, x_d, y, y_d, ad_test::direct_return_d(x, x_d, y, y_d));
+    write_output("intermediate var", x, x_d, y, y_d, ad_test::intermediate_var_d(x, x_d, y, y_d));
+    write_output("intermediate passive var", x, x_d, y, y_d, ad_test::intermediate_passive_var_d(x, x_d, y, y_d));
+    write_output("intermediate untyped", x, x_d, y, y_d, ad_test::intermediate_untyped_d(x, x_d, y, y_d));
+    write_output("intermediate default init", x, x_d, y, y_d, ad_test::intermediate_default_init_d(x, x_d, y, y_d));
+    write_output("intermediate no init", x, x_d, y, y_d, ad_test::intermediate_no_init_d(x, x_d, y, y_d));
+    write_output("while loop", x, x_d, y, y_d, ad_test::while_loop_d(x, x_d, y, y_d));
+    write_output("do while loop", x, x_d, y, y_d, ad_test::do_while_loop_d(x, x_d, y, y_d));
+    write_output("for loop", x, x_d, y, y_d, ad_test::for_loop_d(x, x_d, y, y_d));
 }
