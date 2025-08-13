@@ -24,9 +24,14 @@ taylor: <R, dim: int> type  = {
         return r;
     }
 
-    operator[]: (inout this, i: int) -> forward_ref _ = {
-        assert(1 <= 1 <= dim);
-        return v[i - 1];
+    set: (inout this, k: int, value: R) = {
+        assert(1 <= k <= dim);
+        v[k - 1] = value;
+
+        (copy i := 2)
+        while i <= k next i += 1 {
+            v[k - 1] /= i;
+        }
     }
 
     // C++2 interface / AD interface
@@ -39,6 +44,16 @@ taylor: <R, dim: int> type  = {
         }
 
         return v[i - 1];
+    }
+
+    // Overload for simple handling of connected adds.
+    operator+: (this, o: taylor) -> taylor = {
+        return add(o, 0.0, 0.0); // Primal values are not required.
+    }
+
+    // Overload for simple handling of connected minuses.
+    operator-: (this, o: taylor) -> taylor = {
+        return sub(o, 0.0, 0.0); // Primal values are not required.
     }
 
     add: (this, o: taylor, v0: R, o0: R) -> taylor = {
@@ -187,6 +202,17 @@ taylor: <R, dim: int> type  = {
 
         return r;
     }
+}
+
+to_string: <R, order: int> (o: taylor<R, order>) -> std::string = {
+    r : std::string = "(";
+    (copy i := 1)
+    while i <= order next i += 1 {
+        r += " (o[i])$";
+    }
+    r += " )";
+
+    return r;
 }
 
 } // cpp2 namespace

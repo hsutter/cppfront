@@ -4005,6 +4005,21 @@ autodiff_context: type = {
     );
 
     public suffix: std::string = "_d";
+    private order: int         = 1;
+
+    // Members depending on order
+    public ad_type: std::string = "double";
+
+    set_order : (inout this, new_order: int) = {
+        order = new_order;
+
+        if 1 == order {
+            ad_type = "double";
+        }
+        else {
+            ad_type = "cpp2::taylor<double, (order)$>";
+        }
+    }
 
     gen_temporary : (inout this) -> std::string = {
         temporary_count += 1;
@@ -4014,9 +4029,11 @@ autodiff_context: type = {
     // TODO: Have the proper type declaration here.
     get_ad_type: (inout this, type: std::string) -> std::string = {
 
-        // TODO: Add type to required generation for AD.
+        if order == 1 {
+            return type; // Same type for now for order 1
+        }
 
-        return type; // Use the same type for now.
+        return string_util::replace_all(type, "double", ad_type);
     }
 
     lookup_special_function_handling: (this, func_name: std::string, n_args: int, has_return: bool, is_member: bool) -> (m: bool, code: std::string) = {
@@ -4031,6 +4048,13 @@ autodiff_context: type = {
                 return;
             }
         }
+    }
+
+    enter_function: (inout this) = {
+        temporary_count = 0;
+    }
+
+    leave_function: (inout this) = {
     }
 }
 
@@ -4704,10 +4728,12 @@ autodiff: (inout t: meta::type_declaration) =
 {
 
     suffix_token : std::string_view == "suffix=";
+    order_token : std::string_view == "order=";
 
     args := t.get_arguments();
 
     suffix : std::string = "_d";
+    order  : int         = 1;
     for args do (arg_str) {
         if arg_str.starts_with("\"") && arg_str.ends_with("\"") {
             arg := arg_str.substr(1, arg_str.ssize() - 2);
@@ -4716,17 +4742,30 @@ autodiff: (inout t: meta::type_declaration) =
                 suffix = arg.substr(suffix_token.size());
                 continue;
             }
+            if arg.starts_with(order_token) {
+                if !string_util::string_to_int(arg.substr(order_token.size()), order) {
+                    t.error("AD: Could not parse derivative order: (arg.substr(order_token.size()))$");
+                    return;
+                }
+                continue;
+            }
         }
 
         t.error("AD: Unknown argument: (arg_str)$");
         return;
     }
 
+    ad_ctx: autodiff_context = ();
+    ad_ctx.suffix = suffix;
+    ad_ctx.set_order(order);
+
     for t.get_members()
     do  (m)
     if  m.is_function()
     {
         mf := m.as_function();
+
+        ad_ctx.enter_function();
 
         diff: std::string = "    (mf.name())$(suffix)$: (";
 
@@ -4735,7 +4774,7 @@ autodiff: (inout t: meta::type_declaration) =
 
         for mf.get_parameters() do (param) {
             diff += "(param.get_declaration().name())$ : (param.get_declaration().type())$, ";
-            diff += "(param.get_declaration().name())$(suffix)$ : (param.get_declaration().type())$, ";
+            diff += "(param.get_declaration().name())$(suffix)$ : (ad_ctx.get_ad_type(param.get_declaration().type()))$, ";
         }
 
         diff += ") -> (";
@@ -4755,7 +4794,7 @@ autodiff: (inout t: meta::type_declaration) =
         else {
             for mf.get_returns() do (param) {
                 diff += "(param.get_declaration().name())$ : (param.get_declaration().type())$ = 0.0, ";
-                diff += "(param.get_declaration().name())$(suffix)$ : (param.get_declaration().type())$ = 0.0, ";
+                diff += "(param.get_declaration().name())$(suffix)$ : (ad_ctx.get_ad_type(param.get_declaration().type()))$ = 0.0, ";
             }
         }
 
@@ -4768,8 +4807,7 @@ autodiff: (inout t: meta::type_declaration) =
             return;
         }
 
-        ad_ctx: autodiff_context = ();
-        ad_ctx.suffix = suffix;
+
         ad_impl : autodiff_stmt_handler = (ad_ctx&, mf);
 
 
@@ -4781,7 +4819,13 @@ autodiff: (inout t: meta::type_declaration) =
 
         diff += "}";
 
+        ad_ctx.leave_function();
+
         t.add_member( diff );
+    }
+
+    if 1 != order {
+        t.add_runtime_support_include( "cpp2taylor.h" );
     }
 }
 
