@@ -4195,6 +4195,19 @@ autodiff_context: type = {
     leave_function: (inout this) = {
     }
 
+    push_stack: (inout this, decl: meta::type_or_namespace_declaration) = {
+        full_name: std::string = "";
+
+        if !declaration_stack.empty() {
+            full_name += declaration_stack.back().full_name;
+        }
+
+        full_name += "::";
+        full_name += decl.name();
+
+        declaration_stack.push_back(autodiff_declaration_stack_item(full_name, decl));
+    }
+
     pop_stack: (inout this) = {
         assert(!declaration_stack.empty());
 
@@ -4928,6 +4941,119 @@ autodiff_stmt_handler: type = {
     }
 }
 
+autodiff_declaration_handler: type = {
+    this: simple_traverser      = ();
+    this: autodiff_handler_base;
+
+    base: type == simple_traverser;
+
+    decl: meta::type_or_namespace_declaration;
+
+    operator=: (out this, ctx_: *autodiff_context, decl_: meta::type_or_namespace_declaration) = {
+        autodiff_handler_base = (ctx_);
+        decl = decl_;
+    }
+
+    traverse: (override inout this, decl: meta::declaration) = {
+        base::traverse(decl);
+    }
+
+
+    traverse: (override inout this, f: meta::function_declaration) = {
+        ctx*.enter_function();
+
+        diff = "    (f.name())$(ctx*.suffix)$: (";
+
+        //  1. Generate the modified signature
+        //  a) Parameters
+
+        for f.get_parameters() do (param) {
+            diff += "(param.get_declaration().name())$ : (param.get_declaration().type())$, ";
+            diff += "(param.get_declaration().name())$(ctx*.suffix)$ : (ctx*.get_ad_type(param.get_declaration().type()))$, ";
+        }
+
+        diff += ") -> (";
+
+        //  b) Returns
+
+        if f.has_non_void_return_type() && f.get_returns().empty() { // TODO: has_non_void_return_type is true for return lists: (r: double) bug/feature?
+            // TODO: check if name "r" is available. (Also needs inspection of functions at call sides.)
+            if f.has_deduced_return_type() {
+                // TODO: Take care of initialization order error.
+                diff += "r, r(ctx*.suffix)$, ";
+            }
+            else {
+                diff += "r: (f.get_unnamed_return_type())$ = (), r(ctx*.suffix)$: (ctx*.get_ad_type(f.get_unnamed_return_type()))$ = (), ";
+            }
+        }
+        else {
+            for f.get_returns() do (param) {
+                diff += "(param.get_declaration().name())$ : (param.get_declaration().type())$ = 0.0, ";
+                diff += "(param.get_declaration().name())$(ctx*.suffix)$ : (ctx*.get_ad_type(param.get_declaration().type()))$ = 0.0, ";
+            }
+        }
+
+        diff += ") = {";
+
+        //  Generate the body
+
+        if !f.has_compound_body() {
+            f.error( "temporary alpha limitation: a differentiable function must have a {}-enclosed body" );
+            return;
+        }
+
+
+        ad_impl : autodiff_stmt_handler = (ctx*&, f);
+
+
+        for f.get_compound_body().get_statements() do (stmt)
+        {
+            ad_impl..pre_traverse(stmt);
+        }
+        diff += ad_impl.diff;
+
+        diff += "}";
+
+        ctx*.leave_function();
+
+        decl.add_member( diff );
+        diff = "";
+
+        ctx*.add_as_differentiated(f);
+    }
+
+
+    traverse: (override inout this, o: meta::object_declaration) = {
+        o.error("AD: Do not know how to handle object_declaration: (o.to_string())$");
+    }
+
+
+    traverse: (override inout this, t: meta::type_declaration) = {
+        ctx*.push_stack(t);
+        ad: autodiff_declaration_handler = (ctx, t);
+
+        for t.get_members()
+        do  (m)
+        if  m.is_function()
+        {
+            ad.pre_traverse(m);
+        }
+
+        ctx*.pop_stack();
+    }
+
+
+    traverse: (override inout this, t: meta::parameter_declaration) = {
+        t.error("AD: Do not know how to handle parameter_declaration: (t.to_string())$");
+    }
+
+
+    traverse: (override inout this, stmt: meta::statement) = {
+        stmt.error("AD: Do not know how to handle statement in declaration context: (stmt.to_string())$");
+    }
+}
+
+
 autodiff: (inout t: meta::type_declaration) =
 {
 
@@ -4963,73 +5089,33 @@ autodiff: (inout t: meta::type_declaration) =
     ad_ctx.suffix = suffix;
     ad_ctx.set_order(order);
 
-    ad_ctx.create_namespace_stack(t);
 
-    for t.get_members()
-    do  (m)
-    if  m.is_function()
-    {
-        mf := m.as_function();
+    if t.parent_is_nonglobal_namespace() {
+        p := t.get_parent().as_nonglobal_namespace();
+        ad_ctx.create_namespace_stack(p);
+        ad: autodiff_declaration_handler = (ad_ctx&, p);
+        ad.pre_traverse(t);
 
-        ad_ctx.enter_function();
+    }
+    else if t.parent_is_type() {
+        p := t.get_parent().as_type();
+        ad_ctx.create_namespace_stack(p);
+        ad: autodiff_declaration_handler = (ad_ctx&, p);
+        ad.pre_traverse(t);
+    }
+    else {
+        // TODO: Remove when global namespace is available.
+        // Traverse without parent context
+        ad_ctx.push_stack(t);
+        ad: autodiff_declaration_handler = (ad_ctx&, t);
 
-        diff: std::string = "    (mf.name())$(suffix)$: (";
-
-        //  1. Generate the modified signature
-        //  a) Parameters
-
-        for mf.get_parameters() do (param) {
-            diff += "(param.get_declaration().name())$ : (param.get_declaration().type())$, ";
-            diff += "(param.get_declaration().name())$(suffix)$ : (ad_ctx.get_ad_type(param.get_declaration().type()))$, ";
-        }
-
-        diff += ") -> (";
-
-        //  b) Returns
-
-        if mf.has_non_void_return_type() && mf.get_returns().empty() { // TODO: has_non_void_return_type is true for return lists: (r: double) bug/feature?
-            // TODO: check if name "r" is available. (Also needs inspection of functions at call sides.)
-            if mf.has_deduced_return_type() {
-                // TODO: Take care of initialization order error.
-                diff += "r, r(suffix)$, ";
-            }
-            else {
-                diff += "r: (mf.get_unnamed_return_type())$ = (), r(suffix)$: (ad_ctx.get_ad_type(mf.get_unnamed_return_type()))$ = (), ";
-            }
-        }
-        else {
-            for mf.get_returns() do (param) {
-                diff += "(param.get_declaration().name())$ : (param.get_declaration().type())$ = 0.0, ";
-                diff += "(param.get_declaration().name())$(suffix)$ : (ad_ctx.get_ad_type(param.get_declaration().type()))$ = 0.0, ";
-            }
-        }
-
-        diff += ") = {";
-
-        //  Generate the body
-
-        if !mf.has_compound_body() {
-            mf.error( "temporary alpha limitation: a differentiable function must have a {}-enclosed body" );
-            return;
-        }
-
-
-        ad_impl : autodiff_stmt_handler = (ad_ctx&, mf);
-
-
-        for mf.get_compound_body().get_statements() do (stmt)
+        for t.get_members()
+        do  (m)
+        if  m.is_function()
         {
-            ad_impl..pre_traverse(stmt);
+            ad.pre_traverse(m);
         }
-        diff += ad_impl.diff;
-
-        diff += "}";
-
-        ad_ctx.leave_function();
-
-        t.add_member( diff );
-
-        ad_ctx.add_as_differentiated(mf);
+        ad_ctx.pop_stack();
     }
 
     if 1 != order {
