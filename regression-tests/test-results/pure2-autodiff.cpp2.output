@@ -128,6 +128,15 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
+    func_outer_call:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x * func_outer(x, y);
+        return;
+    }
+
     sin_call:(
         in x: double, 
         in y: double, 
@@ -493,6 +502,24 @@ ad_test:/* @autodiff @print */ type =
         ) = 
     {
         temp_2: _ = func_d(x, x_d, y, y_d);
+        temp_1: _ = temp_2.ret;
+        temp_1_d: _ = temp_2.ret_d;
+        r_d = x * temp_1_d + temp_1 * x_d;
+        r = x * temp_1;
+        return;
+    }
+
+    func_outer_call_d:(
+        in x: double, 
+        in x_d: double, 
+        in y: double, 
+        in y_d: double, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: double = 0.0, 
+        ) = 
+    {
+        temp_2: _ = func_outer_d(x, x_d, y, y_d);
         temp_1: _ = temp_2.ret;
         temp_1_d: _ = temp_2.ret_d;
         r_d = x * temp_1_d + temp_1 * x_d;

@@ -552,8 +552,17 @@ type_or_namespace_declaration: @copy_constructible type =
         if !decl*.is_declaration() {
             error("cannot add a member that is not a declaration");
         }
-        require( n*.add_type_member(move decl),
+
+        if is_namespace() {
+            require( n*.add_namespace_member(move decl),
                  std::string("unexpected error while attempting to add member:\n") + source );
+
+        }
+        else {
+            assert(is_type());
+            require( n*.add_type_member(move decl),
+                 std::string("unexpected error while attempting to add member:\n") + source );
+        }
     }
 }
 
@@ -4212,13 +4221,11 @@ autodiff_context: type = {
         assert(!declaration_stack.empty());
 
         top := declaration_stack.back()&;
+        ad: autodiff_declaration_handler = (this&, top*.decl);
 
         for top*.diff_request do (cur) {
             if !is_in_list(cur, top*.diff_done) {
-                // TODO: Implement declaration diff handling
-                // ad: autodiff_declaration_handler = (this);
-                // ad.pre_traverse(cur);
-                top*.decl.error("AD: diff for `(cur.name())$` in `(top*.decl.name())$` requested.");
+                ad.pre_traverse(cur);
             }
         }
 

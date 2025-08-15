@@ -1,5 +1,9 @@
 ad_name: namespace = {
 
+func_outer: (x: double, y: double) -> (ret: double) = {
+  ret = x + y;
+}
+
 ad_test: @autodiff @print type = {
 
     add_1: (x: double, y: double) -> (r: double) = {
@@ -56,6 +60,10 @@ ad_test: @autodiff @print type = {
 
     func_call: (x: double, y: double) -> (r: double) = {
       r = x * func(x, y);
+    }
+
+    func_outer_call: (x: double, y: double) -> (r: double) = {
+      r = x * func_outer(x, y);
     }
 
     sin_call: (x: double, y: double) -> (r: double) = {
@@ -184,6 +192,7 @@ main: () = {
     write_output("x * (x + y)", x, x_d, y, y_d, ad_name::ad_test::mul_add_d(x, x_d, y, y_d));
     write_output("x + x * y", x, x_d, y, y_d, ad_name::ad_test::add_mul_d(x, x_d, y, y_d));
     write_output("x * func(x, y)", x, x_d, y, y_d, ad_name::ad_test::func_call_d(x, x_d, y, y_d));
+    write_output("x * func_outer(x, y)", x, x_d, y, y_d, ad_name::ad_test::func_outer_call_d(x, x_d, y, y_d));
     write_output("sin(x - y)", x, x_d, y, y_d, ad_name::ad_test::sin_call_d(x, x_d, y, y_d));
     write_output("if branch", x, x_d, y, y_d, ad_name::ad_test::if_branch_d(x, x_d, y, y_d));
     write_output("if else branch", x, x_d, y, y_d, ad_name::ad_test::if_else_branch_d(x, x_d, y, y_d));
