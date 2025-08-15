@@ -113,9 +113,9 @@ ad_test:/* @autodiff<"order=6"> @print */ type =
     func:(
         in x: double, 
         in y: double, 
-    ) -> (out r: double, ) = 
+    ) -> (out ret: double, ) = 
     {
-        r = x + y;
+        ret = x + y;
         return;
     }
 
@@ -473,12 +473,12 @@ ad_test:/* @autodiff<"order=6"> @print */ type =
         in y: double, 
         in y_d: cpp2::taylor<double, 6>, 
     ) -> (
-            out r: double = 0.0, 
-            out r_d: cpp2::taylor<double, 6> = 0.0, 
+            out ret: double = 0.0, 
+            out ret_d: cpp2::taylor<double, 6> = 0.0, 
         ) = 
     {
-        r_d = x_d + y_d;
-        r = x + y;
+        ret_d = x_d + y_d;
+        ret = x + y;
         return;
     }
 
@@ -493,8 +493,8 @@ ad_test:/* @autodiff<"order=6"> @print */ type =
         ) = 
     {
         temp_2: _ = func_d(x, x_d, y, y_d);
-        temp_1: _ = temp_2.r;
-        temp_1_d: _ = temp_2.r_d;
+        temp_1: _ = temp_2.ret;
+        temp_1_d: _ = temp_2.ret_d;
         r_d = x_d.mul(temp_1_d, x, temp_1);
         r = x * temp_1;
         return;

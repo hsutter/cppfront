@@ -52,8 +52,8 @@ ad_test: @autodiff<"order=6"> @print type = {
         r = x + x * y;
     }
 
-    func: (x: double, y: double) -> (r: double) = {
-      r = x + y;
+    func: (x: double, y: double) -> (ret: double) = {
+      ret = x + y;
     }
 
     func_call: (x: double, y: double) -> (r: double) = {

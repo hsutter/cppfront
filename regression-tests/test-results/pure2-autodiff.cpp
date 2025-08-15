@@ -198,7 +198,7 @@ struct add_mul_d_ret { double r; double r_d; };
 
 public: [[nodiscard]] static auto add_mul_d(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> add_mul_d_ret;
 
-struct func_d_ret { double r; double r_d; };
+struct func_d_ret { double ret; double ret_d; };
 
 public: [[nodiscard]] static auto func_d(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> func_d_ret;
 
@@ -383,10 +383,10 @@ auto main() -> int;
 
 #line 52 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::func(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> func_ret{
-          cpp2::impl::deferred_init<double> r;
+          cpp2::impl::deferred_init<double> ret;
 #line 53 "pure2-autodiff.cpp2"
-      r.construct(x + y);
-    return std::move(r.value()); }
+      ret.construct(x + y);
+    return std::move(ret.value()); }
 
 #line 56 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::func_call(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> func_call_ret{
@@ -622,10 +622,10 @@ auto temp_1_d {x * y_d + y * x_d};
     }
 
     [[nodiscard]] auto ad_test::func_d(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> func_d_ret{
-                                                                                                                  double r {0.0};
-                                                                                                                  double r_d {0.0};r_d = x_d + y_d;
-    r = x + y;
-    return  { std::move(r), std::move(r_d) }; 
+                                                                                                                      double ret {0.0};
+                                                                                                                      double ret_d {0.0};ret_d = x_d + y_d;
+    ret = x + y;
+    return  { std::move(ret), std::move(ret_d) }; 
     }
 
     [[nodiscard]] auto ad_test::func_call_d(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> func_call_d_ret{
@@ -633,9 +633,9 @@ auto temp_1_d {x * y_d + y * x_d};
                                                                                                                        double r_d {0.0};
 auto temp_2 {func_d(x, x_d, y, y_d)}; 
 
-    auto temp_1 {temp_2.r}; 
+    auto temp_1 {temp_2.ret}; 
 
-    auto temp_1_d {cpp2::move(temp_2).r_d}; 
+    auto temp_1_d {cpp2::move(temp_2).ret_d}; 
     r_d = x * cpp2::move(temp_1_d) + temp_1 * x_d;
     r = x * cpp2::move(temp_1);
     return  { std::move(r), std::move(r_d) }; 

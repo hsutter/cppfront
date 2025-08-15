@@ -3980,6 +3980,21 @@ autodiff_special_func: type = {
     }
 }
 
+autodiff_declaration_stack_item: @struct type = {
+    full_name:   std::string;  // namespace + type name
+    decl: meta::type_or_namespace_declaration;
+
+    lookup_declaration: (this, decl_name: std::string) -> (r: std::vector<meta::declaration> = ()) = {
+        for decl.get_members() do (cur) {
+            if cur.has_name() && decl_name  == cur.name() {
+                r.push_back(cur);
+
+                // Do not break for overloads. <3
+            }
+        }
+    }
+}
+
 autodiff_context: type = {
     private temporary_count : int = 0;
 
@@ -4024,6 +4039,26 @@ autodiff_context: type = {
     // Members depending on order
     public ad_type: std::string = "double";
 
+    public declaration_map  : std::map<std::string, std::vector<meta::declaration>> = ();
+    public declaration_stack: std::vector<autodiff_declaration_stack_item> = ();
+
+    create_namespace_stack: (inout this, t: meta::type_or_namespace_declaration) = {
+        if t.parent_is_nonglobal_namespace() {
+            create_namespace_stack(t.get_parent().as_nonglobal_namespace());
+        }
+        else if t.parent_is_type() {
+            create_namespace_stack(t.get_parent().as_type());
+        }
+
+        full_name: std::string = "::";
+        if !declaration_stack.empty() {
+            full_name = declaration_stack.back().full_name + "::";
+        }
+        full_name += t.name();
+
+        _ = declaration_stack.emplace_back(autodiff_declaration_stack_item(full_name, t));
+    }
+
     set_order : (inout this, new_order: int) = {
         order = new_order;
 
@@ -4050,6 +4085,39 @@ autodiff_context: type = {
         }
 
         return string_util::replace_all(type, "double", ad_type);
+    }
+
+    lookup_declaration: (inout this, decl_name: std::string) -> (r : std::vector<meta::declaration> = ()) = {
+        for std::ranges::views::reverse(declaration_stack) do (cur) {
+
+            cur_full_name : std::string = cur.full_name + "::" + decl_name;
+            ele := declaration_map.find(cur_full_name);
+            if ele == declaration_map.end() {
+                ele = declaration_map.insert_or_assign(cur_full_name, cur.lookup_declaration(decl_name)).first;
+            }
+
+            if !ele*.second.empty() {
+                // A simple assignment or emplace_back did not work. It tired to use move copy operators.
+                for ele*.second do (cp) {
+                    r.push_back(cp);
+                }
+                //r = ele*.second;
+                break;
+                // TODO: For overload resolution we may want to continue here and just add everything for all parent namespaces.
+            }
+        }
+
+        return;
+    }
+
+    lookup_function_declaration: (inout this, decl_name: std::string) -> (r : std::vector<meta::function_declaration> = ()) = {
+        r_all := lookup_declaration(decl_name);
+
+        for r_all do (cur) {
+            if cur.is_function() {
+                r.push_back(cur.as_function());
+            }
+        }
     }
 
     lookup_special_function_handling: (this, func_name: std::string, n_args: int, has_return: bool, is_member: bool) -> (m: bool, code: std::string) = {
@@ -4270,8 +4338,31 @@ autodiff_expression_handler: type = {
         diff += ");\n";
 
         if has_return {
-            // TODO: Look up return value name of function.
-            gen_lhs_assignment("(ret_temp)$.r", "(ret_temp)$.r(ctx*.suffix)$", /* switch order = */ true);
+            functions := ctx*.lookup_function_declaration(function_name);
+            if functions.ssize() == 0 {
+                postfix.error("AD: Could not find function declaration for `(function_name)$`.\n"
+                              "    If cpp2 function: this is an alpha limitation, please declare it befor the current declaration.\n"
+                              "    If cpp function: please add a special handling for this function.");
+            }
+            else if functions.ssize() != 1 {
+                postfix.error("AD: No handling for overload resultion is currently implemented.");
+            }
+
+            ret_name : std::string = "r"; // Default for regular return.
+            returns := functions[0].get_returns();
+            if !returns.empty() {
+                if returns.ssize() != 1 {
+                    postfix.error("AD: Expecting single return.");
+                }
+
+                for returns do (cur) {
+                    ret_name = cur.get_declaration().name();
+                }
+            }
+
+            ret_name_d : std::string = ret_name + ctx*.suffix;
+
+            gen_lhs_assignment("(ret_temp)$.(ret_name)$", "(ret_temp)$.(ret_name_d)$", /* switch order = */ true);
         }
 
         // TODO: Add function to list of functions/objects for differentiation.
@@ -4797,6 +4888,8 @@ autodiff: (inout t: meta::type_declaration) =
     ad_ctx: autodiff_context = ();
     ad_ctx.suffix = suffix;
     ad_ctx.set_order(order);
+
+    ad_ctx.create_namespace_stack(t);
 
     for t.get_members()
     do  (m)
