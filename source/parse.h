@@ -4042,11 +4042,11 @@ public:
     }
 
 
-    auto add_type_member( std::unique_ptr<statement_node>&& statement )
+    auto add_type_or_namespace_member( std::unique_ptr<statement_node>&& statement )
         -> bool
     {
         if (
-            !is_type()
+            !(is_type() || is_namespace())
             || !initializer
             || !initializer->is_compound()
             || !statement->is_declaration()

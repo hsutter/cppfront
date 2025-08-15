@@ -9,7 +9,7 @@
 #line 1 "pure2-function-body-reflection.cpp2"
 
 #line 2 "pure2-function-body-reflection.cpp2"
-namespace xyzzy {
+namespace ns {
 
 #line 7 "pure2-function-body-reflection.cpp2"
 class test;
@@ -23,11 +23,14 @@ class test;
 #line 1 "pure2-function-body-reflection.cpp2"
 
 #line 2 "pure2-function-body-reflection.cpp2"
-namespace xyzzy {
+namespace ns {
 
-// This function will be visible as a namespace member while reflecting on xyzzy::test
+// This function will be visible as a namespace member while reflecting on ns::test
 auto sample_function_before_type() -> void;
+[[nodiscard]] auto add_1(auto const& x) -> decltype(auto);
 
+
+#line 7 "pure2-function-body-reflection.cpp2"
 class test
  {
     public: [[nodiscard]] static auto one_liner(cpp2::impl::in<double> a, cpp2::impl::in<double> b, cpp2::impl::in<double> c) -> decltype(auto);
@@ -65,7 +68,7 @@ using branches_ret = double;
 #line 76 "pure2-function-body-reflection.cpp2"
 };
 
-// This function will not be visible as a namespace member while reflecting on xyzzy::test
+// This function will not be visible as a namespace member while reflecting on ns::test
 auto sample_function_after_type() -> void;
 
 }
@@ -77,10 +80,12 @@ auto main() -> int;
 #line 1 "pure2-function-body-reflection.cpp2"
 
 #line 2 "pure2-function-body-reflection.cpp2"
-namespace xyzzy {
+namespace ns {
 
 #line 5 "pure2-function-body-reflection.cpp2"
 auto sample_function_before_type() -> void{}
+
+[[nodiscard]] auto add_1(auto const& x) -> decltype(auto) { return x + 1; }
 
 #line 9 "pure2-function-body-reflection.cpp2"
     [[nodiscard]] auto test::one_liner(cpp2::impl::in<double> a, cpp2::impl::in<double> b, cpp2::impl::in<double> c) -> decltype(auto) { return (a + c) * b;  }
@@ -170,5 +175,7 @@ auto sample_function_after_type() -> void{}
 }
 
 #line 83 "pure2-function-body-reflection.cpp2"
-auto main() -> int{}
+auto main() -> int{
+    std::cout << "calling generated function ns::add_1... ns::add_1(42) returned " + cpp2::to_string(ns::add_1(42)) + "\n";
+}
 

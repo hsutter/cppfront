@@ -10,7 +10,7 @@
 
 #line 27 "pure2-initialization-safety-with-else-if.cpp2"
 class ad_test;
-  
+    
 
 //=== Cpp2 type definitions and function declarations ===========================
 
@@ -22,10 +22,10 @@ class ad_test {
 using intermediate_default_no_init_ret = double;
 
 #line 28 "pure2-initialization-safety-with-else-if.cpp2"
-  public: [[nodiscard]] static auto intermediate_default_no_init(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> intermediate_default_no_init_ret;
-  public: ad_test() = default;
-  public: ad_test(ad_test const&) = delete; /* No 'that' constructor, suppress copy */
-  public: auto operator=(ad_test const&) -> void = delete;
+    public: [[nodiscard]] static auto intermediate_default_no_init(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> intermediate_default_no_init_ret;
+    public: ad_test() = default;
+    public: ad_test(ad_test const&) = delete; /* No 'that' constructor, suppress copy */
+    public: auto operator=(ad_test const&) -> void = delete;
 
 
 #line 34 "pure2-initialization-safety-with-else-if.cpp2"
@@ -65,14 +65,14 @@ auto main(int const argc_, char** argv_) -> int{
 }
 
 #line 28 "pure2-initialization-safety-with-else-if.cpp2"
-  [[nodiscard]] auto ad_test::intermediate_default_no_init(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> intermediate_default_no_init_ret{
-        cpp2::impl::deferred_init<double> r;
+    [[nodiscard]] auto ad_test::intermediate_default_no_init(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> intermediate_default_no_init_ret{
+            cpp2::impl::deferred_init<double> r;
 #line 29 "pure2-initialization-safety-with-else-if.cpp2"
-    cpp2::impl::deferred_init<double> t; 
-    t.construct(x + y);
+        cpp2::impl::deferred_init<double> t; 
+        t.construct(x + y);
 
-    r.construct(cpp2::move(t.value()));// OK, after t but it's a return value
-  return std::move(r.value()); }
+        r.construct(cpp2::move(t.value()));// OK, after t but it's a return value
+    return std::move(r.value()); }
 
 #line 36 "pure2-initialization-safety-with-else-if.cpp2"
 auto ok() -> void{

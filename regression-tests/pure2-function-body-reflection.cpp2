@@ -1,7 +1,7 @@
 
-xyzzy: namespace = {
+ns: namespace = {
 
-// This function will be visible as a namespace member while reflecting on xyzzy::test
+// This function will be visible as a namespace member while reflecting on ns::test
 sample_function_before_type: () = { }
 
 test: @sample_traverser type =
@@ -75,9 +75,11 @@ test: @sample_traverser type =
     }
 }
 
-// This function will not be visible as a namespace member while reflecting on xyzzy::test
+// This function will not be visible as a namespace member while reflecting on ns::test
 sample_function_after_type: () = { }
 
 }
 
-main: () = { }
+main: () = {
+    std::cout << "calling generated function ns::add_1... ns::add_1(42) returned (ns::add_1(42))$\n";
+}
