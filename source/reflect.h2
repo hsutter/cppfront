@@ -206,6 +206,9 @@ reflection_base: @polymorphic_base @copy_constructible <T> type =
     position: (override this) -> source_position = n*.position();
 
     print: (this) -> std::string = n*.pretty_print_visualize(0);
+
+    is_same:      (this, o: reflection_base)     -> bool = n == o.n;  // Test pointers
+    is_same: <TO> (this, o: reflection_base<TO>) -> bool = false;     // Different types => false
 }
 
 
@@ -3980,9 +3983,17 @@ autodiff_special_func: type = {
     }
 }
 
-autodiff_declaration_stack_item: @struct type = {
-    full_name:   std::string;  // namespace + type name
-    decl: meta::type_or_namespace_declaration;
+autodiff_declaration_stack_item: @copy_constructible type = {
+    public full_name:   std::string;  // namespace + type name
+    public decl: meta::type_or_namespace_declaration;
+
+    public diff_request: std::vector<meta::declaration> = ();
+    public diff_done:    std::vector<meta::declaration> = ();
+
+    operator=: (out this, full_name_: std::string, decl_: meta::type_or_namespace_declaration) = {
+        full_name = full_name_;
+        decl      = decl_;
+    }
 
     lookup_declaration: (this, decl_name: std::string) -> (r: std::vector<meta::declaration> = ()) = {
         for decl.get_members() do (cur) {
@@ -4056,7 +4067,7 @@ autodiff_context: type = {
         }
         full_name += t.name();
 
-        _ = declaration_stack.emplace_back(autodiff_declaration_stack_item(full_name, t));
+        _ = declaration_stack.push_back(autodiff_declaration_stack_item(full_name, t));
     }
 
     set_order : (inout this, new_order: int) = {
@@ -4139,11 +4150,72 @@ autodiff_context: type = {
         }
     }
 
+    add_as_differentiated: (inout this, t: meta::declaration) = {
+        top := declaration_stack.back()&;
+
+        assert(t.get_parent().is_same(top*.decl));
+
+        top*.diff_done.push_back(t);
+    }
+
+    add_for_differentiation: (inout this, t: meta::declaration) = {
+        t_parent := t.get_parent();
+
+        found := false;
+        for std::ranges::views::reverse(declaration_stack) do (inout cur) {
+            if t_parent.is_same(cur.decl) {
+                if !is_in_list(t, cur.diff_request) {
+                    cur.diff_request.push_back(t);
+                }
+
+                found = true;
+                break;
+            }
+        }
+
+        if !found {
+            t.error("AD: Could not find parent type/namespace for: (t)$");
+        }
+    }
+
+    is_in_list: (v: meta::declaration, list: std::vector<meta::declaration>) -> bool = {
+        for list do (cur) {
+            if cur.is_same(v) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     enter_function: (inout this) = {
         temporary_count = 0;
     }
 
     leave_function: (inout this) = {
+    }
+
+    pop_stack: (inout this) = {
+        assert(!declaration_stack.empty());
+
+        top := declaration_stack.back()&;
+
+        for top*.diff_request do (cur) {
+            if !is_in_list(cur, top*.diff_done) {
+                // TODO: Implement declaration diff handling
+                // ad: autodiff_declaration_handler = (this);
+                // ad.pre_traverse(cur);
+                top*.decl.error("AD: diff for `(cur.name())$` in `(top*.decl.name())$` requested.");
+            }
+        }
+
+        declaration_stack.pop_back();
+    }
+
+    finish: (inout this) = {
+        while !declaration_stack.empty() {
+            pop_stack();
+        }
     }
 }
 
@@ -4363,9 +4435,11 @@ autodiff_expression_handler: type = {
             ret_name_d : std::string = ret_name + ctx*.suffix;
 
             gen_lhs_assignment("(ret_temp)$.(ret_name)$", "(ret_temp)$.(ret_name_d)$", /* switch order = */ true);
+
+            ctx*.add_for_differentiation(functions[0]);
         }
 
-        // TODO: Add function to list of functions/objects for differentiation.
+        // TODO: Add function to list of functions/objects for differentiation for the no return case.
     }
 
     handle_special_function: (inout this, object: std::string, object_d: std::string, function_name: std::string, args: std::vector<std::string>, ret: std::string) -> bool = {
@@ -4954,11 +5028,17 @@ autodiff: (inout t: meta::type_declaration) =
         ad_ctx.leave_function();
 
         t.add_member( diff );
+
+        ad_ctx.add_as_differentiated(mf);
     }
 
     if 1 != order {
         t.add_runtime_support_include( "cpp2taylor.h" );
     }
+
+    ad_ctx.finish();
+
+    _ = ad_ctx;
 }
 
 
