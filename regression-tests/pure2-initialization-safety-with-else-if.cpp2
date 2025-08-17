@@ -25,12 +25,12 @@ main: (args) = {
 }
 
 ad_test: type = {
-  intermediate_default_no_init: (x: double, y: double) -> (r: double) = {
-    t: double;
-    t = x + y;
+    intermediate_default_no_init: (x: double, y: double) -> (r: double) = {
+        t: double;
+        t = x + y;
 
-    r = t;              // OK, after t but it's a return value
-  }
+        r = t;              // OK, after t but it's a return value
+    }
 }
 
 ok: () = {

@@ -4042,11 +4042,11 @@ public:
     }
 
 
-    auto add_type_member( std::unique_ptr<statement_node>&& statement )
+    auto add_type_or_namespace_member( std::unique_ptr<statement_node>&& statement )
         -> bool
     {
         if (
-            !is_type()
+            !(is_type() || is_namespace())
             || !initializer
             || !initializer->is_compound()
             || !statement->is_declaration()
@@ -4073,36 +4073,6 @@ public:
         return true;
     }
 
-    auto add_namespace_member( std::unique_ptr<statement_node>&& statement )
-        -> bool
-    {
-        if (
-            !is_namespace()
-            || !initializer
-            || !initializer->is_compound()
-            || !statement->is_declaration()
-            )
-        {
-            return false;
-        }
-
-        //  Tell this declaration statement that we are its new parent
-        //  and check to ensure that it doesn't already have a parent
-        //  (that shouldn't happen because we should only get here for a
-        //  generated statement that hasn't been added elsewhere yet)
-        auto decl = statement->get_if<declaration_node>();
-        assert(
-            decl
-            && !decl->parent_declaration
-        );
-        decl->parent_declaration = this;
-
-        //  And actually adopt it into our list of statements
-        auto compound_stmt = initializer->get_if<compound_statement_node>();
-        assert (compound_stmt);
-        compound_stmt->statements.push_back(std::move(statement));
-        return true;
-    }
 
     auto add_function_initializer( std::unique_ptr<statement_node>&& statement )
         -> bool

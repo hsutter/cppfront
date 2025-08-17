@@ -553,16 +553,8 @@ type_or_namespace_declaration: @copy_constructible type =
             error("cannot add a member that is not a declaration");
         }
 
-        if is_namespace() {
-            require( n*.add_namespace_member(move decl),
+        require( n*.add_type_or_namespace_member(move decl),
                  std::string("unexpected error while attempting to add member:\n") + source );
-
-        }
-        else {
-            assert(is_type());
-            require( n*.add_type_member(move decl),
-                 std::string("unexpected error while attempting to add member:\n") + source );
-        }
     }
 }
 
@@ -3272,6 +3264,8 @@ sample_traverser: (t: meta::type_declaration, indent: i32 = 0) =
         for ns.get_members() do (m) {
             sample_print(m.name(), indent+2);
         }
+        ns.add_member( "add_1: (x) = x+1;");
+        _ = ns;
     }
 
     for t.get_members() do (m) {
