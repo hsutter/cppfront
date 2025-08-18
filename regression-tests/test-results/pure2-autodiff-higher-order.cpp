@@ -544,7 +544,9 @@ auto main() -> int;
                                                                                                                                                                       double r {0.0};
                                                                                                                                                                       cpp2::taylor<double,6> r_d {0.0};
 auto temp_1_d {CPP2_UFCS(mul)(x_d, y_d, x, y)}; 
-auto temp_1 {x * y}; r_d = CPP2_UFCS(mul)(cpp2::move(temp_1_d), x_d, temp_1, x);
+
+    auto temp_1 {x * y}; 
+    r_d = CPP2_UFCS(mul)(cpp2::move(temp_1_d), x_d, temp_1, x);
     r = cpp2::move(temp_1) * x;
     return  { std::move(r), std::move(r_d) }; 
     }
@@ -560,7 +562,9 @@ auto temp_1 {x * y}; r_d = CPP2_UFCS(mul)(cpp2::move(temp_1_d), x_d, temp_1, x);
                                                                                                                                                                       double r {0.0};
                                                                                                                                                                       cpp2::taylor<double,6> r_d {0.0};
 auto temp_1_d {CPP2_UFCS(div)(x_d, y_d, x, y)}; 
-auto temp_1 {x / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(x),y)}; r_d = CPP2_UFCS(div)(cpp2::move(temp_1_d), y_d, temp_1, y);
+
+    auto temp_1 {x / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(x),y)}; 
+    r_d = CPP2_UFCS(div)(cpp2::move(temp_1_d), y_d, temp_1, y);
     r = cpp2::move(temp_1) / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(cpp2::move(temp_1)),y);
     return  { std::move(r), std::move(r_d) }; 
     }
@@ -569,7 +573,9 @@ auto temp_1 {x / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(x),y)}; r_d = CPP2_UFCS(div)(c
                                                                                                                                                                           double r {0.0};
                                                                                                                                                                           cpp2::taylor<double,6> r_d {0.0};
 auto temp_1_d {CPP2_UFCS(mul)(x_d, y_d, x, y)}; 
-auto temp_1 {x * y}; r_d = CPP2_UFCS(div)(cpp2::move(temp_1_d), x_d, temp_1, x);
+
+    auto temp_1 {x * y}; 
+    r_d = CPP2_UFCS(div)(cpp2::move(temp_1_d), x_d, temp_1, x);
     r = cpp2::move(temp_1) / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(cpp2::move(temp_1)),x);
     return  { std::move(r), std::move(r_d) }; 
     }
@@ -577,9 +583,9 @@ auto temp_1 {x * y}; r_d = CPP2_UFCS(div)(cpp2::move(temp_1_d), x_d, temp_1, x);
     [[nodiscard]] auto ad_test::mul_add_d(cpp2::impl::in<double> x, cpp2::impl::in<cpp2::taylor<double,6>> x_d, cpp2::impl::in<double> y, cpp2::impl::in<cpp2::taylor<double,6>> y_d) -> mul_add_d_ret{
                                                                                                                                                                         double r {0.0};
                                                                                                                                                                         cpp2::taylor<double,6> r_d {0.0};
-auto temp_1_d {x_d + y_d}; 
+cpp2::taylor<double,6> temp_1_d {x_d + y_d}; 
 
-    auto temp_1 {x + y}; 
+    double temp_1 {x + y}; 
     r_d = CPP2_UFCS(mul)(x_d, cpp2::move(temp_1_d), x, temp_1);
     r = x * cpp2::move(temp_1);
     return  { std::move(r), std::move(r_d) }; 
@@ -588,9 +594,9 @@ auto temp_1_d {x_d + y_d};
     [[nodiscard]] auto ad_test::add_mul_d(cpp2::impl::in<double> x, cpp2::impl::in<cpp2::taylor<double,6>> x_d, cpp2::impl::in<double> y, cpp2::impl::in<cpp2::taylor<double,6>> y_d) -> add_mul_d_ret{
                                                                                                                                                                         double r {0.0};
                                                                                                                                                                         cpp2::taylor<double,6> r_d {0.0};
-auto temp_1_d {CPP2_UFCS(mul)(x_d, y_d, x, y)}; 
+cpp2::taylor<double,6> temp_1_d {CPP2_UFCS(mul)(x_d, y_d, x, y)}; 
 
-    auto temp_1 {x * y}; 
+    double temp_1 {x * y}; 
     r_d = x_d + cpp2::move(temp_1_d);
     r = x + cpp2::move(temp_1);
     return  { std::move(r), std::move(r_d) }; 
@@ -606,22 +612,22 @@ auto temp_1_d {CPP2_UFCS(mul)(x_d, y_d, x, y)};
     [[nodiscard]] auto ad_test::func_call_d(cpp2::impl::in<double> x, cpp2::impl::in<cpp2::taylor<double,6>> x_d, cpp2::impl::in<double> y, cpp2::impl::in<cpp2::taylor<double,6>> y_d) -> func_call_d_ret{
                                                                                                                                                                           double r {0.0};
                                                                                                                                                                           cpp2::taylor<double,6> r_d {0.0};
-auto temp_2 {func_d(x, x_d, y, y_d)}; 
+auto temp_1 {func_d(x, x_d, y, y_d)}; 
 
-    auto temp_1 {temp_2.ret}; 
+    cpp2::taylor<double,6> temp_2_d {temp_1.ret_d}; 
 
-    auto temp_1_d {cpp2::move(temp_2).ret_d}; 
-    r_d = CPP2_UFCS(mul)(x_d, cpp2::move(temp_1_d), x, temp_1);
-    r = x * cpp2::move(temp_1);
+    double temp_2 {cpp2::move(temp_1).ret}; 
+    r_d = CPP2_UFCS(mul)(x_d, cpp2::move(temp_2_d), x, temp_2);
+    r = x * cpp2::move(temp_2);
     return  { std::move(r), std::move(r_d) }; 
     }
 
     [[nodiscard]] auto ad_test::sin_call_d(cpp2::impl::in<double> x, cpp2::impl::in<cpp2::taylor<double,6>> x_d, cpp2::impl::in<double> y, cpp2::impl::in<cpp2::taylor<double,6>> y_d) -> sin_call_d_ret{
                                                                                                                                                                          double r {0.0};
                                                                                                                                                                          cpp2::taylor<double,6> r_d {0.0};
-auto temp_1_d {x_d - y_d}; 
+cpp2::taylor<double,6> temp_1_d {x_d - y_d}; 
 
-    auto temp_1 {x - y}; 
+    double temp_1 {x - y}; 
     r_d = CPP2_UFCS(sin)(cpp2::move(temp_1_d), temp_1);
     r = sin(cpp2::move(temp_1));
     return  { std::move(r), std::move(r_d) }; 
@@ -765,10 +771,10 @@ int i_d {};
 std::vector<cpp2::taylor<double,6>> v_d {}; 
 
     std::vector<double> v {}; 
-    CPP2_UFCS(push_back)(v, x);
     CPP2_UFCS(push_back)(v_d, x_d);
-    CPP2_UFCS(push_back)(v, y);
+    CPP2_UFCS(push_back)(v, x);
     CPP2_UFCS(push_back)(v_d, y_d);
+    CPP2_UFCS(push_back)(v, y);
     r_d = {  };
     r = 0.0;
 {
