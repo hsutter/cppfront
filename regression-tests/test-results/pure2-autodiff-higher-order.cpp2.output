@@ -297,6 +297,17 @@ ad_test:/* @autodiff<"order=6"> @print */ type =
         return;
     }
 
+    type_outer_call:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        t: type_outer = ();
+        t.a = x;
+        r = t.add(y);
+        return;
+    }
+
     add_1_d:(
         in x: double, 
         in x_d: cpp2::taylor<double, 6>, 
@@ -808,6 +819,26 @@ ad_test:/* @autodiff<"order=6"> @print */ type =
         temp_1: double = t.a;
         r_d = temp_1_d + y_d;
         r = temp_1 + y;
+        return;
+    }
+
+    type_outer_call_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        t_d: type_outer_d = ();
+        t: type_outer = ();
+        t_d.a_d = x_d;
+        t.a = x;
+        temp_1: _ = t.add_d(t_d, y, y_d);
+        r_d = temp_1.r_d;
+        r = temp_1.r;
         return;
     }
 }

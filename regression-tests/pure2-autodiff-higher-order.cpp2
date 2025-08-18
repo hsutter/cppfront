@@ -9,6 +9,10 @@ func_outer: (x: double, y: double) -> (ret: double) = {
 
 type_outer: type = {
   public a: double = 0.0;
+
+  add: (this, b: double) -> double = {
+    return a + b;
+  }
 }
 
 ad_test: @autodiff<"order=6"> @print type = {
@@ -173,6 +177,13 @@ ad_test: @autodiff<"order=6"> @print type = {
 
       r = t.a + y;
     }
+
+    type_outer_call: (x: double, y: double) -> (r: double) = {
+      t : type_outer = ();
+      t.a = x;
+
+      r = t.add(y);
+    }
 }
 }
 
@@ -220,4 +231,5 @@ main: () = {
     write_output("do while loop", x, x_d, y, y_d, ad_name::ad_test::do_while_loop_d(x, x_d, y, y_d));
     write_output("for loop", x, x_d, y, y_d, ad_name::ad_test::for_loop_d(x, x_d, y, y_d));
     write_output("tye_outer.a + y", x, x_d, y, y_d, ad_name::ad_test::type_outer_use_d(x, x_d, y, y_d));
+    write_output("type_outer.add(y)", x, x_d, y, y_d, ad_name::ad_test::type_outer_call_d(x, x_d, y, y_d));
 }

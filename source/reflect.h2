@@ -3993,12 +3993,30 @@ autodiff_special_func: type = {
     }
 }
 
+autodiff_declared_variable: type = {
+    public name     : std::string = "";
+    public decl     : std::string = ""; // TODO: Maybe use variant here.
+    public is_member: bool        = false;
+
+    operator=:(out this) = {}
+
+    operator=:(out this, name_: std::string, decl_: std::string, is_member_: bool) = {
+        name      = name_;
+        decl      = decl_;
+        is_member = is_member_;
+    }
+
+    operator=:(out this, that) = {}
+}
+
 autodiff_declaration_stack_item: @copy_constructible type = {
     public full_name:   std::string;  // namespace + type name
     public decl: meta::type_or_namespace_declaration;
 
     public diff_request: std::vector<meta::declaration> = ();
     public diff_done:    std::vector<meta::declaration> = ();
+
+    public declared_variables_stack: std::vector<std::vector<autodiff_declared_variable>> = (1);
 
     operator=: (out this, full_name_: std::string, decl_: meta::type_or_namespace_declaration) = {
         full_name = full_name_;
@@ -4014,6 +4032,20 @@ autodiff_declaration_stack_item: @copy_constructible type = {
             }
         }
     }
+
+    lookup_variable_declaration: (this, decl_name: std::string) -> (found: bool = false, r: autodiff_declared_variable = ()) = {
+        for std::ranges::views::reverse(declared_variables_stack) do (cur_context) {
+            for cur_context do (cur) {
+                if cur.name == decl_name {
+                    found = true;
+                    r = cur;
+                    return;
+                }
+            }
+        }
+    }
+
+
 }
 
 autodiff_context: type = {
@@ -4059,6 +4091,10 @@ autodiff_context: type = {
 
     public declaration_map  : std::map<std::string, std::vector<meta::declaration>> = ();
     public declaration_stack: std::vector<autodiff_declaration_stack_item> = ();
+
+    add_variable_declaration: (inout this, name: std::string, type: std::string, is_member: bool = false) = {
+        declaration_stack.back().declared_variables_stack.back().push_back(autodiff_declared_variable(name, type, is_member));
+    }
 
     create_namespace_stack: (inout this, t: meta::type_or_namespace_declaration) = {
         if t.parent_is_nonglobal_namespace() {
@@ -4136,12 +4172,39 @@ autodiff_context: type = {
         return;
     }
 
+    lookup_variable_declaration: (inout this, name: std::string) -> autodiff_declared_variable = {
+        if name == "_" {
+            return autodiff_declared_variable(name, "_", false);
+        }
+
+        for std::ranges::views::reverse(declaration_stack) do (cur_context) {
+            r := cur_context.lookup_variable_declaration(name);
+            if r.found {
+                return r.r;
+            }
+        }
+
+        declaration_stack.back().decl.error("AD: Could not find declaration of variable with name `(name)$`.");
+
+        return autodiff_declared_variable();
+    }
+
     lookup_function_declaration: (inout this, decl_name: std::string) -> (r : std::vector<meta::function_declaration> = ()) = {
         r_all := lookup_declaration(decl_name);
 
         for r_all do (cur) {
             if cur.is_function() {
                 r.push_back(cur.as_function());
+            }
+        }
+    }
+
+    lookup_member_function_declaration: (inout this, obj_type: meta::type_declaration, decl_name: std::string) -> (r : std::vector<meta::function_declaration> = ()) = {
+        for obj_type.get_members() do (cur) {
+            if cur.is_function() && cur.has_name() && decl_name  == cur.name() {
+                r.push_back(cur.as_function());
+
+                // Do not break for overloads. <3
             }
         }
     }
@@ -4218,9 +4281,11 @@ autodiff_context: type = {
 
     enter_function: (inout this) = {
         temporary_count = 0;
+        declaration_stack.back().declared_variables_stack.push_back(std::vector<autodiff_declared_variable>());
     }
 
     leave_function: (inout this) = {
+        declaration_stack.back().declared_variables_stack.pop_back();
     }
 
     push_stack: (inout this, decl: meta::type_or_namespace_declaration) = {
@@ -4317,8 +4382,13 @@ autodiff_expression_handler: type = {
 
 
 
-    handle_expression_list: (inout this, list: meta::expression_list) -> std::vector<std::string> = {
-        args : std::vector<std::string> = ();
+    primal_fwd_name: @struct type = {
+        primal: std::string = "";
+        fwd   : std::string = "";
+    }
+
+    handle_expression_list: (inout this, list: meta::expression_list) -> std::vector<primal_fwd_name> = {
+        args : std::vector<primal_fwd_name> = ();
         for list.get_expressions() do (expr) {
             args.push_back(handle_expression_term(expr));
         }
@@ -4326,22 +4396,29 @@ autodiff_expression_handler: type = {
         return args;
     }
 
-    handle_expression_term :(inout this, term) -> std::string = {
+    handle_expression_term :(inout this, term) -> primal_fwd_name = {
         if term.is_identifier() {
-            return term.to_string();
+            primal := term.to_string();
+            fwd    := primal + ctx*.suffix;
+
+            decl := ctx*.lookup_variable_declaration(primal);
+            if decl.is_member {
+                fwd = "this(ctx*.suffix)$." + fwd;
+            }
+            return (primal, fwd);
         }
         else if term.is_expression_list() {
             exprs := term..as_expression_list()..get_expressions();
             if exprs.ssize() != 1 {
                 term.error("Can not handle multiple expressions. (term.to_string())");
-                return "error";
+                return ("error", "");
             }
             expr := exprs[0];
             bin_expr := expr..as_assignment_expression();
 
             if bin_expr.terms_size() != 0 {
                 term.error("Can not handle assign expr inside of expression. (expr.to_string())$");
-                return "error";
+                return ("error", "");
             }
 
             ad : autodiff_expression_handler = (ctx);
@@ -4350,7 +4427,9 @@ autodiff_expression_handler: type = {
             ad.gen_declaration(t, "double"); // TODO: get type of expression
             append(ad);
 
-            return t;
+            r : primal_fwd_name = (t, t + ctx*.suffix); // TODO: Check why on return (t, t + ctx*.suffix) the primal is initialized empty. Probably because of the move(t)
+            _ = t;
+            return r;
         }
         else {
             // Nothing special. A regular expression.
@@ -4362,7 +4441,9 @@ autodiff_expression_handler: type = {
             ad.gen_declaration(t, "double"); // TODO: get type of expression
             append(ad);
 
-            return t;
+             r : primal_fwd_name = (t, t + ctx*.suffix); // TODO: Check why on return (t, t + ctx*.suffix) the primal is initialized empty. Probably because of the move(t)
+            _ = t;
+            return r;
         }
     }
 
@@ -4392,7 +4473,7 @@ autodiff_expression_handler: type = {
         object         : std::string = "";
         object_d       : std::string = "";
         function_name : std::string = "";
-        args          : std::vector<std::string> = ();
+        args          : std::vector<primal_fwd_name> = ();
 
         primary := postfix.get_primary_expression();
 
@@ -4432,9 +4513,9 @@ autodiff_expression_handler: type = {
             return;
         }
 
-        // No special handling, currently only allow direct function calls
-        if !object.empty() {
-            postfix.error("AD: Can currently only handle direct function calls and no member function calls.: (postfix.to_string())$");
+        if object.contains(".") {
+            postfix.error("AD: can not handle nested member function calls: (postfix.to_string())$");
+            return;
         }
 
         // All arguments have now been handled. Form the function call
@@ -4445,21 +4526,48 @@ autodiff_expression_handler: type = {
         }
 
         // TODO: This is untested for functions with no return value. Requires handling of out and inout parameters in functions.
+        if !object.empty() { // Prepend object call
+            diff += "(object)$.";
+        }
         diff += "(function_name)$(ctx*.suffix)$(";
+        if !object.empty() { // Add this_d argument.
+            diff += "(object_d)$, ";
+        }
         for args do (arg) {
-            diff += "(arg)$, (arg)$(ctx*.suffix)$,";
+            diff += "(arg.primal)$, (arg.fwd)$,";
         }
         diff += ");\n";
 
         if has_return {
-            functions := ctx*.lookup_function_declaration(function_name);
-            if functions.ssize() == 0 {
-                postfix.error("AD: Could not find function declaration for `(function_name)$`.\n"
-                              "    If cpp2 function: this is an alpha limitation, please declare it befor the current declaration.\n"
-                              "    If cpp function: please add a special handling for this function.");
+            functions : std::vector<meta::function_declaration> = ();
+            if !object.empty() {
+                obj_decl := ctx*.lookup_variable_declaration(object);
+                obj_decl_types := ctx*.lookup_type_declaration(obj_decl.decl);
+
+                if obj_decl_types.empty() {
+                    postfix.error("AD: Could not find type declaration for `(object)$ with type (obj_decl.decl)$`.\n"
+                              "    If cpp2 object: this is an alpha limitation, please declare it befor the current declaration.\n"
+                              "    If cpp function: please add a special handling for this member function.");
+                    return;
+                }
+                functions = ctx*.lookup_member_function_declaration(obj_decl_types[0], function_name);
+
+                ctx*.add_for_differentiation(obj_decl_types[0]); // TODO: Add more fine grained differentiation.
             }
-            else if functions.ssize() != 1 {
-                postfix.error("AD: No handling for overload resultion is currently implemented.");
+            else {
+                functions = ctx*.lookup_function_declaration(function_name);
+                if functions.ssize() == 0 {
+                    postfix.error("AD: Could not find function declaration for `(function_name)$`.\n"
+                                "    If cpp2 function: this is an alpha limitation, please declare it befor the current declaration.\n"
+                                "    If cpp function: please add a special handling for this function.");
+                    return;
+                }
+                else if functions.ssize() != 1 {
+                    postfix.error("AD: No handling for overload resultion is currently implemented.");
+                    return;
+                }
+
+                ctx*.add_for_differentiation(functions[0]);
             }
 
             ret_name : std::string = "r"; // Default for regular return.
@@ -4478,15 +4586,12 @@ autodiff_expression_handler: type = {
 
             primal_expr = "(ret_temp)$.(ret_name)$";
             fwd_expr    = "(ret_temp)$.(ret_name_d)$";
-            // TODO: check reverse order
-
-            ctx*.add_for_differentiation(functions[0]);
         }
 
         // TODO: Add function to list of functions/objects for differentiation for the no return case.
     }
 
-    handle_special_function: (inout this, object: std::string, object_d: std::string, function_name: std::string, args: std::vector<std::string>) -> bool = {
+    handle_special_function: (inout this, object: std::string, object_d: std::string, function_name: std::string, args: std::vector<primal_fwd_name>) -> bool = {
 
         r := ctx*.lookup_special_function_handling(function_name, args.ssize(), !object.empty());
 
@@ -4508,11 +4613,11 @@ autodiff_expression_handler: type = {
 
         (copy i := 1)
         for args do (arg) {
-            code_primal = string_util::replace_all(code_primal, "_a(i)$_", arg);
-            code_primal = string_util::replace_all(code_primal, "_ad(i)$_", arg + ctx*.suffix);
+            code_primal = string_util::replace_all(code_primal, "_a(i)$_", arg.primal);
+            code_primal = string_util::replace_all(code_primal, "_ad(i)$_", arg.fwd);
 
-            code_fwd = string_util::replace_all(code_fwd, "_a(i)$_", arg);
-            code_fwd = string_util::replace_all(code_fwd, "_ad(i)$_", arg + ctx*.suffix);
+            code_fwd = string_util::replace_all(code_fwd, "_a(i)$_", arg.primal);
+            code_fwd = string_util::replace_all(code_fwd, "_ad(i)$_", arg.fwd);
         }
 
         primal_expr = code_primal;
@@ -4579,9 +4684,8 @@ autodiff_expression_handler: type = {
             }
 
             var   := handle_expression_term(term.get_term());
-            var_d := var + ctx*.suffix;
-            fwd    += "(var_d)$";
-            primal += "(var)$";
+            fwd    += var.fwd;
+            primal += var.primal;
 
             first = false;
         }
@@ -4593,13 +4697,15 @@ autodiff_expression_handler: type = {
     traverse: (override inout this, binexpr: meta::multiplicative_expression) = {
         terms := binexpr.get_terms();
 
-        arg_a   := handle_expression_term(terms[0].get_term());
-        arg_a_d := arg_a + ctx*.suffix;
+        var     := handle_expression_term(terms[0].get_term());
+        arg_a   := var.primal;
+        arg_a_d := var.fwd;
 
         i : int = 1;
         while i < terms.ssize() next i += 1 {
-            arg_b   := handle_expression_term(terms[i].get_term());
-            arg_b_d := arg_b + ctx*.suffix;
+            var      = handle_expression_term(terms[i].get_term());
+            arg_b   := var.primal;
+            arg_b_d := var.fwd;
 
             op := terms[i].get_op().to_string();
 
@@ -4699,6 +4805,11 @@ autodiff_expression_handler: type = {
         if primary.is_identifier() {
             primal_expr = primary.to_string();
             fwd_expr    = add_suffix_if_not_wildcard(primal_expr);
+
+            decl := ctx*.lookup_variable_declaration(primal_expr);
+            if decl.is_member {
+                fwd_expr = "this(ctx*.suffix)$." + fwd_expr;
+            }
         }
         else if primary.is_expression_list() {
             if primary.as_expression_list().is_empty() {
@@ -4769,6 +4880,8 @@ autodiff_stmt_handler: type = {
         }
         diff += "(lhs)$(ctx*.suffix)$ : (ad_type)$(fwd_init)$;\n";
         diff += "(lhs)$   : (type)$(prim_init)$;\n";
+
+        ctx*.add_variable_declaration(lhs, type);
     }
 
 
@@ -4853,6 +4966,9 @@ autodiff_stmt_handler: type = {
             diff += "(param_decl.name())$_d_iter++";
             diff += ") do ((param_style)$ (param_decl.name())$: (param_decl.type())$) {\n";
             diff += "((param_style)$ (param_decl.name())$(ctx*.suffix)$: (param_decl.type())$ = (param_decl.name())$_d_iter*)";
+
+            ctx*.add_variable_declaration("(param_decl.name())$", "(param_decl.type())$"); // TODO: Handle loop/compound context variable declarations.
+
             pre_traverse(stmt.get_for_body());
             diff += "}\n";
         }
@@ -5008,8 +5124,20 @@ autodiff_declaration_handler: type = {
         //  a) Parameters
 
         for f.get_parameters() do (param) {
-            diff += "(param.get_declaration().name())$ : (param.get_declaration().type())$, ";
-            diff += "(param.get_declaration().name())$(ctx*.suffix)$ : (ctx*.get_ad_type(param.get_declaration().type()))$, ";
+            name : std::string = param.get_declaration().name();
+
+            if "this" ==  name{
+                ad_type := ctx*.get_ad_type(std::string(decl.name()));
+                diff += "(name)$, ";
+                diff += "(name)$(ctx*.suffix)$: (ad_type)$, ";
+            }
+            else {
+                type := param.get_declaration().type();
+                diff += "(name)$ : (type)$, ";
+                diff += "(name)$(ctx*.suffix)$ : (ctx*.get_ad_type(type))$, ";
+
+                ctx*.add_variable_declaration(name, type);
+            }
         }
 
         diff += ") -> (";
@@ -5028,8 +5156,12 @@ autodiff_declaration_handler: type = {
         }
         else {
             for f.get_returns() do (param) {
-                diff += "(param.get_declaration().name())$ : (param.get_declaration().type())$ = 0.0, ";
-                diff += "(param.get_declaration().name())$(ctx*.suffix)$ : (ctx*.get_ad_type(param.get_declaration().type()))$ = 0.0, ";
+                name := param.get_declaration().name();
+                type := param.get_declaration().type();
+                diff += "(name)$ : (param.get_declaration().type())$ = 0.0, ";
+                diff += "(name)$(ctx*.suffix)$ : (ctx*.get_ad_type(type))$ = 0.0, ";
+
+                ctx*.add_variable_declaration("(name)$", "(type)$");
             }
         }
 
@@ -5086,6 +5218,8 @@ autodiff_declaration_handler: type = {
             decl.add_member(diff);
         }
         diff = "";
+
+        ctx*.add_variable_declaration("(o.name())$", "(o.type())$", true);
     }
 
 
