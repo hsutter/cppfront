@@ -128,6 +128,15 @@ ad_test:/* @autodiff<"order=6"> @print */ type =
         return;
     }
 
+    func_outer_call:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x * func_outer(x, y);
+        return;
+    }
+
     sin_call:(
         in x: double, 
         in y: double, 
@@ -274,6 +283,17 @@ ad_test:/* @autodiff<"order=6"> @print */ type =
             {
                 r = r + t;
             }
+        return;
+    }
+
+    type_outer_use:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        t: type_outer = ();
+        t.a = x;
+        r = t.a + y;
         return;
     }
 
@@ -493,6 +513,24 @@ ad_test:/* @autodiff<"order=6"> @print */ type =
         ) = 
     {
         temp_1: _ = func_d(x, x_d, y, y_d);
+        temp_2_d: cpp2::taylor<double, 6> = temp_1.ret_d;
+        temp_2: double = temp_1.ret;
+        r_d = x_d.mul(temp_2_d, x, temp_2);
+        r = x * temp_2;
+        return;
+    }
+
+    func_outer_call_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        temp_1: _ = func_outer_d(x, x_d, y, y_d);
         temp_2_d: cpp2::taylor<double, 6> = temp_1.ret_d;
         temp_2: double = temp_1.ret;
         r_d = x_d.mul(temp_2_d, x, temp_2);
@@ -749,6 +787,27 @@ ad_test:/* @autodiff<"order=6"> @print */ type =
                     r = r + t;
                 }
             }
+        return;
+    }
+
+    type_outer_use_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        t_d: type_outer_d = ();
+        t: type_outer = ();
+        t_d.a_d = x_d;
+        t.a = x;
+        temp_1_d: cpp2::taylor<double, 6> = t_d.a_d;
+        temp_1: double = t.a;
+        r_d = temp_1_d + y_d;
+        r = temp_1 + y;
         return;
     }
 }

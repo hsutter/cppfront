@@ -12,6 +12,8 @@ namespace ad_name {
 #line 7 "pure2-autodiff.cpp2"
 class type_outer;
   
+  class type_outer_d;
+
 
 #line 11 "pure2-autodiff.cpp2"
 class ad_test;
@@ -46,6 +48,13 @@ struct func_outer_d_ret { double ret; double ret_d; };
 
 
 [[nodiscard]] auto func_outer_d(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> func_outer_d_ret;
+class type_outer_d {
+public: double a_d {}; 
+ public: type_outer_d() = default;
+ public: type_outer_d(type_outer_d const&) = delete; /* No 'that' constructor, suppress copy */
+ public: auto operator=(type_outer_d const&) -> void = delete;
+
+};
 
 #line 11 "pure2-autodiff.cpp2"
 class ad_test {
@@ -358,6 +367,8 @@ return std::move(ret.value()); }
 ret = x + y;
 return  { std::move(ret), std::move(ret_d) }; 
 }
+
+
 
 #line 13 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::add_1(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> add_1_ret{
@@ -913,13 +924,13 @@ auto const& t_d{*cpp2::impl::assert_not_null(t_d_iter)};
     [[nodiscard]] auto ad_test::type_outer_use_d(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> type_outer_use_d_ret{
                                                                                                                             double r {0.0};
                                                                                                                             double r_d {0.0};
-type_outer t_d {}; 
+type_outer_d t_d {}; 
 
     type_outer t {}; 
-    t_d.a = x_d;
+    t_d.a_d = x_d;
     t.a = x;
 
-    double temp_1_d {cpp2::move(t_d).a}; 
+    double temp_1_d {cpp2::move(t_d).a_d}; 
 
     double temp_1 {cpp2::move(t).a}; 
     r_d = cpp2::move(temp_1_d) + y_d;

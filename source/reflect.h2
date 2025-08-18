@@ -4095,15 +4095,22 @@ autodiff_context: type = {
         return "temp_(temporary_count)$";
     }
 
-    // TODO: Have the proper type declaration here.
     get_ad_type: (inout this, type: std::string) -> std::string = {
+        type_d := type;
 
-        // TODO: Lookup if type is a known type and if it has AD values.
-        if order == 1 {
-            return type; // Same type for now for order 1
+        if "double" != type {
+            type_decls := lookup_type_declaration(type);
+            if !type_decls.empty() {
+                // We found a cpp2 type declaration, mark it for differentiation.
+                add_for_differentiation(type_decls[0]);
+
+                // Add the AD suffix to the type
+                type_d += suffix;
+            }
         }
 
-        return string_util::replace_all(type, "double", ad_type);
+        // Replace with AD type for the AD order.
+        return string_util::replace_all(type_d, "double", ad_type);
     }
 
     lookup_declaration: (inout this, decl_name: std::string) -> (r : std::vector<meta::declaration> = ()) = {
@@ -4135,6 +4142,16 @@ autodiff_context: type = {
         for r_all do (cur) {
             if cur.is_function() {
                 r.push_back(cur.as_function());
+            }
+        }
+    }
+
+    lookup_type_declaration: (inout this, decl_name: std::string) -> (r : std::vector<meta::type_declaration> = ()) = {
+        r_all := lookup_declaration(decl_name);
+
+        for r_all do (cur) {
+            if cur.is_type() {
+                r.push_back(cur.as_type());
             }
         }
     }
@@ -4398,7 +4415,7 @@ autodiff_expression_handler: type = {
                 }
                 else {
                     object   += "." + name;
-                    object_d += "." + name;
+                    object_d += "." + name + ctx*.suffix;
                 }
             }
             else if term.get_op() == "(" {
@@ -4663,17 +4680,17 @@ autodiff_expression_handler: type = {
         else {
             // Member access
 
-            primary    :             = postfix.get_primary_expression();
-            obj_name   : std::string = primary.to_string();
-            obj_name_d : std::string = obj_name + ctx*.suffix;
-            obj_access : std::string = "";
+            primary      :             = postfix.get_primary_expression();
+            obj_access   : std::string = primary.to_string();
+            obj_access_d : std::string = obj_access + ctx*.suffix;
 
             for terms do (term)  {
-                obj_access += term.get_op() + term.get_id_expression().to_string();
+                obj_access   += term.get_op() + term.get_id_expression().to_string();
+                obj_access_d += term.get_op() + term.get_id_expression().to_string() + ctx*.suffix;
             }
 
-            primal_expr = "(obj_name)$(obj_access)$";
-            fwd_expr    = "(obj_name_d)$(obj_access)$";
+            primal_expr = obj_access;
+            fwd_expr    = obj_access_d;
         }
     }
 
@@ -4730,7 +4747,7 @@ autodiff_stmt_handler: type = {
 
     traverse: (override inout this, o: meta::object_declaration) = {
         lhs  : std::string = o.name();
-        type :             =  o.type();
+        type :             = o.type();
 
         ad_type : = ctx*.get_ad_type(type);
 
@@ -4871,39 +4888,39 @@ autodiff_stmt_handler: type = {
     }
 
     traverse: (override inout this, binexpr: meta::logical_or_expression) = {
-        binexpr.error( "AD: Logical or expressions are not yet handled as standalone statements.." );
+        binexpr.error( "AD: Logical or expressions are not yet handled as standalone statements." );
     }
 
     traverse: (override inout this, binexpr: meta::logical_and_expression) = {
-        binexpr.error( "AD: Logical and expressions are not yet handled as standalone statements.." );
+        binexpr.error( "AD: Logical and expressions are not yet handled as standalone statements." );
     }
 
     traverse: (override inout this, binexpr: meta::bit_or_expression) = {
-        binexpr.error( "AD: Bit or expressions are not yet handled as standalone statements.." );
+        binexpr.error( "AD: Bit or expressions are not yet handled as standalone statements." );
     }
 
     traverse: (override inout this, binexpr: meta::bit_xor_expression) = {
-        binexpr.error( "AD: Bit xor expressions are not yet handled as standalone statements.." );
+        binexpr.error( "AD: Bit xor expressions are not yet handled as standalone statements." );
     }
 
     traverse: (override inout this, binexpr: meta::bit_and_expression) = {
-        binexpr.error( "AD: Bit and expressions are not yet handled as standalone statements.." );
+        binexpr.error( "AD: Bit and expressions are not yet handled as standalone statements." );
     }
 
     traverse: (override inout this, binexpr: meta::equality_expression) = {
-        binexpr.error( "AD: Equality or expressions are not yet handled as standalone statements.." );
+        binexpr.error( "AD: Equality or expressions are not yet handled as standalone statements." );
     }
 
     traverse: (override inout this, binexpr: meta::relational_expression) = {
-        binexpr.error( "AD: Relational expressions are not yet handled as standalone statements.." );
+        binexpr.error( "AD: Relational expressions are not yet handled as standalone statements." );
     }
 
     traverse: (override inout this, binexpr: meta::compare_expression) = {
-        binexpr.error( "AD: Compare or expressions are not yet handled as standalone statements.." );
+        binexpr.error( "AD: Compare or expressions are not yet handled as standalone statements." );
     }
 
     traverse: (override inout this, binexpr: meta::shift_expression) = {
-        binexpr.error( "AD: Shift or expressions are not yet handled as standalone statements.." );
+        binexpr.error( "AD: Shift or expressions are not yet handled as standalone statements." );
     }
 
     traverse: (override inout this, binexpr: meta::additive_expression) = {
@@ -5079,7 +5096,6 @@ autodiff_declaration_handler: type = {
 
         for t.get_members()
         do  (m)
-        if  m.is_function()
         {
             ad.pre_traverse(m);
         }
@@ -5090,6 +5106,9 @@ autodiff_declaration_handler: type = {
             diff = "(t.name())$(ctx*.suffix)$ : type = {\n";
             diff += "(ad.diff_ad_type)$";
             diff += "}";
+
+            decl.add_member(diff);
+            diff = "";
         }
     }
 
