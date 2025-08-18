@@ -4094,6 +4094,7 @@ autodiff_context: type = {
     // TODO: Have the proper type declaration here.
     get_ad_type: (inout this, type: std::string) -> std::string = {
 
+        // TODO: Lookup if type is a known type and if it has AD values.
         if order == 1 {
             return type; // Same type for now for order 1
         }
@@ -4257,6 +4258,8 @@ autodiff_expression_handler: type = {
     public declare_p: std::string;
     public declare_d: std::string;
 
+    public primal_gen: bool = true;
+
     operator=: (out this, ctx_: *autodiff_context, lhs_: std::string, declare_p_: std::string = "", declare_d_: std::string = "") = {
         autodiff_handler_base = (ctx_);
         lhs = lhs_;
@@ -4278,11 +4281,11 @@ autodiff_expression_handler: type = {
         fwd_str    := "(lhs_d)$   (declare_d)$ = (fwd)$;\n";
         primal_str := "(lhs)$   (declare_p)$ = (prim)$;\n";
 
-        if primal_first {
+        if primal_gen && primal_first {
             diff += primal_str;
         }
         diff += fwd_str;
-        if !primal_first {
+        if primal_gen && !primal_first {
             diff += primal_str;
         }
     }
@@ -4606,7 +4609,9 @@ autodiff_expression_handler: type = {
                 t_d := t + ctx*.suffix;
                 // TODO: Get type of expression, in order to define the type of t.
                 diff += "(t_d)$ := (fwd)$;";
-                diff += "(t)$   := (primal)$;";
+                if primal_gen {
+                    diff += "(t)$   := (primal)$;";
+                }
 
                 arg_a   = t;
                 arg_a_d = t_d;
@@ -4627,7 +4632,7 @@ autodiff_expression_handler: type = {
     {
         terms := postfix.get_terms();
 
-        is_func  := true;
+        is_func  := false;
 
         (copy i := 0)
         for terms next i += 1 do (term)  {
@@ -4635,19 +4640,31 @@ autodiff_expression_handler: type = {
                 continue;
             }
             if term.get_op() == "(" && i + 1 == terms.ssize() { // Function operator has to be the last
+                is_func = true;
                 continue;
             }
-
-            is_func = false;
+            else {
+                postfix.error("AD: Unknown operator for postfix expression. op: (term.get_op())$ expr: (postfix)$");
+            }
         }
 
-        // Check for function call, everything else is not handled.
-        if !(is_func) {
-            postfix.error( "AD: Postfix expressions are only handled for function calls, or member function calls. Do not know how to handle: (postfix.to_string())$" );
-            return;
+        if is_func {
+            handle_function_call(postfix, true);
         }
+        else {
+            // Member access
 
-        handle_function_call(postfix, true);
+            primary    :             = postfix.get_primary_expression();
+            obj_name   : std::string = primary.to_string();
+            obj_name_d : std::string = obj_name + ctx*.suffix;
+            obj_access : std::string = "";
+
+            for terms do (term)  {
+                obj_access += term.get_op() + term.get_id_expression().to_string();
+            }
+
+            gen_lhs_assignment("(obj_name)$(obj_access)$", "(obj_name_d)$(obj_access)$");
+        }
     }
 
     traverse: (override inout this, primary: meta::primary_expression) =
@@ -4911,7 +4928,7 @@ autodiff_stmt_handler: type = {
     {
         terms := postfix.get_terms();
 
-        is_func  := true;
+        is_func  := false;
 
         (copy i := 0)
         for terms next i += 1 do (term)  {
@@ -4919,10 +4936,11 @@ autodiff_stmt_handler: type = {
                 continue;
             }
             if term.get_op() == "(" && i + 1 == terms.ssize() { // Function operator has to be the last
+                is_func = true;
                 continue;
+            } else {
+                postfix.error("AD: Unknown operator for standalone postfix expression. op: (term.get_op())$ expr: (postfix)$");
             }
-
-            is_func = false;
         }
 
         // Check for function call, everything else is not handled.
@@ -4949,6 +4967,9 @@ autodiff_declaration_handler: type = {
     base: type == simple_traverser;
 
     decl: meta::type_or_namespace_declaration;
+
+    is_type_context: bool        = false;
+    diff_ad_type   : std::string = "";
 
     operator=: (out this, ctx_: *autodiff_context, decl_: meta::type_or_namespace_declaration) = {
         autodiff_handler_base = (ctx_);
@@ -5025,13 +5046,35 @@ autodiff_declaration_handler: type = {
 
 
     traverse: (override inout this, o: meta::object_declaration) = {
-        o.error("AD: Do not know how to handle object_declaration: (o.to_string())$");
+        ad_name : std::string = "(o.name())$(ctx*.suffix)$";
+        ad_type : std::string = ctx*.get_ad_type(o.type());
+
+
+        if o.has_initializer() {
+            ad: autodiff_expression_handler = (ctx, "(o.name())$", ": " + o.type(), ": " + ad_type);
+            ad.primal_gen = false;
+            ad.pre_traverse(o.get_initializer());
+            append(ad);
+        }
+        else {
+            diff = "(ad_name)$ : (ad_type)$;";
+        }
+
+        if is_type_context {
+
+            diff_ad_type += "public (diff)$\n";
+        }
+        else {
+            decl.add_member(diff);
+        }
+        diff = "";
     }
 
 
     traverse: (override inout this, t: meta::type_declaration) = {
         ctx*.push_stack(t);
         ad: autodiff_declaration_handler = (ctx, t);
+        ad.is_type_context = true;
 
         for t.get_members()
         do  (m)
@@ -5041,6 +5084,12 @@ autodiff_declaration_handler: type = {
         }
 
         ctx*.pop_stack();
+
+        if !ad.diff_ad_type.empty() {
+            diff = "(t.name())$(ctx*.suffix)$ : type = {\n";
+            diff += "(ad.diff_ad_type)$";
+            diff += "}";
+        }
     }
 
 
