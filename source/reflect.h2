@@ -4681,7 +4681,7 @@ autodiff_expression_handler: type = {
     {
         if primary.is_identifier() {
             primal_expr = primary.to_string();
-            fwd_expr    = primary.to_string() + ctx*.suffix;
+            fwd_expr    = add_suffix_if_not_wildcard(primal_expr);
         }
         else if primary.is_expression_list() {
             if primary.as_expression_list().is_empty() {
@@ -4858,7 +4858,9 @@ autodiff_stmt_handler: type = {
         {
             //  If this is not an assignment to a parameter or return object, skip it
             lhs_rhs := expr.get_lhs_rhs_if_simple_assignment();
-            lhs     := lhs_rhs.lhs.get_first_token_ignoring_this();
+
+            h_lhs: autodiff_expression_handler = (ctx);
+            h_lhs.pre_traverse(lhs_rhs.lhs);
 
             assignment := expr.as_assignment_expression();
 
@@ -4873,7 +4875,7 @@ autodiff_stmt_handler: type = {
 
             h: autodiff_expression_handler = (ctx);
             h.pre_traverse(assignment_terms[1].get_term());
-            h.gen_assignment(lhs.to_string());
+            h.gen_assignment(h_lhs.primal_expr, h_lhs.fwd_expr);
             append(h);
         }
         else {

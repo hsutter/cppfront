@@ -4,6 +4,10 @@ func_outer: (x: double, y: double) -> (ret: double) = {
   ret = x + y;
 }
 
+type_outer: type = {
+  public a: double = 0.0;
+}
+
 ad_test: @autodiff @print type = {
 
     add_1: (x: double, y: double) -> (r: double) = {
@@ -159,6 +163,13 @@ ad_test: @autodiff @print type = {
         r = r + t;
       }
     }
+
+    type_outer_use: (x: double, y: double) -> (r: double) = {
+      t : type_outer = ();
+      t.a = x;
+
+      r = t.a + y;
+    }
 }
 }
 
@@ -205,6 +216,7 @@ main: () = {
     write_output("while loop", x, x_d, y, y_d, ad_name::ad_test::while_loop_d(x, x_d, y, y_d));
     write_output("do while loop", x, x_d, y, y_d, ad_name::ad_test::do_while_loop_d(x, x_d, y, y_d));
     write_output("for loop", x, x_d, y, y_d, ad_name::ad_test::for_loop_d(x, x_d, y, y_d));
+    write_output("tye_outer.a + y", x, x_d, y, y_d, ad_name::ad_test::type_outer_use_d(x, x_d, y, y_d));
 
     r_twice := ad_test_twice::mul_1_d_d2(x, x_d, x_d, 0.0);
     std::cout << "2nd order diff of x*x at (x)$ = (r_twice.r_d_d2)$" << std::endl;
