@@ -4854,38 +4854,20 @@ autodiff_stmt_handler: type = {
     }
 
     traverse : (override inout this, expr: meta::expression) = {
-        if expr.is_simple_assignment()
-        {
-            //  If this is not an assignment to a parameter or return object, skip it
-            lhs_rhs := expr.get_lhs_rhs_if_simple_assignment();
-
-            h_lhs: autodiff_expression_handler = (ctx);
-            h_lhs.pre_traverse(lhs_rhs.lhs);
-
-            assignment := expr.as_assignment_expression();
-
-            //  Cpp2 doesn't allow chained assignment, so rhs must be a single logical_or_expression
-            assignment_terms := assignment.get_terms();
-            if assignment_terms.ssize() != 2 {
-                mf.error( "an assignment must have exactly one right-hand side expression" );
-            }
-
-            //  Now we handle sequences of binary "expr1 @ expr2 @ ..." where each
-            //  @ is one of a list of operators at the same grammar precedence
-
-            h: autodiff_expression_handler = (ctx);
-            h.pre_traverse(assignment_terms[1].get_term());
-            h.gen_assignment(h_lhs.primal_expr, h_lhs.fwd_expr);
-            append(h);
-        }
-        else {
-            base::traverse(expr);
-        }
+        base::traverse(expr);
     }
 
     traverse: (override inout this, binexpr: meta::assignment_expression) = {
-        // TDOO: Move meta::expression logic here
-        binexpr.error( "AD: Assign expressions are not yet handled as standalone statements.." );
+        h_lhs: autodiff_expression_handler = (ctx);
+        h_lhs.pre_traverse(binexpr.get_lhs_postfix_expression());
+
+        //  Cpp2 doesn't allow chained assignment, so rhs must be a single logical_or_expression
+        assignment_terms := binexpr.get_terms();
+
+        h: autodiff_expression_handler = (ctx);
+        h.pre_traverse(assignment_terms[1].get_term());
+        h.gen_assignment(h_lhs.primal_expr, h_lhs.fwd_expr);
+        append(h);
     }
 
     traverse: (override inout this, binexpr: meta::logical_or_expression) = {
