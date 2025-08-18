@@ -4757,7 +4757,18 @@ autodiff_expression_handler: type = {
 
     traverse: (override inout this, prefix: meta::prefix_expression) =
     {
-        prefix.error( "AD: Prefix expressions are not yet handled." );
+        ops := prefix.get_ops();
+
+        if ops.ssize() != 1 {
+            prefix.error( "AD: Can only handle one prefix operation. Expression is: (prefix.to_string())$" );
+        }
+
+        ad: autodiff_expression_handler = (ctx);
+        ad.pre_traverse(prefix.get_postfix_expression());
+        append(ad);
+
+        primal_expr = ops[0] + ad.primal_expr;
+        fwd_expr    = ops[0] + ad.fwd_expr;
     }
 
     traverse: (override inout this, postfix: meta::postfix_expression) =

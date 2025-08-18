@@ -62,6 +62,14 @@ ad_test: @autodiff @print type = {
         r = x + x * y;
     }
 
+    prefix_add: (x: double, y: double) -> (r: double) = {
+        r = +x + y;
+    }
+
+    prefix_sub: (x: double, y: double) -> (r: double) = {
+        r = -x + y;
+    }
+
     func: (x: double, y: double) -> (ret: double) = {
       ret = x + y;
     }
@@ -213,6 +221,8 @@ main: () = {
     write_output("x * y / x", x, x_d, y, y_d, ad_name::ad_test::mul_div_2_d(x, x_d, y, y_d));
     write_output("x * (x + y)", x, x_d, y, y_d, ad_name::ad_test::mul_add_d(x, x_d, y, y_d));
     write_output("x + x * y", x, x_d, y, y_d, ad_name::ad_test::add_mul_d(x, x_d, y, y_d));
+    write_output("+x + y)", x, x_d, y, y_d, ad_name::ad_test::prefix_add_d(x, x_d, y, y_d));
+    write_output("-x + y)", x, x_d, y, y_d, ad_name::ad_test::prefix_sub_d(x, x_d, y, y_d));
     write_output("x * func(x, y)", x, x_d, y, y_d, ad_name::ad_test::func_call_d(x, x_d, y, y_d));
     write_output("x * func_outer(x, y)", x, x_d, y, y_d, ad_name::ad_test::func_outer_call_d(x, x_d, y, y_d));
     write_output("sin(x - y)", x, x_d, y, y_d, ad_name::ad_test::sin_call_d(x, x_d, y, y_d));

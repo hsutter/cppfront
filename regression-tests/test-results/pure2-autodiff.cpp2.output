@@ -110,6 +110,24 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 
+    prefix_add:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = +x + y;
+        return;
+    }
+
+    prefix_sub:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = -x + y;
+        return;
+    }
+
     func:(
         in x: double, 
         in y: double, 
@@ -495,6 +513,40 @@ ad_test:/* @autodiff @print */ type =
         temp_1: double = x * y;
         r_d = x_d + temp_1_d;
         r = x + temp_1;
+        return;
+    }
+
+    prefix_add_d:(
+        in x: double, 
+        in x_d: double, 
+        in y: double, 
+        in y_d: double, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: double = 0.0, 
+        ) = 
+    {
+        temp_1_d: double = +x_d;
+        temp_1: double = +x;
+        r_d = temp_1_d + y_d;
+        r = temp_1 + y;
+        return;
+    }
+
+    prefix_sub_d:(
+        in x: double, 
+        in x_d: double, 
+        in y: double, 
+        in y_d: double, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: double = 0.0, 
+        ) = 
+    {
+        temp_1_d: double = -x_d;
+        temp_1: double = -x;
+        r_d = temp_1_d + y_d;
+        r = temp_1 + y;
         return;
     }
 

@@ -63,6 +63,23 @@ taylor: <R, dim: int> type  = {
         return sub(o, 0.0, 0.0); // Primal values are not required.
     }
 
+    // Overload for simple handling of prefix +.
+    operator+: (this) -> taylor = {
+        return this;
+    }
+
+    // Overload for simple handling of prefix -.
+    operator-: (this) -> taylor = {
+        r: taylor = ();
+
+        (copy k:= 1)
+        while k <= dim next k += 1 {
+            r.v[k - 1] = -v[k - 1];
+        }
+
+        return r;
+    }
+
     add: (this, o: taylor, v0: R, o0: R) -> taylor = {
         r: taylor = ();
 
