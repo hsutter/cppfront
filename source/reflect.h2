@@ -4332,17 +4332,56 @@ autodiff_context: type = {
     }
 }
 
-autodiff_handler_base: type = {
+autodiff_diff_code: type = {
     public ctx: *autodiff_context;
 
-    public diff : std::string = "";
+    public fwd: std::string = "";
+    public rws: std::string = "";
 
-    operator=: (out this, ctx_: *autodiff_context) = {
+    operator=:(out this, ctx_: *autodiff_context) = {
         ctx = ctx_;
     }
 
+    // Temporary: TODO: remove when everything has been adapted to primal, fwd, rws pushes.
+    operator=:(inout this, v: std::string) = {
+        ctx = ctx;
+        fwd = v;
+    }
+
+    // Temporary: TODO: remove when everything has been adapted to primal, fwd, rws pushes.
+    operator+=: (inout this, v: std::string) = {
+        fwd += v;
+    }
+
+    // Temporary: TODO: remove when everything has been adapted to primal, fwd, rws pushes.
+    operator+=: (inout this, v: autodiff_diff_code) = {
+        fwd += v.fwd;
+    }
+
+    // Temporary: TODO: remove when everything has been adapted to primal, fwd, rws pushes.
+    empty: (this) -> bool = {
+        return fwd.empty();
+    }
+}
+
+// // Temporary: TODO: remove when everything has been adapted to primal, fwd, rws pushes.
+// to_string: (v: autodiff_diff_code) -> std::string = {
+//     return v.fwd;
+// }
+
+autodiff_handler_base: type = {
+    public ctx: *autodiff_context;
+
+    public diff : autodiff_diff_code;
+
+    operator=: (out this, ctx_: *autodiff_context) = {
+        ctx = ctx_;
+        diff = (ctx);
+    }
+
+    // Temporary: TODO: remove when everything has been adapted to primal, fwd, rws pushes.
     append: (inout this, in_ref o: autodiff_handler_base) = {
-        diff += o.diff;
+        diff += o.diff.fwd;
     }
 }
 
@@ -5208,7 +5247,7 @@ autodiff_declaration_handler: type = {
 
         ctx*.leave_function();
 
-        decl.add_member( diff );
+        decl.add_member( diff.fwd );
         diff = "";
 
         ctx*.add_as_differentiated(f);
@@ -5232,10 +5271,10 @@ autodiff_declaration_handler: type = {
 
         if is_type_context {
 
-            diff_ad_type += "public (diff)$\n";
+            diff_ad_type += "public (diff.fwd)$\n";
         }
         else {
-            decl.add_member(diff);
+            decl.add_member(diff.fwd);
         }
         diff = "";
 
@@ -5261,7 +5300,7 @@ autodiff_declaration_handler: type = {
             diff += "(ad.diff_ad_type)$";
             diff += "}";
 
-            decl.add_member(diff);
+            decl.add_member(diff.fwd);
             diff = "";
         }
     }
