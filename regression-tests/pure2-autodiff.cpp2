@@ -190,6 +190,13 @@ ad_test: @autodiff @print type = {
       r = t.add(y);
     }
 }
+
+ad_test_reverse: @autodiff<"reverse"> @print type = {
+
+    add_1: (x: double, y: double) -> (r: double) = {
+        r = x + y;
+    }
+}
 }
 
 ad_test_twice: @autodiff @autodiff<"suffix=_d2"> @print type = {
@@ -200,6 +207,12 @@ ad_test_twice: @autodiff @autodiff<"suffix=_d2"> @print type = {
 
 write_output: (func: std::string, x: double, x_d: double, y: double, y_d: double, ret) = {
     std::cout << "diff((func)$) at (x = (x)$, x_d = (x_d)$, y = (y)$, y_d = (y_d)$) = (r = (ret.r)$, r_d = (ret.r_d)$)" << std::endl;
+}
+
+write_output_reverse: (func: std::string, x: double, inout x_b: double, y: double, inout y_b: double, in r_b: double, ret) = {
+    std::cout << "diff((func)$) at (x = (x)$, y = (y)$, r_b = (r_b)$) = (r = (ret)$, x_b = (x_b)$, y_b = (y_b)$)" << std::endl;
+    x_b = 0.0;
+    y_b = 0.0;
 }
 
 main: () = {
@@ -239,6 +252,12 @@ main: () = {
     write_output("for loop", x, x_d, y, y_d, ad_name::ad_test::for_loop_d(x, x_d, y, y_d));
     write_output("tye_outer.a + y", x, x_d, y, y_d, ad_name::ad_test::type_outer_use_d(x, x_d, y, y_d));
     write_output("type_outer.add(y)", x, x_d, y, y_d, ad_name::ad_test::type_outer_call_d(x, x_d, y, y_d));
+
+    x_b: double = 0.0;
+    y_b: double = 0.0;
+    w_b: double = 1.0;
+
+    write_output_reverse("x + y", x, y, w_b, ad_name::ad_test_reverse::add_1_b(x, x_b, y, y_b, w_b));
 
     r_twice := ad_test_twice::mul_1_d_d2(x, x_d, x_d, 0.0);
     std::cout << "2nd order diff of x*x at (x)$ = (r_twice.r_d_d2)$" << std::endl;

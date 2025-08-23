@@ -8,6 +8,7 @@ taylor: <R, dim: int> type  = {
 
     operator=:(out this) = {}
     operator=:(out this, d1: R) = {
+        v = ();
         v[0] = d1;
     }
     operator=:(out this, that) = {}

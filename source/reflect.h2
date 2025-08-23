@@ -4133,7 +4133,9 @@ autodiff_context: type = {
         _ = declaration_stack.push_back(autodiff_declaration_stack_item(full_name, t));
     }
 
-    is_taylor: (this) = order != 1;
+    is_forward: (this) = !reverse || (reverse && order != 1);
+    is_reverse: (this) = reverse;
+    is_taylor : (this) = order != 1;
 
     gen_temporary : (inout this) -> std::string = {
         temporary_count += 1;
@@ -4156,6 +4158,52 @@ autodiff_context: type = {
 
         // Replace with AD type for the AD order.
         return string_util::replace_all(type_d, "double", fwd_ad_type);
+    }
+
+    get_rws_ad_type: (inout this, type: std::string) -> std::string = {
+        type_d := type;
+
+        if "double" != type {
+            type_decls := lookup_type_declaration(type);
+            if !type_decls.empty() {
+                // We found a cpp2 type declaration, mark it for differentiation.
+                add_for_differentiation(type_decls[0]);
+
+                // Add the AD suffix to the type
+                type_d += rws_suffix;
+            }
+        }
+
+        // Replace with AD type for the AD order.
+        return string_util::replace_all(type_d, "double", rws_ad_type);
+    }
+
+    get_reverse_passing_style: (this, p: passing_style) -> passing_style = {
+        // TODO: inspect does not work here: error: error: no matching function for call to ‘is<cpp2::passing_style::in>(const cpp2::passing_style&)’
+        // return inspect p -> passing_style  {
+        //     is passing_style::in          = passing_style::inout;
+        //     is passing_style::in_ref      = passing_style::inout;
+        //     is passing_style::copy        = passing_style::inout;
+        //     is passing_style::inout       = passing_style::inout;
+        //     is passing_style::out         = passing_style::inout;
+        //     is passing_style::move        = passing_style::inout;
+        //     is passing_style::forward     = passing_style::inout;
+        //     is passing_style::forward_ref = passing_style::inout;
+        //     is _                          = passing_style::inout;
+        // };
+        if p == passing_style::in          { return  passing_style::inout; }
+        if p == passing_style::in_ref      { return  passing_style::inout; }
+        if p == passing_style::copy        { return  passing_style::inout; }
+        if p == passing_style::inout       { return  passing_style::inout; }
+        if p == passing_style::out         { return  passing_style::inout; }
+        if p == passing_style::move        { return  passing_style::inout; }
+        if p == passing_style::forward     { return  passing_style::inout; }
+        if p == passing_style::forward_ref { return  passing_style::inout; }
+
+
+        declaration_stack.back().decl.error("AD: Do not know how to handle passing style:(p)$");
+
+        return  passing_style::inout;
     }
 
     lookup_declaration: (inout this, decl_name: std::string) -> (r : std::vector<meta::declaration> = ()) = {
@@ -4340,6 +4388,14 @@ autodiff_diff_code: type = {
 
     operator=:(out this, ctx_: *autodiff_context) = {
         ctx = ctx_;
+    }
+
+    add_forward: (inout this, v: std::string) = { if ctx*.is_forward() { fwd += v; }}
+    add_reverse: (inout this, v: std::string) = { if ctx*.is_reverse() { rws += v; }}
+
+    reset: (inout this) = {
+        fwd = "";
+        rws = "";
     }
 
     // Temporary: TODO: remove when everything has been adapted to primal, fwd, rws pushes.
@@ -5177,54 +5233,113 @@ autodiff_declaration_handler: type = {
     traverse: (override inout this, f: meta::function_declaration) = {
         ctx*.enter_function();
 
-        diff = "    (f.name())$(ctx*.fwd_suffix)$: (";
+        diff.add_forward("    (f.name())$(ctx*.fwd_suffix)$: (");
+        diff.add_reverse("    (f.name())$(ctx*.rws_suffix)$: (");
 
         //  1. Generate the modified signature
         //  a) Parameters
 
         for f.get_parameters() do (param) {
-            name : std::string = param.get_declaration().name();
+            name: std::string = param.get_declaration().name();
 
-            if "this" ==  name{
+            fwd_pass_style := to_string_view(param.get_passing_style());
+            rws_pass_style := to_string_view(ctx*.get_reverse_passing_style(param.get_passing_style()));
+
+            if "this" ==  name {
                 fwd_ad_type := ctx*.get_fwd_ad_type(std::string(decl.name()));
-                diff += "(name)$, ";
-                diff += "(name)$(ctx*.fwd_suffix)$: (fwd_ad_type)$, ";
+                rws_ad_type := ctx*.get_rws_ad_type(std::string(decl.name()));
+
+                diff.add_forward("(fwd_pass_style)$ (name)$, ");
+                diff.add_forward("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$: (fwd_ad_type)$, ");
+
+                diff.add_reverse("(fwd_pass_style)$ (name)$, ");
+                if ctx*.is_taylor() { // Add forward type for higher order
+                    diff.add_reverse("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$: (fwd_ad_type)$, ");
+                }
+                diff.add_reverse("(rws_pass_style)$ (name)$(ctx*.rws_suffix)$: (rws_ad_type)$, ");
             }
             else {
                 type := param.get_declaration().type();
-                diff += "(name)$ : (type)$, ";
-                diff += "(name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$, ";
+                diff.add_forward("(fwd_pass_style)$ (name)$ : (type)$, ");
+                diff.add_forward("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$, ");
+
+                diff.add_reverse("(fwd_pass_style)$ (name)$ : (type)$, ");
+                if ctx*.is_taylor() {
+                    diff.add_reverse("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$, ");
+                }
+                diff.add_reverse("(rws_pass_style)$ (name)$(ctx*.rws_suffix)$ : (ctx*.get_rws_ad_type(type))$, ");
+
 
                 ctx*.add_variable_declaration(name, type);
             }
         }
 
-        diff += ") -> (";
-
-        //  b) Returns
+        //  b) Add arguments for returns that become inputs
 
         if f.has_non_void_return_type() && f.get_returns().empty() { // TODO: has_non_void_return_type is true for return lists: (r: double) bug/feature?
             // TODO: check if name "r" is available. (Also needs inspection of functions at call sides.)
             if f.has_deduced_return_type() {
                 // TODO: Take care of initialization order error.
-                diff += "r, r(ctx*.fwd_suffix)$, ";
+                diff.add_reverse("inout r(ctx*.rws_suffix)$, ");
             }
             else {
-                diff += "r: (f.get_unnamed_return_type())$ = (), r(ctx*.fwd_suffix)$: (ctx*.get_fwd_ad_type(f.get_unnamed_return_type()))$ = (), ";
+                diff.add_reverse("inout r(ctx*.rws_suffix)$: (ctx*.get_rws_ad_type(f.get_unnamed_return_type()))$, ");
             }
         }
         else {
             for f.get_returns() do (param) {
                 name := param.get_declaration().name();
                 type := param.get_declaration().type();
-                diff += "(name)$ : (param.get_declaration().type())$ = 0.0, ";
-                diff += "(name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$ = 0.0, ";
+
+                rws_pass_style := to_string_view(ctx*.get_reverse_passing_style(param.get_passing_style()));
+                diff.add_reverse("(rws_pass_style)$ (name)$(ctx*.rws_suffix)$ : (ctx*.get_rws_ad_type(type))$ , ");
+            }
+        }
+
+        diff.add_forward(") -> (");
+        diff.add_reverse(") -> (");
+
+        //  c) Returns
+
+        if f.has_non_void_return_type() && f.get_returns().empty() { // TODO: has_non_void_return_type is true for return lists: (r: double) bug/feature?
+            // TODO: check if name "r" is available. (Also needs inspection of functions at call sides.)
+            if f.has_deduced_return_type() {
+                // TODO: Take care of initialization order error.
+                diff.add_forward("r, r(ctx*.fwd_suffix)$, ");
+                diff.add_reverse("r, ");
+                if ctx*.is_taylor() {
+                    diff.add_reverse("r(ctx*.fwd_suffix)$,");
+                }
+            }
+            else {
+                diff.add_forward("r: (f.get_unnamed_return_type())$ = (), r(ctx*.fwd_suffix)$: (ctx*.get_fwd_ad_type(f.get_unnamed_return_type()))$ = (), ");
+                diff.add_reverse("r: (f.get_unnamed_return_type())$ = (), ");
+                if ctx*.is_taylor() {
+                    diff.add_reverse("r(ctx*.fwd_suffix)$: (ctx*.get_fwd_ad_type(f.get_unnamed_return_type()))$ = (), ");
+                }
+            }
+        }
+        else {
+            for f.get_returns() do (param) {
+                name := param.get_declaration().name();
+                type := param.get_declaration().type();
+
+                fwd_pass_style := to_string_view(param.get_passing_style());
+                rws_pass_style := to_string_view(ctx*.get_reverse_passing_style(param.get_passing_style()));
+                diff.add_forward("(fwd_pass_style)$ (name)$ : (param.get_declaration().type())$ = 0.0, ");
+                diff.add_forward("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$ = 0.0, ");
+
+                diff.add_reverse("(fwd_pass_style)$ (name)$ : (param.get_declaration().type())$ = 0.0, ");
+                if ctx*.is_taylor() {
+                    diff.add_reverse("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$ = 0.0, ");
+                }
 
                 ctx*.add_variable_declaration("(name)$", "(type)$");
             }
         }
 
-        diff += ") = {";
+        diff.add_forward(") = {");
+        diff.add_reverse(") = {");
 
         //  Generate the body
 
@@ -5241,14 +5356,21 @@ autodiff_declaration_handler: type = {
         {
             ad_impl..pre_traverse(stmt);
         }
-        diff += ad_impl.diff;
+        diff.add_forward(ad_impl.diff.fwd);
+        diff.add_reverse(ad_impl.diff.rws);
 
-        diff += "}";
+        diff.add_forward("}");
+        diff.add_reverse("}");
 
         ctx*.leave_function();
 
-        decl.add_member( diff.fwd );
-        diff = "";
+        if ctx*.is_forward() {
+            decl.add_member( diff.fwd );
+        }
+        if ctx*.is_reverse() {
+            decl.add_member( diff.rws );
+        }
+        diff.reset();
 
         ctx*.add_as_differentiated(f);
     }
