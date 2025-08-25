@@ -54,6 +54,18 @@ taylor: <R, dim: int> type  = {
         return v[i - 1];
     }
 
+    // Overload for reverse AD.
+    operator+=: (inout this, o: taylor) -> forward_ref _ = {
+        this = this + o;
+        return this;
+    }
+
+    // Overload for reverse AD.
+    operator-=: (inout this, o: taylor) -> forward_ref _ = {
+        this = this - o;
+        return this;
+    }
+
     // Overload for simple handling of connected adds.
     operator+: (this, o: taylor) -> taylor = {
         return add(o, 0.0, 0.0); // Primal values are not required.

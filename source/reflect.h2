@@ -4383,19 +4383,22 @@ autodiff_context: type = {
 autodiff_diff_code: type = {
     public ctx: *autodiff_context;
 
-    public fwd: std::string = "";
-    public rws: std::string = "";
+    public fwd         : std::string = "";
+    public rws_primal  : std::string = "";
+    public rws_backprop: std::string = "";
 
     operator=:(out this, ctx_: *autodiff_context) = {
         ctx = ctx_;
     }
 
-    add_forward: (inout this, v: std::string) = { if ctx*.is_forward() { fwd += v; }}
-    add_reverse: (inout this, v: std::string) = { if ctx*.is_reverse() { rws += v; }}
+    add_forward         : (inout this, v: std::string) = { if ctx*.is_forward() { fwd          += v; }}
+    add_reverse_primal  : (inout this, v: std::string) = { if ctx*.is_reverse() { rws_primal   += v; }}
+    add_reverse_backprop: (inout this, v: std::string) = { if ctx*.is_reverse() { rws_backprop += v; }}
 
     reset: (inout this) = {
-        fwd = "";
-        rws = "";
+        fwd          = "";
+        rws_primal   = "";
+        rws_backprop = "";
     }
 
     // Temporary: TODO: remove when everything has been adapted to primal, fwd, rws pushes.
@@ -4437,7 +4440,9 @@ autodiff_handler_base: type = {
 
     // Temporary: TODO: remove when everything has been adapted to primal, fwd, rws pushes.
     append: (inout this, in_ref o: autodiff_handler_base) = {
-        diff += o.diff.fwd;
+        diff.fwd          += o.diff.fwd;
+        diff.rws_primal   += o.diff.rws_primal;
+        diff.rws_backprop  = o.diff.rws_backprop + diff.rws_backprop;
     }
 }
 
@@ -4449,28 +4454,35 @@ autodiff_expression_handler: type = {
 
     public primal_expr: std::string = "";
     public fwd_expr   : std::string = "";
+    public rws_expr   : std::string = "";
 
     operator=: (out this, ctx_: *autodiff_context) = {
         autodiff_handler_base = (ctx_);
     }
 
-    add_suffix_if_not_wildcard: (this, lhs: std::string) -> std::string = {
+    add_suffix_if_not_wildcard: (this, lhs: std::string, suffix: std::string) -> std::string = {
         if "_" == lhs {
             return lhs;
         }
         else {
-            return lhs + ctx*.fwd_suffix;
+            return lhs + suffix;
         }
     }
 
-    gen_assignment: (inout this, lhs: std::string, lhs_d: std::string, rhs: std::string, rhs_d: std::string) = {
-        diff += "(lhs_d)$ = (rhs_d)$;\n";
-        diff += "(lhs)$   = (rhs)$;\n";
+    gen_assignment: (inout this, lhs: std::string, lhs_d: std::string, lhs_b: std::string, rhs: std::string, rhs_d: std::string, rhs_b: std::string) = {
+        diff.add_forward("(lhs_d)$ = (rhs_d)$;\n");
+        diff.add_forward("(lhs)$   = (rhs)$;\n");
+
+        if ctx*.is_taylor() {
+            diff.add_reverse_primal("(lhs_d)$ = (rhs_d)$;\n");
+        }
+        diff.add_reverse_primal("(lhs)$   = (rhs)$;\n");
+        diff.add_reverse_backprop(string_util::replace_all(rhs_b, "_rb_", lhs_b));
     }
-    gen_assignment: (inout this, lhs: std::string, lhs_d: std::string)
-        = gen_assignment(lhs, lhs_d, primal_expr, fwd_expr);
+    gen_assignment: (inout this, lhs: std::string, lhs_d: std::string, lhs_b: std::string)
+        = gen_assignment(lhs, lhs_d, lhs_b, primal_expr, fwd_expr, rws_expr);
     gen_assignment: (inout this, lhs: std::string)
-        = gen_assignment(lhs, add_suffix_if_not_wildcard(lhs), primal_expr, fwd_expr);
+        = gen_assignment(lhs, add_suffix_if_not_wildcard(lhs, ctx*.fwd_suffix), add_suffix_if_not_wildcard(lhs, ctx*.rws_suffix), primal_expr, fwd_expr, rws_expr);
 
 
     gen_declaration: (inout this, lhs: std::string, lhs_d: std::string, rhs: std::string, rhs_d: std::string, type: std::string, type_d: std::string) = {
@@ -4486,13 +4498,14 @@ autodiff_expression_handler: type = {
 
 
 
-    primal_fwd_name: @struct type = {
+    primal_fwd_rws_name: @struct type = {
         primal: std::string = "";
         fwd   : std::string = "";
+        rws   : std::string = "";
     }
 
-    handle_expression_list: (inout this, list: meta::expression_list) -> std::vector<primal_fwd_name> = {
-        args : std::vector<primal_fwd_name> = ();
+    handle_expression_list: (inout this, list: meta::expression_list) -> std::vector<primal_fwd_rws_name> = {
+        args : std::vector<primal_fwd_rws_name> = ();
         for list.get_expressions() do (expr) {
             args.push_back(handle_expression_term(expr));
         }
@@ -4500,29 +4513,31 @@ autodiff_expression_handler: type = {
         return args;
     }
 
-    handle_expression_term :(inout this, term) -> primal_fwd_name = {
+    handle_expression_term :(inout this, term) -> primal_fwd_rws_name = {
         if term.is_identifier() {
             primal := term.to_string();
             fwd    := primal + ctx*.fwd_suffix;
+            rws    := primal + ctx*.rws_suffix;
 
             decl := ctx*.lookup_variable_declaration(primal);
             if decl.is_member {
                 fwd = "this(ctx*.fwd_suffix)$." + fwd;
+                rws = "this(ctx*.rws_suffix)$." + rws;
             }
-            return (primal, fwd);
+            return (primal, fwd, rws);
         }
         else if term.is_expression_list() {
             exprs := term..as_expression_list()..get_expressions();
             if exprs.ssize() != 1 {
                 term.error("Can not handle multiple expressions. (term.to_string())");
-                return ("error", "");
+                return ("error", "", "");
             }
             expr := exprs[0];
             bin_expr := expr..as_assignment_expression();
 
             if bin_expr.terms_size() != 0 {
                 term.error("Can not handle assign expr inside of expression. (expr.to_string())$");
-                return ("error", "");
+                return ("error", "", "");
             }
 
             ad : autodiff_expression_handler = (ctx);
@@ -4531,7 +4546,7 @@ autodiff_expression_handler: type = {
             ad.gen_declaration(t, "double"); // TODO: get type of expression
             append(ad);
 
-            r : primal_fwd_name = (t, t + ctx*.fwd_suffix); // TODO: Check why on return (t, t + ctx*.fwd_suffix) the primal is initialized empty. Probably because of the move(t)
+            r : primal_fwd_rws_name = (t, t + ctx*.fwd_suffix, t + ctx*.rws_suffix); // TODO: Check why on return (t, t + ctx*.fwd_suffix) the primal is initialized empty. Probably because of the move(t)
             _ = t;
             return r;
         }
@@ -4545,7 +4560,7 @@ autodiff_expression_handler: type = {
             ad.gen_declaration(t, "double"); // TODO: get type of expression
             append(ad);
 
-             r : primal_fwd_name = (t, t + ctx*.fwd_suffix); // TODO: Check why on return (t, t + ctx*.fwd_suffix) the primal is initialized empty. Probably because of the move(t)
+             r : primal_fwd_rws_name = (t, t + ctx*.fwd_suffix, t + ctx*.rws_suffix); // TODO: Check why on return (t, t + ctx*.fwd_suffix) the primal is initialized empty. Probably because of the move(t)
             _ = t;
             return r;
         }
@@ -4577,7 +4592,7 @@ autodiff_expression_handler: type = {
         object         : std::string = "";
         object_d       : std::string = "";
         function_name : std::string = "";
-        args          : std::vector<primal_fwd_name> = ();
+        args          : std::vector<primal_fwd_rws_name> = ();
 
         primary := postfix.get_primary_expression();
 
@@ -4695,7 +4710,7 @@ autodiff_expression_handler: type = {
         // TODO: Add function to list of functions/objects for differentiation for the no return case.
     }
 
-    handle_special_function: (inout this, object: std::string, object_d: std::string, function_name: std::string, args: std::vector<primal_fwd_name>) -> bool = {
+    handle_special_function: (inout this, object: std::string, object_d: std::string, function_name: std::string, args: std::vector<primal_fwd_rws_name>) -> bool = {
 
         r := ctx*.lookup_special_function_handling(function_name, args.ssize(), !object.empty());
 
@@ -4778,17 +4793,21 @@ autodiff_expression_handler: type = {
         terms := binexpr.get_terms();
 
         first := true;
+        op  :   std::string = "+";
         fwd :   std::string = "";
+        rws :   std::string = "";
         primal: std::string = "";
         for terms do (term) {
             if !first {
-                op := term.get_op().to_string();
+                op      = term.get_op().to_string();
                 fwd    += " (op)$ ";
                 primal += " (op)$ ";
+
             }
 
             var   := handle_expression_term(term.get_term());
             fwd    += var.fwd;
+            rws    += "(var.rws)$ (op)$= _rb_;\n";
             primal += var.primal;
 
             first = false;
@@ -4796,6 +4815,7 @@ autodiff_expression_handler: type = {
 
         primal_expr = primal;
         fwd_expr    = fwd;
+        rws_expr    = rws;
     }
 
     traverse: (override inout this, binexpr: meta::multiplicative_expression) = {
@@ -4919,17 +4939,20 @@ autodiff_expression_handler: type = {
     {
         if primary.is_identifier() {
             primal_expr = primary.to_string();
-            fwd_expr    = add_suffix_if_not_wildcard(primal_expr);
+            fwd_expr    = add_suffix_if_not_wildcard(primal_expr, ctx*.fwd_suffix);
+            rws_expr    = add_suffix_if_not_wildcard(primal_expr, ctx*.rws_suffix);
 
             decl := ctx*.lookup_variable_declaration(primal_expr);
             if decl.is_member {
                 fwd_expr = "this(ctx*.fwd_suffix)$." + fwd_expr;
+                rws_expr = "this(ctx*.rws_suffix)$." + rws_expr;
             }
         }
         else if primary.is_expression_list() {
             if primary.as_expression_list().is_empty() {
                 primal_expr = "()";
                 fwd_expr    = "()";
+                rws_expr    = "()";   // TODO: Check for reverse
             }
             else {
                 primary.error("AD: Do not know how to handle non empty expression list inside of primary_expression: (primary.to_string())$");
@@ -4938,6 +4961,7 @@ autodiff_expression_handler: type = {
         else if primary.is_literal() {
             primal_expr = primary.to_string();
             fwd_expr    = "()";
+            rws_expr    = "()";  // TODO: Check for reverse
         }
         else if primary.is_declaration() {
             primary.error("AD: Do not know how to handle declaration inside of primary_expression: (primary.to_string())$");
@@ -5114,7 +5138,7 @@ autodiff_stmt_handler: type = {
 
         h: autodiff_expression_handler = (ctx);
         h.pre_traverse(assignment_terms[1].get_term());
-        h.gen_assignment(h_lhs.primal_expr, h_lhs.fwd_expr);
+        h.gen_assignment(h_lhs.primal_expr, h_lhs.fwd_expr, h_lhs.rws_expr);
         append(h);
     }
 
@@ -5234,7 +5258,7 @@ autodiff_declaration_handler: type = {
         ctx*.enter_function();
 
         diff.add_forward("    (f.name())$(ctx*.fwd_suffix)$: (");
-        diff.add_reverse("    (f.name())$(ctx*.rws_suffix)$: (");
+        diff.add_reverse_primal("    (f.name())$(ctx*.rws_suffix)$: (");
 
         //  1. Generate the modified signature
         //  a) Parameters
@@ -5252,22 +5276,22 @@ autodiff_declaration_handler: type = {
                 diff.add_forward("(fwd_pass_style)$ (name)$, ");
                 diff.add_forward("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$: (fwd_ad_type)$, ");
 
-                diff.add_reverse("(fwd_pass_style)$ (name)$, ");
+                diff.add_reverse_primal("(fwd_pass_style)$ (name)$, ");
                 if ctx*.is_taylor() { // Add forward type for higher order
-                    diff.add_reverse("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$: (fwd_ad_type)$, ");
+                    diff.add_reverse_primal("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$: (fwd_ad_type)$, ");
                 }
-                diff.add_reverse("(rws_pass_style)$ (name)$(ctx*.rws_suffix)$: (rws_ad_type)$, ");
+                diff.add_reverse_primal("(rws_pass_style)$ (name)$(ctx*.rws_suffix)$: (rws_ad_type)$, ");
             }
             else {
                 type := param.get_declaration().type();
                 diff.add_forward("(fwd_pass_style)$ (name)$ : (type)$, ");
                 diff.add_forward("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$, ");
 
-                diff.add_reverse("(fwd_pass_style)$ (name)$ : (type)$, ");
+                diff.add_reverse_primal("(fwd_pass_style)$ (name)$ : (type)$, ");
                 if ctx*.is_taylor() {
-                    diff.add_reverse("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$, ");
+                    diff.add_reverse_primal("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$, ");
                 }
-                diff.add_reverse("(rws_pass_style)$ (name)$(ctx*.rws_suffix)$ : (ctx*.get_rws_ad_type(type))$, ");
+                diff.add_reverse_primal("(rws_pass_style)$ (name)$(ctx*.rws_suffix)$ : (ctx*.get_rws_ad_type(type))$, ");
 
 
                 ctx*.add_variable_declaration(name, type);
@@ -5280,10 +5304,10 @@ autodiff_declaration_handler: type = {
             // TODO: check if name "r" is available. (Also needs inspection of functions at call sides.)
             if f.has_deduced_return_type() {
                 // TODO: Take care of initialization order error.
-                diff.add_reverse("inout r(ctx*.rws_suffix)$, ");
+                diff.add_reverse_primal("inout r(ctx*.rws_suffix)$, ");
             }
             else {
-                diff.add_reverse("inout r(ctx*.rws_suffix)$: (ctx*.get_rws_ad_type(f.get_unnamed_return_type()))$, ");
+                diff.add_reverse_primal("inout r(ctx*.rws_suffix)$: (ctx*.get_rws_ad_type(f.get_unnamed_return_type()))$, ");
             }
         }
         else {
@@ -5292,12 +5316,12 @@ autodiff_declaration_handler: type = {
                 type := param.get_declaration().type();
 
                 rws_pass_style := to_string_view(ctx*.get_reverse_passing_style(param.get_passing_style()));
-                diff.add_reverse("(rws_pass_style)$ (name)$(ctx*.rws_suffix)$ : (ctx*.get_rws_ad_type(type))$ , ");
+                diff.add_reverse_primal("(rws_pass_style)$ (name)$(ctx*.rws_suffix)$ : (ctx*.get_rws_ad_type(type))$ , ");
             }
         }
 
         diff.add_forward(") -> (");
-        diff.add_reverse(") -> (");
+        diff.add_reverse_primal(") -> (");
 
         //  c) Returns
 
@@ -5306,16 +5330,16 @@ autodiff_declaration_handler: type = {
             if f.has_deduced_return_type() {
                 // TODO: Take care of initialization order error.
                 diff.add_forward("r, r(ctx*.fwd_suffix)$, ");
-                diff.add_reverse("r, ");
+                diff.add_reverse_primal("r, ");
                 if ctx*.is_taylor() {
-                    diff.add_reverse("r(ctx*.fwd_suffix)$,");
+                    diff.add_reverse_primal("r(ctx*.fwd_suffix)$,");
                 }
             }
             else {
                 diff.add_forward("r: (f.get_unnamed_return_type())$ = (), r(ctx*.fwd_suffix)$: (ctx*.get_fwd_ad_type(f.get_unnamed_return_type()))$ = (), ");
-                diff.add_reverse("r: (f.get_unnamed_return_type())$ = (), ");
+                diff.add_reverse_primal("r: (f.get_unnamed_return_type())$ = (), ");
                 if ctx*.is_taylor() {
-                    diff.add_reverse("r(ctx*.fwd_suffix)$: (ctx*.get_fwd_ad_type(f.get_unnamed_return_type()))$ = (), ");
+                    diff.add_reverse_primal("r(ctx*.fwd_suffix)$: (ctx*.get_fwd_ad_type(f.get_unnamed_return_type()))$ = (), ");
                 }
             }
         }
@@ -5329,9 +5353,9 @@ autodiff_declaration_handler: type = {
                 diff.add_forward("(fwd_pass_style)$ (name)$ : (param.get_declaration().type())$ = 0.0, ");
                 diff.add_forward("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$ = 0.0, ");
 
-                diff.add_reverse("(fwd_pass_style)$ (name)$ : (param.get_declaration().type())$ = 0.0, ");
+                diff.add_reverse_primal("(fwd_pass_style)$ (name)$ : (param.get_declaration().type())$ = 0.0, ");
                 if ctx*.is_taylor() {
-                    diff.add_reverse("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$ = 0.0, ");
+                    diff.add_reverse_primal("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$ = 0.0, ");
                 }
 
                 ctx*.add_variable_declaration("(name)$", "(type)$");
@@ -5339,7 +5363,7 @@ autodiff_declaration_handler: type = {
         }
 
         diff.add_forward(") = {");
-        diff.add_reverse(") = {");
+        diff.add_reverse_primal(") = {");
 
         //  Generate the body
 
@@ -5357,10 +5381,11 @@ autodiff_declaration_handler: type = {
             ad_impl..pre_traverse(stmt);
         }
         diff.add_forward(ad_impl.diff.fwd);
-        diff.add_reverse(ad_impl.diff.rws);
+        diff.add_reverse_primal(ad_impl.diff.rws_primal);
+        diff.add_reverse_primal(ad_impl.diff.rws_backprop);
 
         diff.add_forward("}");
-        diff.add_reverse("}");
+        diff.add_reverse_primal("}");
 
         ctx*.leave_function();
 
@@ -5368,7 +5393,7 @@ autodiff_declaration_handler: type = {
             decl.add_member( diff.fwd );
         }
         if ctx*.is_reverse() {
-            decl.add_member( diff.rws );
+            decl.add_member( diff.rws_primal );
         }
         diff.reset();
 
