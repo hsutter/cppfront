@@ -32,6 +32,9 @@ compiler_services: @polymorphic_base @copy_constructible type =
     //
     errors               : *std::vector<error_entry>;
     includes             : *std::set<std::string>;
+    extra_cpp1           : *std::vector<std::string>;
+    extra_build          : *std::vector<std::string>;
+    file_name            : std::string;
     errors_original_size : int;
     generated_tokens     : *stable_vector<token>;
     parser               : cpp2::parser;
@@ -45,18 +48,26 @@ compiler_services: @polymorphic_base @copy_constructible type =
         out this,
         errors_          : *std::vector<error_entry>,
         includes_        : *std::set<std::string>,
+        extra_cpp1_      : *std::vector<std::string>,
+        extra_build_     : *std::vector<std::string>,
+        filename         : std::string,
         generated_tokens_: *stable_vector<token>
     )
     = {
         errors               = errors_;
         includes             = includes_;
+        extra_cpp1           = extra_cpp1_;
+        extra_build          = extra_build_;
+        file_name            = filename;
         errors_original_size = cpp2::unchecked_narrow<int>(std::ssize(errors*));
         generated_tokens     = generated_tokens_;
-        parser               = (errors*, includes*);
+        parser               = (errors*, includes*, extra_cpp1*, extra_build*, file_name);
     }
 
     //  Common API
     //
+    filename: (this) -> std::string_view = file_name;
+
     set_metafunction_name: (inout this, name: std::string_view, args: std::vector<std::string>) = {
         metafunction_name  = name;
         metafunction_args  = args;
@@ -133,7 +144,19 @@ compiler_services: @polymorphic_base @copy_constructible type =
         }
     }
 
-    add_runtime_support_include: (inout this, s: std::string_view) = _=includes*.emplace( s );
+    add_runtime_support_include: (inout this, s: std::string_view, angles: bool = false) = {
+        inc: std::string = s;
+        if angles {
+            inc = "<" + inc + ">";
+        }
+        else {
+            inc = "\"" + inc + "\"";
+        }
+        _=includes*.emplace( inc );
+    }
+
+    add_extra_cpp1_code : (inout this, s: std::string) = extra_cpp1 *.push_back( s );
+    add_extra_build_step: (inout this, s: std::string) = extra_build*.push_back( s+"\n" );
 
     position: (virtual this)
         -> source_position
@@ -2454,6 +2477,82 @@ noisy: (t: meta::type_declaration) =
             _ = body;
         }
     }
+}
+
+
+//-----------------------------------------------------------------------
+//
+//  python - expose the type using pybind11
+// 
+//  *** Basic proof of concept only, limited and not well tested
+//      Hardcoded for pybind11 and g++10 and my local cppfront include path
+//
+python_param_names_and_types: (mf: meta::function_declaration)
+    -> 
+    (
+    names: std::string = (),
+    types: std::string = ()
+    ) 
+= {
+    for mf.get_parameters()
+    do  (param)
+    if  param.get_declaration().name() != "this"
+    {
+        names += ", ";
+        if !types.empty() {
+            types += ", ";
+        }
+        names += std::string("pybind11::arg(\"") + param.get_declaration().name() + "\")";
+        types += param.get_declaration().type();
+    }
+}
+
+python: (inout t: meta::type_declaration) =
+{
+    bind: std::string = ();
+    bind += "PYBIND11_MODULE((t.name())$lib, m) {\n";
+    bind += "    pybind11::class_<(t.name())$>(m, \"(t.name())$\")\n";
+
+    for t.get_members()
+    do  (m)
+    if  m.is_function()
+    {
+        mf := m.as_function();
+        params := mf.python_param_names_and_types();
+
+        if mf.is_constructor()
+        {
+            //param_types: std::string = ();
+            //for mf.get_parameters()
+            //do  (param)
+            //if  param.get_declaration().name() != "this"
+            //{
+            //    if !param_types.empty() {
+            //        param_types += ", ";
+            //    }
+            //    param_types += param.get_declaration().type();
+            //}
+            bind += "        .def(pybind11::init<(params.types)$>())\n";
+        }
+        else if !mf.has_name("operator=")
+        {
+            bind += "        .def(\"(mf.name())$\", &(t.name())$::(mf.name())$ (params.names)$)\n";
+        }
+    }
+
+    bind += "    ;\n";
+    bind += "}\n";
+
+    file := t.filename();
+    if file.ends_with(".cpp2") {
+        file = file.substr(0, file.size()-5);    // drop the ".cpp2"
+    }
+    build: std::string = "g++-10 -O3 -shared -std=c++20 -fPIC $(python3 -m pybind11 --includes) (file)$.cpp -o (file)$lib$(python3-config --extension-suffix)";
+
+    t.add_runtime_support_include( "pybind11/pybind11.h", true );
+    t.add_runtime_support_include( "pybind11/stl.h", true );
+    t.add_extra_cpp1_code        ( bind );
+    t.add_extra_build_step       ( build );
 }
 
 
@@ -6060,6 +6159,9 @@ apply_metafunctions: (
         }
         else if name == "noisy" {
             noisy( rtype );
+        }
+        else if name == "python" {
+            python( rtype );
         }
         else if name == "autodiff" {
             autodiff( rtype );
