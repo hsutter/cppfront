@@ -4,7 +4,7 @@
 cpp2: namespace = {
 
 taylor: <R, dim: int> type  = {
-    v : std::array<R, dim> = ();
+    public v : std::array<R, dim> = ();
 
     operator=:(out this) = {}
     operator=:(out this, d1: R) = {
@@ -45,10 +45,11 @@ taylor: <R, dim: int> type  = {
     // C++2 interface / AD interface
 
     get: (this, i: int, v0: R) -> R = {
-        assert(0 <= i <= dim);
-
         if i == 0 {
             return v0;
+        }
+        else if i > dim {
+            return 0.0;
         }
 
         return v[i - 1];
@@ -115,11 +116,12 @@ taylor: <R, dim: int> type  = {
         return r;
     }
 
-    mul: (this, o: taylor, v0: R, o0: R) -> taylor = {
-        r: taylor = ();
+    mul: <dim_o: int> (this, in_ref o: taylor<R, dim_o>, v0: R, o0: R) -> taylor<R, std::max(dim, dim_o)> = {
+        dim_r : int == std::max(dim, dim_o);
+        r: taylor<R, dim_r> = ();
 
         (copy k:= 1)
-        while k <= dim next k += 1 {
+        while k <= dim_r next k += 1 {
             (copy j :=  0)
             while j <= k next j += 1 {
                 r..v[k - 1] += get(j, v0) * o..get(k - j, o0);

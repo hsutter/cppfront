@@ -4469,6 +4469,15 @@ autodiff_expression_handler: type = {
         }
     }
 
+    prepare_backprop: (this, rhs_b: std::string, lhs: std::string, lhs_d: std::string, lhs_b: std::string) -> std::string = {
+        r := rhs_b;
+        r  = string_util::replace_all(r, "_r_", lhs);
+        r  = string_util::replace_all(r, "_rd_", lhs_d);
+        r  = string_util::replace_all(r, "_rb_", lhs_b);
+
+        return r;
+    }
+
     gen_assignment: (inout this, lhs: std::string, lhs_d: std::string, lhs_b: std::string, rhs: std::string, rhs_d: std::string, rhs_b: std::string) = {
         diff.add_forward("(lhs_d)$ = (rhs_d)$;\n");
         diff.add_forward("(lhs)$   = (rhs)$;\n");
@@ -4477,7 +4486,7 @@ autodiff_expression_handler: type = {
             diff.add_reverse_primal("(lhs_d)$ = (rhs_d)$;\n");
         }
         diff.add_reverse_primal("(lhs)$   = (rhs)$;\n");
-        diff.add_reverse_backprop(string_util::replace_all(rhs_b, "_rb_", lhs_b));
+        diff.add_reverse_backprop(prepare_backprop(rhs_b, lhs, lhs_d, lhs_b));
     }
     gen_assignment: (inout this, lhs: std::string, lhs_d: std::string, lhs_b: std::string)
         = gen_assignment(lhs, lhs_d, lhs_b, primal_expr, fwd_expr, rws_expr);
@@ -4485,16 +4494,22 @@ autodiff_expression_handler: type = {
         = gen_assignment(lhs, add_suffix_if_not_wildcard(lhs, ctx*.fwd_suffix), add_suffix_if_not_wildcard(lhs, ctx*.rws_suffix), primal_expr, fwd_expr, rws_expr);
 
 
-    gen_declaration: (inout this, lhs: std::string, lhs_d: std::string, rhs: std::string, rhs_d: std::string, type: std::string, type_d: std::string) = {
-        diff += "(lhs_d)$: (type_d)$ = (rhs_d)$;\n";
-        diff += "(lhs)$  : (type)$ = (rhs)$;\n";
+    gen_declaration: (inout this, lhs: std::string, lhs_d: std::string, lhs_b: std::string, rhs: std::string, rhs_d: std::string, rhs_b: std::string, type: std::string, type_d: std::string, type_b: std::string) = {
+        diff.add_forward("(lhs_d)$: (type_d)$ = (rhs_d)$;\n");
+        diff.add_forward("(lhs)$  : (type)$ = (rhs)$;\n");
+
+        if ctx*.is_taylor() {
+            diff.add_reverse_primal("(lhs_d)$: (type_d)$ = (rhs_d)$;\n");
+        }
+        diff.add_reverse_primal("(lhs)$  : (type)$ = (rhs)$;\n");
+        diff.add_reverse_backprop(prepare_backprop(rhs_b, lhs, lhs_d, lhs_b));
     }
-    gen_declaration: (inout this, lhs: std::string, lhs_d: std::string, rhs: std::string, rhs_d: std::string, type: std::string)
-        = gen_declaration(lhs, lhs_d, rhs, rhs_d, type, ctx*.get_fwd_ad_type(type));
-    gen_declaration: (inout this, lhs: std::string, lhs_d: std::string, type: std::string)
-        = gen_declaration(lhs, lhs_d, primal_expr, fwd_expr, type, ctx*.get_fwd_ad_type(type));
+    gen_declaration: (inout this, lhs: std::string, lhs_d: std::string, lhs_b: std::string, rhs: std::string, rhs_d: std::string, rhs_b: std::string, type: std::string)
+        = gen_declaration(lhs, lhs_d, lhs_b, rhs, rhs_d, rhs_b, type, ctx*.get_fwd_ad_type(type) , ctx*.get_rws_ad_type(type));
+    gen_declaration: (inout this, lhs: std::string, lhs_d: std::string, lhs_b: std::string, type: std::string)
+        = gen_declaration(lhs, lhs_d, lhs_b, primal_expr, fwd_expr, rws_expr, type);
     gen_declaration: (inout this, lhs: std::string, type: std::string)
-        = gen_declaration(lhs, lhs + ctx*.fwd_suffix, primal_expr, fwd_expr, type, ctx*.get_fwd_ad_type(type));
+        = gen_declaration(lhs, lhs + ctx*.fwd_suffix, lhs + ctx*.rws_suffix, type);
 
 
 
@@ -4824,33 +4839,44 @@ autodiff_expression_handler: type = {
         var     := handle_expression_term(terms[0].get_term());
         arg_a   := var.primal;
         arg_a_d := var.fwd;
+        arg_a_b := var.rws;
 
         i : int = 1;
         while i < terms.ssize() next i += 1 {
             var      = handle_expression_term(terms[i].get_term());
             arg_b   := var.primal;
             arg_b_d := var.fwd;
+            arg_b_b := var.rws;
 
             op := terms[i].get_op().to_string();
 
             fwd    : std::string = "";
+            rws    : std::string = "";
             primal : std::string = "";
 
             if "*" == op {
                 if ctx*.is_taylor() {
-                    fwd = "(arg_a_d)$.mul((arg_b_d)$, (arg_a)$, (arg_b)$)";
+                    fwd = "(arg_a_d)$..mul((arg_b_d)$, (arg_a)$, (arg_b)$)";
+                    rws = "(arg_b_b)$ += (arg_a_d)$..mul(_rb_, (arg_a)$, _r_);\n"
+                          "(arg_a_b)$ += (arg_b_d)$..mul(_rb_, (arg_b)$, _r_);";
                 }
                 else {
                     fwd = "(arg_a)$ * (arg_b_d)$ + (arg_b)$ * (arg_a_d)$";
+                    rws = "(arg_b_b)$ += (arg_a)$ * _rb_;\n"
+                          "(arg_a_b)$ += (arg_b)$ * _rb_;";
                 }
                 primal = "(arg_a)$ * (arg_b)$";
             }
             else if "/" == op {
                 if ctx*.is_taylor() {
                     fwd = "(arg_a_d)$.div((arg_b_d)$, (arg_a)$, (arg_b)$)";
+                    rws = "(arg_b_b)$ -= (arg_a_d)$.mul(_rb_, (arg_a)$, _r_).div((arg_b_d)$.mul((arg_b_d)$, (arg_b)$, (arg_b)$), (arg_a)$ * _r_, (arg_b)$ * (arg_b)$);\n"
+                          "(arg_a_b)$ += _rb_.div((arg_b_d)$, _r_, (arg_b)$);";
                 }
                 else {
-                    fwd    = "(arg_a_d)$ / (arg_b)$ - (arg_a)$ * (arg_b_d)$ / ((arg_b)$ * (arg_b)$)";
+                    fwd = "(arg_a_d)$ / (arg_b)$ - (arg_a)$ * (arg_b_d)$ / ((arg_b)$ * (arg_b)$)";
+                    rws = "(arg_b_b)$ -= (arg_a)$ * _rb_ / ((arg_b)$ * (arg_b)$);\n"
+                          "(arg_a_b)$ += _rb_ / (arg_b)$;";
                 }
                 primal = "(arg_a)$ / (arg_b)$";
             }
@@ -4862,15 +4888,18 @@ autodiff_expression_handler: type = {
             if i + 1 == terms.ssize() {
                 primal_expr = primal;
                 fwd_expr    = fwd;
+                rws_expr    = rws;
             }
             else {
                 // Temporary
                 t   := ctx*.gen_temporary();
                 t_d := t + ctx*.fwd_suffix;
-                gen_declaration(t, t_d, primal, fwd, "", "");
+                t_b := t + ctx*.rws_suffix;
+                gen_declaration(t, t_d, t_b, primal, fwd, rws, "", "", "");
 
                 arg_a   = t;
                 arg_a_d = t_d;
+                arg_a_b = t_b;
             }
         }
     }
