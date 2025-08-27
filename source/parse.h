@@ -3542,6 +3542,7 @@ struct declaration_node
     //  Attributes currently configurable only via metafunction API,
     //  not directly in the base language grammar
     bool member_function_generation = true;
+    bool ref_qualifier_generation   = true;
 
     //  Cache some context
     bool is_a_template_parameter  = false;
@@ -3635,6 +3636,12 @@ struct declaration_node
         -> void
     {
         member_function_generation = false;
+    }
+
+    auto type_disable_ref_qualifier_generation()
+        -> void
+    {
+        ref_qualifier_generation = false;
     }
 
     auto object_type() const

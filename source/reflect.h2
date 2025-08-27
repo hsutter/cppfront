@@ -614,6 +614,7 @@ type_declaration: @copy_constructible type =
     }
 
     disable_member_function_generation: (inout this) = n*.type_disable_member_function_generation();
+    disable_ref_qualifier_generation  : (inout this) = n*.type_disable_ref_qualifier_generation();
 
     //  At some point we may want to allow this also for namespaces, but for now only types
     remove_marked_members: (inout this) = n*.type_remove_marked_members();
@@ -2520,22 +2521,10 @@ python: (inout t: meta::type_declaration) =
         mf := m.as_function();
         params := mf.python_param_names_and_types();
 
-        if mf.is_constructor()
-        {
-            //param_types: std::string = ();
-            //for mf.get_parameters()
-            //do  (param)
-            //if  param.get_declaration().name() != "this"
-            //{
-            //    if !param_types.empty() {
-            //        param_types += ", ";
-            //    }
-            //    param_types += param.get_declaration().type();
-            //}
+        if mf.is_constructor() {
             bind += "        .def(pybind11::init<(params.types)$>())\n";
         }
-        else if !mf.has_name("operator=")
-        {
+        else if !mf.has_name("operator=") {
             bind += "        .def(\"(mf.name())$\", &(t.name())$::(mf.name())$ (params.names)$)\n";
         }
     }
@@ -2553,6 +2542,49 @@ python: (inout t: meta::type_declaration) =
     t.add_runtime_support_include( "pybind11/stl.h", true );
     t.add_extra_cpp1_code        ( bind );
     t.add_extra_build_step       ( build );
+}
+
+
+//-----------------------------------------------------------------------
+//
+//  javascript - expose the type using emscripten
+// 
+//  *** Basic proof of concept only, limited and not well tested
+//
+javascript: (inout t: meta::type_declaration) =
+{
+    bind: std::string = ();
+    bind += "using namespace emscripten;\n";
+    bind += "EMSCRIPTEN_BINDINGS((t.name())$_module) {\n";
+    bind += "    class_<(t.name())$>(\"(t.name())$\")\n";
+
+    for t.get_members()
+    do  (m)
+    if  m.is_function()
+    {
+        mf := m.as_function();
+        params := mf.python_param_names_and_types(); // good enough! only care about .types
+
+        if mf.is_constructor() {
+            bind += "        .constructor<(params.types)$>()\n";
+        }
+        else if !mf.has_name("operator=") {
+            bind += "        .function(\"(mf.name())$\", &(t.name())$::(mf.name())$)\n";
+        }
+    }
+
+    bind += "    ;\n";
+    bind += "}\n";
+
+    file := t.filename();
+    if file.ends_with(".cpp2") {
+        file = file.substr(0, file.size()-5);    // drop the ".cpp2"
+    }
+    build: std::string = "em++ -std=c++20 -O3 (file)$.cpp --bind -s MODULARIZE=1 -s ENVIRONMENT='web,node' -s ALLOW_MEMORY_GROWTH=1 -s FILESYSTEM=0 -s LEGACY_VM_SUPPORT=1 -o (file)$.js";
+    t.add_runtime_support_include( "emscripten/bind.h", true );
+    t.add_extra_cpp1_code        ( bind );
+    t.add_extra_build_step       ( build );
+    t.disable_ref_qualifier_generation();
 }
 
 
@@ -6162,6 +6194,9 @@ apply_metafunctions: (
         }
         else if name == "python" {
             python( rtype );
+        }
+        else if name == "javascript" {
+            javascript( rtype );
         }
         else if name == "autodiff" {
             autodiff( rtype );

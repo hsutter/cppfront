@@ -4,23 +4,23 @@ In file included from pure2-default-arguments.cpp:7:
 ../../../include/cpp2util.h:10047:15: note: in expansion of macro ‘CPP2_FORWARD’
 ../../../include/cpp2util.h:10066:22: note: in expansion of macro ‘CPP2_UFCS_CONSTRAINT_ARG’
 ../../../include/cpp2util.h:10096:59: note: in expansion of macro ‘CPP2_UFCS_’
-pure2-default-arguments.cpp2:6:22: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
+pure2-default-arguments.cpp2:6:38: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 ../../../include/cpp2util.h:10047:92: error: local variable ‘params’ may not appear in this context
 ../../../include/cpp2util.h:10008:34: note: in definition of macro ‘CPP2_UFCS_IDENTITY’
 ../../../include/cpp2util.h:10047:79: note: in expansion of macro ‘CPP2_FORWARD’
 ../../../include/cpp2util.h:10066:22: note: in expansion of macro ‘CPP2_UFCS_CONSTRAINT_ARG’
 ../../../include/cpp2util.h:10096:59: note: in expansion of macro ‘CPP2_UFCS_’
-pure2-default-arguments.cpp2:6:22: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
+pure2-default-arguments.cpp2:6:38: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 ../../../include/cpp2util.h:10048:74: error: local variable ‘obj’ may not appear in this context
 ../../../include/cpp2util.h:10008:34: note: in definition of macro ‘CPP2_UFCS_IDENTITY’
 ../../../include/cpp2util.h:10048:61: note: in expansion of macro ‘CPP2_FORWARD’
 ../../../include/cpp2util.h:10066:22: note: in expansion of macro ‘CPP2_UFCS_CONSTRAINT_ARG’
 ../../../include/cpp2util.h:10096:59: note: in expansion of macro ‘CPP2_UFCS_’
-pure2-default-arguments.cpp2:6:22: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
+pure2-default-arguments.cpp2:6:38: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 ../../../include/cpp2util.h:10048:93: error: local variable ‘params’ may not appear in this context
 ../../../include/cpp2util.h:10008:34: note: in definition of macro ‘CPP2_UFCS_IDENTITY’
 ../../../include/cpp2util.h:10048:80: note: in expansion of macro ‘CPP2_FORWARD’
 ../../../include/cpp2util.h:10066:22: note: in expansion of macro ‘CPP2_UFCS_CONSTRAINT_ARG’
 ../../../include/cpp2util.h:10096:59: note: in expansion of macro ‘CPP2_UFCS_’
-pure2-default-arguments.cpp2:6:22: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
-pure2-default-arguments.cpp2:6:61: error: ‘std::source_location’ has not been declared
+pure2-default-arguments.cpp2:6:38: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
+pure2-default-arguments.cpp2:6:77: error: ‘std::source_location’ has not been declared

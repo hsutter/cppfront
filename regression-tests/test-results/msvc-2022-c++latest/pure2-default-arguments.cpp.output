@@ -1,1 +1,2 @@
 pure2-default-arguments.cpp
+pure2-default-arguments.cpp2(6): error C7595: 'std::source_location::current': call to immediate function is not a constant expression

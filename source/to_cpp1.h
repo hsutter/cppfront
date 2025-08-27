@@ -4707,10 +4707,10 @@ public:
 
         if (
             !is_returns
-            && !n.declaration->is_variadic
             && !type_id.is_wildcard()
             && !is_dependent_parameter_type
-            && !type_id.is_pointer_qualified()
+            && !type_id.is_function_typeid()
+            && !n.declaration->is_variadic
             )
         {
             switch (n.pass) {
@@ -4723,13 +4723,6 @@ public:
         printer.preempt_position_push( n.position() );
 
         if (
-            type_id.is_pointer_qualified()
-            && n.pass == passing_style::in
-            )
-        {
-            printer.print_cpp2( param_type, n.position() );
-        }
-        else if (
             type_id.is_wildcard()
             || is_dependent_parameter_type
             || n.declaration->is_variadic
@@ -4808,7 +4801,7 @@ public:
             !is_returns
             && !type_id.is_wildcard()
             && !is_dependent_parameter_type
-            && !type_id.is_pointer_qualified()
+            && !type_id.is_function_typeid()
             && !n.declaration->is_variadic
             )
         {
@@ -6520,12 +6513,20 @@ public:
                     break;case passing_style::in:
                         suffix1 += " const";
                         //  Cpp1 ref-qualifiers don't belong on virtual functions
-                        if (!this_->is_polymorphic()) {
+                        if (
+                            !this_->is_polymorphic()
+                            && n.get_parent()->ref_qualifier_generation
+                            )
+                        {
                             suffix1 += "&";
                         }
                     break;case passing_style::inout:
                         //  Cpp1 ref-qualifiers don't belong on virtual functions
-                        if (!this_->is_polymorphic()) {
+                        if (
+                            !this_->is_polymorphic()
+                            && n.get_parent()->ref_qualifier_generation
+                            ) 
+                        {
                             suffix1 += " &";
                         }
                     break;case passing_style::out:
