@@ -44,8 +44,10 @@ test: @sample_traverser type =
     = {
         a := -1;
         b := +2;
+
+        (local := a-b)
         if !true {
-            return 0;
+            return local;
         }
         return a+b;
     }
@@ -66,7 +68,12 @@ test: @sample_traverser type =
     = {
         v: std::vector = (1, 2, 3);
 
-        for v do (value) { std::cout << value << "\n"; }
+        (copy index := 1)
+        for v
+        do  (value)
+        {
+            std::cout << "(index)$ (value)$\n";
+        }
 
         i := 0;
         while i < 3 next i += 1 { std::cout << i << "\n"; }

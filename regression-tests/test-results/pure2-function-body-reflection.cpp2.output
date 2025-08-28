@@ -251,6 +251,18 @@ pure2-function-body-reflection.cpp2...Type: test
                       op: +
                       expression
                           2
+            statement parameters: 
+              parameter:
+                passing style: in
+                declaration:
+                  Object: name local, type _
+                    Initializer:
+                      additive
+                        term:
+                            a
+                        op: -
+                        term:
+                            b
             if statement
               condition:
                 prefix expression
@@ -261,7 +273,7 @@ pure2-function-body-reflection.cpp2...Type: test
                 compound statement
                     return statement
                       expression
-                          0
+                          local
               false branch:
                 compound statement (empty)
               return statement
@@ -327,6 +339,13 @@ pure2-function-body-reflection.cpp2...Type: test
                           2
                           3
                       )
+            statement parameters: 
+              parameter:
+                passing style: copy
+                declaration:
+                  Object: name index, type _
+                    Initializer:
+                        1
               for loop:
                 range:
                     v
@@ -342,10 +361,33 @@ pure2-function-body-reflection.cpp2...Type: test
                           std::cout
                       op: <<
                       term:
-                          value
-                      op: <<
-                      term:
-                          "\n"
+                        additive
+                          term:
+                              ""
+                          op: +
+                          term:
+                            postfix expression
+                              expression
+                                  cpp2::to_string
+                              op: (
+                              (
+                                  index
+                              )
+                          op: +
+                          term:
+                              " "
+                          op: +
+                          term:
+                            postfix expression
+                              expression
+                                  cpp2::to_string
+                              op: (
+                              (
+                                  value
+                              )
+                          op: +
+                          term:
+                              "\n"
               Declaration: i
                 Object: name i, type _
                   Initializer:
