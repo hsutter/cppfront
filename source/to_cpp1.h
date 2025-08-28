@@ -1016,6 +1016,8 @@ class cppfront
     std::string              sourcefile;
     std::vector<error_entry> errors;
     std::set<std::string>    includes;
+    std::vector<std::string> extra_cpp1;
+    std::vector<std::string> extra_build;
 
     //  For building
     //
@@ -1176,7 +1178,7 @@ public:
         : sourcefile{ filename }
         , source    { errors }
         , tokens    { errors }
-        , parser    { errors, includes }
+        , parser    { errors, includes, extra_cpp1, extra_build, filename }
         , sema      { errors }
     {
         //  "Constraints enable creativity in the right directions"
@@ -1368,8 +1370,8 @@ public:
                 printer.print_extra( "#define CPP2_NO_RTTI             Yes\n" );
             }
 
-            for (auto& h: includes) {
-                printer.print_extra( "#include \"" + h + "\"\n" );
+            for (auto const& h: includes) {
+                printer.print_extra( "#include " + h + "\n" );
             }
         }
 
@@ -1602,11 +1604,29 @@ public:
 
         printer.finalize_phase( true );
 
-        //  Finally, some debug checks
+
+        //---------------------------------------------------------------------
+        //  Do epilog and some debug checks
+
+        for (auto& e: extra_cpp1) {
+            printer.print_extra( e + "\n" );
+        }
+
         assert(
             (!errors.empty() || tokens.num_unprinted_comments() == 0)
             && "ICE: not all comments were printed"
         );
+
+
+        //---------------------------------------------------------------------
+        //  Emit any extra build steps
+
+        if (!extra_build.empty()) {
+            auto build = std::ofstream("cpp2_post_build.sh", std::ios::binary);
+            for (auto& e: extra_build) {
+                build << e << "\n";
+            }
+        }
 
         return ret;
     }
@@ -4687,10 +4707,10 @@ public:
 
         if (
             !is_returns
-            && !n.declaration->is_variadic
             && !type_id.is_wildcard()
             && !is_dependent_parameter_type
-            && !type_id.is_pointer_qualified()
+            && !type_id.is_function_typeid()
+            && !n.declaration->is_variadic
             )
         {
             switch (n.pass) {
@@ -4703,13 +4723,6 @@ public:
         printer.preempt_position_push( n.position() );
 
         if (
-            type_id.is_pointer_qualified()
-            && n.pass == passing_style::in
-            )
-        {
-            printer.print_cpp2( param_type, n.position() );
-        }
-        else if (
             type_id.is_wildcard()
             || is_dependent_parameter_type
             || n.declaration->is_variadic
@@ -4788,7 +4801,7 @@ public:
             !is_returns
             && !type_id.is_wildcard()
             && !is_dependent_parameter_type
-            && !type_id.is_pointer_qualified()
+            && !type_id.is_function_typeid()
             && !n.declaration->is_variadic
             )
         {
@@ -6500,12 +6513,20 @@ public:
                     break;case passing_style::in:
                         suffix1 += " const";
                         //  Cpp1 ref-qualifiers don't belong on virtual functions
-                        if (!this_->is_polymorphic()) {
+                        if (
+                            !this_->is_polymorphic()
+                            && n.get_parent()->ref_qualifier_generation
+                            )
+                        {
                             suffix1 += "&";
                         }
                     break;case passing_style::inout:
                         //  Cpp1 ref-qualifiers don't belong on virtual functions
-                        if (!this_->is_polymorphic()) {
+                        if (
+                            !this_->is_polymorphic()
+                            && n.get_parent()->ref_qualifier_generation
+                            ) 
+                        {
                             suffix1 += " &";
                         }
                     break;case passing_style::out:

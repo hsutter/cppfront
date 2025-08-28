@@ -3542,6 +3542,7 @@ struct declaration_node
     //  Attributes currently configurable only via metafunction API,
     //  not directly in the base language grammar
     bool member_function_generation = true;
+    bool ref_qualifier_generation   = true;
 
     //  Cache some context
     bool is_a_template_parameter  = false;
@@ -3635,6 +3636,12 @@ struct declaration_node
         -> void
     {
         member_function_generation = false;
+    }
+
+    auto type_disable_ref_qualifier_generation()
+        -> void
+    {
+        ref_qualifier_generation = false;
     }
 
     auto object_type() const
@@ -6403,6 +6410,9 @@ class parser
 {
     std::vector<error_entry>& errors;
     std::set<std::string>&    includes;
+    std::vector<std::string>& extra_cpp1;
+    std::vector<std::string>& extra_build;
+    std::string               filename;
 
     std::unique_ptr<translation_unit_node> parse_tree = {};
 
@@ -6529,18 +6539,36 @@ public:
     //
     parser( 
         std::vector<error_entry>& errors_,
-        std::set<std::string>&    includes_
+        std::set<std::string>&    includes_,
+        std::vector<std::string>& extra_cpp1_,
+        std::vector<std::string>& extra_build_,
+        std::string_view          filename_
     )
-        : errors{ errors_ }
-        , includes{ includes_ }
-        , parse_tree{std::make_unique<translation_unit_node>()}
+        : errors     { errors_ }
+        , includes   { includes_ }
+        , extra_cpp1 { extra_cpp1_ }
+        , extra_build{ extra_build_ }
+        , filename   { filename_ }
+        , parse_tree {std::make_unique<translation_unit_node>()}
     { }
 
     parser( parser const& that )
         : errors{ that.errors }
         , includes{ that.includes }
+        , extra_cpp1{ that.extra_cpp1 }
+        , extra_build{ that.extra_build }
         , parse_tree{std::make_unique<translation_unit_node>()}
     { }
+
+
+    //-----------------------------------------------------------------------
+    //  get_filename
+    //
+    auto get_filename() const
+        -> std::string
+    {
+        return filename;
+    }
 
 
     //-----------------------------------------------------------------------

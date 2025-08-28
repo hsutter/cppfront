@@ -21,7 +21,7 @@ template<typename T = int, int N = 42> class myclass;
 //        Older compilers will emit failures for this test case.
 #line 5 "pure2-default-arguments.cpp2"
 auto my_function_name(
-    char const* fn = CPP2_UFCS_NONLOCAL(function_name)(std::source_location::current())
+    cpp2::impl::in<char const*> fn = CPP2_UFCS_NONLOCAL(function_name)(std::source_location::current())
     ) -> void;
 
 #line 12 "pure2-default-arguments.cpp2"
@@ -58,7 +58,7 @@ auto main(int const argc_, char** argv_) -> int;
 
 #line 5 "pure2-default-arguments.cpp2"
 auto my_function_name(
-    char const* fn
+    cpp2::impl::in<char const*> fn
     ) -> void
 {
     std::cout << "calling: " + cpp2::to_string(fn) + "\n";
