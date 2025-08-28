@@ -4127,13 +4127,15 @@ autodiff_special_func: type = {
 autodiff_declared_variable: type = {
     public name     : std::string = "";
     public decl     : std::string = ""; // TODO: Maybe use variant here.
+    public is_active: bool        = false;
     public is_member: bool        = false;
 
     operator=:(out this) = {}
 
-    operator=:(out this, name_: std::string, decl_: std::string, is_member_: bool) = {
+    operator=:(out this, name_: std::string, decl_: std::string, is_active_: bool, is_member_: bool) = {
         name      = name_;
         decl      = decl_;
+        is_active = is_active_;
         is_member = is_member_;
     }
 
@@ -4209,6 +4211,12 @@ autodiff_context: type = {
             "exp(_a1_)",
             "_ad1_.exp(_a1_)",
         ),
+        autodiff_special_func("sqrt", 1, /* is_member = */ false,
+            "sqrt(_a1_)",
+            "0.5 * _ad1_ / sqrt(_a1_)",
+            "sqrt(_a1_)",
+            "_ad1_.sqrt(_a1_)",
+        ),
         autodiff_special_func("push_back", 1, /* is_member = */ true,
             "_o_.push_back(_a1_);",
             "_od_.push_back(_ad1_);")
@@ -4243,8 +4251,12 @@ autodiff_context: type = {
 
     }
 
-    add_variable_declaration: (inout this, name: std::string, type: std::string, is_member: bool = false) = {
-        declaration_stack.back().declared_variables_stack.back().push_back(autodiff_declared_variable(name, type, is_member));
+    add_variable_declaration: (inout this, name: std::string, type: std::string, is_active: bool, is_member: bool = false) = {
+        declaration_stack.back().declared_variables_stack.back().push_back(autodiff_declared_variable(name, type, is_active, is_member));
+    }
+
+    is_variable_active: (inout this, name: std::string) -> bool = {
+        return lookup_variable_declaration(name).is_active;
     }
 
     create_namespace_stack: (inout this, t: meta::type_or_namespace_declaration) = {
@@ -4271,6 +4283,27 @@ autodiff_context: type = {
     gen_temporary : (inout this) -> std::string = {
         temporary_count += 1;
         return "temp_(temporary_count)$";
+    }
+
+    is_type_active: (inout this, type: std::string) -> bool = {
+        decls := lookup_type_declaration(type);
+        r := false;
+
+        if !decls.empty() {
+            assert(decls.ssize() == 1);
+            ada: autodiff_activity_check = (this&);
+            ada.pre_traverse(decls[0]);
+            r = ada.active;
+        }
+
+        // TODO: Add template activity lookup.
+
+        if !r {
+            // Declaration lookup did not yield an activity: Apply some heuristics.
+            r = type.contains("double");
+        }
+
+        return r;
     }
 
     get_fwd_ad_type: (inout this, type: std::string) -> std::string = {
@@ -4362,7 +4395,7 @@ autodiff_context: type = {
 
     lookup_variable_declaration: (inout this, name: std::string) -> autodiff_declared_variable = {
         if name == "_" {
-            return autodiff_declared_variable(name, "_", false);
+            return autodiff_declared_variable(name, "_", false, false);
         }
 
         for std::ranges::views::reverse(declaration_stack) do (cur_context) {
@@ -4559,6 +4592,92 @@ autodiff_diff_code: type = {
 //     return v.fwd;
 // }
 
+autodiff_activity_check: type = {
+    this: simple_traverser = ();
+
+    public ctx   : *autodiff_context;
+    public active: bool              = false;
+
+    operator=: (out this, ctx_: *autodiff_context) = {
+        ctx = ctx_;
+    }
+
+    traverse: (override inout this, o: meta::object_declaration) = {
+
+        type := o.type();
+
+        if "_" == type {
+            if o.has_initializer() {
+                pre_traverse(o.get_initializer());
+            }
+            else {
+                // Assume active
+                active = true;
+            }
+        }
+        else {
+            active |= ctx*.is_type_active(type);
+        }
+    }
+
+    traverse: (override inout this, primary: meta::primary_expression) =
+    {
+        if primary.is_identifier() {
+            active |= ctx*.is_variable_active(primary.to_string());
+        }
+        else if primary.is_expression_list() {
+            for primary.as_expression_list().get_expressions() do (cur) {
+                pre_traverse(cur);
+            }
+        }
+        else if primary.is_literal() {
+            // TODO: Improve check
+            if primary.to_string().contains(".") {
+                active = true;
+            }
+        }
+        else if primary.is_declaration() {
+            pre_traverse(primary.as_declaration());
+        }
+        else {
+            primary.error("AD: Unknown primary expression kind: (primary.to_string())$");
+        }
+    }
+
+    traverse: (override inout this, postfix: meta::postfix_expression) =
+    {
+        terms := postfix.get_terms();
+
+        is_func  := false;
+
+        (copy i := 0)
+        for terms next i += 1 do (term)  {
+            if term.get_op() == "." {
+                continue;
+            }
+            if term.get_op() == "(" && i + 1 == terms.ssize() { // Function operator has to be the last
+                is_func = true;
+                continue;
+            }
+            else {
+                postfix.error("AD: Unknown operator for postfix expression. op: (term.get_op())$ expr: (postfix)$");
+            }
+        }
+
+        // TODO: Really check for members
+        if terms.ssize() != 1 {
+            active |= ctx*.is_variable_active(postfix.get_primary_expression().to_string());
+        }
+
+        if is_func {
+            // Check arguments of function
+            for terms.back().get_expression_list().get_expressions() do (cur) {
+                pre_traverse(cur);
+            }
+        }
+    }
+}
+
 autodiff_handler_base: type = {
     public ctx: *autodiff_context;
 
@@ -4648,6 +4767,7 @@ autodiff_expression_handler: type = {
         primal: std::string = "";
         fwd   : std::string = "";
         rws   : std::string = "";
+        active: bool        = false;
     }
 
     handle_expression_list: (inout this, list: meta::expression_list) -> std::vector<primal_fwd_rws_name> = {
@@ -4670,45 +4790,53 @@ autodiff_expression_handler: type = {
                 fwd = "this(ctx*.fwd_suffix)$." + fwd;
                 rws = "this(ctx*.rws_suffix)$." + rws;
             }
-            return (primal, fwd, rws);
+
+            if decl.is_active {
+                return (primal, fwd, rws, true);
+            }
+            else {
+                return (primal, "", "", false);
+            }
+
         }
         else if term.is_expression_list() {
             exprs := term..as_expression_list()..get_expressions();
             if exprs.ssize() != 1 {
                 term.error("Can not handle multiple expressions. (term.to_string())");
-                return ("error", "", "");
+                return ("error", "", "", false);
             }
             expr := exprs[0];
             bin_expr := expr..as_assignment_expression();
 
             if bin_expr.terms_size() != 0 {
                 term.error("Can not handle assign expr inside of expression. (expr.to_string())$");
-                return ("error", "", "");
+                return ("error", "", "", false);
             }
 
-            ad : autodiff_expression_handler = (ctx);
-            ad..pre_traverse(bin_expr.get_terms().front().get_term());
-            t := ctx*.gen_temporary();
-            ad.gen_declaration(t, "double"); // TODO: get type of expression
-            append(ad);
-
-            r : primal_fwd_rws_name = (t, t + ctx*.fwd_suffix, t + ctx*.rws_suffix); // TODO: Check why on return (t, t + ctx*.fwd_suffix) the primal is initialized empty. Probably because of the move(t)
-            _ = t;
-            return r;
+            return handle_expression_term(bin_expr.get_terms().front().get_term());
         }
         else {
             // Nothing special. A regular expression.
             expr := term;
 
-            ad : autodiff_expression_handler = (ctx);
-            ad..pre_traverse(expr);
-            t := ctx*.gen_temporary();
-            ad.gen_declaration(t, "double"); // TODO: get type of expression
-            append(ad);
+            ada: autodiff_activity_check = (ctx);
+            ada.pre_traverse(expr);
 
-             r : primal_fwd_rws_name = (t, t + ctx*.fwd_suffix, t + ctx*.rws_suffix); // TODO: Check why on return (t, t + ctx*.fwd_suffix) the primal is initialized empty. Probably because of the move(t)
-            _ = t;
-            return r;
+            if ada.active {
+
+                ad : autodiff_expression_handler = (ctx);
+                ad..pre_traverse(expr);
+                t := ctx*.gen_temporary();
+                ad.gen_declaration(t, "double"); // TODO: get type of expression
+                append(ad);
+
+                r : primal_fwd_rws_name = (t, t + ctx*.fwd_suffix, t + ctx*.rws_suffix, true); // TODO: Check why on return (t, t + ctx*.fwd_suffix) the primal is initialized empty. Probably because of the move(t)
+                _ = t;
+                return r;
+            }
+            else {
+                return (expr.to_string(), "", "", false);
+            }
         }
     }
 
@@ -4799,7 +4927,12 @@ autodiff_expression_handler: type = {
             diff += "(object_d)$, ";
         }
         for args do (arg) {
-            diff += "(arg.primal)$, (arg.fwd)$,";
+            if arg.active {
+                diff += "(arg.primal)$, (arg.fwd)$, ";
+            }
+            else {
+                diff += "(arg.primal)$, ";
+            }
         }
         diff += ");\n";
 
@@ -4952,8 +5085,10 @@ autodiff_expression_handler: type = {
             }
 
             var   := handle_expression_term(term.get_term());
-            fwd    += var.fwd;
-            rws    += "(var.rws)$ (op)$= _rb_;\n";
+            if var.active {
+                fwd    += var.fwd;
+                rws    += "(var.rws)$ (op)$= _rb_;\n";
+            }
             primal += var.primal;
 
             first = false;
@@ -4967,17 +5102,11 @@ autodiff_expression_handler: type = {
     traverse: (override inout this, binexpr: meta::multiplicative_expression) = {
         terms := binexpr.get_terms();
 
-        var     := handle_expression_term(terms[0].get_term());
-        arg_a   := var.primal;
-        arg_a_d := var.fwd;
-        arg_a_b := var.rws;
+        var_a := handle_expression_term(terms[0].get_term());
 
         i : int = 1;
         while i < terms.ssize() next i += 1 {
-            var      = handle_expression_term(terms[i].get_term());
-            arg_b   := var.primal;
-            arg_b_d := var.fwd;
-            arg_b_b := var.rws;
+            var_b := handle_expression_term(terms[i].get_term());
 
             op := terms[i].get_op().to_string();
 
@@ -4987,29 +5116,54 @@ autodiff_expression_handler: type = {
 
             if "*" == op {
                 if ctx*.is_taylor() {
-                    fwd = "(arg_a_d)$..mul((arg_b_d)$, (arg_a)$, (arg_b)$)";
-                    rws = "(arg_b_b)$ += (arg_a_d)$..mul(_rb_, (arg_a)$, _r_);\n"
-                          "(arg_a_b)$ += (arg_b_d)$..mul(_rb_, (arg_b)$, _r_);";
+                    // TODO: Add taylor overloads
+                    fwd = "(var_a.fwd)$..mul((var_b.fwd)$, (var_a.primal)$, (var_b.primal)$)";
+                    if var_a.active {
+                        //fwd += "(var_b.primal)$ * (var_a.fwd)$";
+                        rws += "(var_a.rws)$ += (var_b.fwd)$..mul(_rb_, (var_b.primal)$, _r_);\n";
+                    }
+                    if var_b.active {
+                        if !fwd.empty() { fwd += " + "; }
+                        //fwd += "(var_a.primal)$ * (var_b.fwd)$";
+                        rws = "(var_b.rws)$ += (var_a.fwd)$..mul(_rb_, (var_a.primal)$, _r_);\n";
+                    }
                 }
                 else {
-                    fwd = "(arg_a)$ * (arg_b_d)$ + (arg_b)$ * (arg_a_d)$";
-                    rws = "(arg_b_b)$ += (arg_a)$ * _rb_;\n"
-                          "(arg_a_b)$ += (arg_b)$ * _rb_;";
+                    if var_a.active {
+                        fwd += "(var_b.primal)$ * (var_a.fwd)$";
+                        rws += "(var_a.rws)$ += (var_b.primal)$ * _rb_;\n";
+                    }
+                    if var_b.active {
+                        if !fwd.empty() { fwd += " + "; }
+                        fwd += "(var_a.primal)$ * (var_b.fwd)$";
+                        rws = "(var_b.rws)$ += (var_a.primal)$ * _rb_;\n";
+                    }
                 }
-                primal = "(arg_a)$ * (arg_b)$";
+                primal = "(var_a.primal)$ * (var_b.primal)$";
             }
             else if "/" == op {
                 if ctx*.is_taylor() {
-                    fwd = "(arg_a_d)$.div((arg_b_d)$, (arg_a)$, (arg_b)$)";
-                    rws = "(arg_b_b)$ -= (arg_a_d)$.mul(_rb_, (arg_a)$, _r_).div((arg_b_d)$.mul((arg_b_d)$, (arg_b)$, (arg_b)$), (arg_a)$ * _r_, (arg_b)$ * (arg_b)$);\n"
-                          "(arg_a_b)$ += _rb_.div((arg_b_d)$, _r_, (arg_b)$);";
+                    // TODO: Add taylor overloads
+                    fwd = "(var_a.fwd)$.div((var_b.fwd)$, (var_a.primal)$, (var_b.primal)$)";
+                    if var_a.active {
+                        rws += "(var_a.rws)$ += _rb_.div((var_b.fwd)$, _r_, (var_b.primal)$);\n";
+                    }
+                    if var_b.active {
+                        rws += "(var_b.rws)$ -= (var_a.fwd)$.mul(_rb_, (var_a.primal)$, _r_).div((var_b.fwd)$.mul((var_b.fwd)$, (var_b.primal)$, (var_b.primal)$), (var_a.primal)$ * _r_, (var_b.primal)$ * (var_b.primal)$);\n";
+                    }
                 }
                 else {
-                    fwd = "(arg_a_d)$ / (arg_b)$ - (arg_a)$ * (arg_b_d)$ / ((arg_b)$ * (arg_b)$)";
-                    rws = "(arg_b_b)$ -= (arg_a)$ * _rb_ / ((arg_b)$ * (arg_b)$);\n"
-                          "(arg_a_b)$ += _rb_ / (arg_b)$;";
+                    if var_a.active {
+                        fwd += "(var_a.fwd)$ / (var_b.primal)$";
+                        rws = "(var_a.rws)$ += _rb_ / (var_b.primal)$;\n";
+                    }
+                    if var_b.active {
+                        if !fwd.empty() { fwd += " + "; }
+                        fwd += "-(var_a.primal)$ * (var_b.fwd)$ / ((var_b.primal)$ * (var_b.primal)$)";
+                        rws += "(var_b.rws)$ -= (var_a.primal)$ * _rb_ / ((var_b.primal)$ * (var_b.primal)$);\n";
+                    }
                 }
-                primal = "(arg_a)$ / (arg_b)$";
+                primal = "(var_a.primal)$ / (var_b.primal)$";
             }
             else {
                 binexpr.error( "unkown multiplicative operator '(op)$'");
@@ -5023,14 +5177,11 @@ autodiff_expression_handler: type = {
             }
             else {
                 // Temporary
-                t   := ctx*.gen_temporary();
-                t_d := t + ctx*.fwd_suffix;
-                t_b := t + ctx*.rws_suffix;
-                gen_declaration(t, t_d, t_b, primal, fwd, rws, "", "", "");
-
-                arg_a   = t;
-                arg_a_d = t_d;
-                arg_a_b = t_b;
+                var_a.primal = ctx*.gen_temporary();
+                var_a.fwd    = var_a.primal + ctx*.fwd_suffix;
+                var_a.rws    = var_a.primal + ctx*.rws_suffix;
+                var_a.active = var_a.active | var_b.active;
+                gen_declaration(var_a.primal, var_a.fwd, var_a.rws, primal, fwd, rws, "", "", "");
             }
         }
     }
@@ -5159,28 +5310,50 @@ autodiff_stmt_handler: type = {
         lhs  : std::string = o.name();
         type :             = o.type();
 
-        fwd_ad_type : = ctx*.get_fwd_ad_type(type);
-
-        prim_init: std::string = "";
-        fwd_init : std::string = "";
-
-        if o.has_initializer() {
-            ad: autodiff_expression_handler = (ctx);
-            ad.pre_traverse(o.get_initializer());
-            append(ad);
-
-            prim_init = " = " + ad.primal_expr;
-            fwd_init  = " = " + ad.fwd_expr;
-
-            if type == "_" && ad.fwd_expr == "()" {
-                // Special handling for auto initialization from a literal.
-                fwd_init = " = " + ctx*.get_fwd_ad_type("double") + "()";
-            }
+        active := false;
+        if "_" != type {
+            active = ctx*.is_type_active(type);
         }
-        diff += "(lhs)$(ctx*.fwd_suffix)$ : (fwd_ad_type)$(fwd_init)$;\n";
-        diff += "(lhs)$   : (type)$(prim_init)$;\n";
+        else {
+            assert(o.has_initializer());
 
-        ctx*.add_variable_declaration(lhs, type);
+            ada: autodiff_activity_check = (ctx);
+            ada.pre_traverse(o.get_initializer());
+            active = ada.active;
+        }
+
+        if active {
+
+            fwd_ad_type : = ctx*.get_fwd_ad_type(type);
+
+            prim_init: std::string = "";
+            fwd_init : std::string = "";
+
+            if o.has_initializer() {
+                ad: autodiff_expression_handler = (ctx);
+                ad.pre_traverse(o.get_initializer());
+                append(ad);
+
+                prim_init = " = " + ad.primal_expr;
+                fwd_init  = " = " + ad.fwd_expr;
+
+                if type == "_" && ad.fwd_expr == "()" {
+                    // Special handling for auto initialization from a literal.
+                    fwd_init = " = " + ctx*.get_fwd_ad_type("double") + "()";
+                }
+            }
+            diff += "(lhs)$(ctx*.fwd_suffix)$ : (fwd_ad_type)$(fwd_init)$;\n";
+            diff += "(lhs)$   : (type)$(prim_init)$;\n";
+        }
+        else {
+            diff += "(lhs)$: (type)$";
+            if o.has_initializer() {
+                diff += " = (o.get_initializer().to_string())$";
+            }
+            diff += ";\n";
+        }
+
+        ctx*.add_variable_declaration(lhs, type, active);
     }
 
 
@@ -5266,7 +5439,7 @@ autodiff_stmt_handler: type = {
             diff += ") do ((param_style)$ (param_decl.name())$: (param_decl.type())$) {\n";
             diff += "((param_style)$ (param_decl.name())$(ctx*.fwd_suffix)$: (param_decl.type())$ = (param_decl.name())$_d_iter*)";
 
-            ctx*.add_variable_declaration("(param_decl.name())$", "(param_decl.type())$"); // TODO: Handle loop/compound context variable declarations.
+            ctx*.add_variable_declaration("(param_decl.name())$", "(param_decl.type())$", true); // TODO: Handle loop/compound context variable declarations.
 
             pre_traverse(stmt.get_for_body());
             diff += "}\n";
@@ -5417,6 +5590,8 @@ autodiff_declaration_handler: type = {
     traverse: (override inout this, f: meta::function_declaration) = {
         ctx*.enter_function();
 
+        // TODO: Add activity for member functions
+
         diff.add_forward("    (f.name())$(ctx*.fwd_suffix)$: (");
         diff.add_reverse_primal("    (f.name())$(ctx*.rws_suffix)$: (");
 
@@ -5444,17 +5619,26 @@ autodiff_declaration_handler: type = {
             }
             else {
                 type := param.get_declaration().type();
-                diff.add_forward("(fwd_pass_style)$ (name)$ : (type)$, ");
-                diff.add_forward("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$, ");
 
-                diff.add_reverse_primal("(fwd_pass_style)$ (name)$ : (type)$, ");
-                if ctx*.is_taylor() {
-                    diff.add_reverse_primal("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$, ");
+                ada: autodiff_activity_check = (ctx);
+                ada.pre_traverse(param);
+
+                if ada.active {
+                    diff.add_forward("(fwd_pass_style)$ (name)$ : (type)$, ");
+                    diff.add_forward("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$, ");
+
+                    diff.add_reverse_primal("(fwd_pass_style)$ (name)$ : (type)$, ");
+                    if ctx*.is_taylor() {
+                        diff.add_reverse_primal("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$, ");
+                    }
+                    diff.add_reverse_primal("(rws_pass_style)$ (name)$(ctx*.rws_suffix)$ : (ctx*.get_rws_ad_type(type))$, ");
                 }
-                diff.add_reverse_primal("(rws_pass_style)$ (name)$(ctx*.rws_suffix)$ : (ctx*.get_rws_ad_type(type))$, ");
+                else {
+                    diff.add_forward("(fwd_pass_style)$ (name)$ : (type)$, ");
+                    diff.add_reverse_primal("(fwd_pass_style)$ (name)$ : (type)$, ");
+                }
 
-
-                ctx*.add_variable_declaration(name, type);
+                ctx*.add_variable_declaration(name, type, ada.active);
             }
         }
 
@@ -5518,7 +5702,7 @@ autodiff_declaration_handler: type = {
                     diff.add_reverse_primal("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$ = 0.0, ");
                 }
 
-                ctx*.add_variable_declaration("(name)$", "(type)$");
+                ctx*.add_variable_declaration("(name)$", "(type)$", true); // TODO_a: Add acitivty check
             }
         }
 
@@ -5585,7 +5769,7 @@ autodiff_declaration_handler: type = {
         }
         diff = "";
 
-        ctx*.add_variable_declaration("(o.name())$", "(o.type())$", true);
+        ctx*.add_variable_declaration("(o.name())$", "(o.type())$", true, true); // TODO_a: Add acitivty check
     }
 
 
