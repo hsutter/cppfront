@@ -4948,30 +4948,40 @@ autodiff_expression_handler: type = {
             return;
         }
 
+        call_primal: std::string = "";
+        call_fwd   : std::string = "";
+        call_rws   : std::string = "";
+
         // All arguments have now been handled. Form the function call
         ret_temp : std::string = "";
         if has_return {
             ret_temp = ctx*.gen_temporary();
-            diff += "(ret_temp)$ := ";
+            call_fwd += "(ret_temp)$ := ";
         }
 
         // TODO: This is untested for functions with no return value. Requires handling of out and inout parameters in functions.
         if !object.empty() { // Prepend object call
-            diff += "(object)$.";
+            call_primal += "(object)$.";
+            call_fwd    += "(object)$.";
+            call_rws    += "(object)$.";
         }
-        diff += "(function_name)$(ctx*.fwd_suffix)$(";
+        call_primal += "(function_name)$(";
+        call_fwd    += "(function_name)$(ctx*.fwd_suffix)$(";
+        call_rws    += "(function_name)$(ctx*.rws_suffix)$(";
         if !object.empty() { // Add this_d argument.
-            diff += "(object_d)$, ";
+            call_fwd += "(object_d)$, ";
+            call_rws += "(object_b)$, ";
         }
         for args do (arg) {
+            // TODO: Add taylor reverse handling.
+            call_primal += "(arg.primal)$, ";
+            call_fwd    += "(arg.primal)$, ";
+            call_rws    += "(arg.primal)$, ";
             if arg.active {
-                diff += "(arg.primal)$, (arg.fwd)$, ";
-            }
-            else {
-                diff += "(arg.primal)$, ";
+                call_fwd += "(arg.fwd)$, ";
+                call_rws += "(arg.rws)$, ";
             }
         }
-        diff += ");\n";
 
         if has_return {
             functions : std::vector<meta::function_declaration> = ();
@@ -5018,9 +5028,28 @@ autodiff_expression_handler: type = {
             }
 
             ret_name_d : std::string = ret_name + ctx*.fwd_suffix;
+            ret_name_b : std::string = ret_name + ctx*.rws_suffix;
 
-            primal_expr = "(ret_temp)$.(ret_name)$";
+            call_rws += "_rb_, ";
+
+            call_primal += ")";
+            call_fwd    += ");\n";
+            call_rws    += ");\n";
+
+            diff.add_forward(call_fwd);
+
+            primal_expr = call_primal;
             fwd_expr    = "(ret_temp)$.(ret_name_d)$";
+            rws_expr    = "_ = (call_rws)$";
+        }
+        else {
+            call_primal += ");\n";
+            call_fwd    += ");\n";
+            call_rws    += ");\n";
+
+            diff.add_forward(call_fwd);
+            diff.add_reverse_primal(call_primal);
+            diff.add_reverse_backprop(call_rws);
         }
 
         // TODO: Add function to list of functions/objects for differentiation for the no return case.

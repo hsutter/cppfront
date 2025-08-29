@@ -577,7 +577,7 @@ ad_test:/* @autodiff @print */ type =
     {
         temp_1: _ = func_d(x, x_d, y, y_d);
         temp_2_d: double = temp_1.ret_d;
-        temp_2: double = temp_1.ret;
+        temp_2: double = func(x, y);
         r_d = temp_2 * x_d + x * temp_2_d;
         r = x * temp_2;
         return;
@@ -595,7 +595,7 @@ ad_test:/* @autodiff @print */ type =
     {
         temp_1: _ = func_outer_d(x, x_d, y, y_d);
         temp_2_d: double = temp_1.ret_d;
-        temp_2: double = temp_1.ret;
+        temp_2: double = func_outer(x, y);
         r_d = temp_2 * x_d + x * temp_2_d;
         r = x * temp_2;
         return;
@@ -885,7 +885,7 @@ ad_test:/* @autodiff @print */ type =
         t.a = x;
         temp_1: _ = t.add_d(t_d, y, y_d);
         r_d = temp_1.r_d;
-        r = temp_1.r;
+        r = t.add(y);
         return;
     }
 }
@@ -1007,6 +1007,33 @@ ad_test_reverse:/* @autodiff<"reverse"> @print */ type =
     ) -> (out r: double, ) = 
     {
         r = sin(x - y);
+        return;
+    }
+
+    func:(
+        in x: double, 
+        in y: double, 
+    ) -> (out ret: double, ) = 
+    {
+        ret = x + y;
+        return;
+    }
+
+    func_call:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x * func(x, y);
+        return;
+    }
+
+    func_outer_call:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x * func_outer(x, y);
         return;
     }
 
@@ -1234,6 +1261,59 @@ ad_test_reverse:/* @autodiff<"reverse"> @print */ type =
         x_b += temp_1_b;
         y_b -= temp_1_b;
         temp_1_b = 0.0;
+        return;
+    }
+
+    func_b:(
+        in x: double, 
+        inout x_b: double, 
+        in y: double, 
+        inout y_b: double, 
+        inout ret_b: double, 
+    ) -> (out ret: double = 0.0, ) = 
+    {
+        ret = x + y;
+        x_b += ret_b;
+        y_b += ret_b;
+        ret_b = 0.0;
+        return;
+    }
+
+    func_call_b:(
+        in x: double, 
+        inout x_b: double, 
+        in y: double, 
+        inout y_b: double, 
+        inout r_b: double, 
+    ) -> (out r: double = 0.0, ) = 
+    {
+        temp_2_b: double = 0.0;
+        temp_2: double = func(x, y);
+        r = x * temp_2;
+        x_b += temp_2 * r_b;
+        temp_2_b += x * r_b;
+        r_b = 0.0;
+        _ = func_b(x, x_b, y, y_b, temp_2_b);
+        temp_2_b = 0.0;
+        return;
+    }
+
+    func_outer_call_b:(
+        in x: double, 
+        inout x_b: double, 
+        in y: double, 
+        inout y_b: double, 
+        inout r_b: double, 
+    ) -> (out r: double = 0.0, ) = 
+    {
+        temp_2_b: double = 0.0;
+        temp_2: double = func_outer(x, y);
+        r = x * temp_2;
+        x_b += temp_2 * r_b;
+        temp_2_b += x * r_b;
+        r_b = 0.0;
+        _ = func_outer_b(x, x_b, y, y_b, temp_2_b);
+        temp_2_b = 0.0;
         return;
     }
 }
