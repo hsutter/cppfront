@@ -14,7 +14,7 @@ namespace ns {
 #line 7 "pure2-function-body-reflection.cpp2"
 class test;
 
-#line 81 "pure2-function-body-reflection.cpp2"
+#line 88 "pure2-function-body-reflection.cpp2"
 }
 
 
@@ -52,20 +52,20 @@ using branches_ret = double;
 #line 43 "pure2-function-body-reflection.cpp2"
     public: [[nodiscard]] static auto prefix() -> int;
 
-#line 53 "pure2-function-body-reflection.cpp2"
+#line 55 "pure2-function-body-reflection.cpp2"
     public: static auto postfix(double& a) -> void;
 
-#line 59 "pure2-function-body-reflection.cpp2"
+#line 61 "pure2-function-body-reflection.cpp2"
     public: [[nodiscard]] static auto qualified_ids() -> auto;
 
-#line 65 "pure2-function-body-reflection.cpp2"
+#line 67 "pure2-function-body-reflection.cpp2"
     public: static auto loops() -> void;
     public: test() = default;
     public: test(test const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(test const&) -> void = delete;
 
 
-#line 76 "pure2-function-body-reflection.cpp2"
+#line 83 "pure2-function-body-reflection.cpp2"
 };
 
 // This function will not be visible as a namespace member while reflecting on ns::test
@@ -136,45 +136,60 @@ auto sample_function_before_type() -> void{}
     {
         auto a {-1}; 
         auto b {+2}; 
+{
+auto const& local{a - b};
+
+#line 49 "pure2-function-body-reflection.cpp2"
         if (!(true)) {
-            return 0; 
+            return local; 
         }
+}
+#line 52 "pure2-function-body-reflection.cpp2"
         return cpp2::move(a) + cpp2::move(b); 
     }
 
-#line 53 "pure2-function-body-reflection.cpp2"
+#line 55 "pure2-function-body-reflection.cpp2"
     auto test::postfix(double& a) -> void
     {
         auto ptr {&a}; 
         --++*cpp2::impl::assert_not_null(cpp2::move(ptr));
     }
 
-#line 59 "pure2-function-body-reflection.cpp2"
+#line 61 "pure2-function-body-reflection.cpp2"
     [[nodiscard]] auto test::qualified_ids() -> auto
     {
         std::vector<int> v {1, 2, 3}; 
         return CPP2_UFCS(ssize)(cpp2::move(v)); 
     }
 
-#line 65 "pure2-function-body-reflection.cpp2"
+#line 67 "pure2-function-body-reflection.cpp2"
     auto test::loops() -> void
     {
         std::vector v {1, 2, 3}; 
+{
+auto index{1};
 
-        for ( auto const& value : cpp2::move(v) ) {std::cout << value << "\n"; }
+#line 72 "pure2-function-body-reflection.cpp2"
+        for ( 
+             auto const& value : cpp2::move(v) ) 
+        {
+            std::cout << "" + cpp2::to_string(index) + " " + cpp2::to_string(value) + "\n";
+        }
+}
 
+#line 78 "pure2-function-body-reflection.cpp2"
         auto i {0}; 
         for( ; cpp2::impl::cmp_less(i,3); i += 1 ) {std::cout << i << "\n"; }
 
         do {std::cout << "plugh\n"; } while ( false);
     }
 
-#line 79 "pure2-function-body-reflection.cpp2"
+#line 86 "pure2-function-body-reflection.cpp2"
 auto sample_function_after_type() -> void{}
 
 }
 
-#line 83 "pure2-function-body-reflection.cpp2"
+#line 90 "pure2-function-body-reflection.cpp2"
 auto main() -> int{
     std::cout << "calling generated function ns::add_1... ns::add_1(42) returned " + cpp2::to_string(ns::add_1(42)) + "\n";
 }

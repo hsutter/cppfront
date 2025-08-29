@@ -1328,6 +1328,16 @@ statement: @polymorphic_base @copy_constructible type =
         reflection_base<statement_node> = (n_, s);
     }
 
+    get_parameters: (this)
+        -> std::vector<parameter_declaration>
+    = {
+        ret: std::vector<parameter_declaration> = ();
+        for n*.get_parameters() do (param) {
+            _ = ret.emplace_back( param, this );
+        }
+        return ret;
+    }
+
     is_expression_statement : (this) -> bool = n*.is_expression();
     is_compound_statement   : (this) -> bool = n*.is_compound();
     is_selection_statement  : (this) -> bool = n*.is_selection();
@@ -3426,6 +3436,14 @@ sample_traverser: (t: meta::parameter_declaration, indent: i32 = 0) =
 
 sample_traverser: (stmt: meta::statement, indent: i32) =
 {
+    params := stmt.get_parameters();
+    if !params.empty() {
+        sample_print("statement parameters: ", indent);
+        for params do (param) {
+            sample_traverser( param, indent+1 );
+        }
+    }
+
     if stmt.is_expression_statement() {
         sample_traverser(stmt.as_expression_statement().get_expression(), indent);
     }
