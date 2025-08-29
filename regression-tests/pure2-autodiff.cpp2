@@ -196,6 +196,10 @@ ad_test_reverse: @autodiff<"reverse"> @print type = {
     add_1: (x: double, y: double) -> (r: double) = {
         r = x + y;
     }
+
+    mul_1: (x: double, y: double) -> (r: double) = {
+        r = x * y;
+    }
 }
 }
 
@@ -257,7 +261,12 @@ main: () = {
     y_b: double = 0.0;
     w_b: double = 1.0;
 
-    write_output_reverse("x + y", x, y, w_b, ad_name::ad_test_reverse::add_1_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x + y", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::add_1_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x * y", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::mul_1_b(x, x_b, y, y_b, w_b));
+
+    _ = x_b;
+    _ = y_b;
+    _ = w_b;
 
     r_twice := ad_test_twice::mul_1_d_d2(x, x_d, x_d, 0.0);
     std::cout << "2nd order diff of x*x at (x)$ = (r_twice.r_d_d2)$" << std::endl;

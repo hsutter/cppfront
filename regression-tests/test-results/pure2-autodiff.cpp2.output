@@ -411,7 +411,7 @@ ad_test:/* @autodiff @print */ type =
             out r_d: double = 0.0, 
         ) = 
     {
-        r_d = x * y_d + y * x_d;
+        r_d = y * x_d + x * y_d;
         r = x * y;
         return;
     }
@@ -426,9 +426,9 @@ ad_test:/* @autodiff @print */ type =
             out r_d: double = 0.0, 
         ) = 
     {
-        temp_1_d: _ = x * y_d + y * x_d;
+        temp_1_d: _ = y * x_d + x * y_d;
         temp_1: _ = x * y;
-        r_d = temp_1 * x_d + x * temp_1_d;
+        r_d = x * temp_1_d + temp_1 * x_d;
         r = temp_1 * x;
         return;
     }
@@ -443,7 +443,7 @@ ad_test:/* @autodiff @print */ type =
             out r_d: double = 0.0, 
         ) = 
     {
-        r_d = x_d / y - x * y_d / (y * y);
+        r_d = x_d / y + -x * y_d / (y * y);
         r = x / y;
         return;
     }
@@ -458,9 +458,9 @@ ad_test:/* @autodiff @print */ type =
             out r_d: double = 0.0, 
         ) = 
     {
-        temp_1_d: _ = x_d / y - x * y_d / (y * y);
+        temp_1_d: _ = x_d / y + -x * y_d / (y * y);
         temp_1: _ = x / y;
-        r_d = temp_1_d / y - temp_1 * y_d / (y * y);
+        r_d = temp_1_d / y + -temp_1 * y_d / (y * y);
         r = temp_1 / y;
         return;
     }
@@ -475,9 +475,9 @@ ad_test:/* @autodiff @print */ type =
             out r_d: double = 0.0, 
         ) = 
     {
-        temp_1_d: _ = x * y_d + y * x_d;
+        temp_1_d: _ = y * x_d + x * y_d;
         temp_1: _ = x * y;
-        r_d = temp_1_d / x - temp_1 * x_d / (x * x);
+        r_d = temp_1_d / x + -temp_1 * x_d / (x * x);
         r = temp_1 / x;
         return;
     }
@@ -494,7 +494,7 @@ ad_test:/* @autodiff @print */ type =
     {
         temp_1_d: double = x_d + y_d;
         temp_1: double = x + y;
-        r_d = x * temp_1_d + temp_1 * x_d;
+        r_d = temp_1 * x_d + x * temp_1_d;
         r = x * temp_1;
         return;
     }
@@ -509,7 +509,7 @@ ad_test:/* @autodiff @print */ type =
             out r_d: double = 0.0, 
         ) = 
     {
-        temp_1_d: double = x * y_d + y * x_d;
+        temp_1_d: double = y * x_d + x * y_d;
         temp_1: double = x * y;
         r_d = x_d + temp_1_d;
         r = x + temp_1;
@@ -578,7 +578,7 @@ ad_test:/* @autodiff @print */ type =
         temp_1: _ = func_d(x, x_d, y, y_d);
         temp_2_d: double = temp_1.ret_d;
         temp_2: double = temp_1.ret;
-        r_d = x * temp_2_d + temp_2 * x_d;
+        r_d = temp_2 * x_d + x * temp_2_d;
         r = x * temp_2;
         return;
     }
@@ -596,7 +596,7 @@ ad_test:/* @autodiff @print */ type =
         temp_1: _ = func_outer_d(x, x_d, y, y_d);
         temp_2_d: double = temp_1.ret_d;
         temp_2: double = temp_1.ret;
-        r_d = x * temp_2_d + temp_2 * x_d;
+        r_d = temp_2 * x_d + x * temp_2_d;
         r = x * temp_2;
         return;
     }
@@ -706,13 +706,10 @@ ad_test:/* @autodiff @print */ type =
             out r_d: double = 0.0, 
         ) = 
     {
-        i_d: int = ();
         i: int = ();
         r_d = x_d + y_d;
         r = x + y;
-        i_d = ();
         i = 2;
-        _ = i_d;
         _ = i;
         return;
     }
@@ -784,7 +781,6 @@ ad_test:/* @autodiff @print */ type =
             out r_d: double = 0.0, 
         ) = 
     {
-        i_d: int = ();
         i: int = 0;
         r_d = x_d;
         r = x;
@@ -807,7 +803,6 @@ ad_test:/* @autodiff @print */ type =
             out r_d: double = 0.0, 
         ) = 
     {
-        i_d: int = ();
         i: int = 0;
         r_d = x_d;
         r = x;
@@ -896,6 +891,56 @@ ad_test:/* @autodiff @print */ type =
 }
 
 
+ad_test_reverse:/* @autodiff<"reverse"> @print */ type = 
+{
+    add_1:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x + y;
+        return;
+    }
+
+    mul_1:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x * y;
+        return;
+    }
+
+    add_1_b:(
+        in x: double, 
+        inout x_b: double, 
+        in y: double, 
+        inout y_b: double, 
+        inout r_b: double, 
+    ) -> (out r: double = 0.0, ) = 
+    {
+        r = x + y;
+        x_b += r_b;
+        y_b += r_b;
+        return;
+    }
+
+    mul_1_b:(
+        in x: double, 
+        inout x_b: double, 
+        in y: double, 
+        inout y_b: double, 
+        inout r_b: double, 
+    ) -> (out r: double = 0.0, ) = 
+    {
+        r = x * y;
+        x_b += y * r_b;
+        y_b += x * r_b;
+        return;
+    }
+}
+
+
 ad_test_twice:/* @autodiff @autodiff<"suffix=_d2"> @print */ type = 
 {
     mul_1:(in x: double, ) -> (out r: double, ) = 
@@ -942,9 +987,9 @@ ad_test_twice:/* @autodiff @autodiff<"suffix=_d2"> @print */ type =
             out r_d_d2: double = 0.0, 
         ) = 
     {
-        temp_1_d2: double = x * x_d_d2 + x_d * x_d2;
+        temp_1_d2: double = x_d * x_d2 + x * x_d_d2;
         temp_1: double = x * x_d;
-        temp_2_d2: double = x * x_d_d2 + x_d * x_d2;
+        temp_2_d2: double = x_d * x_d2 + x * x_d_d2;
         temp_2: double = x * x_d;
         r_d_d2 = temp_1_d2 + temp_2_d2;
         r_d = temp_1 + temp_2;

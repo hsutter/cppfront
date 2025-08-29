@@ -4602,6 +4602,18 @@ autodiff_activity_check: type = {
         ctx = ctx_;
     }
 
+    traverse: (override inout this, t: meta::type_declaration) = {
+        for t.get_members()
+        do  (m)
+        {
+            if m.is_object() || m.is_member_object() {
+                pre_traverse(m);
+            }
+
+            // TODO: Maybe also add functions.
+        }
+    }
+
     traverse: (override inout this, o: meta::object_declaration) = {
 
         type := o.type();
@@ -4665,7 +4677,7 @@ autodiff_activity_check: type = {
         }
 
         // TODO: Really check for members
-        if terms.ssize() != 1 {
+        if !is_func || terms.ssize() != 1 {
             active |= ctx*.is_variable_active(postfix.get_primary_expression().to_string());
         }
 
@@ -5125,7 +5137,7 @@ autodiff_expression_handler: type = {
                     if var_b.active {
                         if !fwd.empty() { fwd += " + "; }
                         //fwd += "(var_a.primal)$ * (var_b.fwd)$";
-                        rws = "(var_b.rws)$ += (var_a.fwd)$..mul(_rb_, (var_a.primal)$, _r_);\n";
+                        rws += "(var_b.rws)$ += (var_a.fwd)$..mul(_rb_, (var_a.primal)$, _r_);\n";
                     }
                 }
                 else {
@@ -5136,7 +5148,7 @@ autodiff_expression_handler: type = {
                     if var_b.active {
                         if !fwd.empty() { fwd += " + "; }
                         fwd += "(var_a.primal)$ * (var_b.fwd)$";
-                        rws = "(var_b.rws)$ += (var_a.primal)$ * _rb_;\n";
+                        rws += "(var_b.rws)$ += (var_a.primal)$ * _rb_;\n";
                     }
                 }
                 primal = "(var_a.primal)$ * (var_b.primal)$";
@@ -5463,16 +5475,28 @@ autodiff_stmt_handler: type = {
     }
 
     traverse: (override inout this, binexpr: meta::assignment_expression) = {
-        h_lhs: autodiff_expression_handler = (ctx);
-        h_lhs.pre_traverse(binexpr.get_lhs_postfix_expression());
+        ada: autodiff_activity_check = (ctx);
+        ada.pre_traverse(binexpr.get_lhs_postfix_expression());
+        if "_" == binexpr.get_lhs_postfix_expression().to_string() {
+            ada.pre_traverse(binexpr.get_terms()[1].get_term());
+        }
 
-        //  Cpp2 doesn't allow chained assignment, so rhs must be a single logical_or_expression
-        assignment_terms := binexpr.get_terms();
+        if ada.active {
+            h_lhs: autodiff_expression_handler = (ctx);
+            h_lhs.pre_traverse(binexpr.get_lhs_postfix_expression());
 
-        h: autodiff_expression_handler = (ctx);
-        h.pre_traverse(assignment_terms[1].get_term());
-        h.gen_assignment(h_lhs.primal_expr, h_lhs.fwd_expr, h_lhs.rws_expr);
-        append(h);
+            //  Cpp2 doesn't allow chained assignment, so rhs must be a single logical_or_expression
+            assignment_terms := binexpr.get_terms();
+
+            h: autodiff_expression_handler = (ctx);
+            h.pre_traverse(assignment_terms[1].get_term());
+            h.gen_assignment(h_lhs.primal_expr, h_lhs.fwd_expr, h_lhs.rws_expr);
+            append(h);
+        }
+        else {
+            diff.add_forward(binexpr.to_string() + ";\n");
+            diff.add_reverse_primal(binexpr.to_string() + ";\n");
+        }
     }
 
     traverse: (override inout this, binexpr: meta::logical_or_expression) = {
