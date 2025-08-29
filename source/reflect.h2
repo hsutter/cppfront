@@ -4095,25 +4095,33 @@ autodiff_special_func: type = {
 
     public code_primal             : std::string;
     public code_fwd                : std::string;
+    public code_rws                : std::string;
     public code_primal_higher_order: std::string;
     public code_fwd_higher_order   : std::string;
+    public code_rws_higher_order   : std::string;
 
     operator=: (out this, name_: std::string, n_args_: int, is_member_: bool, code_primal_: std::string = "", code_fwd_: std::string = "",
-                          code_primal_higher_order_: std::string = "", code_fwd_higher_order_: std::string = "") = {
+                          code_rws_: std::string = "", code_primal_higher_order_: std::string = "", code_fwd_higher_order_: std::string = "",
+                          code_rws_higher_order_: std::string = "") = {
         name      = name_;
         n_args    = n_args_;
         is_member = is_member_;
 
         code_primal              = code_primal_;
         code_fwd                 = code_fwd_;
+        code_rws                 = code_rws_;
         code_primal_higher_order = code_primal_higher_order_;
         code_fwd_higher_order    = code_fwd_higher_order_;
+        code_rws_higher_order    = code_rws_higher_order_;
 
         if code_primal_higher_order.empty() {
             code_primal_higher_order = code_primal;
         }
         if code_fwd_higher_order.empty() {
             code_fwd_higher_order = code_fwd;
+        }
+        if code_rws_higher_order.empty() {
+            code_rws_higher_order = code_rws;
         }
     }
 
@@ -4195,31 +4203,40 @@ autodiff_context: type = {
         autodiff_special_func("sin", 1, /* is_member = */ false,
             "sin(_a1_)",
             "cos(_a1_) * _ad1_",
+            "_ab1_ += cos(_a1_) * _rb_;\n",
             "sin(_a1_)",
             "_ad1_.sin(_a1_)",
+            "TODO",
 
         ),
         autodiff_special_func("cos", 1, /* is_member = */ false,
             "cos(_a1_)",
             "-sin(_a1_) * _ad1_",
+            "_ab1_ += -sin(_a1_) * _rb_;\n",
             "cos(_a1_)",
             "_ad1_.cos(_a1_)",
+            "TODO",
         ),
         autodiff_special_func("exp", 1, /* is_member = */ false,
             "exp(_a1_)",
             "exp(_a1_) * _ad1_",
+            "_ab1_ += exp(_a1_) * _rb_;\n",
             "exp(_a1_)",
             "_ad1_.exp(_a1_)",
+            "TODO",
         ),
         autodiff_special_func("sqrt", 1, /* is_member = */ false,
             "sqrt(_a1_)",
             "0.5 * _ad1_ / sqrt(_a1_)",
+            "_ab1_ += 0.5 * _rb_ / sqrt(_a1_);\n",
             "sqrt(_a1_)",
             "_ad1_.sqrt(_a1_)",
+            "TODO",
         ),
         autodiff_special_func("push_back", 1, /* is_member = */ true,
             "_o_.push_back(_a1_);",
-            "_od_.push_back(_ad1_);")
+            "_od_.push_back(_ad1_);",
+            "TODO")
     );
 
     public  fwd_suffix : std::string = "_d";
@@ -4440,22 +4457,25 @@ autodiff_context: type = {
         }
     }
 
-    lookup_special_function_handling: (this, func_name: std::string, n_args: int, is_member: bool) -> (m: bool, code_primal: std::string, code_fwd: std::string) = {
+    lookup_special_function_handling: (this, func_name: std::string, n_args: int, is_member: bool) -> (m: bool, code_primal: std::string, code_fwd: std::string, code_rws: std::string) = {
         lookup : autodiff_special_func = (func_name, n_args, is_member);
 
         m = false;
         code_primal = "";
         code_fwd    = "";
+        code_rws    = "";
         for special_funcs do (func) {
             if func.is_match(lookup) {
                 m = true;
                 if is_taylor() {
                     code_primal = func.code_primal_higher_order;
                     code_fwd    = func.code_fwd_higher_order;
+                    code_rws    = func.code_rws_higher_order;
                 }
                 else {
                     code_primal = func.code_primal;
                     code_fwd    = func.code_fwd;
+                    code_rws    = func.code_rws;
                 }
                 return;
             }
@@ -4880,6 +4900,7 @@ autodiff_expression_handler: type = {
 
         object         : std::string = "";
         object_d       : std::string = "";
+        object_b       : std::string = "";
         function_name : std::string = "";
         args          : std::vector<primal_fwd_rws_name> = ();
 
@@ -4888,6 +4909,7 @@ autodiff_expression_handler: type = {
         if 1 != terms.ssize() {
             object   = primary.to_string();
             object_d = primary.to_string() + ctx*.fwd_suffix;
+            object_b = primary.to_string() + ctx*.rws_suffix;
         }
         else {
             function_name = primary.to_string();
@@ -4917,7 +4939,7 @@ autodiff_expression_handler: type = {
             }
         }
 
-        if handle_special_function(object, object_d, function_name, args) {
+        if handle_special_function(object, object_d, object_b, function_name, args) {
             return;
         }
 
@@ -5004,7 +5026,7 @@ autodiff_expression_handler: type = {
         // TODO: Add function to list of functions/objects for differentiation for the no return case.
     }
 
-    handle_special_function: (inout this, object: std::string, object_d: std::string, function_name: std::string, args: std::vector<primal_fwd_rws_name>) -> bool = {
+    handle_special_function: (inout this, object: std::string, object_d: std::string, object_b: std::string, function_name: std::string, args: std::vector<primal_fwd_rws_name>) -> bool = {
 
         r := ctx*.lookup_special_function_handling(function_name, args.ssize(), !object.empty());
 
@@ -5015,6 +5037,7 @@ autodiff_expression_handler: type = {
         // Have a match, do the replacement
         code_primal: std::string = r.code_primal;
         code_fwd   : std::string = r.code_fwd;
+        code_rws   : std::string = r.code_rws;
 
         if !object.empty() {
             code_primal = string_util::replace_all(code_primal, "_o_", object);
@@ -5022,6 +5045,10 @@ autodiff_expression_handler: type = {
 
             code_fwd = string_util::replace_all(code_fwd, "_o_", object);
             code_fwd = string_util::replace_all(code_fwd, "_od_", object_d);
+
+            code_rws = string_util::replace_all(code_fwd, "_o_", object);
+            code_rws = string_util::replace_all(code_rws, "_od_", object_d);
+            code_rws = string_util::replace_all(code_fwd, "_ob_", object_b);
         }
 
         (copy i := 1)
@@ -5031,10 +5058,15 @@ autodiff_expression_handler: type = {
 
             code_fwd = string_util::replace_all(code_fwd, "_a(i)$_", arg.primal);
             code_fwd = string_util::replace_all(code_fwd, "_ad(i)$_", arg.fwd);
+
+            code_rws = string_util::replace_all(code_rws, "_a(i)$_", arg.primal);
+            code_rws = string_util::replace_all(code_rws, "_ad(i)$_", arg.fwd);
+            code_rws = string_util::replace_all(code_rws, "_ab(i)$_", arg.rws);
         }
 
         primal_expr = code_primal;
         fwd_expr    = code_fwd;
+        rws_expr    = code_rws;
 
         return true;
     }

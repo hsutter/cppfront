@@ -1001,6 +1001,15 @@ ad_test_reverse:/* @autodiff<"reverse"> @print */ type =
         return;
     }
 
+    sin_call:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = sin(x - y);
+        return;
+    }
+
     add_1_b:(
         in x: double, 
         inout x_b: double, 
@@ -1205,6 +1214,25 @@ ad_test_reverse:/* @autodiff<"reverse"> @print */ type =
         r_b = 0.0;
         x_b += y * temp_1_b;
         y_b += x * temp_1_b;
+        temp_1_b = 0.0;
+        return;
+    }
+
+    sin_call_b:(
+        in x: double, 
+        inout x_b: double, 
+        in y: double, 
+        inout y_b: double, 
+        inout r_b: double, 
+    ) -> (out r: double = 0.0, ) = 
+    {
+        temp_1_b: double = 0.0;
+        temp_1: double = x - y;
+        r = sin(temp_1);
+        temp_1_b += cos(temp_1) * r_b;
+        r_b = 0.0;
+        x_b += temp_1_b;
+        y_b -= temp_1_b;
         temp_1_b = 0.0;
         return;
     }

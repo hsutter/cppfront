@@ -240,6 +240,10 @@ ad_test_reverse: @autodiff<"reverse"> @print type = {
     add_mul: (x: double, y: double) -> (r: double) = {
         r = x + x * y;
     }
+
+    sin_call: (x: double, y: double) -> (r: double) = {
+      r = sin(x - y);
+    }
 }
 }
 
@@ -314,6 +318,7 @@ main: () = {
     write_output_reverse("x * y / x", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::mul_div_2_b(x, x_b, y, y_b, w_b));
     write_output_reverse("x * (x + y)", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::mul_add_b(x, x_b, y, y_b, w_b));
     write_output_reverse("x + x * y", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::add_mul_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("sin(x-y)", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::sin_call_b(x, x_b, y, y_b, w_b));
 
     _ = x_b;
     _ = y_b;
