@@ -4557,7 +4557,7 @@ autodiff_diff_code: type = {
 
     add_forward         : (inout this, v: std::string) = { if ctx*.is_forward() { fwd          += v; }}
     add_reverse_primal  : (inout this, v: std::string) = { if ctx*.is_reverse() { rws_primal   += v; }}
-    add_reverse_backprop: (inout this, v: std::string) = { if ctx*.is_reverse() { rws_backprop += v; }}
+    add_reverse_backprop: (inout this, v: std::string) = { if ctx*.is_reverse() { rws_backprop = v + rws_backprop; }}
 
     reset: (inout this) = {
         fwd          = "";
@@ -4748,6 +4748,7 @@ autodiff_expression_handler: type = {
             diff.add_reverse_primal("(lhs_d)$ = (rhs_d)$;\n");
         }
         diff.add_reverse_primal("(lhs)$   = (rhs)$;\n");
+        diff.add_reverse_backprop("(lhs_b)$ = 0.0;\n");
         diff.add_reverse_backprop(prepare_backprop(rhs_b, lhs, lhs_d, lhs_b));
     }
     gen_assignment: (inout this, lhs: std::string, lhs_d: std::string, lhs_b: std::string)
@@ -4763,7 +4764,9 @@ autodiff_expression_handler: type = {
         if ctx*.is_taylor() {
             diff.add_reverse_primal("(lhs_d)$: (type_d)$ = (rhs_d)$;\n");
         }
+        diff.add_reverse_primal("(lhs_b)$ : (type_b)$ = 0.0;\n");
         diff.add_reverse_primal("(lhs)$  : (type)$ = (rhs)$;\n");
+        diff.add_reverse_backprop("(lhs_b)$ = 0.0;\n");
         diff.add_reverse_backprop(prepare_backprop(rhs_b, lhs, lhs_d, lhs_b));
     }
     gen_declaration: (inout this, lhs: std::string, lhs_d: std::string, lhs_b: std::string, rhs: std::string, rhs_d: std::string, rhs_b: std::string, type: std::string)

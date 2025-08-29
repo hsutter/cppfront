@@ -902,12 +902,102 @@ ad_test_reverse:/* @autodiff<"reverse"> @print */ type =
         return;
     }
 
+    add_2:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x + y + x;
+        return;
+    }
+
+    sub_1:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x - y;
+        return;
+    }
+
+    sub_2:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x - y - x;
+        return;
+    }
+
+    add_sub_2:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x + y - x;
+        return;
+    }
+
     mul_1:(
         in x: double, 
         in y: double, 
     ) -> (out r: double, ) = 
     {
         r = x * y;
+        return;
+    }
+
+    mul_2:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x * y * x;
+        return;
+    }
+
+    div_1:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x / y;
+        return;
+    }
+
+    div_2:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x / y / y;
+        return;
+    }
+
+    mul_div_2:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x * y / x;
+        return;
+    }
+
+    mul_add:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x * (x + y);
+        return;
+    }
+
+    add_mul:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x + x * y;
         return;
     }
 
@@ -922,6 +1012,70 @@ ad_test_reverse:/* @autodiff<"reverse"> @print */ type =
         r = x + y;
         x_b += r_b;
         y_b += r_b;
+        r_b = 0.0;
+        return;
+    }
+
+    add_2_b:(
+        in x: double, 
+        inout x_b: double, 
+        in y: double, 
+        inout y_b: double, 
+        inout r_b: double, 
+    ) -> (out r: double = 0.0, ) = 
+    {
+        r = x + y + x;
+        x_b += r_b;
+        y_b += r_b;
+        x_b += r_b;
+        r_b = 0.0;
+        return;
+    }
+
+    sub_1_b:(
+        in x: double, 
+        inout x_b: double, 
+        in y: double, 
+        inout y_b: double, 
+        inout r_b: double, 
+    ) -> (out r: double = 0.0, ) = 
+    {
+        r = x - y;
+        x_b += r_b;
+        y_b -= r_b;
+        r_b = 0.0;
+        return;
+    }
+
+    sub_2_b:(
+        in x: double, 
+        inout x_b: double, 
+        in y: double, 
+        inout y_b: double, 
+        inout r_b: double, 
+    ) -> (out r: double = 0.0, ) = 
+    {
+        r = x - y - x;
+        x_b += r_b;
+        y_b -= r_b;
+        x_b -= r_b;
+        r_b = 0.0;
+        return;
+    }
+
+    add_sub_2_b:(
+        in x: double, 
+        inout x_b: double, 
+        in y: double, 
+        inout y_b: double, 
+        inout r_b: double, 
+    ) -> (out r: double = 0.0, ) = 
+    {
+        r = x + y - x;
+        x_b += r_b;
+        y_b += r_b;
+        x_b -= r_b;
+        r_b = 0.0;
         return;
     }
 
@@ -936,6 +1090,122 @@ ad_test_reverse:/* @autodiff<"reverse"> @print */ type =
         r = x * y;
         x_b += y * r_b;
         y_b += x * r_b;
+        r_b = 0.0;
+        return;
+    }
+
+    mul_2_b:(
+        in x: double, 
+        inout x_b: double, 
+        in y: double, 
+        inout y_b: double, 
+        inout r_b: double, 
+    ) -> (out r: double = 0.0, ) = 
+    {
+        temp_1_b: _ = 0.0;
+        temp_1: _ = x * y;
+        r = temp_1 * x;
+        temp_1_b += x * r_b;
+        x_b += temp_1 * r_b;
+        r_b = 0.0;
+        x_b += y * temp_1_b;
+        y_b += x * temp_1_b;
+        temp_1_b = 0.0;
+        return;
+    }
+
+    div_1_b:(
+        in x: double, 
+        inout x_b: double, 
+        in y: double, 
+        inout y_b: double, 
+        inout r_b: double, 
+    ) -> (out r: double = 0.0, ) = 
+    {
+        r = x / y;
+        x_b += r_b / y;
+        y_b -= x * r_b / (y * y);
+        r_b = 0.0;
+        return;
+    }
+
+    div_2_b:(
+        in x: double, 
+        inout x_b: double, 
+        in y: double, 
+        inout y_b: double, 
+        inout r_b: double, 
+    ) -> (out r: double = 0.0, ) = 
+    {
+        temp_1_b: _ = 0.0;
+        temp_1: _ = x / y;
+        r = temp_1 / y;
+        temp_1_b += r_b / y;
+        y_b -= temp_1 * r_b / (y * y);
+        r_b = 0.0;
+        x_b += temp_1_b / y;
+        y_b -= x * temp_1_b / (y * y);
+        temp_1_b = 0.0;
+        return;
+    }
+
+    mul_div_2_b:(
+        in x: double, 
+        inout x_b: double, 
+        in y: double, 
+        inout y_b: double, 
+        inout r_b: double, 
+    ) -> (out r: double = 0.0, ) = 
+    {
+        temp_1_b: _ = 0.0;
+        temp_1: _ = x * y;
+        r = temp_1 / x;
+        temp_1_b += r_b / x;
+        x_b -= temp_1 * r_b / (x * x);
+        r_b = 0.0;
+        x_b += y * temp_1_b;
+        y_b += x * temp_1_b;
+        temp_1_b = 0.0;
+        return;
+    }
+
+    mul_add_b:(
+        in x: double, 
+        inout x_b: double, 
+        in y: double, 
+        inout y_b: double, 
+        inout r_b: double, 
+    ) -> (out r: double = 0.0, ) = 
+    {
+        temp_1_b: double = 0.0;
+        temp_1: double = x + y;
+        r = x * temp_1;
+        x_b += temp_1 * r_b;
+        temp_1_b += x * r_b;
+        r_b = 0.0;
+        x_b += temp_1_b;
+        y_b += temp_1_b;
+        temp_1_b = 0.0;
+        return;
+    }
+
+    add_mul_b:(
+        in x: double, 
+        inout x_b: double, 
+        in y: double, 
+        inout y_b: double, 
+        inout r_b: double, 
+    ) -> (out r: double = 0.0, ) = 
+    {
+        temp_1_b: double = 0.0;
+        temp_1: double = x * y;
+        r = x + temp_1;
+        x_b += r_b;
+        temp_1_b += r_b;
+        r_b = 0.0;
+        x_b += y * temp_1_b;
+        y_b += x * temp_1_b;
+        temp_1_b = 0.0;
         return;
     }
 }

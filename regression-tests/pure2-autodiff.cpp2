@@ -197,8 +197,48 @@ ad_test_reverse: @autodiff<"reverse"> @print type = {
         r = x + y;
     }
 
+    add_2: (x: double, y: double) -> (r: double) = {
+        r = x + y + x;
+    }
+
+    sub_1: (x: double, y: double) -> (r: double) = {
+        r = x - y;
+    }
+
+    sub_2: (x: double, y: double) -> (r: double) = {
+        r = x - y - x;
+    }
+
+    add_sub_2: (x: double, y: double) -> (r: double) = {
+        r = x + y - x;
+    }
+
     mul_1: (x: double, y: double) -> (r: double) = {
         r = x * y;
+    }
+
+    mul_2: (x: double, y: double) -> (r: double) = {
+        r = x * y * x;
+    }
+
+    div_1: (x: double, y: double) -> (r: double) = {
+        r = x / y;
+    }
+
+    div_2: (x: double, y: double) -> (r: double) = {
+        r = x / y / y;
+    }
+
+    mul_div_2: (x: double, y: double) -> (r: double) = {
+        r = x * y / x;
+    }
+
+    mul_add: (x: double, y: double) -> (r: double) = {
+        r = x * (x + y);
+    }
+
+    add_mul: (x: double, y: double) -> (r: double) = {
+        r = x + x * y;
     }
 }
 }
@@ -213,7 +253,8 @@ write_output: (func: std::string, x: double, x_d: double, y: double, y_d: double
     std::cout << "diff((func)$) at (x = (x)$, x_d = (x_d)$, y = (y)$, y_d = (y_d)$) = (r = (ret.r)$, r_d = (ret.r_d)$)" << std::endl;
 }
 
-write_output_reverse: (func: std::string, x: double, inout x_b: double, y: double, inout y_b: double, in r_b: double, ret) = {
+write_output_reverse: (func: std::string, x: double, inout x_b: double, y: double, inout y_b: double, inout r_b: double, ret) = {
+    r_b = 1.0;
     std::cout << "diff((func)$) at (x = (x)$, y = (y)$, r_b = (r_b)$) = (r = (ret)$, x_b = (x_b)$, y_b = (y_b)$)" << std::endl;
     x_b = 0.0;
     y_b = 0.0;
@@ -262,7 +303,17 @@ main: () = {
     w_b: double = 1.0;
 
     write_output_reverse("x + y", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::add_1_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x + y + x", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::add_2_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x - y", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::sub_1_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x - y - x", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::sub_2_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x + y - x", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::add_sub_2_b(x, x_b, y, y_b, w_b));
     write_output_reverse("x * y", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::mul_1_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x * y * x", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::mul_2_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x / y", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::div_1_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x / y / y", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::div_2_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x * y / x", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::mul_div_2_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x * (x + y)", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::mul_add_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x + x * y", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::add_mul_b(x, x_b, y, y_b, w_b));
 
     _ = x_b;
     _ = y_b;
