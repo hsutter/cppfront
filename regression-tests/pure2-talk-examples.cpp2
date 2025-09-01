@@ -1,0 +1,38 @@
+// Examples from Herb Sutter's talk on metaclasses
+
+shape: @interface type = {
+    area: (this) -> double;
+    scale: (inout this, factor: double);
+}
+
+point: @value type = {
+    x: double;
+    y: double;
+}
+
+circle: type = {
+    center: point;
+    radius: double;
+
+    this: shape = {
+        area: (this) -> double = {
+            return 3.14159 * radius * radius;
+        }
+        scale: (inout this, factor: double) = {
+            radius *= factor;
+        }
+    }
+
+    operator=: (out this, c: point, r: double) = {
+        center = c;
+        radius = r;
+    }
+}
+
+main: () -> int = {
+    c: circle = (point{1.0, 2.0}, 5.0);
+    std::cout << "Area: " << c.area() << "\n";
+    c.scale(2.0);
+    std::cout << "Scaled area: " << c.area() << "\n";
+    return 0;
+}
