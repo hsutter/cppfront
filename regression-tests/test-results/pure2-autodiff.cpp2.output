@@ -261,12 +261,16 @@ ad_test:/* @autodiff @print */ type =
         in y: double, 
     ) -> (out r: double, ) = 
     {
-        i: int = 0;
         r = x;
+        (
+            copy i: int = 0, 
+            copy t: double = 0.0, 
+        )
         while i < 2
         next (i += 1)
             {
-                r = r + y;
+                t = y;
+                r = r + t;
             }
         return;
     }
@@ -276,8 +280,8 @@ ad_test:/* @autodiff @print */ type =
         in y: double, 
     ) -> (out r: double, ) = 
     {
-        i: int = 0;
         r = x;
+        (copy i: _ = 0, )
         do 
             {
                 r = r + y;
@@ -781,14 +785,20 @@ ad_test:/* @autodiff @print */ type =
             out r_d: double = 0.0, 
         ) = 
     {
-        i: int = 0;
         r_d = x_d;
         r = x;
+        (
+            copy i: int = 0, 
+            copy t: double = 0.0, 
+            copy t_d: double = (), 
+        )
         while i < 2
         next (i += 1)
             {
-                r_d = r_d + y_d;
-                r = r + y;
+                t_d = y_d;
+                t = y;
+                r_d = r_d + t_d;
+                r = r + t;
             }
         return;
     }
@@ -803,9 +813,9 @@ ad_test:/* @autodiff @print */ type =
             out r_d: double = 0.0, 
         ) = 
     {
-        i: int = 0;
         r_d = x_d;
         r = x;
+        (copy i: _ = 0, )
         do 
             {
                 r_d = r_d + y_d;

@@ -5385,9 +5385,55 @@ autodiff_stmt_handler: type = {
 
     mf: meta::function_declaration;
 
+    last_params: std::vector<meta::parameter_declaration> = ();
+
     operator=: (out this, ctx_: *autodiff_context, mf_: meta::function_declaration) = {
         autodiff_handler_base = (ctx_);
         mf = mf_;
+    }
+
+    handle_stmt_parameters: (inout this, params: std::vector<parameter_declaration>, leave_open: bool) = {
+        if params.empty() {
+            return;
+        }
+
+        fwd: std::string = "(";
+        for params do (param) {
+            name: std::string = param.get_declaration().name();
+            type: std::string = param.get_declaration().type();
+
+            fwd_pass_style := to_string_view(param.get_passing_style());
+
+            ada: autodiff_activity_check = (ctx);
+            ada.pre_traverse(param);
+
+            init  : std::string = "";
+            init_d: std::string = "";
+
+            if param.get_declaration().has_initializer() {
+                ad: autodiff_expression_handler = (ctx);
+                ad.pre_traverse(param.get_declaration().get_initializer());
+                init = " = (ad.primal_expr)$";
+
+                if ada.active {
+                    init_d = " = (ad.fwd_expr)$";
+                }
+            }
+
+
+            fwd += "(fwd_pass_style)$ (name)$ : (type)$(init)$, ";
+            if ada.active {
+                fwd += "(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$(init_d)$, ";
+            }
+
+            ctx*.add_variable_declaration(name, type, ada.active);
+        }
+
+        if !leave_open {
+            fwd += ")";
+        }
+
+        diff += fwd;
     }
 
     traverse: (override inout this, decl: meta::declaration) = {
@@ -5462,12 +5508,13 @@ autodiff_stmt_handler: type = {
 
 
     traverse: (override inout this, stmt: meta::statement) = {
+        // TODO: Remove this hack when statements like compound_statement can access their root statement.
+        last_params = stmt.get_parameters();
         base::traverse(stmt);
     }
 
 
     traverse: (override inout this, stmt: meta::compound_statement) = {
-        // Brackets are handled by the
         diff += "{\n";
         base::traverse(stmt);
         diff += "}\n";
@@ -5492,6 +5539,10 @@ autodiff_stmt_handler: type = {
 
 
     traverse: (override inout this, stmt: meta::iteration_statement) = {
+        if !last_params.empty() {
+            handle_stmt_parameters(last_params, stmt.is_for());
+        }
+
         if stmt.is_while() {
             // TODO: Assumption is here that nothing is in the condition
             diff += "while (stmt.get_do_while_condition().to_string())$ ";
@@ -5523,7 +5574,10 @@ autodiff_stmt_handler: type = {
             param := stmt.get_for_parameter();
             param_style := to_string_view(param.get_passing_style());
             param_decl := param.get_declaration();
-            diff += "(copy (param_decl.name())$_d_iter := (range)$(ctx*.fwd_suffix)$.begin())\n";
+            if last_params.empty() {
+                diff += "("; // Open statment parameter scope. If the loop has parameters, they are alrady handled and the brace is left open.
+            }
+            diff += "copy (param_decl.name())$_d_iter := (range)$(ctx*.fwd_suffix)$.begin())\n";
             diff += "for (range)$ next (";
             if stmt.has_next() {
                 // TODO: Assumption is here that nothing is in the next expression

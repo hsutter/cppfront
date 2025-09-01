@@ -114,7 +114,7 @@ ad_test: @autodiff @print type = {
     }
 
     intermediate_passive_var: (x: double, y: double) -> (r: double) = {
-      i: int = (); // TODO: Handle as passive when type information on call side is available.
+      i: int = ();
       r = x + y;
       i = 2;
 
@@ -143,18 +143,19 @@ ad_test: @autodiff @print type = {
     }
 
     while_loop: (x: double, y: double) -> (r: double) = {
-      i: int = 0;
-
       r = x;
+
+      (copy i: int = 0, copy t: double = 0.0)
       while i < 2 next (i += 1) {
-        r = r + y ;
+        t = y;
+        r = r + t;
       }
     }
 
     do_while_loop: (x: double, y: double) -> (r: double) = {
-      i: int = 0;
-
       r = x;
+
+      (copy i: = 0)
       do {
         r = r + y ;
       }

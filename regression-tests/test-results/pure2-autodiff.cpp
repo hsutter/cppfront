@@ -18,10 +18,10 @@ class type_outer;
 #line 15 "pure2-autodiff.cpp2"
 class ad_test;
 
-#line 194 "pure2-autodiff.cpp2"
+#line 195 "pure2-autodiff.cpp2"
 class ad_test_reverse;
 
-#line 260 "pure2-autodiff.cpp2"
+#line 261 "pure2-autodiff.cpp2"
 }
 
 class ad_test_twice;
@@ -205,22 +205,22 @@ using while_loop_ret = double;
 using do_while_loop_ret = double;
 
 
-#line 154 "pure2-autodiff.cpp2"
+#line 155 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto do_while_loop(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> do_while_loop_ret;
 using for_loop_ret = double;
 
 
-#line 165 "pure2-autodiff.cpp2"
+#line 166 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto for_loop(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> for_loop_ret;
 using type_outer_use_ret = double;
 
 
-#line 179 "pure2-autodiff.cpp2"
+#line 180 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto type_outer_use(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> type_outer_use_ret;
 using type_outer_call_ret = double;
 
 
-#line 186 "pure2-autodiff.cpp2"
+#line 187 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto type_outer_call(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> type_outer_call_ret;
 struct add_1_d_ret { double r; double r_d; };
 
@@ -352,94 +352,94 @@ public: [[nodiscard]] static auto type_outer_call_d(cpp2::impl::in<double> x, cp
     public: auto operator=(ad_test const&) -> void = delete;
 
 
-#line 192 "pure2-autodiff.cpp2"
+#line 193 "pure2-autodiff.cpp2"
 };
 
 using func_outer_b_ret = double;
 
 [[nodiscard]] auto func_outer_b(cpp2::impl::in<double> x, double& x_b, cpp2::impl::in<double> y, double& y_b, double& ret_b) -> func_outer_b_ret;
 
-#line 194 "pure2-autodiff.cpp2"
+#line 195 "pure2-autodiff.cpp2"
 class ad_test_reverse {
 using add_1_ret = double;
 
 
-#line 196 "pure2-autodiff.cpp2"
+#line 197 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto add_1(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> add_1_ret;
 using add_2_ret = double;
 
 
-#line 200 "pure2-autodiff.cpp2"
+#line 201 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto add_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> add_2_ret;
 using sub_1_ret = double;
 
 
-#line 204 "pure2-autodiff.cpp2"
+#line 205 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto sub_1(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> sub_1_ret;
 using sub_2_ret = double;
 
 
-#line 208 "pure2-autodiff.cpp2"
+#line 209 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto sub_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> sub_2_ret;
 using add_sub_2_ret = double;
 
 
-#line 212 "pure2-autodiff.cpp2"
+#line 213 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto add_sub_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> add_sub_2_ret;
 using mul_1_ret = double;
 
 
-#line 216 "pure2-autodiff.cpp2"
+#line 217 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto mul_1(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> mul_1_ret;
 using mul_2_ret = double;
 
 
-#line 220 "pure2-autodiff.cpp2"
+#line 221 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto mul_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> mul_2_ret;
 using div_1_ret = double;
 
 
-#line 224 "pure2-autodiff.cpp2"
+#line 225 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto div_1(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> div_1_ret;
 using div_2_ret = double;
 
 
-#line 228 "pure2-autodiff.cpp2"
+#line 229 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto div_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> div_2_ret;
 using mul_div_2_ret = double;
 
 
-#line 232 "pure2-autodiff.cpp2"
+#line 233 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto mul_div_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> mul_div_2_ret;
 using mul_add_ret = double;
 
 
-#line 236 "pure2-autodiff.cpp2"
+#line 237 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto mul_add(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> mul_add_ret;
 using add_mul_ret = double;
 
 
-#line 240 "pure2-autodiff.cpp2"
+#line 241 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto add_mul(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> add_mul_ret;
 using sin_call_ret = double;
 
 
-#line 244 "pure2-autodiff.cpp2"
+#line 245 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto sin_call(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> sin_call_ret;
 using func_ret = double;
 
 
-#line 248 "pure2-autodiff.cpp2"
+#line 249 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto func(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> func_ret;
 using func_call_ret = double;
 
 
-#line 252 "pure2-autodiff.cpp2"
+#line 253 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto func_call(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> func_call_ret;
 using func_outer_call_ret = double;
 
 
-#line 256 "pure2-autodiff.cpp2"
+#line 257 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto func_outer_call(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> func_outer_call_ret;
 using add_1_b_ret = double;
 
@@ -495,14 +495,14 @@ public: [[nodiscard]] static auto func_outer_call_b(cpp2::impl::in<double> x, do
     public: auto operator=(ad_test_reverse const&) -> void = delete;
 
 
-#line 259 "pure2-autodiff.cpp2"
+#line 260 "pure2-autodiff.cpp2"
 };
 }
 
 class ad_test_twice {
 using mul_1_ret = double;
 
-#line 263 "pure2-autodiff.cpp2"
+#line 264 "pure2-autodiff.cpp2"
     public: [[nodiscard]] static auto mul_1(cpp2::impl::in<double> x) -> mul_1_ret;
 struct mul_1_d_ret { double r; double r_d; };
 
@@ -522,15 +522,15 @@ public: [[nodiscard]] static auto mul_1_d_d2(cpp2::impl::in<double> x, cpp2::imp
     public: auto operator=(ad_test_twice const&) -> void = delete;
 
 
-#line 266 "pure2-autodiff.cpp2"
+#line 267 "pure2-autodiff.cpp2"
 };
 
 auto write_output(cpp2::impl::in<std::string> func, cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d, auto const& ret) -> void;
 
-#line 272 "pure2-autodiff.cpp2"
+#line 273 "pure2-autodiff.cpp2"
 auto write_output_reverse(cpp2::impl::in<std::string> func, cpp2::impl::in<double> x, double& x_b, cpp2::impl::in<double> y, double& y_b, double& r_b, auto const& ret) -> void;
 
-#line 279 "pure2-autodiff.cpp2"
+#line 280 "pure2-autodiff.cpp2"
 auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -732,7 +732,7 @@ return std::move(ret.value()); }
     [[nodiscard]] auto ad_test::intermediate_passive_var(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> intermediate_passive_var_ret{
           cpp2::impl::deferred_init<double> r;
 #line 117 "pure2-autodiff.cpp2"
-      int i {};    // TODO: Handle as passive when type information on call side is available.
+      int i {}; 
       r.construct(x + y);
       i = 2;
 
@@ -773,32 +773,48 @@ return std::move(ret.value()); }
     [[nodiscard]] auto ad_test::while_loop(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> while_loop_ret{
           cpp2::impl::deferred_init<double> r;
 #line 146 "pure2-autodiff.cpp2"
-      int i {0}; 
-
       r.construct(x);
+{
+int i{0};
+double t{0.0};
+
+#line 149 "pure2-autodiff.cpp2"
       for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-        r.value() = r.value() + y;
-      }return std::move(r.value()); 
+        t = y;
+        r.value() = r.value() + t;
+      }
+}
+#line 150 "pure2-autodiff.cpp2"
+        return std::move(r.value()); 
+
+#line 153 "pure2-autodiff.cpp2"
     }
 
-#line 154 "pure2-autodiff.cpp2"
+#line 155 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::do_while_loop(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> do_while_loop_ret{
           cpp2::impl::deferred_init<double> r;
-#line 155 "pure2-autodiff.cpp2"
-      int i {0}; 
-
+#line 156 "pure2-autodiff.cpp2"
       r.construct(x);
+{
+auto i{0};
+
+#line 159 "pure2-autodiff.cpp2"
       do {
         r.value() = r.value() + y;
       } while ( [&]{ 
       (i += 1) ; return true; }() && 
-      cpp2::impl::cmp_less(i,2));return std::move(r.value()); 
+      cpp2::impl::cmp_less(i,2));
+}
+#line 160 "pure2-autodiff.cpp2"
+        return std::move(r.value()); 
+
+#line 164 "pure2-autodiff.cpp2"
     }
 
-#line 165 "pure2-autodiff.cpp2"
+#line 166 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::for_loop(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> for_loop_ret{
           cpp2::impl::deferred_init<double> r;
-#line 166 "pure2-autodiff.cpp2"
+#line 167 "pure2-autodiff.cpp2"
       std::vector<double> v {}; 
 
       CPP2_UFCS(push_back)(v, x);
@@ -812,20 +828,20 @@ return std::move(ret.value()); }
       }return std::move(r.value()); 
     }
 
-#line 179 "pure2-autodiff.cpp2"
+#line 180 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::type_outer_use(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> type_outer_use_ret{
           cpp2::impl::deferred_init<double> r;
-#line 180 "pure2-autodiff.cpp2"
+#line 181 "pure2-autodiff.cpp2"
       type_outer t {}; 
       t.a = x;
 
       r.construct(cpp2::move(t).a + y);
     return std::move(r.value()); }
 
-#line 186 "pure2-autodiff.cpp2"
+#line 187 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::type_outer_call(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> type_outer_call_ret{
           cpp2::impl::deferred_init<double> r;
-#line 187 "pure2-autodiff.cpp2"
+#line 188 "pure2-autodiff.cpp2"
       type_outer t {}; 
       t.a = x;
 
@@ -1097,23 +1113,28 @@ cpp2::impl::deferred_init<double> t_d;
 
     [[nodiscard]] auto ad_test::while_loop_d(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> while_loop_d_ret{
                                                                                                                                             double r {0.0};
-                                                                                                                                            double r_d {0.0};
-int i {0}; 
-    r_d = x_d;
+                                                                                                                                            double r_d {0.0};r_d = x_d;
     r = x;
+{
+int i{0};
+double t{0.0};
+double t_d{};
     for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-    r_d = r_d + y_d;
-    r = r + y;
+    t_d = y_d;
+    t = y;
+    r_d = r_d + t_d;
+    r = r + t;
     }
+}
     return  { std::move(r), std::move(r_d) }; 
     }
 
     [[nodiscard]] auto ad_test::do_while_loop_d(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> do_while_loop_d_ret{
                                                                                                                                                double r {0.0};
-                                                                                                                                               double r_d {0.0};
-int i {0}; 
-    r_d = x_d;
+                                                                                                                                               double r_d {0.0};r_d = x_d;
     r = x;
+{
+auto i{0};
     do {
     r_d = r_d + y_d;
     r = r + y;
@@ -1123,6 +1144,7 @@ int i {0};
      ; return true; }() && 
     cpp2::impl::cmp_less(i,2)
     );
+}
     return  { std::move(r), std::move(r_d) }; 
     }
 
@@ -1193,115 +1215,115 @@ type_outer_d t_d {};
     ret_b = 0.0;
     return ret; }
 
-#line 196 "pure2-autodiff.cpp2"
+#line 197 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::add_1(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> add_1_ret{
             cpp2::impl::deferred_init<double> r;
-#line 197 "pure2-autodiff.cpp2"
+#line 198 "pure2-autodiff.cpp2"
         r.construct(x + y);
     return std::move(r.value()); }
 
-#line 200 "pure2-autodiff.cpp2"
+#line 201 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::add_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> add_2_ret{
             cpp2::impl::deferred_init<double> r;
-#line 201 "pure2-autodiff.cpp2"
+#line 202 "pure2-autodiff.cpp2"
         r.construct(x + y + x);
     return std::move(r.value()); }
 
-#line 204 "pure2-autodiff.cpp2"
+#line 205 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::sub_1(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> sub_1_ret{
             cpp2::impl::deferred_init<double> r;
-#line 205 "pure2-autodiff.cpp2"
+#line 206 "pure2-autodiff.cpp2"
         r.construct(x - y);
     return std::move(r.value()); }
 
-#line 208 "pure2-autodiff.cpp2"
+#line 209 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::sub_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> sub_2_ret{
             cpp2::impl::deferred_init<double> r;
-#line 209 "pure2-autodiff.cpp2"
+#line 210 "pure2-autodiff.cpp2"
         r.construct(x - y - x);
     return std::move(r.value()); }
 
-#line 212 "pure2-autodiff.cpp2"
+#line 213 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::add_sub_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> add_sub_2_ret{
             cpp2::impl::deferred_init<double> r;
-#line 213 "pure2-autodiff.cpp2"
+#line 214 "pure2-autodiff.cpp2"
         r.construct(x + y - x);
     return std::move(r.value()); }
 
-#line 216 "pure2-autodiff.cpp2"
+#line 217 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::mul_1(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> mul_1_ret{
             cpp2::impl::deferred_init<double> r;
-#line 217 "pure2-autodiff.cpp2"
+#line 218 "pure2-autodiff.cpp2"
         r.construct(x * y);
     return std::move(r.value()); }
 
-#line 220 "pure2-autodiff.cpp2"
+#line 221 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::mul_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> mul_2_ret{
             cpp2::impl::deferred_init<double> r;
-#line 221 "pure2-autodiff.cpp2"
+#line 222 "pure2-autodiff.cpp2"
         r.construct(x * y * x);
     return std::move(r.value()); }
 
-#line 224 "pure2-autodiff.cpp2"
+#line 225 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::div_1(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> div_1_ret{
             cpp2::impl::deferred_init<double> r;
-#line 225 "pure2-autodiff.cpp2"
+#line 226 "pure2-autodiff.cpp2"
         r.construct(x / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(x),y));
     return std::move(r.value()); }
 
-#line 228 "pure2-autodiff.cpp2"
+#line 229 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::div_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> div_2_ret{
             cpp2::impl::deferred_init<double> r;
-#line 229 "pure2-autodiff.cpp2"
+#line 230 "pure2-autodiff.cpp2"
         r.construct(x / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(x),y) / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(y),y));
     return std::move(r.value()); }
 
-#line 232 "pure2-autodiff.cpp2"
+#line 233 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::mul_div_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> mul_div_2_ret{
             cpp2::impl::deferred_init<double> r;
-#line 233 "pure2-autodiff.cpp2"
+#line 234 "pure2-autodiff.cpp2"
         r.construct(x * y / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(y),x));
     return std::move(r.value()); }
 
-#line 236 "pure2-autodiff.cpp2"
+#line 237 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::mul_add(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> mul_add_ret{
             cpp2::impl::deferred_init<double> r;
-#line 237 "pure2-autodiff.cpp2"
+#line 238 "pure2-autodiff.cpp2"
         r.construct(x * (x + y));
     return std::move(r.value()); }
 
-#line 240 "pure2-autodiff.cpp2"
+#line 241 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::add_mul(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> add_mul_ret{
             cpp2::impl::deferred_init<double> r;
-#line 241 "pure2-autodiff.cpp2"
+#line 242 "pure2-autodiff.cpp2"
         r.construct(x + x * y);
     return std::move(r.value()); }
 
-#line 244 "pure2-autodiff.cpp2"
+#line 245 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::sin_call(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> sin_call_ret{
           cpp2::impl::deferred_init<double> r;
-#line 245 "pure2-autodiff.cpp2"
+#line 246 "pure2-autodiff.cpp2"
       r.construct(sin(x - y));
     return std::move(r.value()); }
 
-#line 248 "pure2-autodiff.cpp2"
+#line 249 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::func(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> func_ret{
           cpp2::impl::deferred_init<double> ret;
-#line 249 "pure2-autodiff.cpp2"
+#line 250 "pure2-autodiff.cpp2"
       ret.construct(x + y);
     return std::move(ret.value()); }
 
-#line 252 "pure2-autodiff.cpp2"
+#line 253 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::func_call(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> func_call_ret{
           cpp2::impl::deferred_init<double> r;
-#line 253 "pure2-autodiff.cpp2"
+#line 254 "pure2-autodiff.cpp2"
       r.construct(x * func(x, y));
     return std::move(r.value()); }
 
-#line 256 "pure2-autodiff.cpp2"
+#line 257 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::func_outer_call(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> func_outer_call_ret{
           cpp2::impl::deferred_init<double> r;
-#line 257 "pure2-autodiff.cpp2"
+#line 258 "pure2-autodiff.cpp2"
       r.construct(x * func_outer(x, y));
     return std::move(r.value()); }
 
@@ -1473,13 +1495,13 @@ double temp_2_b {0.0};
     temp_2_b = 0.0;
     return r; }
 
-#line 260 "pure2-autodiff.cpp2"
+#line 261 "pure2-autodiff.cpp2"
 }
 
-#line 263 "pure2-autodiff.cpp2"
+#line 264 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_twice::mul_1(cpp2::impl::in<double> x) -> mul_1_ret{
             cpp2::impl::deferred_init<double> r;
-#line 264 "pure2-autodiff.cpp2"
+#line 265 "pure2-autodiff.cpp2"
         r.construct(x * x);
     return std::move(r.value()); }
 
@@ -1516,12 +1538,12 @@ double temp_1_d2 {x_d * x_d2 + x * x_d_d2};
     return  { std::move(r), std::move(r_d2), std::move(r_d), std::move(r_d_d2) }; 
     }
 
-#line 268 "pure2-autodiff.cpp2"
+#line 269 "pure2-autodiff.cpp2"
 auto write_output(cpp2::impl::in<std::string> func, cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d, auto const& ret) -> void{
     std::cout << "diff(" + cpp2::to_string(func) + ") at (x = " + cpp2::to_string(x) + ", x_d = " + cpp2::to_string(x_d) + ", y = " + cpp2::to_string(y) + ", y_d = " + cpp2::to_string(y_d) + ") = (r = " + cpp2::to_string(ret.r) + ", r_d = " + cpp2::to_string(ret.r_d) + ")" << std::endl;
 }
 
-#line 272 "pure2-autodiff.cpp2"
+#line 273 "pure2-autodiff.cpp2"
 auto write_output_reverse(cpp2::impl::in<std::string> func, cpp2::impl::in<double> x, double& x_b, cpp2::impl::in<double> y, double& y_b, double& r_b, auto const& ret) -> void{
     r_b = 1.0;
     std::cout << "diff(" + cpp2::to_string(func) + ") at (x = " + cpp2::to_string(x) + ", y = " + cpp2::to_string(y) + ", r_b = " + cpp2::to_string(r_b) + ") = (r = " + cpp2::to_string(ret) + ", x_b = " + cpp2::to_string(x_b) + ", y_b = " + cpp2::to_string(y_b) + ")" << std::endl;
@@ -1529,7 +1551,7 @@ auto write_output_reverse(cpp2::impl::in<std::string> func, cpp2::impl::in<doubl
     y_b = 0.0;
 }
 
-#line 279 "pure2-autodiff.cpp2"
+#line 280 "pure2-autodiff.cpp2"
 auto main() -> int{
 
     double x {2.0}; 
