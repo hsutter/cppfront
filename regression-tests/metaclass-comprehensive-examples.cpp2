@@ -132,6 +132,242 @@ sealed_base: @interface type = {
     type_name: (this) -> std::string;
 }
 
+// ===== KOTLIN CONCURRENCY METACLASSES =====
+
+// @coroutine - Kotlin's suspend function/coroutine equivalent
+coroutine: @value type = {
+    is_active: bool = false;
+    is_completed: bool = false;
+    result: std::optional<std::string> = std::nullopt;
+
+    // Simulate coroutine state
+    suspend: (inout this) = {
+        is_active = false;
+    }
+
+    resume: (inout this) = {
+        is_active = true;
+    }
+
+    complete: (inout this, res: std::string) = {
+        is_completed = true;
+        is_active = false;
+        result = res;
+    }
+
+    get_result: (this) -> std::optional<std::string> = {
+        return result;
+    }
+
+    is_suspended: (this) -> bool = {
+        return !is_active && !is_completed;
+    }
+}
+
+// @channel - Kotlin's Channel<T> equivalent for CSP-style concurrency
+channel: @value <T:type> type = {
+    buffer: std::queue<T> = ();
+    capacity: int = 0;  // 0 = unbuffered, >0 = buffered
+    is_closed: bool = false;
+
+    // Send operation (would be suspend in real Kotlin)
+    send: (inout this, value: T) -> bool = {
+        if is_closed {
+            return false;
+        }
+        if capacity == 0 || buffer.size() < capacity {
+            buffer.push(value);
+            return true;
+        }
+        return false;  // Would suspend in real implementation
+    }
+
+    // Receive operation (would be suspend in real Kotlin)
+    receive: (inout this) -> std::optional<T> = {
+        if !buffer.empty() {
+            value: T = buffer.front();
+            buffer.pop();
+            return value;
+        }
+        if is_closed {
+            return std::nullopt;
+        }
+        return std::nullopt;  // Would suspend in real implementation
+    }
+
+    close: (inout this) = {
+        is_closed = true;
+    }
+
+    is_empty: (this) -> bool = {
+        return buffer.empty();
+    }
+
+    size: (this) -> int = {
+        return buffer.size();
+    }
+}
+
+// @flow - Kotlin's Flow<T> equivalent for reactive streams
+flow: @value <T:type> type = {
+    subscribers: std::vector<std::function<void(T)>> = ();
+    is_completed: bool = false;
+
+    // Emit a value to all subscribers
+    emit: (inout this, value: T) = {
+        if !is_completed {
+            for subscriber in subscribers do (subscriber) {
+                subscriber(value);
+            }
+        }
+    }
+
+    // Subscribe to flow events
+    subscribe: (inout this, subscriber: std::function<void(T)>) = {
+        subscribers.push_back(subscriber);
+    }
+
+    // Complete the flow
+    complete: (inout this) = {
+        is_completed = true;
+        subscribers.clear();
+    }
+
+    // Transform flow with map operation
+    map: (this, transformer: std::function<T(T)>) -> flow<T> = {
+        flow<T> new_flow = ();
+        auto mapped_subscriber := [=](T value) {
+            transformed: T = transformer(value);
+            new_flow.emit(transformed);
+        };
+        this.subscribe(mapped_subscriber);
+        return new_flow;
+    }
+
+    // Filter flow elements
+    filter: (this, predicate: std::function<bool(T)>) -> flow<T> = {
+        flow<T> new_flow = ();
+        auto filtered_subscriber := [=](T value) {
+            if predicate(value) {
+                new_flow.emit(value);
+            }
+        };
+        this.subscribe(filtered_subscriber);
+        return new_flow;
+    }
+}
+
+// @async - Kotlin's async/await equivalent
+async_task: @value type = {
+    task_id: std::string = "";
+    is_running: bool = false;
+    is_completed: bool = false;
+    result: std::optional<std::string> = std::nullopt;
+
+    operator=: (out this, id: std::string) = {
+        task_id = id;
+    }
+
+    start: (inout this) = {
+        is_running = true;
+        // In real implementation, this would spawn a coroutine
+    }
+
+    await: (inout this) -> std::optional<std::string> = {
+        // Simulate awaiting completion
+        if is_completed {
+            return result;
+        }
+        return std::nullopt;
+    }
+
+    complete: (inout this, res: std::string) = {
+        is_completed = true;
+        is_running = false;
+        result = res;
+    }
+
+    cancel: (inout this) = {
+        is_running = false;
+        is_completed = true;
+        result = std::nullopt;
+    }
+}
+
+// @mutex - Kotlin's synchronization equivalent
+kotlin_mutex: @value type = {
+    is_locked: bool = false;
+    owner: std::string = "";
+
+    // Acquire lock (would be suspend in real Kotlin)
+    lock: (inout this, owner_id: std::string) -> bool = {
+        if !is_locked {
+            is_locked = true;
+            owner = owner_id;
+            return true;
+        }
+        return false;  // Would suspend in real implementation
+    }
+
+    // Release lock
+    unlock: (inout this) = {
+        if is_locked {
+            is_locked = false;
+            owner = "";
+        }
+    }
+
+    try_lock: (inout this, owner_id: std::string) -> bool = {
+        if !is_locked {
+            is_locked = true;
+            owner = owner_id;
+            return true;
+        }
+        return false;
+    }
+
+    get_owner: (this) -> std::string = {
+        return owner;
+    }
+}
+
+// @actor - Kotlin's actor pattern equivalent
+actor: @value type = {
+    mailbox: std::queue<std::string> = ();
+    is_processing: bool = false;
+    actor_id: std::string = "";
+
+    operator=: (out this, id: std::string) = {
+        actor_id = id;
+    }
+
+    // Send message to actor
+    send: (inout this, message: std::string) = {
+        mailbox.push(message);
+        process_messages();
+    }
+
+    // Process messages (simplified)
+    process_messages: (inout this) = {
+        if !is_processing && !mailbox.empty() {
+            is_processing = true;
+            std::string message := mailbox.front();
+            mailbox.pop();
+            handle_message(message);
+            is_processing = false;
+        }
+    }
+
+    // Handle individual message (override in concrete actors)
+    handle_message: (inout this, message: std::string) = {
+        std::cout << "Actor (actor_id)$ received: (message)$\n";
+    }
+
+    has_messages: (this) -> bool = {
+        return !mailbox.empty();
+    }
+}
+
 // ===== SCALA-STYLE METACLASSES =====
 
 // @case_class - Scala's case class equivalent
@@ -925,6 +1161,70 @@ test_cross_language_metaclasses: () = {
     std::cout << "InverseProperty @navigation test:\n";
     inv: inverse_property = "orders";
     std::cout << "Inverse property: (inv.get_inverse())$\n";
+
+    // Test Kotlin concurrency patterns
+    std::cout << "Kotlin @coroutine test:\n";
+    coro: coroutine = ();
+    coro.resume();
+    std::cout << "Coroutine resumed, suspended: (coro.is_suspended())$\n";
+    coro.complete("Task completed");
+    result := coro.get_result();
+    if result.has_value() {
+        std::cout << "Coroutine result: (result.value())$\n";
+    }
+
+    // Test Kotlin channel
+    std::cout << "Kotlin @channel test:\n";
+    ch: channel<std::string> = (10);  // Buffered channel with capacity 10
+    sent := ch.send("Hello Channel");
+    if sent {
+        std::cout << "Message sent to channel\n";
+    }
+    received := ch.receive();
+    if received.has_value() {
+        std::cout << "Received from channel: (received.value())$\n";
+    }
+
+    // Test Kotlin flow
+    std::cout << "Kotlin @flow test:\n";
+    data_flow: flow<int> = ();
+    int sum := 0;
+    auto subscriber := [&](int value) {
+        sum += value;
+        std::cout << "Flow emitted: (value)$, running sum: (sum)$\n";
+    };
+    data_flow.subscribe(subscriber);
+    data_flow.emit(10);
+    data_flow.emit(20);
+    data_flow.emit(30);
+    data_flow.complete();
+
+    // Test Kotlin async/await
+    std::cout << "Kotlin @async test:\n";
+    task: async_task = "background-task";
+    task.start();
+    task.complete("Async result");
+    task_result := task.await();
+    if task_result.has_value() {
+        std::cout << "Async task result: (task_result.value())$\n";
+    }
+
+    // Test Kotlin mutex
+    std::cout << "Kotlin @mutex test:\n";
+    mutex: kotlin_mutex = ();
+    locked := mutex.lock("thread-1");
+    if locked {
+        std::cout << "Mutex locked by: (mutex.get_owner())$\n";
+        mutex.unlock();
+        std::cout << "Mutex unlocked\n";
+    }
+
+    // Test Kotlin actor
+    std::cout << "Kotlin @actor test:\n";
+    worker: actor = "worker-actor";
+    worker.send("Process data");
+    worker.send("Save results");
+    std::cout << "Actor has messages: (worker.has_messages())$\n";
 
     std::cout << "=== Cross-Language Tests Complete ===\n";
 }

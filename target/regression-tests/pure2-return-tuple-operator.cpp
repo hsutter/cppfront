@@ -1,0 +1,2 @@
+regression-tests/pure2-return-tuple-operator.cpp2... ok (all Cpp2, passes safety checks)
+
