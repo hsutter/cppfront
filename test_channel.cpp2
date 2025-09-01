@@ -1,0 +1,44 @@
+// Minimal test for channel metaclass
+#include <queue>
+#include <optional>
+
+// @channel - Kotlin's Channel<T> equivalent for CSP-style concurrency
+channel: @value <T:type> type = {
+    buffer: std::queue<T> = ();
+    capacity: int = 0;  // 0 = unbuffered, >0 = buffered
+    is_closed: bool = false;
+
+    // Send operation (would be suspend in real Kotlin)
+    send: (inout this, value: T) -> bool = {
+        if is_closed {
+            return false;
+        }
+        if capacity == 0 || buffer.size() < capacity {
+            buffer.push(value);
+            return true;
+        }
+        return false;  // Would suspend in real implementation
+    }
+
+    // Receive operation (would be suspend in real Kotlin)
+    receive: (inout this) -> std::optional<T> = {
+        if !buffer.empty() {
+            value: T = buffer.front();
+            buffer.pop();
+            return value;
+        }
+        if is_closed {
+            return std::nullopt;
+        }
+        return std::nullopt;  // Would suspend in real implementation
+    }
+
+    close: (inout this) = {
+        is_closed = true;
+    }
+}
+
+main: () -> int = {
+    ch: channel<std::string> = (10);
+    return 0;
+}

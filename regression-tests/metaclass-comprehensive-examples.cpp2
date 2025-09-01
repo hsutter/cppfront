@@ -1,0 +1,1338 @@
+// Comprehensive metaclass examples from Herb Sutter's cppfront
+// Based on P0707 and cppfront regression tests
+
+// ===== INTERFACE METACLASS =====
+shape: @interface type = {
+    area: (this) -> double;
+    scale: (inout this, factor: double);
+}
+
+// ===== VALUE TYPE METACLASSES =====
+point: @value type = {
+    x: double = 0.0;
+    y: double = 0.0;
+}
+
+widget: @value type = {
+    val: int = 0;
+    operator=: (out this, i: int) = { val = i; }
+}
+
+weakly_ordered_widget: @weakly_ordered_value type = {
+    val: int = 0;
+    operator=: (out this, i: int) = { val = i; }
+}
+
+partially_ordered_widget: @partially_ordered_value type = {
+    val: int = 0;
+    operator=: (out this, i: int) = { val = i; }
+}
+
+// ===== POLYMORPHIC BASE METACLASS =====
+polymorphic_base_example: @polymorphic_base type = {
+    id: int = 0;
+    work: (virtual this);
+}
+
+// ===== ENUM METACLASSES =====
+skat_game: @enum type = {
+    diamonds := 9;
+    hearts;  // 10
+    spades;  // 11
+    clubs;   // 12
+    grand    := 20;
+    null     := 23;
+}
+
+janus: @enum type = {
+    past;
+    future;
+
+    flip: (inout this) == {
+        if this == past { this = future; }
+        else { this = past; }
+    }
+}
+
+file_attributes: @flag_enum<u8> type = {
+    cached;     // 1
+    current;    // 2
+    obsolete;   // 4
+    cached_and_current := cached | current;
+}
+
+// ===== UNION METACLASS =====
+name_or_number: @union type = {
+    name: std::string;
+    num : i32;
+}
+
+name_or_other: @union <T:type> type = {
+    name  : std::string;
+    other : T;
+
+    to_string: (this) -> std::string = {
+        if is_name()       { return name(); }
+        else if is_other() { return other() as std::string; }
+        else               { return "invalid value"; }
+    }
+}
+
+// ===== STRUCT METACLASS =====
+simple_struct: @struct type = {
+    x: int;
+    y: int;
+}
+
+// ===== CROSS-LANGUAGE METACLASS EXAMPLES =====
+// Inspired by TypeScript, Kotlin, Scala, and other languages
+
+// ===== TYPESCRIPT-STYLE METACLASSES =====
+
+// @record - TypeScript's Record<K,V> equivalent
+record: @struct <K:type, V:type> type = {
+    // Empty struct that can be extended with key-value pairs
+}
+
+// @partial - TypeScript's Partial<T> equivalent (makes all fields optional)
+partial: @value <T:type> type = {
+    // This would make all fields of T optional - simplified example
+    data: std::optional<T> = std::nullopt;
+}
+
+// @readonly - TypeScript's Readonly<T> equivalent
+readonly: @value type = {
+    // Simplified: just a regular value type
+    data: int = 0;
+}
+
+// ===== KOTLIN-STYLE METACLASSES =====
+
+// @data_class - Kotlin's data class equivalent
+data_class: @value type = {
+    // This would generate equals, hashCode, toString, copy methods
+    // Simplified implementation
+    id: std::string = "";
+
+    operator=: (out this, s: std::string) = {
+        id = s;
+    }
+
+    to_string: (this) -> std::string = {
+        return "DataClass(id='(id)$')";
+    }
+
+    copy: (this, new_id: std::string) -> data_class = {
+        return (new_id);
+    }
+}
+
+// @sealed - Kotlin's sealed class equivalent (simplified)
+sealed_base: @interface type = {
+    type_name: (this) -> std::string;
+}
+
+// ===== KOTLIN CONCURRENCY METACLASSES =====
+
+// @coroutine - Kotlin's suspend function/coroutine equivalent
+coroutine: @value type = {
+    is_active: bool = false;
+    is_completed: bool = false;
+    result: std::optional<std::string> = std::nullopt;
+
+    // Simulate coroutine state
+    suspend: (inout this) = {
+        is_active = false;
+    }
+
+    resume: (inout this) = {
+        is_active = true;
+    }
+
+    complete: (inout this, res: std::string) = {
+        is_completed = true;
+        is_active = false;
+        result = res;
+    }
+
+    get_result: (this) -> std::optional<std::string> = {
+        return result;
+    }
+
+    is_suspended: (this) -> bool = {
+        return !is_active && !is_completed;
+    }
+}
+
+// @channel - Kotlin's Channel<T> equivalent for CSP-style concurrency
+channel: @value <T:type> type = {
+    buffer: std::queue<T> = ();
+    capacity: int = 0;  // 0 = unbuffered, >0 = buffered
+    is_closed: bool = false;
+
+    // Send operation (would be suspend in real Kotlin)
+    send: (inout this, value: T) -> bool = {
+        if is_closed {
+            return false;
+        }
+        if capacity == 0 || buffer.size() < capacity {
+            buffer.push(value);
+            return true;
+        }
+        return false;  // Would suspend in real implementation
+    }
+
+    // Receive operation (would be suspend in real Kotlin)
+    receive: (inout this) -> std::optional<T> = {
+        if !buffer.empty() {
+            value: T = buffer.front();
+            buffer.pop();
+            return value;
+        }
+        if is_closed {
+            return std::nullopt;
+        }
+        return std::nullopt;  // Would suspend in real implementation
+    }
+
+    close: (inout this) = {
+        is_closed = true;
+    }
+
+    is_empty: (this) -> bool = {
+        return buffer.empty();
+    }
+
+    size: (this) -> int = {
+        return buffer.size();
+    }
+}
+
+// @flow - Kotlin's Flow<T> equivalent for reactive streams
+flow: @value <T:type> type = {
+    subscribers: std::vector<std::function<void(T)>> = ();
+    is_completed: bool = false;
+
+    // Emit a value to all subscribers
+    emit: (inout this, value: T) = {
+        if !is_completed {
+            for subscriber in subscribers do (subscriber) {
+                subscriber(value);
+            }
+        }
+    }
+
+    // Subscribe to flow events
+    subscribe: (inout this, subscriber: std::function<void(T)>) = {
+        subscribers.push_back(subscriber);
+    }
+
+    // Complete the flow
+    complete: (inout this) = {
+        is_completed = true;
+        subscribers.clear();
+    }
+
+    // Transform flow with map operation
+    map: (this, transformer: std::function<T(T)>) -> flow<T> = {
+        flow<T> new_flow = ();
+        auto mapped_subscriber := [=](T value) {
+            transformed: T = transformer(value);
+            new_flow.emit(transformed);
+        };
+        this.subscribe(mapped_subscriber);
+        return new_flow;
+    }
+
+    // Filter flow elements
+    filter: (this, predicate: std::function<bool(T)>) -> flow<T> = {
+        flow<T> new_flow = ();
+        auto filtered_subscriber := [=](T value) {
+            if predicate(value) {
+                new_flow.emit(value);
+            }
+        };
+        this.subscribe(filtered_subscriber);
+        return new_flow;
+    }
+}
+
+// @async - Kotlin's async/await equivalent
+async_task: @value type = {
+    task_id: std::string = "";
+    is_running: bool = false;
+    is_completed: bool = false;
+    result: std::optional<std::string> = std::nullopt;
+
+    operator=: (out this, id: std::string) = {
+        task_id = id;
+    }
+
+    start: (inout this) = {
+        is_running = true;
+        // In real implementation, this would spawn a coroutine
+    }
+
+    await: (inout this) -> std::optional<std::string> = {
+        // Simulate awaiting completion
+        if is_completed {
+            return result;
+        }
+        return std::nullopt;
+    }
+
+    complete: (inout this, res: std::string) = {
+        is_completed = true;
+        is_running = false;
+        result = res;
+    }
+
+    cancel: (inout this) = {
+        is_running = false;
+        is_completed = true;
+        result = std::nullopt;
+    }
+}
+
+// @mutex - Kotlin's synchronization equivalent
+kotlin_mutex: @value type = {
+    is_locked: bool = false;
+    owner: std::string = "";
+
+    // Acquire lock (would be suspend in real Kotlin)
+    lock: (inout this, owner_id: std::string) -> bool = {
+        if !is_locked {
+            is_locked = true;
+            owner = owner_id;
+            return true;
+        }
+        return false;  // Would suspend in real implementation
+    }
+
+    // Release lock
+    unlock: (inout this) = {
+        if is_locked {
+            is_locked = false;
+            owner = "";
+        }
+    }
+
+    try_lock: (inout this, owner_id: std::string) -> bool = {
+        if !is_locked {
+            is_locked = true;
+            owner = owner_id;
+            return true;
+        }
+        return false;
+    }
+
+    get_owner: (this) -> std::string = {
+        return owner;
+    }
+}
+
+// @actor - Kotlin's actor pattern equivalent
+actor: @value type = {
+    mailbox: std::queue<std::string> = ();
+    is_processing: bool = false;
+    actor_id: std::string = "";
+
+    operator=: (out this, id: std::string) = {
+        actor_id = id;
+    }
+
+    // Send message to actor
+    send: (inout this, message: std::string) = {
+        mailbox.push(message);
+        process_messages();
+    }
+
+    // Process messages (simplified)
+    process_messages: (inout this) = {
+        if !is_processing && !mailbox.empty() {
+            is_processing = true;
+            std::string message := mailbox.front();
+            mailbox.pop();
+            handle_message(message);
+            is_processing = false;
+        }
+    }
+
+    // Handle individual message (override in concrete actors)
+    handle_message: (inout this, message: std::string) = {
+        std::cout << "Actor (actor_id)$ received: (message)$\n";
+    }
+
+    has_messages: (this) -> bool = {
+        return !mailbox.empty();
+    }
+}
+
+// ===== SCALA-STYLE METACLASSES =====
+
+// @case_class - Scala's case class equivalent
+case_class: @value type = {
+    value: int = 0;
+
+    operator=: (out this, v: int) = {
+        value = v;
+    }
+
+    // Would generate unapply, copy, equals, hashCode, toString
+    unapply: (this) -> int = {
+        return value;
+    }
+
+    copy: (this, new_value: int) -> case_class = {
+        return (new_value);
+    }
+}
+
+// @bean_property - Scala's @BeanProperty equivalent
+bean_property: @value type = {
+    private_value: int = 0;
+
+    // Would generate Java-style getters/setters
+    get_value: (this) -> int = {
+        return private_value;
+    }
+
+    set_value: (inout this, v: int) = {
+        private_value = v;
+    }
+}
+
+// ===== RUST-STYLE METACLASSES =====
+
+// @derive - Rust's derive macro equivalent (simplified)
+derive_eq: @value type = {
+    x: int = 0;
+    y: int = 0;
+
+    // Would auto-generate equality operators
+    operator==: (this, other: derive_eq) -> bool = {
+        return x == other.x && y == other.y;
+    }
+}
+
+derive_debug: @value type = {
+    name: std::string = "";
+
+    // Would auto-generate debug formatting
+    debug_string: (this) -> std::string = {
+        return "DeriveDebug{name: \"(name)$\"}";
+    }
+}
+
+// ===== SWIFT-STYLE METACLASSES =====
+
+// @codable - Swift's Codable equivalent (simplified)
+codable: @value type = {
+    json_data: std::string = "{}";
+
+    // Would generate encode/decode methods
+    to_json: (this) -> std::string = {
+        return "{\"data\": \"(json_data)$\"}";
+    }
+
+    from_json: (json: std::string) -> codable = {
+        return (json);
+    }
+}
+
+// ===== C#-STYLE ANNOTATIONS =====
+
+// [Serializable] - C#'s serialization attribute equivalent
+serializable: @value type = {
+    enabled: bool = true;
+
+    // Would generate serialization methods
+    serialize: (this) -> std::string = {
+        return "Serialized data";
+    }
+
+    deserialize: (data: std::string) -> serializable = {
+        return (true);
+    }
+}
+
+// [Obsolete] - C#'s obsolete attribute equivalent
+obsolete: @value type = {
+    message: std::string = "This is obsolete";
+    is_error: bool = false;
+
+    operator=: (out this, msg: std::string) = {
+        message = msg;
+    }
+
+    get_message: (this) -> std::string = {
+        return message;
+    }
+
+    should_error: (this) -> bool = {
+        return is_error;
+    }
+}
+
+// [Conditional] - C#'s conditional compilation equivalent
+conditional: @value type = {
+    condition: std::string = "DEBUG";
+
+    operator=: (out this, cond: std::string) = {
+        condition = cond;
+    }
+
+    should_execute: (this) -> bool = {
+        // In real implementation, this would check compilation symbols
+        return condition == "DEBUG";
+    }
+}
+
+// [Flags] - C#'s flags enum attribute equivalent
+flags: @value type = {
+    // This would mark an enum as having flag semantics
+    description: std::string = "Bit flags enum";
+}
+
+// [AttributeUsage] - C#'s attribute usage specification
+attribute_usage: @value type = {
+    valid_on: std::string = "all";
+    allow_multiple: bool = false;
+    inherited: bool = true;
+
+    operator=: (out this, target: std::string) = {
+        valid_on = target;
+    }
+}
+
+// C# Record type pattern (C# 9+)
+csharp_record: @value type = {
+    name: std::string = "";
+    value: int = 0;
+
+    operator=: (out this, n: std::string, v: int) = {
+        name = n;
+        value = v;
+    }
+
+    // Records auto-generate equality and ToString
+    to_string: (this) -> std::string = {
+        return "Record{name: '(name)$', value: (value)$}";
+    }
+
+    // With expression (record mutation)
+    with_name: (this, new_name: std::string) -> csharp_record = {
+        return (new_name, value);
+    }
+
+    with_value: (this, new_value: int) -> csharp_record = {
+        return (name, new_value);
+    }
+}
+
+// Init-only properties pattern (C# 9+)
+init_only_property: @value type = {
+    private_data: int = 0;
+
+    // Init-only setter (would be called during construction only)
+    set_data: (inout this, value: int) = {
+        // In C#, this would only be callable during object initialization
+        private_data = value;
+    }
+
+    get_data: (this) -> int = {
+        return private_data;
+    }
+}
+
+// Caller info attributes pattern
+caller_info: @value type = {
+    member_name: std::string = "";
+    file_path: std::string = "";
+    line_number: int = 0;
+
+    // In C#, these would be automatically filled by compiler
+    log_call: (this, message: std::string) = {
+        std::cout << "[(file_path)$:(line_number)$] (member_name)$: (message)$\n";
+    }
+}
+
+// [Required] attribute pattern (for validation)
+required: @value type = {
+    error_message: std::string = "This field is required";
+
+    operator=: (out this, msg: std::string) = {
+        error_message = msg;
+    }
+
+    validate: (value: std::string) -> std::optional<std::string> = {
+        if value.empty() {
+            return error_message;
+        }
+        return std::nullopt;
+    }
+}
+
+// [Range] attribute pattern (for validation)
+range: @value type = {
+    min_value: int = 0;
+    max_value: int = 100;
+
+    operator=: (out this, min: int, max: int) = {
+        min_value = min;
+        max_value = max;
+    }
+
+    validate: (value: int) -> std::optional<std::string> = {
+        if value < min_value || value > max_value {
+            return "Value must be between (min_value)$ and (max_value)$";
+        }
+        return std::nullopt;
+    }
+}
+
+// [StringLength] attribute pattern
+string_length: @value type = {
+    max_length: int = 50;
+    min_length: int = 0;
+
+    operator=: (out this, max: int) = {
+        max_length = max;
+    }
+
+    validate: (value: std::string) -> std::optional<std::string> = {
+        if value.length() < min_length {
+            return "String must be at least (min_length)$ characters";
+        }
+        if value.length() > max_length {
+            return "String must not exceed (max_length)$ characters";
+        }
+        return std::nullopt;
+    }
+}
+
+// C# style validation context
+validation_context: @value type = {
+    errors: std::vector<std::string> = ();
+
+    add_error: (inout this, error: std::string) = {
+        errors.push_back(error);
+    }
+
+    is_valid: (this) -> bool = {
+        return errors.empty();
+    }
+
+    get_errors: (this) -> std::vector<std::string> = {
+        return errors;
+    }
+}
+
+// Example C# style class with attributes
+user_model: type = {
+    id: int = 0;
+    this: range = (1, 999999);  // [Range(1, 999999)]
+
+    username: std::string = "";
+    this: string_length = 20;   // [StringLength(20)]
+    this: required = "Username is required";  // [Required]
+
+    email: std::string = "";
+    this: required = "Email is required";  // [Required]
+
+    age: int = 0;
+    this: range = (0, 150);     // [Range(0, 150)]
+
+    this: serializable = ();    // [Serializable]
+
+    // Validation method (like C#'s validation attributes)
+    validate: (this) -> validation_context = {
+        context: validation_context = ();
+
+        // Validate ID range
+        id_result := range(1, 999999).validate(id);
+        if id_result.has_value() {
+            context.add_error("ID: (id_result.value())$");
+        }
+
+        // Validate username
+        username_result := string_length(20).validate(username);
+        if username_result.has_value() {
+            context.add_error("Username: (username_result.value())$");
+        }
+
+        // Validate required fields
+        if username.empty() {
+            context.add_error("Username: Username is required");
+        }
+        if email.empty() {
+            context.add_error("Email: Email is required");
+        }
+
+        // Validate age
+        age_result := range(0, 150).validate(age);
+        if age_result.has_value() {
+            context.add_error("Age: (age_result.value())$");
+        }
+
+        return context;
+    }
+
+    to_string: (this) -> std::string = {
+        return "User{id: (id)$, username: '(username)$', email: '(email)$', age: (age)$}";
+    }
+}
+
+// ===== FUNCTIONAL PROGRAMMING METACLASSES =====
+
+// @monad - Functional programming monad pattern
+maybe: @union <T:type> type = {
+    value: T;
+    nothing: std::monostate;
+
+    // Monad operations (simplified)
+    map: (this, multiplier: double) -> double = {
+        if is_value() {
+            // Convert to double and multiply
+            val := value();
+            return val as double * multiplier;
+        } else {
+            return 0.0;  // Default value for nothing case
+        }
+    }
+
+    flat_map: (this) -> maybe<T> = {
+        // Simplified flat_map that just returns itself
+        return this*;
+    }
+}
+
+// @lens - Functional lens pattern for immutable updates
+lens_example: @value type = {
+    first: int = 0;
+    second: int = 0;
+
+    // Lens-style update
+    with_first: (this, new_first: int) -> lens_example = {
+        return (new_first, second);
+    }
+
+    with_second: (this, new_second: int) -> lens_example = {
+        return (first, new_second);
+    }
+}
+
+// ===== ENTERPRISE PATTERNS =====
+
+// @entity - JPA/Entity style
+entity: @value type = {
+    id: std::string = "";
+    version: int = 1;
+
+    operator=: (out this, entity_id: std::string) = {
+        id = entity_id;
+    }
+
+    // Entity methods
+    is_new: (this) -> bool = {
+        return id.empty();
+    }
+
+    next_version: (inout this) = {
+        version += 1;
+    }
+}
+
+// @dto - Data Transfer Object pattern
+dto: @value type = {
+    data: std::string = "";
+
+    // DTO validation
+    is_valid: (this) -> bool = {
+        return !data.empty();
+    }
+
+    validate: (this) -> std::optional<std::string> = {
+        if data.empty() {
+            return "Data cannot be empty";
+        }
+        return std::nullopt;
+    }
+}
+
+// ===== JAVA-STYLE ANNOTATIONS =====
+// Simplified Java annotation patterns - isomorphic to C# attributes
+
+// @Entity annotation equivalent (isomorphic to C# [Table])
+entity: @value type = {
+    table_name: std::string = "";
+    schema: std::string = "public";
+
+    operator=: (out this, table: std::string) = {
+        table_name = table;
+    }
+
+    get_table_name: (this) -> std::string = {
+        return table_name;
+    }
+}
+
+// @Service annotation equivalent (isomorphic to C# [ServiceLocator])
+service: @value type = {
+    name: std::string = "";
+    scope: std::string = "singleton";
+
+    operator=: (out this, svc_name: std::string) = {
+        name = svc_name;
+    }
+}
+
+// @Service annotation equivalent (isomorphic to C# [ServiceLocator])
+service: @value type = {
+    name: std::string = "";
+    scope: std::string = "singleton";
+
+    operator=: (out this, svc_name: std::string) = {
+        name = svc_name;
+    }
+}
+
+// ===== C#-STYLE ISOMORPHIC PATTERNS =====
+
+// [DataContract] - C#'s data contract serialization (isomorphic to Java @Entity)
+data_contract: @value type = {
+    name: std::string = "";
+    namespace_uri: std::string = "http://schemas.datacontract.org/2004/07/";
+
+    operator=: (out this, contract_name: std::string) = {
+        name = contract_name;
+    }
+
+    get_namespace: (this) -> std::string = {
+        return namespace_uri + name;
+    }
+}
+
+// [DataMember] - C#'s data member attribute (isomorphic to Java @Column)
+data_member: @value type = {
+    name: std::string = "";
+    order: int = 0;
+    is_required: bool = false;
+
+    operator=: (out this, member_name: std::string) = {
+        name = member_name;
+    }
+
+    get_order: (this) -> int = {
+        return order;
+    }
+
+    required: (this) -> bool = {
+        return is_required;
+    }
+}
+
+// [JsonProperty] - JSON.NET attribute (isomorphic to Jackson @JsonProperty)
+json_property: @value type = {
+    name: std::string = "";
+    required: bool = false;
+    default_value: std::string = "";
+
+    operator=: (out this, prop_name: std::string) = {
+        name = prop_name;
+    }
+
+    get_property_name: (this) -> std::string = {
+        return name;
+    }
+}
+
+// [Display] - MVC display attribute (isomorphic to Bean Validation)
+display: @value type = {
+    name: std::string = "";
+    description: std::string = "";
+    group_name: std::string = "";
+
+    operator=: (out this, display_name: std::string) = {
+        name = display_name;
+    }
+
+    get_display_name: (this) -> std::string = {
+        return name;
+    }
+}
+
+// [Key] - Entity Framework key attribute (isomorphic to JPA @Id)
+key: @value type = {
+    auto_generated: bool = true;
+
+    operator=: (out this) = {
+        // Default constructor for key attribute
+    }
+}
+
+// [ForeignKey] - Entity Framework foreign key (isomorphic to JPA @JoinColumn)
+foreign_key: @value type = {
+    referenced_table: std::string = "";
+    referenced_column: std::string = "id";
+
+    operator=: (out this, table: std::string) = {
+        referenced_table = table;
+    }
+
+    get_reference: (this) -> std::string = {
+        return referenced_table + "." + referenced_column;
+    }
+}
+
+// [NotMapped] - Entity Framework attribute (isomorphic to JPA @Transient)
+not_mapped: @value type = {
+    reason: std::string = "Computed property";
+
+    operator=: (out this) = {
+        // Default constructor
+    }
+}
+
+// [Index] - Entity Framework index attribute (isomorphic to database indexes)
+index: @value type = {
+    name: std::string = "";
+    is_unique: bool = false;
+    is_clustered: bool = false;
+
+    operator=: (out this, index_name: std::string) = {
+        name = index_name;
+    }
+
+    get_index_name: (this) -> std::string = {
+        return name;
+    }
+}
+
+// [ConcurrencyCheck] - Entity Framework optimistic concurrency
+concurrency_check: @value type = {
+    message: std::string = "Concurrency conflict detected";
+
+    operator=: (out this) = {
+        // Default constructor
+    }
+}
+
+// [InverseProperty] - Entity Framework inverse navigation
+inverse_property: @value type = {
+    property_name: std::string = "";
+
+    operator=: (out this, prop: std::string) = {
+        property_name = prop;
+    }
+
+    get_inverse: (this) -> std::string = {
+        return property_name;
+    }
+}
+
+// C# Entity Framework style entity with isomorphic attributes
+ef_entity: type = {
+    id: int = 0;
+    this: key = ();  // [Key]
+
+    name: std::string = "";
+    this: string_length = 100;  // [StringLength(100)]
+    this: display = "Full Name";  // [Display(Name = "Full Name")]
+
+    email: std::string = "";
+    this: index = "IX_User_Email";  // [Index("IX_User_Email")]
+    this: json_property = "emailAddress";  // [JsonProperty("emailAddress")]
+
+    created_date: std::chrono::system_clock::time_point = std::chrono::system_clock::now();
+    this: concurrency_check = ();  // [ConcurrencyCheck]
+
+    // Computed property (not mapped to database)
+    display_name: std::string = "";
+    this: not_mapped = ();  // [NotMapped]
+
+    operator=: (out this, entity_id: int, entity_name: std::string, entity_email: std::string) = {
+        id = entity_id;
+        name = entity_name;
+        email = entity_email;
+        display_name = name + " <" + email + ">";
+    }
+
+    // Navigation property with inverse relationship
+    orders: std::vector<ef_order> = ();
+    this: inverse_property = "customer";  // [InverseProperty("customer")]
+
+    to_string: (this) -> std::string = {
+        return "EF_Entity{id: (id)$, name: '(name)$', email: '(email)$'}";
+    }
+}
+
+// Related entity for inverse property demonstration
+ef_order: type = {
+    id: int = 0;
+    this: key = ();  // [Key]
+
+    order_number: std::string = "";
+    this: string_length = 50;  // [StringLength(50)]
+
+    customer_id: int = 0;
+    this: foreign_key = "ef_entity";  // [ForeignKey("Customer")]
+
+    // Navigation property
+    customer: ef_entity = ();
+    this: inverse_property = "orders";  // [InverseProperty("orders")]
+
+    operator=: (out this, order_id: int, number: std::string, cust_id: int) = {
+        id = order_id;
+        order_number = number;
+        customer_id = cust_id;
+    }
+}
+
+// C# DataContract style serialization
+data_contract_entity: type = {
+    this: data_contract = "Person";  // [DataContract(Name = "Person")]
+
+    person_id: int = 0;
+    this: data_member = "Id";  // [DataMember(Name = "Id")]
+
+    first_name: std::string = "";
+    this: data_member = "FirstName";  // [DataMember(Name = "FirstName")]
+
+    last_name: std::string = "";
+    this: data_member = "LastName";  // [DataMember(Name = "LastName")]
+
+    operator=: (out this, id: int, first: std::string, last: std::string) = {
+        person_id = id;
+        first_name = first;
+        last_name = last;
+    }
+
+    serialize_to_json: (this) -> std::string = {
+        return "{\"Id\": (person_id)$, \"FirstName\": \"(first_name)$\", \"LastName\": \"(last_name)$\"}";
+    }
+}
+
+// ===== CROSS-LANGUAGE TEST FUNCTIONS =====
+test_cross_language_metaclasses: () = {
+    std::cout << "\n=== Cross-Language Metaclass Tests ===\n";
+
+    // Test TypeScript-style metaclasses
+    std::cout << "TypeScript @record test:\n";
+    rec: record<std::string, int> = ();
+    std::cout << "Record created\n";
+
+    // Test Kotlin-style data class
+    std::cout << "Kotlin @data_class test:\n";
+    dc: data_class = "test-data";
+    std::cout << "Data class: (dc.to_string())$\n";
+    dc_copy := dc.copy("modified");
+    std::cout << "Copied data class: (dc_copy.to_string())$\n";
+
+    // Test Scala-style case class
+    std::cout << "Scala @case_class test:\n";
+    cc: case_class = 42;
+    std::cout << "Case class value: (cc.unapply())$\n";
+
+    // Test Rust-style derive
+    std::cout << "Rust @derive test:\n";
+    de: derive_eq = (10, 20);
+    de2: derive_eq = (10, 20);
+    if de == de2 {
+        std::cout << "Derived equality works\n";
+    }
+
+    // Test Swift-style codable
+    std::cout << "Swift @codable test:\n";
+    c: codable = "{\"test\": \"data\"}";
+    std::cout << "JSON: (c.to_json())$\n";
+
+    // Test C#-style record
+    std::cout << "C# @record test:\n";
+    rt: csharp_record = ("Alice", 30);
+    std::cout << "Record: (rt.to_string())$\n";
+    rt_modified := rt.with_name("Bob");
+    std::cout << "Modified record: (rt_modified.to_string())$\n";
+
+    // Test C# validation attributes
+    std::cout << "C# validation @attributes test:\n";
+    user: user_model = ();
+    user.id = 123;
+    user.username = "johndoe";
+    user.email = "john@example.com";
+    user.age = 25;
+
+    validation_result := user.validate();
+    if validation_result.is_valid() {
+        std::cout << "User is valid: (user.to_string())$\n";
+    } else {
+        std::cout << "Validation errors:\n";
+        for error in validation_result.get_errors() do (error) {
+            std::cout << "  - (error)$\n";
+        }
+    }
+
+    // Test invalid user
+    invalid_user: user_model = ();
+    invalid_user.id = 0;  // Invalid: below range
+    invalid_user.username = "";  // Invalid: empty
+    invalid_user.email = "";  // Invalid: empty
+    invalid_user.age = 200;  // Invalid: above range
+
+    invalid_result := invalid_user.validate();
+    if !invalid_result.is_valid() {
+        std::cout << "Invalid user has (invalid_result.get_errors().size())$ validation errors\n";
+    }
+
+    // Test C# serialization
+    std::cout << "C# @serializable test:\n";
+    serializable_obj: serializable = ();
+    serialized := serializable_obj.serialize();
+    std::cout << "Serialized: (serialized)$\n";
+
+    // Test C# obsolete
+    std::cout << "C# @obsolete test:\n";
+    obsolete_attr: obsolete = "This method is deprecated";
+    std::cout << "Obsolete message: (obsolete_attr.get_message())$\n";
+
+    // Test C# conditional
+    std::cout << "C# @conditional test:\n";
+    conditional_attr: conditional = "DEBUG";
+    if conditional_attr.should_execute() {
+        std::cout << "Conditional code executed\n";
+    }
+
+    // Test functional programming patterns
+    std::cout << "Functional @monad test:\n";
+    m: maybe<int> = 42;
+    mapped_value := m.map(2.0);  // Simplified: just multiply by 2.0
+    std::cout << "Mapped value: (mapped_value)$\n";
+
+    // Test enterprise patterns
+    std::cout << "Enterprise @entity test:\n";
+    e: entity = "user-123";
+    if !e.is_new() {
+        std::cout << "Entity ID: (e.id)$\n";
+    }
+
+    // Test testing framework
+    std::cout << "Testing @test_case:\n";
+    tc: test_case = "sample-test";
+    if tc.run() {
+        std::cout << "Test passed: (tc.name)$\n";
+    }
+
+    // Test C# isomorphic patterns
+    std::cout << "C# isomorphic @patterns test:\n";
+
+    // Test Entity Framework style entity
+    std::cout << "Entity Framework @entity test:\n";
+    ef: ef_entity = (1, "John Doe", "john@example.com");
+    std::cout << "EF Entity: (ef.to_string())$\n";
+
+    // Test DataContract serialization
+    std::cout << "DataContract @serialization test:\n";
+    dc: data_contract_entity = (1, "Jane", "Smith");
+    json := dc.serialize_to_json();
+    std::cout << "DataContract JSON: (json)$\n";
+
+    // Test JSON.NET properties
+    std::cout << "JsonProperty @attribute test:\n";
+    jp: json_property = "userName";
+    std::cout << "JSON property name: (jp.get_property_name())$\n";
+
+    // Test display attributes
+    std::cout << "Display @attribute test:\n";
+    disp: display = "User Display Name";
+    std::cout << "Display name: (disp.get_display_name())$\n";
+
+    // Test foreign key relationships
+    std::cout << "ForeignKey @relationship test:\n";
+    fk: foreign_key = "users";
+    std::cout << "Foreign key reference: (fk.get_reference())$\n";
+
+    // Test index attributes
+    std::cout << "Index @attribute test:\n";
+    idx: index = "IX_User_Email";
+    idx.is_unique = true;
+    std::cout << "Index name: (idx.get_index_name())$, unique: (idx.is_unique)$\n";
+
+    // Test inverse property navigation
+    std::cout << "InverseProperty @navigation test:\n";
+    inv: inverse_property = "orders";
+    std::cout << "Inverse property: (inv.get_inverse())$\n";
+
+    // Test Kotlin concurrency patterns
+    std::cout << "Kotlin @coroutine test:\n";
+    coro: coroutine = ();
+    coro.resume();
+    std::cout << "Coroutine resumed, suspended: (coro.is_suspended())$\n";
+    coro.complete("Task completed");
+    result := coro.get_result();
+    if result.has_value() {
+        std::cout << "Coroutine result: (result.value())$\n";
+    }
+
+    // Test Kotlin channel
+    std::cout << "Kotlin @channel test:\n";
+    ch: channel<std::string> = (10);  // Buffered channel with capacity 10
+    sent := ch.send("Hello Channel");
+    if sent {
+        std::cout << "Message sent to channel\n";
+    }
+    received := ch.receive();
+    if received.has_value() {
+        std::cout << "Received from channel: (received.value())$\n";
+    }
+
+    // Test Kotlin flow
+    std::cout << "Kotlin @flow test:\n";
+    data_flow: flow<int> = ();
+    int sum := 0;
+    auto subscriber := [&](int value) {
+        sum += value;
+        std::cout << "Flow emitted: (value)$, running sum: (sum)$\n";
+    };
+    data_flow.subscribe(subscriber);
+    data_flow.emit(10);
+    data_flow.emit(20);
+    data_flow.emit(30);
+    data_flow.complete();
+
+    // Test Kotlin async/await
+    std::cout << "Kotlin @async test:\n";
+    task: async_task = "background-task";
+    task.start();
+    task.complete("Async result");
+    task_result := task.await();
+    if task_result.has_value() {
+        std::cout << "Async task result: (task_result.value())$\n";
+    }
+
+    // Test Kotlin mutex
+    std::cout << "Kotlin @mutex test:\n";
+    mutex: kotlin_mutex = ();
+    locked := mutex.lock("thread-1");
+    if locked {
+        std::cout << "Mutex locked by: (mutex.get_owner())$\n";
+        mutex.unlock();
+        std::cout << "Mutex unlocked\n";
+    }
+
+    // Test Kotlin actor
+    std::cout << "Kotlin @actor test:\n";
+    worker: actor = "worker-actor";
+    worker.send("Process data");
+    worker.send("Save results");
+    std::cout << "Actor has messages: (worker.has_messages())$\n";
+
+    std::cout << "=== Cross-Language Tests Complete ===\n";
+}
+
+// ===== CONCRETE TYPE IMPLEMENTING INTERFACE =====
+circle: type = {
+    center: point;
+    radius: double = 1.0;
+    this: shape = ();
+
+    operator=: (out this, c: point, r: double) = {
+        center = c;
+        radius = r;
+    }
+
+    area: (override this) -> double = {
+        return 3.14159 * radius * radius;
+    }
+
+    scale: (override inout this, factor: double) = {
+        radius *= factor;
+    }
+}
+
+// ===== POLYMORPHIC TYPE =====
+concrete_poly: type = {
+    id: int = 0;
+    this: polymorphic_base_example;
+
+    operator=: (out this, i: int) = {
+        id = i;
+    }
+
+    work: (override this) = {
+        std::cout << "Working with id: (id)$\n";
+    }
+}
+
+// ===== TEST FUNCTIONS =====
+main: () -> int = {
+    std::cout << "=== Basic Metaclass Tests ===\n";
+
+    // Test @value
+    p: point = (1.0, 2.0);
+    w: widget = 42;
+
+    // Test comparisons (generated by @value)
+    if p == point(1.0, 2.0) {
+        std::cout << "Points are equal\n";
+    }
+
+    // Test @weakly_ordered_value
+    ww1: weakly_ordered_widget = 10;
+    ww2: weakly_ordered_widget = 20;
+    if ww1 < ww2 {
+        std::cout << "Weak ordering works\n";
+    }
+
+    // Test @enum
+    game: skat_game = skat_game::hearts;
+    std::cout << "Game: (game.to_string())$\n";
+
+    // Test @enum with member function
+    j: janus = janus::past;
+    j.flip();
+    std::cout << "Janus: (j.to_string())$\n";
+
+    // Test @flag_enum
+    flags: file_attributes = file_attributes::cached | file_attributes::current;
+    if flags.has(file_attributes::cached) {
+        std::cout << "Has cached flag\n";
+    }
+
+    // Test @union
+    val: name_or_number = ();
+    val.set_name("Test");
+    if val.is_name() {
+        std::cout << "Name: (val.name())$\n";
+    }
+
+    // Test templated @union
+    other_val: name_or_other<int> = ();
+    other_val.set_other(123);
+    std::cout << "Other: (other_val.to_string())$\n";
+
+    // Test @interface implementation
+    c: circle = (point(0.0, 0.0), 5.0);
+    std::cout << "Area: (c.area())$\n";
+    c.scale(2.0);
+    std::cout << "Scaled area: (c.area())$\n";
+
+    // Test @polymorphic_base
+    poly: concrete_poly = ();
+    poly.work();
+
+    // Test @regex
+    matcher: name_matcher = ();
+    result := matcher.regex.match("John Doe");
+    if result.matched {
+        std::cout << "First name: (result.group(1))$\n";
+        std::cout << "Last name: (result.group(2))$\n";
+    }
+
+    std::cout << "=== Basic Tests Complete ===\n";
+
+    // Run cross-language metaclass tests
+    test_cross_language_metaclasses();
+
+    std::cout << "=== All metaclass tests completed ===\n";
+    return 0;
+}

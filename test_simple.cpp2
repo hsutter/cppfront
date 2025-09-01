@@ -1,0 +1,10 @@
+// Simple test
+point: @value type = {
+    x: double = 0.0;
+    y: double = 0.0;
+}
+
+main: () -> int = {
+    p: point = (1.0, 2.0);
+    return 0;
+}

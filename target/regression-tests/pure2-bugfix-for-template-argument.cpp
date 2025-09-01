@@ -1,0 +1,2 @@
+regression-tests/pure2-bugfix-for-template-argument.cpp2... ok (all Cpp2, passes safety checks)
+
