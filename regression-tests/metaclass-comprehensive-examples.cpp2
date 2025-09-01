@@ -84,48 +84,895 @@ simple_struct: @struct type = {
     y: int;
 }
 
-// ===== REGEX METACLASS =====
-name_matcher: @regex type = {
-    regex := R"((\w+) (\w+))";  // for example: Margaret Hamilton
+// ===== CROSS-LANGUAGE METACLASS EXAMPLES =====
+// Inspired by TypeScript, Kotlin, Scala, and other languages
+
+// ===== TYPESCRIPT-STYLE METACLASSES =====
+
+// @record - TypeScript's Record<K,V> equivalent
+record: @struct <K:type, V:type> type = {
+    // Empty struct that can be extended with key-value pairs
+}
+
+// @partial - TypeScript's Partial<T> equivalent (makes all fields optional)
+partial: @value <T:type> type = {
+    // This would make all fields of T optional - simplified example
+    data: std::optional<T> = std::nullopt;
+}
+
+// @readonly - TypeScript's Readonly<T> equivalent
+readonly: @value type = {
+    // Simplified: just a regular value type
+    data: int = 0;
+}
+
+// ===== KOTLIN-STYLE METACLASSES =====
+
+// @data_class - Kotlin's data class equivalent
+data_class: @value type = {
+    // This would generate equals, hashCode, toString, copy methods
+    // Simplified implementation
+    id: std::string = "";
+
+    operator=: (out this, s: std::string) = {
+        id = s;
+    }
+
+    to_string: (this) -> std::string = {
+        return "DataClass(id='(id)$')";
+    }
+
+    copy: (this, new_id: std::string) -> data_class = {
+        return (new_id);
+    }
+}
+
+// @sealed - Kotlin's sealed class equivalent (simplified)
+sealed_base: @interface type = {
+    type_name: (this) -> std::string;
+}
+
+// ===== SCALA-STYLE METACLASSES =====
+
+// @case_class - Scala's case class equivalent
+case_class: @value type = {
+    value: int = 0;
+
+    operator=: (out this, v: int) = {
+        value = v;
+    }
+
+    // Would generate unapply, copy, equals, hashCode, toString
+    unapply: (this) -> int = {
+        return value;
+    }
+
+    copy: (this, new_value: int) -> case_class = {
+        return (new_value);
+    }
+}
+
+// @bean_property - Scala's @BeanProperty equivalent
+bean_property: @value type = {
+    private_value: int = 0;
+
+    // Would generate Java-style getters/setters
+    get_value: (this) -> int = {
+        return private_value;
+    }
+
+    set_value: (inout this, v: int) = {
+        private_value = v;
+    }
+}
+
+// ===== RUST-STYLE METACLASSES =====
+
+// @derive - Rust's derive macro equivalent (simplified)
+derive_eq: @value type = {
+    x: int = 0;
+    y: int = 0;
+
+    // Would auto-generate equality operators
+    operator==: (this, other: derive_eq) -> bool = {
+        return x == other.x && y == other.y;
+    }
+}
+
+derive_debug: @value type = {
+    name: std::string = "";
+
+    // Would auto-generate debug formatting
+    debug_string: (this) -> std::string = {
+        return "DeriveDebug{name: \"(name)$\"}";
+    }
+}
+
+// ===== SWIFT-STYLE METACLASSES =====
+
+// @codable - Swift's Codable equivalent (simplified)
+codable: @value type = {
+    json_data: std::string = "{}";
+
+    // Would generate encode/decode methods
+    to_json: (this) -> std::string = {
+        return "{\"data\": \"(json_data)$\"}";
+    }
+
+    from_json: (json: std::string) -> codable = {
+        return (json);
+    }
+}
+
+// ===== C#-STYLE ANNOTATIONS =====
+
+// [Serializable] - C#'s serialization attribute equivalent
+serializable: @value type = {
+    enabled: bool = true;
+
+    // Would generate serialization methods
+    serialize: (this) -> std::string = {
+        return "Serialized data";
+    }
+
+    deserialize: (data: std::string) -> serializable = {
+        return (true);
+    }
+}
+
+// [Obsolete] - C#'s obsolete attribute equivalent
+obsolete: @value type = {
+    message: std::string = "This is obsolete";
+    is_error: bool = false;
+
+    operator=: (out this, msg: std::string) = {
+        message = msg;
+    }
+
+    get_message: (this) -> std::string = {
+        return message;
+    }
+
+    should_error: (this) -> bool = {
+        return is_error;
+    }
+}
+
+// [Conditional] - C#'s conditional compilation equivalent
+conditional: @value type = {
+    condition: std::string = "DEBUG";
+
+    operator=: (out this, cond: std::string) = {
+        condition = cond;
+    }
+
+    should_execute: (this) -> bool = {
+        // In real implementation, this would check compilation symbols
+        return condition == "DEBUG";
+    }
+}
+
+// [Flags] - C#'s flags enum attribute equivalent
+flags: @value type = {
+    // This would mark an enum as having flag semantics
+    description: std::string = "Bit flags enum";
+}
+
+// [AttributeUsage] - C#'s attribute usage specification
+attribute_usage: @value type = {
+    valid_on: std::string = "all";
+    allow_multiple: bool = false;
+    inherited: bool = true;
+
+    operator=: (out this, target: std::string) = {
+        valid_on = target;
+    }
+}
+
+// C# Record type pattern (C# 9+)
+csharp_record: @value type = {
+    name: std::string = "";
+    value: int = 0;
+
+    operator=: (out this, n: std::string, v: int) = {
+        name = n;
+        value = v;
+    }
+
+    // Records auto-generate equality and ToString
+    to_string: (this) -> std::string = {
+        return "Record{name: '(name)$', value: (value)$}";
+    }
+
+    // With expression (record mutation)
+    with_name: (this, new_name: std::string) -> csharp_record = {
+        return (new_name, value);
+    }
+
+    with_value: (this, new_value: int) -> csharp_record = {
+        return (name, new_value);
+    }
+}
+
+// Init-only properties pattern (C# 9+)
+init_only_property: @value type = {
+    private_data: int = 0;
+
+    // Init-only setter (would be called during construction only)
+    set_data: (inout this, value: int) = {
+        // In C#, this would only be callable during object initialization
+        private_data = value;
+    }
+
+    get_data: (this) -> int = {
+        return private_data;
+    }
+}
+
+// Caller info attributes pattern
+caller_info: @value type = {
+    member_name: std::string = "";
+    file_path: std::string = "";
+    line_number: int = 0;
+
+    // In C#, these would be automatically filled by compiler
+    log_call: (this, message: std::string) = {
+        std::cout << "[(file_path)$:(line_number)$] (member_name)$: (message)$\n";
+    }
+}
+
+// [Required] attribute pattern (for validation)
+required: @value type = {
+    error_message: std::string = "This field is required";
+
+    operator=: (out this, msg: std::string) = {
+        error_message = msg;
+    }
+
+    validate: (value: std::string) -> std::optional<std::string> = {
+        if value.empty() {
+            return error_message;
+        }
+        return std::nullopt;
+    }
+}
+
+// [Range] attribute pattern (for validation)
+range: @value type = {
+    min_value: int = 0;
+    max_value: int = 100;
+
+    operator=: (out this, min: int, max: int) = {
+        min_value = min;
+        max_value = max;
+    }
+
+    validate: (value: int) -> std::optional<std::string> = {
+        if value < min_value || value > max_value {
+            return "Value must be between (min_value)$ and (max_value)$";
+        }
+        return std::nullopt;
+    }
+}
+
+// [StringLength] attribute pattern
+string_length: @value type = {
+    max_length: int = 50;
+    min_length: int = 0;
+
+    operator=: (out this, max: int) = {
+        max_length = max;
+    }
+
+    validate: (value: std::string) -> std::optional<std::string> = {
+        if value.length() < min_length {
+            return "String must be at least (min_length)$ characters";
+        }
+        if value.length() > max_length {
+            return "String must not exceed (max_length)$ characters";
+        }
+        return std::nullopt;
+    }
+}
+
+// C# style validation context
+validation_context: @value type = {
+    errors: std::vector<std::string> = ();
+
+    add_error: (inout this, error: std::string) = {
+        errors.push_back(error);
+    }
+
+    is_valid: (this) -> bool = {
+        return errors.empty();
+    }
+
+    get_errors: (this) -> std::vector<std::string> = {
+        return errors;
+    }
+}
+
+// Example C# style class with attributes
+user_model: type = {
+    id: int = 0;
+    this: range = (1, 999999);  // [Range(1, 999999)]
+
+    username: std::string = "";
+    this: string_length = 20;   // [StringLength(20)]
+    this: required = "Username is required";  // [Required]
+
+    email: std::string = "";
+    this: required = "Email is required";  // [Required]
+
+    age: int = 0;
+    this: range = (0, 150);     // [Range(0, 150)]
+
+    this: serializable = ();    // [Serializable]
+
+    // Validation method (like C#'s validation attributes)
+    validate: (this) -> validation_context = {
+        context: validation_context = ();
+
+        // Validate ID range
+        id_result := range(1, 999999).validate(id);
+        if id_result.has_value() {
+            context.add_error("ID: (id_result.value())$");
+        }
+
+        // Validate username
+        username_result := string_length(20).validate(username);
+        if username_result.has_value() {
+            context.add_error("Username: (username_result.value())$");
+        }
+
+        // Validate required fields
+        if username.empty() {
+            context.add_error("Username: Username is required");
+        }
+        if email.empty() {
+            context.add_error("Email: Email is required");
+        }
+
+        // Validate age
+        age_result := range(0, 150).validate(age);
+        if age_result.has_value() {
+            context.add_error("Age: (age_result.value())$");
+        }
+
+        return context;
+    }
+
+    to_string: (this) -> std::string = {
+        return "User{id: (id)$, username: '(username)$', email: '(email)$', age: (age)$}";
+    }
+}
+
+// ===== FUNCTIONAL PROGRAMMING METACLASSES =====
+
+// @monad - Functional programming monad pattern
+maybe: @union <T:type> type = {
+    value: T;
+    nothing: std::monostate;
+
+    // Monad operations (simplified)
+    map: (this, multiplier: double) -> double = {
+        if is_value() {
+            // Convert to double and multiply
+            val := value();
+            return val as double * multiplier;
+        } else {
+            return 0.0;  // Default value for nothing case
+        }
+    }
+
+    flat_map: (this) -> maybe<T> = {
+        // Simplified flat_map that just returns itself
+        return this*;
+    }
+}
+
+// @lens - Functional lens pattern for immutable updates
+lens_example: @value type = {
+    first: int = 0;
+    second: int = 0;
+
+    // Lens-style update
+    with_first: (this, new_first: int) -> lens_example = {
+        return (new_first, second);
+    }
+
+    with_second: (this, new_second: int) -> lens_example = {
+        return (first, new_second);
+    }
+}
+
+// ===== ENTERPRISE PATTERNS =====
+
+// @entity - JPA/Entity style
+entity: @value type = {
+    id: std::string = "";
+    version: int = 1;
+
+    operator=: (out this, entity_id: std::string) = {
+        id = entity_id;
+    }
+
+    // Entity methods
+    is_new: (this) -> bool = {
+        return id.empty();
+    }
+
+    next_version: (inout this) = {
+        version += 1;
+    }
+}
+
+// @dto - Data Transfer Object pattern
+dto: @value type = {
+    data: std::string = "";
+
+    // DTO validation
+    is_valid: (this) -> bool = {
+        return !data.empty();
+    }
+
+    validate: (this) -> std::optional<std::string> = {
+        if data.empty() {
+            return "Data cannot be empty";
+        }
+        return std::nullopt;
+    }
+}
+
+// ===== JAVA-STYLE ANNOTATIONS =====
+// Simplified Java annotation patterns - isomorphic to C# attributes
+
+// @Entity annotation equivalent (isomorphic to C# [Table])
+entity: @value type = {
+    table_name: std::string = "";
+    schema: std::string = "public";
+
+    operator=: (out this, table: std::string) = {
+        table_name = table;
+    }
+
+    get_table_name: (this) -> std::string = {
+        return table_name;
+    }
+}
+
+// @Service annotation equivalent (isomorphic to C# [ServiceLocator])
+service: @value type = {
+    name: std::string = "";
+    scope: std::string = "singleton";
+
+    operator=: (out this, svc_name: std::string) = {
+        name = svc_name;
+    }
+}
+
+// @Service annotation equivalent (isomorphic to C# [ServiceLocator])
+service: @value type = {
+    name: std::string = "";
+    scope: std::string = "singleton";
+
+    operator=: (out this, svc_name: std::string) = {
+        name = svc_name;
+    }
+}
+
+// ===== C#-STYLE ISOMORPHIC PATTERNS =====
+
+// [DataContract] - C#'s data contract serialization (isomorphic to Java @Entity)
+data_contract: @value type = {
+    name: std::string = "";
+    namespace_uri: std::string = "http://schemas.datacontract.org/2004/07/";
+
+    operator=: (out this, contract_name: std::string) = {
+        name = contract_name;
+    }
+
+    get_namespace: (this) -> std::string = {
+        return namespace_uri + name;
+    }
+}
+
+// [DataMember] - C#'s data member attribute (isomorphic to Java @Column)
+data_member: @value type = {
+    name: std::string = "";
+    order: int = 0;
+    is_required: bool = false;
+
+    operator=: (out this, member_name: std::string) = {
+        name = member_name;
+    }
+
+    get_order: (this) -> int = {
+        return order;
+    }
+
+    required: (this) -> bool = {
+        return is_required;
+    }
+}
+
+// [JsonProperty] - JSON.NET attribute (isomorphic to Jackson @JsonProperty)
+json_property: @value type = {
+    name: std::string = "";
+    required: bool = false;
+    default_value: std::string = "";
+
+    operator=: (out this, prop_name: std::string) = {
+        name = prop_name;
+    }
+
+    get_property_name: (this) -> std::string = {
+        return name;
+    }
+}
+
+// [Display] - MVC display attribute (isomorphic to Bean Validation)
+display: @value type = {
+    name: std::string = "";
+    description: std::string = "";
+    group_name: std::string = "";
+
+    operator=: (out this, display_name: std::string) = {
+        name = display_name;
+    }
+
+    get_display_name: (this) -> std::string = {
+        return name;
+    }
+}
+
+// [Key] - Entity Framework key attribute (isomorphic to JPA @Id)
+key: @value type = {
+    auto_generated: bool = true;
+
+    operator=: (out this) = {
+        // Default constructor for key attribute
+    }
+}
+
+// [ForeignKey] - Entity Framework foreign key (isomorphic to JPA @JoinColumn)
+foreign_key: @value type = {
+    referenced_table: std::string = "";
+    referenced_column: std::string = "id";
+
+    operator=: (out this, table: std::string) = {
+        referenced_table = table;
+    }
+
+    get_reference: (this) -> std::string = {
+        return referenced_table + "." + referenced_column;
+    }
+}
+
+// [NotMapped] - Entity Framework attribute (isomorphic to JPA @Transient)
+not_mapped: @value type = {
+    reason: std::string = "Computed property";
+
+    operator=: (out this) = {
+        // Default constructor
+    }
+}
+
+// [Index] - Entity Framework index attribute (isomorphic to database indexes)
+index: @value type = {
+    name: std::string = "";
+    is_unique: bool = false;
+    is_clustered: bool = false;
+
+    operator=: (out this, index_name: std::string) = {
+        name = index_name;
+    }
+
+    get_index_name: (this) -> std::string = {
+        return name;
+    }
+}
+
+// [ConcurrencyCheck] - Entity Framework optimistic concurrency
+concurrency_check: @value type = {
+    message: std::string = "Concurrency conflict detected";
+
+    operator=: (out this) = {
+        // Default constructor
+    }
+}
+
+// [InverseProperty] - Entity Framework inverse navigation
+inverse_property: @value type = {
+    property_name: std::string = "";
+
+    operator=: (out this, prop: std::string) = {
+        property_name = prop;
+    }
+
+    get_inverse: (this) -> std::string = {
+        return property_name;
+    }
+}
+
+// C# Entity Framework style entity with isomorphic attributes
+ef_entity: type = {
+    id: int = 0;
+    this: key = ();  // [Key]
+
+    name: std::string = "";
+    this: string_length = 100;  // [StringLength(100)]
+    this: display = "Full Name";  // [Display(Name = "Full Name")]
+
+    email: std::string = "";
+    this: index = "IX_User_Email";  // [Index("IX_User_Email")]
+    this: json_property = "emailAddress";  // [JsonProperty("emailAddress")]
+
+    created_date: std::chrono::system_clock::time_point = std::chrono::system_clock::now();
+    this: concurrency_check = ();  // [ConcurrencyCheck]
+
+    // Computed property (not mapped to database)
+    display_name: std::string = "";
+    this: not_mapped = ();  // [NotMapped]
+
+    operator=: (out this, entity_id: int, entity_name: std::string, entity_email: std::string) = {
+        id = entity_id;
+        name = entity_name;
+        email = entity_email;
+        display_name = name + " <" + email + ">";
+    }
+
+    // Navigation property with inverse relationship
+    orders: std::vector<ef_order> = ();
+    this: inverse_property = "customer";  // [InverseProperty("customer")]
+
+    to_string: (this) -> std::string = {
+        return "EF_Entity{id: (id)$, name: '(name)$', email: '(email)$'}";
+    }
+}
+
+// Related entity for inverse property demonstration
+ef_order: type = {
+    id: int = 0;
+    this: key = ();  // [Key]
+
+    order_number: std::string = "";
+    this: string_length = 50;  // [StringLength(50)]
+
+    customer_id: int = 0;
+    this: foreign_key = "ef_entity";  // [ForeignKey("Customer")]
+
+    // Navigation property
+    customer: ef_entity = ();
+    this: inverse_property = "orders";  // [InverseProperty("orders")]
+
+    operator=: (out this, order_id: int, number: std::string, cust_id: int) = {
+        id = order_id;
+        order_number = number;
+        customer_id = cust_id;
+    }
+}
+
+// C# DataContract style serialization
+data_contract_entity: type = {
+    this: data_contract = "Person";  // [DataContract(Name = "Person")]
+
+    person_id: int = 0;
+    this: data_member = "Id";  // [DataMember(Name = "Id")]
+
+    first_name: std::string = "";
+    this: data_member = "FirstName";  // [DataMember(Name = "FirstName")]
+
+    last_name: std::string = "";
+    this: data_member = "LastName";  // [DataMember(Name = "LastName")]
+
+    operator=: (out this, id: int, first: std::string, last: std::string) = {
+        person_id = id;
+        first_name = first;
+        last_name = last;
+    }
+
+    serialize_to_json: (this) -> std::string = {
+        return "{\"Id\": (person_id)$, \"FirstName\": \"(first_name)$\", \"LastName\": \"(last_name)$\"}";
+    }
+}
+
+// ===== CROSS-LANGUAGE TEST FUNCTIONS =====
+test_cross_language_metaclasses: () = {
+    std::cout << "\n=== Cross-Language Metaclass Tests ===\n";
+
+    // Test TypeScript-style metaclasses
+    std::cout << "TypeScript @record test:\n";
+    rec: record<std::string, int> = ();
+    std::cout << "Record created\n";
+
+    // Test Kotlin-style data class
+    std::cout << "Kotlin @data_class test:\n";
+    dc: data_class = "test-data";
+    std::cout << "Data class: (dc.to_string())$\n";
+    dc_copy := dc.copy("modified");
+    std::cout << "Copied data class: (dc_copy.to_string())$\n";
+
+    // Test Scala-style case class
+    std::cout << "Scala @case_class test:\n";
+    cc: case_class = 42;
+    std::cout << "Case class value: (cc.unapply())$\n";
+
+    // Test Rust-style derive
+    std::cout << "Rust @derive test:\n";
+    de: derive_eq = (10, 20);
+    de2: derive_eq = (10, 20);
+    if de == de2 {
+        std::cout << "Derived equality works\n";
+    }
+
+    // Test Swift-style codable
+    std::cout << "Swift @codable test:\n";
+    c: codable = "{\"test\": \"data\"}";
+    std::cout << "JSON: (c.to_json())$\n";
+
+    // Test C#-style record
+    std::cout << "C# @record test:\n";
+    rt: csharp_record = ("Alice", 30);
+    std::cout << "Record: (rt.to_string())$\n";
+    rt_modified := rt.with_name("Bob");
+    std::cout << "Modified record: (rt_modified.to_string())$\n";
+
+    // Test C# validation attributes
+    std::cout << "C# validation @attributes test:\n";
+    user: user_model = ();
+    user.id = 123;
+    user.username = "johndoe";
+    user.email = "john@example.com";
+    user.age = 25;
+
+    validation_result := user.validate();
+    if validation_result.is_valid() {
+        std::cout << "User is valid: (user.to_string())$\n";
+    } else {
+        std::cout << "Validation errors:\n";
+        for error in validation_result.get_errors() do (error) {
+            std::cout << "  - (error)$\n";
+        }
+    }
+
+    // Test invalid user
+    invalid_user: user_model = ();
+    invalid_user.id = 0;  // Invalid: below range
+    invalid_user.username = "";  // Invalid: empty
+    invalid_user.email = "";  // Invalid: empty
+    invalid_user.age = 200;  // Invalid: above range
+
+    invalid_result := invalid_user.validate();
+    if !invalid_result.is_valid() {
+        std::cout << "Invalid user has (invalid_result.get_errors().size())$ validation errors\n";
+    }
+
+    // Test C# serialization
+    std::cout << "C# @serializable test:\n";
+    serializable_obj: serializable = ();
+    serialized := serializable_obj.serialize();
+    std::cout << "Serialized: (serialized)$\n";
+
+    // Test C# obsolete
+    std::cout << "C# @obsolete test:\n";
+    obsolete_attr: obsolete = "This method is deprecated";
+    std::cout << "Obsolete message: (obsolete_attr.get_message())$\n";
+
+    // Test C# conditional
+    std::cout << "C# @conditional test:\n";
+    conditional_attr: conditional = "DEBUG";
+    if conditional_attr.should_execute() {
+        std::cout << "Conditional code executed\n";
+    }
+
+    // Test functional programming patterns
+    std::cout << "Functional @monad test:\n";
+    m: maybe<int> = 42;
+    mapped_value := m.map(2.0);  // Simplified: just multiply by 2.0
+    std::cout << "Mapped value: (mapped_value)$\n";
+
+    // Test enterprise patterns
+    std::cout << "Enterprise @entity test:\n";
+    e: entity = "user-123";
+    if !e.is_new() {
+        std::cout << "Entity ID: (e.id)$\n";
+    }
+
+    // Test testing framework
+    std::cout << "Testing @test_case:\n";
+    tc: test_case = "sample-test";
+    if tc.run() {
+        std::cout << "Test passed: (tc.name)$\n";
+    }
+
+    // Test C# isomorphic patterns
+    std::cout << "C# isomorphic @patterns test:\n";
+
+    // Test Entity Framework style entity
+    std::cout << "Entity Framework @entity test:\n";
+    ef: ef_entity = (1, "John Doe", "john@example.com");
+    std::cout << "EF Entity: (ef.to_string())$\n";
+
+    // Test DataContract serialization
+    std::cout << "DataContract @serialization test:\n";
+    dc: data_contract_entity = (1, "Jane", "Smith");
+    json := dc.serialize_to_json();
+    std::cout << "DataContract JSON: (json)$\n";
+
+    // Test JSON.NET properties
+    std::cout << "JsonProperty @attribute test:\n";
+    jp: json_property = "userName";
+    std::cout << "JSON property name: (jp.get_property_name())$\n";
+
+    // Test display attributes
+    std::cout << "Display @attribute test:\n";
+    disp: display = "User Display Name";
+    std::cout << "Display name: (disp.get_display_name())$\n";
+
+    // Test foreign key relationships
+    std::cout << "ForeignKey @relationship test:\n";
+    fk: foreign_key = "users";
+    std::cout << "Foreign key reference: (fk.get_reference())$\n";
+
+    // Test index attributes
+    std::cout << "Index @attribute test:\n";
+    idx: index = "IX_User_Email";
+    idx.is_unique = true;
+    std::cout << "Index name: (idx.get_index_name())$, unique: (idx.is_unique)$\n";
+
+    // Test inverse property navigation
+    std::cout << "InverseProperty @navigation test:\n";
+    inv: inverse_property = "orders";
+    std::cout << "Inverse property: (inv.get_inverse())$\n";
+
+    std::cout << "=== Cross-Language Tests Complete ===\n";
 }
 
 // ===== CONCRETE TYPE IMPLEMENTING INTERFACE =====
 circle: type = {
     center: point;
     radius: double = 1.0;
-
-    this: shape = {
-        area: (this) -> double = {
-            return 3.14159 * radius * radius;
-        }
-        scale: (inout this, factor: double) = {
-            radius *= factor;
-        }
-    }
+    this: shape = ();
 
     operator=: (out this, c: point, r: double) = {
         center = c;
         radius = r;
     }
+
+    area: (override this) -> double = {
+        return 3.14159 * radius * radius;
+    }
+
+    scale: (override inout this, factor: double) = {
+        radius *= factor;
+    }
 }
 
 // ===== POLYMORPHIC TYPE =====
 concrete_poly: type = {
-    this: polymorphic_base_example = {
-        work: (override this) = {
-            std::cout << "Working with id: (id)$\n";
-        }
+    id: int = 0;
+    this: polymorphic_base_example;
+
+    operator=: (out this, i: int) = {
+        id = i;
+    }
+
+    work: (override this) = {
+        std::cout << "Working with id: (id)$\n";
     }
 }
 
 // ===== TEST FUNCTIONS =====
-test_value_types: () = {
+main: () -> int = {
+    std::cout << "=== Basic Metaclass Tests ===\n";
+
     // Test @value
     p: point = (1.0, 2.0);
     w: widget = 42;
 
     // Test comparisons (generated by @value)
-    if p == point{1.0, 2.0} {
+    if p == point(1.0, 2.0) {
         std::cout << "Points are equal\n";
     }
 
@@ -135,9 +982,7 @@ test_value_types: () = {
     if ww1 < ww2 {
         std::cout << "Weak ordering works\n";
     }
-}
 
-test_enums: () = {
     // Test @enum
     game: skat_game = skat_game::hearts;
     std::cout << "Game: (game.to_string())$\n";
@@ -152,9 +997,7 @@ test_enums: () = {
     if flags.has(file_attributes::cached) {
         std::cout << "Has cached flag\n";
     }
-}
 
-test_union: () = {
     // Test @union
     val: name_or_number = ();
     val.set_name("Test");
@@ -166,23 +1009,17 @@ test_union: () = {
     other_val: name_or_other<int> = ();
     other_val.set_other(123);
     std::cout << "Other: (other_val.to_string())$\n";
-}
 
-test_interface: () = {
     // Test @interface implementation
-    c: circle = (point{0.0, 0.0}, 5.0);
+    c: circle = (point(0.0, 0.0), 5.0);
     std::cout << "Area: (c.area())$\n";
     c.scale(2.0);
     std::cout << "Scaled area: (c.area())$\n";
-}
 
-test_polymorphic: () = {
     // Test @polymorphic_base
     poly: concrete_poly = ();
     poly.work();
-}
 
-test_regex: () = {
     // Test @regex
     matcher: name_matcher = ();
     result := matcher.regex.match("John Doe");
@@ -190,28 +1027,11 @@ test_regex: () = {
         std::cout << "First name: (result.group(1))$\n";
         std::cout << "Last name: (result.group(2))$\n";
     }
-}
 
-main: () -> int = {
-    std::cout << "=== Testing Metaclass Examples ===\n\n";
+    std::cout << "=== Basic Tests Complete ===\n";
 
-    test_value_types();
-    std::cout << "\n";
-
-    test_enums();
-    std::cout << "\n";
-
-    test_union();
-    std::cout << "\n";
-
-    test_interface();
-    std::cout << "\n";
-
-    test_polymorphic();
-    std::cout << "\n";
-
-    test_regex();
-    std::cout << "\n";
+    // Run cross-language metaclass tests
+    test_cross_language_metaclasses();
 
     std::cout << "=== All metaclass tests completed ===\n";
     return 0;

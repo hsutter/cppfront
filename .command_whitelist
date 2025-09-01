@@ -1,0 +1,6 @@
+# Whitelisted commands for automated runner
+# Lines starting with # are comments. Blank lines ignored.
+# Add exact command paths or prefixes. Example:
+./source/cppfront
+
+# You can add more allowed commands below, one per line.
