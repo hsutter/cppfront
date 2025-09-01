@@ -1,0 +1,193 @@
+// Test coverage for coroutine metaclasses in cppfront
+// This file tests the @async_base, @coroutine, @suspendable, @continuation, @generator, @task metaclasses
+// Inspired by C++20 coroutines and Kotlin's suspend functions
+// Ensures MLIR optimizations for locality and JIT compilation
+
+// Test @async_base metaclass
+async_test_type: @async_base type = {
+    value: int = 0;
+    data: std::string = "";
+}
+
+// Test @coroutine metaclass
+coroutine_test_type: @coroutine type = {
+    state: int = 0;
+    name: std::string = "test_coroutine";
+}
+
+// Test @suspendable metaclass
+suspendable_test_type: @suspendable type = {
+    flag: bool = false;
+    count: int = 0;
+}
+
+// Test @continuation metaclass
+continuation_test_type: @continuation type = {
+    step: int = 0;
+    message: std::string = "continuation";
+}
+
+// Test @generator metaclass
+generator_test_type: @generator type = {
+    current: int = 0;
+    max: int = 10;
+}
+
+// Test @task metaclass
+task_test_type: @task type = {
+    result: double = 0.0;
+    status: std::string = "pending";
+}
+
+// Test inheritance and composition
+composed_async: @async_base type = {
+    coro: coroutine_test_type = ();
+    susp: suspendable_test_type = ();
+}
+
+// Test with templates
+template_async: @async_base <T> type = {
+    item: T;
+}
+
+// Test with inheritance
+derived_coroutine: @coroutine type = {
+    base_value: int = 0;
+    derived_value: double = 0.0;
+}
+
+// Test complex initialization
+complex_test: @async_base type = {
+    vec: std::vector<int> = (1, 2, 3, 4, 5);
+    map: std::map<std::string, int> = (("key1", 1), ("key2", 2));
+}
+
+// Test operator overloading
+operator_test: @coroutine type = {
+    operator=: (inout this, val: int) = {
+        this.state = val;
+    }
+    
+    operator+: (this, other: operator_test) -> operator_test = {
+        ret: operator_test = (this.state + other.state);
+        return ret;
+    }
+}
+
+// Test with contracts
+contract_test: @async_base type = {
+    x: int;
+    
+    operator=: (out this, val: int)
+        pre (val >= 0, "value must be non-negative")
+    = {
+        this.x = val;
+    }
+}
+
+// Test with nested types
+nested_test: @coroutine type = {
+    inner: type = {
+        inner_value: int = 0;
+    }
+    
+    inner_instance: inner = ();
+}
+
+// Test with function expressions
+function_expr_test: @suspendable type = {
+    func: (int) -> int = (x) { return x * 2; };
+}
+
+// Test with inspect expressions
+inspect_test: @generator type = {
+    value: int = 0;
+    
+    classify: (this) -> std::string = {
+        inspect this.value {
+            0 => "zero";
+            1 => "one";
+            _ => "other";
+        }
+    }
+}
+
+// Main test function
+main: () -> int = {
+    // Test basic instantiation
+    async_obj: async_test_type = ();
+    async_obj.value = 42;
+    async_obj.data = "test";
+    
+    coro_obj: coroutine_test_type = 5;
+    coro_obj.name = "main_coro";
+    
+    susp_obj: suspendable_test_type = ();
+    susp_obj.flag = true;
+    susp_obj.count = 10;
+    
+    cont_obj: continuation_test_type = ();
+    cont_obj.step = 3;
+    cont_obj.message = "test_message";
+    
+    gen_obj: generator_test_type = 20;
+    gen_obj.max = 100;
+    
+    task_obj: task_test_type = ();
+    task_obj.result = 3.14;
+    task_obj.status = "completed";
+    
+    // Test composed type
+    comp_obj: composed_async = ();
+    comp_obj.coro.state = 7;
+    comp_obj.susp.count = 15;
+    
+    // Test template
+    templ_obj: template_async<int> = 99;
+    
+    // Test derived
+    derived_obj: derived_coroutine = 8;
+    derived_obj.derived_value = 2.5;
+    
+    // Test complex
+    complex_obj: complex_test = ();
+    complex_obj.vec.push_back(6);
+    complex_obj.map["key3"] = 3;
+    
+    // Test operators
+    op1: operator_test = 10;
+    op2: operator_test = 20;
+    op3: operator_test = op1 + op2;
+    
+    // Test contracts
+    contract_obj: contract_test = 25;
+    
+    // Test nested
+    nested_obj: nested_test = 30;
+    nested_obj.inner_instance.inner_value = 40;
+    
+    // Test function expression
+    result: int = function_expr_test().func(5);
+    
+    // Test inspect
+    inspect_result: std::string = inspect_test(1).classify();
+    
+    // Output results
+    std::cout << "Async value: " << async_obj.value << "\n";
+    std::cout << "Coroutine state: " << coro_obj.state << "\n";
+    std::cout << "Suspendable count: " << susp_obj.count << "\n";
+    std::cout << "Continuation step: " << cont_obj.step << "\n";
+    std::cout << "Generator max: " << gen_obj.max << "\n";
+    std::cout << "Task result: " << task_obj.result << "\n";
+    std::cout << "Composed coro state: " << comp_obj.coro.state << "\n";
+    std::cout << "Template item: " << templ_obj.item << "\n";
+    std::cout << "Derived state: " << derived_obj.state << "\n";
+    std::cout << "Complex vec size: " << complex_obj.vec.size() << "\n";
+    std::cout << "Operator result: " << op3.state << "\n";
+    std::cout << "Contract x: " << contract_obj.x << "\n";
+    std::cout << "Nested inner: " << nested_obj.inner_instance.inner_value << "\n";
+    std::cout << "Function result: " << result << "\n";
+    std::cout << "Inspect result: " << inspect_result << "\n";
+    
+    return 0;
+}

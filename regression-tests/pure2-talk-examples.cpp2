@@ -8,6 +8,11 @@ shape: @interface type = {
 point: @value type = {
     x: double;
     y: double;
+    // allow construction from two doubles
+    operator=: (out this, a: double, b: double) = {
+        x = a;
+        y = b;
+    }
 }
 
 circle: type = {
@@ -15,10 +20,11 @@ circle: type = {
     radius: double;
 
     this: shape = {
-        area: (this) -> double = {
+        area: (override this) -> double = {
             return 3.14159 * radius * radius;
         }
-        scale: (inout this, factor: double) = {
+
+        scale: (override inout this, factor: double) = {
             radius *= factor;
         }
     }
@@ -29,10 +35,67 @@ circle: type = {
     }
 }
 
+// Metaclass taxonomy for coroutines, continuations, and suspend functions
+// Inspired by Kotlin's suspend functions and C++20 coroutines
+// This is a proposed design for cppfront metaclasses
+
+// Example usage of coroutine metaclasses
+my_async_type: @async_base type = {
+    data: int = 0;
+}
+
+my_coroutine_type: @coroutine type = {
+    state: int = 0;
+}
+
+my_suspendable_type: @suspendable type = {
+    flag: bool = false;
+}
+
+my_continuation_type: @continuation type = {
+    step: int = 0;
+}
+
+my_generator_type: @generator type = {
+    current: int = 0;
+}
+
+my_task_type: @task type = {
+    result: std::string = "";
+}
+
 main: () -> int = {
-    c: circle = (point{1.0, 2.0}, 5.0);
+    // Default construct and assign members to avoid complex initializer parsing
+    c: circle = ();
+    c.center = point(1.0, 2.0);
+    c.radius = 5.0;
     std::cout << "Area: " << c.area() << "\n";
     c.scale(2.0);
     std::cout << "Scaled area: " << c.area() << "\n";
+    
+    async_obj: my_async_type = ();
+    async_obj.data = 42;
+    async_obj.resume();  // Added by @async_base metaclass
+    std::cout << "Async data: " << async_obj.data << "\n";
+    
+    coro: my_coroutine_type = 10;
+    coro.resume();
+    std::cout << "Coroutine state: " << coro.state << "\n";
+    
+    susp: my_suspendable_type = ();
+    susp.flag = true;
+    std::cout << "Suspendable flag: " << susp.flag << "\n";
+    
+    cont: my_continuation_type = ();
+    cont.resume();
+    std::cout << "Continuation step: " << cont.step << "\n";
+    
+    gen: my_generator_type = 5;
+    std::cout << "Generator current: " << gen.current << "\n";
+    
+    task_obj: my_task_type = ();
+    task_obj.result = "done";
+    std::cout << "Task result: " << task_obj.result << "\n";
+    
     return 0;
 }

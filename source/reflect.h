@@ -1282,6 +1282,24 @@ auto add_virtual_destructor(meta::type_declaration& t) -> void;
 auto interface(meta::type_declaration& t) -> void;
 
 #line 1583 "reflect.h2"
+auto async_base(meta::type_declaration& t) -> void;
+
+#line 1583 "reflect.h2"
+auto coroutine(meta::type_declaration& t) -> void;
+
+#line 1583 "reflect.h2"
+auto suspendable(meta::type_declaration& t) -> void;
+
+#line 1583 "reflect.h2"
+auto continuation(meta::type_declaration& t) -> void;
+
+#line 1583 "reflect.h2"
+auto generator(meta::type_declaration& t) -> void;
+
+#line 1583 "reflect.h2"
+auto task(meta::type_declaration& t) -> void;
+
+#line 1583 "reflect.h2"
 auto polymorphic_base(meta::type_declaration& t) -> void;
 
 #line 1628 "reflect.h2"
@@ -4464,7 +4482,76 @@ auto interface(meta::type_declaration& t) -> void
 }
 
 #line 1567 "reflect.h2"
+auto async_base(meta::type_declaration& t) -> void
+{
+    // Enforce no copy/move for async types
+    CPP2_UFCS(add_member)(t, "operator=: (out this, that) = delete;");
+    CPP2_UFCS(add_member)(t, "operator=: (move this, that) = delete;");
+    
+    // Require a resume() function
+    CPP2_UFCS(add_member)(t, "resume: (inout this) -> void;");
+    
+    // Add coroutine traits
+    CPP2_UFCS(add_member)(t, "operator co_await: (this) -> awaiter = { return awaiter{this}; }");
+    
+    // Add MLIR optimization hints for locality recalibration on resume
+    CPP2_UFCS(add_extra_cpp1_code)(t, "// MLIR pass: optimize locality on resume\n");
+    CPP2_UFCS(add_extra_build_step)(t, "mlir-opt --optimize-locality input.mlir -o optimized.mlir\n");
+}
+
+#line 1583 "reflect.h2"
+auto coroutine(meta::type_declaration& t) -> void
+{
+    // Add coroutine_handle
+    CPP2_UFCS(add_member)(t, "std::coroutine_handle<> handle = nullptr;");
+    
+    // Add state machine
+    CPP2_UFCS(add_member)(t, "int state = 0;");
+    
+    // Add destroy
+    CPP2_UFCS(add_member)(t, "void destroy() { if (handle) handle.destroy(); }");
+}
+
+#line 1583 "reflect.h2"
+auto suspendable(meta::type_declaration& t) -> void
+{
+    // Mark as suspendable
+    CPP2_UFCS(add_member)(t, "bool is_suspendable = true;");
+    
+    // Add suspend function
+    CPP2_UFCS(add_member)(t, "void suspend() { /* suspend logic */ }");
+}
+
+#line 1583 "reflect.h2"
+auto continuation(meta::type_declaration& t) -> void
+{
+    // Add continuation state
+    CPP2_UFCS(add_member)(t, "int step = 0;");
+}
+
+#line 1583 "reflect.h2"
+auto generator(meta::type_declaration& t) -> void
+{
+    // Add current value
+    CPP2_UFCS(add_member)(t, "int current = 0;");
+    
+    // Add yield function
+    CPP2_UFCS(add_member)(t, "void yield(int value) { /* co_yield logic */ }");
+}
+
+#line 1583 "reflect.h2"
+auto task(meta::type_declaration& t) -> void
+{
+    // Add result
+    CPP2_UFCS(add_member)(t, "std::string result = \"\";");
+    
+    // Add get function
+    CPP2_UFCS(add_member)(t, "auto get() { return result; }");
+}
+
+#line 1567 "reflect.h2"
 //-----------------------------------------------------------------------
+
 //
 //     "C.35: A base class destructor should be either public and
 //      virtual, or protected and non-virtual."
@@ -9229,6 +9316,24 @@ auto regex_gen(meta::type_declaration& t) -> void
         else {if (name == "sample_traverser") {
             sample_traverser(rtype);
         }
+        else {if (name == "async_base") {
+            async_base(rtype);
+        }
+        else {if (name == "coroutine") {
+            coroutine(rtype);
+        }
+        else {if (name == "suspendable") {
+            suspendable(rtype);
+        }
+        else {if (name == "continuation") {
+            continuation(rtype);
+        }
+        else {if (name == "generator") {
+            generator(rtype);
+        }
+        else {if (name == "task") {
+            task(rtype);
+        }
         else {
             error("unrecognized metafunction name: " + cpp2::move(name));
             error(
@@ -9236,7 +9341,7 @@ auto regex_gen(meta::type_declaration& t) -> void
                 "https://hsutter.github.io/cppfront/cpp2/metafunctions/#built-in-metafunctions"
             );
             return false; 
-        }}}}}}}}}}}}}}}}}}}}}}}}
+        }}}}}}}}
     }
 
     return true; 

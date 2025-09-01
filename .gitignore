@@ -31,6 +31,9 @@ build*/
 venv/*
 *.ifc
 
+# Generated C++ files
+target/
+
 # Visual Studio cache directory
 .vs/
 
