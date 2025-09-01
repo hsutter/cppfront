@@ -1,0 +1,132 @@
+// wide-scanner-autovec.cpp2
+// Automatic vectorization examples for wide scanning operations in Cpp2
+// Demonstrates SIMD optimizations for performance-critical scanning algorithms
+
+#include <vector>
+#include <array>
+#include <algorithm>
+#include <numeric>
+#include <iostream>
+#include <chrono>
+
+// SIMD-enabled wide scanner metaclass for automatic vectorization
+@wide_scanner: type = {
+    // SIMD vector width (platform-dependent, typically 4-8 for float/double)
+    vector_width: int = 4;
+
+    // Wide scanning operation with automatic vectorization hints
+    scan_wide: (data: std::vector<double> const&) -> double = {
+        if data.empty() { return 0.0; }
+
+        // Compiler hint for vectorization - process in chunks
+        chunk_size: int = vector_width * 4;  // Process multiple vectors at once
+        result: double = 0.0;
+
+        // Vectorized reduction loop
+        for i: int = 0; i < data.size(); i += chunk_size {
+            end: int = std::min(i + chunk_size, data.size());
+            chunk_sum: double = 0.0;
+
+            // Inner loop that compilers can auto-vectorize
+            for j: int = i; j < end; ++j {
+                chunk_sum += data[j] * data[j];  // Example: sum of squares
+            }
+
+            result += chunk_sum;
+        }
+
+        return result;
+    }
+
+    // Memory-aligned vector operations for better SIMD performance
+    aligned_scan: (data: std::vector<double> const&) -> double = {
+        if data.empty() { return 0.0; }
+
+        // Ensure data is aligned for SIMD operations
+        aligned_data: std::vector<double> = data;  // Copy to ensure alignment
+        result: double = 0.0;
+
+        // Vectorized processing with alignment hints
+        #pragma omp simd reduction(+:result)  // OpenMP SIMD directive
+        for i: int = 0; i < aligned_data.size(); ++i {
+            result += aligned_data[i];
+        }
+
+        return result;
+    }
+
+    // Wide pattern matching with vectorized comparisons
+    find_pattern_wide: (data: std::vector<int> const&, pattern: std::array<int, 4>) -> std::vector<int> = {
+        matches: std::vector<int> = ();
+
+        if data.size() < pattern.size() { return matches; }
+
+        // Vectorized pattern matching
+        for i: int = 0; i <= data.size() - pattern.size(); i += vector_width {
+            match_count: int = 0;
+
+            // Check pattern elements in parallel (can be vectorized)
+            for j: int = 0; j < pattern.size(); ++j {
+                if i + j < data.size() && data[i + j] == pattern[j] {
+                    ++match_count;
+                }
+            }
+
+            if match_count == pattern.size() {
+                matches.push_back(i);
+            }
+        }
+
+        return matches;
+    }
+}
+
+// Performance benchmarking metaclass
+@benchmark: type = {
+    time_operation: (op: std::function<void()>) -> std::chrono::milliseconds = {
+        start: auto = std::chrono::high_resolution_clock::now();
+        op();
+        end: auto = std::chrono::high_resolution_clock::now();
+        return std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    }
+}
+
+// Example usage and testing
+main: () -> int = {
+    std::cout << "Wide Scanner Automatic Vectorization Demo\n";
+
+    // Create test data
+    test_data: std::vector<double> = std::vector<double>(10000);
+    std::iota(test_data.begin(), test_data.end(), 1.0);
+
+    scanner: wide_scanner = ();
+
+    // Benchmark vectorized operations
+    bench: benchmark = ();
+
+    time1: auto = bench.time_operation([&]() {
+        result1: double = scanner.scan_wide(test_data);
+        std::cout << "Wide scan result: " << result1 << "\n";
+    });
+
+    time2: auto = bench.time_operation([&]() {
+        result2: double = scanner.aligned_scan(test_data);
+        std::cout << "Aligned scan result: " << result2 << "\n";
+    });
+
+    std::cout << "Wide scan time: " << time1.count() << "ms\n";
+    std::cout << "Aligned scan time: " << time2.count() << "ms\n";
+
+    // Pattern matching example
+    pattern_data: std::vector<int> = {1, 2, 3, 4, 5, 2, 3, 4, 6, 7, 2, 3, 4, 8, 9};
+    pattern: std::array<int, 4> = {2, 3, 4, 5};
+
+    matches: auto = scanner.find_pattern_wide(pattern_data, pattern);
+    std::cout << "Pattern matches at positions: ";
+    for pos: auto in matches {
+        std::cout << pos << " ";
+    }
+    std::cout << "\n";
+
+    return 0;
+}
