@@ -2,7 +2,7 @@
 
 ## Overview
 
-Wide-scanners represent an evolution of cppfront's lexical analyzer to leverage SIMD (Single Instruction, Multiple Data) instructions for parallel character processing. This approach draws inspiration from BBCursive auto-vectorization patterns and aims to significantly improve parsing performance for large C++ source files.
+Wide-scanners represent an evolution of cppfront's lexical analyzer to leverage SIMD (Single Instruction, Multiple Data) instructions for parallel character processing. This approach draws inspiration from BThis initiative aligns with modern compiler optimizaThis initiative aligns with modern compiler optimization trends and positions cppfront as a high-performance C++ compilation toolchain capable of handling large-scale codebases efficiently.on trends and positions cppfront as a high-performance C++ compilation toolchain capable of handling large-scale codebases efficiently.ursive auto-vectorization patterns and aims to significantly improve parsing performance for large C++ source files.
 
 ## Current State Analysis
 
@@ -22,26 +22,52 @@ Wide-scanners represent an evolution of cppfront's lexical analyzer to leverage 
 
 ## SIMD Acceleration Strategy
 
-### 1. Character Classification SIMD
+### Auto-Vectorization Approach
+
+Instead of platform-specific SIMD intrinsics, we leverage compiler auto-vectorization by writing scalar code that exhibits patterns conducive to vectorization:
+
+- **Loop Unrolling**: Process multiple elements per iteration
+- **Branch Elimination**: Use conditional moves instead of branches
+- **Memory Alignment**: Ensure data structures support vector loads
+- **Data Layout**: Arrange data for contiguous access patterns
+
+### 1. Character Classification Auto-Vectorization
 
 ```cpp
-// SIMD-accelerated whitespace detection
-__m128i whitespace_mask = _mm_set1_epi8(0x20); // space character
-__m128i tab_mask = _mm_set1_epi8(0x09);        // tab character
-__m128i newline_mask = _mm_set1_epi8(0x0A);    // newline character
+// Auto-vectorizable whitespace detection
+bool is_whitespace_av(const char* data, size_t length) {
+    // Compiler can vectorize this loop
+    for (size_t i = 0; i < length; ++i) {
+        char c = data[i];
+        if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
+            return true;
+        }
+    }
+    return false;
+}
 
-bool is_whitespace_simd(const char* data, size_t length) {
-    for (size_t i = 0; i < length; i += 16) {
-        __m128i chunk = _mm_loadu_si128((__m128i*)&data[i]);
-        __m128i ws_result = _mm_or_si128(
-            _mm_cmpeq_epi8(chunk, whitespace_mask),
-            _mm_or_si128(
-                _mm_cmpeq_epi8(chunk, tab_mask),
-                _mm_cmpeq_epi8(chunk, newline_mask)
-            )
-        );
-        if (_mm_movemask_epi8(ws_result)) {
-            return true; // Found whitespace
+// Optimized version for auto-vectorization
+bool is_whitespace_av_optimized(const char* data, size_t length) {
+    // Process in chunks to help vectorization
+    constexpr size_t CHUNK_SIZE = 16;
+    size_t i = 0;
+    
+    // Main vectorizable loop
+    for (; i + CHUNK_SIZE <= length; i += CHUNK_SIZE) {
+        bool found = false;
+        #pragma clang loop vectorize(enable)
+        for (size_t j = 0; j < CHUNK_SIZE; ++j) {
+            char c = data[i + j];
+            found |= (c == ' ' || c == '\t' || c == '\n' || c == '\r');
+        }
+        if (found) return true;
+    }
+    
+    // Handle remainder
+    for (; i < length; ++i) {
+        char c = data[i];
+        if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
+            return true;
         }
     }
     return false;
@@ -51,34 +77,49 @@ bool is_whitespace_simd(const char* data, size_t length) {
 ### 2. Token Boundary Detection
 
 ```cpp
-// Parallel token boundary identification
-__m128i identifier_chars = create_identifier_mask();
-__m128i operator_chars = create_operator_mask();
-
-std::vector<size_t> find_token_boundaries_simd(const std::string& input) {
+// Auto-vectorizable token boundary finding
+std::vector<size_t> find_token_boundaries_av(const std::string& input) {
     std::vector<size_t> boundaries;
-    const size_t chunk_size = 16;
+    const char* data = input.data();
+    size_t length = input.size();
     
-    for (size_t i = 0; i < input.size(); i += chunk_size) {
-        __m128i chunk = _mm_loadu_si128((__m128i*)&input[i]);
+    // Character class lookup tables (encourage vectorization)
+    static const bool is_identifier_char[256] = {
+        // Initialize with identifier character flags
+        ['a'] = true, ['b'] = true, /* ... */ ['z'] = true,
+        ['A'] = true, ['B'] = true, /* ... */ ['Z'] = true,
+        ['0'] = true, ['1'] = true, /* ... */ ['9'] = true,
+        ['_'] = true
+    };
+    
+    static const bool is_operator_char[256] = {
+        // Initialize with operator character flags
+        ['+'] = true, ['-'] = true, ['*'] = true, ['/'] = true,
+        ['='] = true, ['<'] = true, ['>'] = true, ['!'] = true,
+        ['&'] = true, ['|'] = true, ['^'] = true, ['%'] = true,
+        ['?'] = true, [':'] = true, ['.'] = true, [','] = true,
+        [';'] = true, ['('] = true, [')'] = true, ['['] = true,
+        [']'] = true, ['{'] = true, ['}'] = true
+    };
+    
+    bool prev_was_identifier = false;
+    bool prev_was_operator = false;
+    
+    #pragma clang loop vectorize(enable)
+    for (size_t i = 0; i < length; ++i) {
+        char c = data[i];
+        bool curr_is_identifier = is_identifier_char[static_cast<unsigned char>(c)];
+        bool curr_is_operator = is_operator_char[static_cast<unsigned char>(c)];
         
-        // Check for identifier characters
-        __m128i id_mask = _mm_and_si128(chunk, identifier_chars);
-        
-        // Check for operator characters  
-        __m128i op_mask = _mm_and_si128(chunk, operator_chars);
-        
-        // Find transitions between character classes
-        uint16_t transition_mask = _mm_movemask_epi8(
-            _mm_xor_si128(id_mask, op_mask)
-        );
-        
-        // Extract boundary positions
-        while (transition_mask) {
-            int bit_pos = __builtin_ctz(transition_mask);
-            boundaries.push_back(i + bit_pos);
-            transition_mask &= transition_mask - 1;
+        // Detect transitions between character classes
+        if ((prev_was_identifier && !curr_is_identifier && !curr_is_operator) ||
+            (prev_was_operator && !curr_is_operator && !curr_is_identifier) ||
+            (!prev_was_identifier && !prev_was_operator && (curr_is_identifier || curr_is_operator))) {
+            boundaries.push_back(i);
         }
+        
+        prev_was_identifier = curr_is_identifier;
+        prev_was_operator = curr_is_operator;
     }
     
     return boundaries;
@@ -88,21 +129,32 @@ std::vector<size_t> find_token_boundaries_simd(const std::string& input) {
 ### 3. String Literal Processing
 
 ```cpp
-// SIMD-accelerated escape sequence detection
-bool contains_escape_sequences_simd(const std::string& str) {
+// Auto-vectorizable escape sequence detection
+bool contains_escape_sequences_av(const std::string& str) {
     const char* data = str.data();
     size_t length = str.size();
     
-    __m128i backslash_mask = _mm_set1_epi8('\\');
+    // Use lookup table for vectorization
+    static const bool is_escape_char[256] = {
+        ['\\'] = true, ['"'] = true, ['\''] = true,
+        ['n'] = true, ['t'] = true, ['r'] = true,
+        ['0'] = true, ['x'] = true, ['u'] = true, ['U'] = true
+    };
     
-    for (size_t i = 0; i < length; i += 16) {
-        __m128i chunk = _mm_loadu_si128((__m128i*)&data[i]);
-        __m128i result = _mm_cmpeq_epi8(chunk, backslash_mask);
-        
-        if (_mm_movemask_epi8(result)) {
-            return true;
+    bool in_escape = false;
+    #pragma clang loop vectorize(enable)
+    for (size_t i = 0; i < length; ++i) {
+        char c = data[i];
+        if (in_escape) {
+            if (is_escape_char[static_cast<unsigned char>(c)]) {
+                return true;
+            }
+            in_escape = false;
+        } else if (c == '\\') {
+            in_escape = true;
         }
     }
+    
     return false;
 }
 ```
@@ -193,32 +245,80 @@ struct lexer_benchmark {
 
 ## Cross-Platform Considerations
 
-### SIMD Instruction Sets
+### Auto-Vectorization Strategy
 
-- **x86-64**: SSE4.2, AVX2, AVX-512
-- **ARM64**: NEON
-- **Fallback**: Scalar implementation for unsupported platforms
+- **Compiler Agnostic**: Rely on compiler auto-vectorization rather than intrinsics
+- **Universal Compatibility**: Same code works across x86, ARM, RISC-V, etc.
+- **Future-Proof**: Adapts to new SIMD instruction sets automatically
+- **Maintainability**: No platform-specific code branches
 
-### Compiler Support
+### Compiler Hints and Pragmas
 
 ```cpp
-#if defined(__SSE4_2__)
-#include <nmmintrin.h>  // SSE4.2 CRC32, POPCNT
-#endif
+// Encourage vectorization with pragmas
+#pragma clang loop vectorize(enable)
+#pragma clang loop interleave(enable)
+#pragma clang loop vectorize_width(4)
 
-#if defined(__AVX2__)
-#include <immintrin.h>  // AVX2
-#endif
+// GCC equivalents
+#pragma GCC ivdep  // Ignore vector dependencies
+#pragma GCC unroll 4
 
-// Runtime CPU feature detection
-bool has_simd_support() {
-    #if defined(__x86_64__)
-    return __builtin_cpu_supports("sse4.2") && __builtin_cpu_supports("avx2");
-    #elif defined(__aarch64__)
-    return true; // NEON always available on ARM64
+// MSVC
+#pragma loop(ivdep)
+#pragma loop(no_vector)  // For fallback cases
+```
+
+### Optimization Flags
+
+```bash
+# Clang/LLVM optimization flags for auto-vectorization
+-O3 -march=native -ffast-math -funroll-loops
+-Rpass=loop-vectorize -Rpass-analysis=loop-vectorize
+-fvectorize -fslp-vectorize
+
+# GCC optimization flags
+-O3 -march=native -ftree-vectorize -funroll-loops
+-fvect-cost-model=dynamic -fvect-cost-model
+```
+
+### Fallback Mechanisms
+
+```cpp
+// Runtime vectorization capability detection
+bool should_use_vectorized_path() {
+    #ifdef __clang__
+    return __builtin_cpu_supports("avx2") || __builtin_cpu_supports("sse4.2");
+    #elif defined(__GNUC__)
+    return __builtin_cpu_supports("avx2") || __builtin_cpu_supports("sse4.2");
     #else
-    return false;
+    // Conservative fallback for unknown compilers
+    return true;  // Assume vectorization is beneficial
     #endif
+}
+
+// Conditional compilation for vectorization hints
+#ifdef __clang__
+#define VECTORIZE_HINT _Pragma("clang loop vectorize(enable)")
+#define INTERLEAVE_HINT _Pragma("clang loop interleave(enable)")
+#else
+#define VECTORIZE_HINT
+#define INTERLEAVE_HINT
+#endif
+
+void process_characters(const char* data, size_t length) {
+    if (should_use_vectorized_path()) {
+        VECTORIZE_HINT
+        INTERLEAVE_HINT
+        for (size_t i = 0; i < length; ++i) {
+            // Vectorizable operations
+        }
+    } else {
+        // Scalar fallback
+        for (size_t i = 0; i < length; ++i) {
+            // Scalar operations
+        }
+    }
 }
 ```
 
@@ -234,20 +334,45 @@ bool has_simd_support() {
 ### Build System Integration
 
 ```cmake
-# CMake SIMD detection
+# CMake auto-vectorization configuration
 include(CheckCXXCompilerFlag)
-check_cxx_compiler_flag("-msse4.2" COMPILER_SUPPORTS_SSE42)
-check_cxx_compiler_flag("-mavx2" COMPILER_SUPPORTS_AVX2)
 
-if(COMPILER_SUPPORTS_SSE42)
-    add_compile_options(-msse4.2)
-    add_definitions(-DCPP2_SIMD_SSE42)
+# Check for vectorization support
+check_cxx_compiler_flag("-fvectorize" COMPILER_SUPPORTS_VECTORIZE)
+check_cxx_compiler_flag("-ftree-vectorize" COMPILER_SUPPORTS_TREE_VECTORIZE)
+check_cxx_compiler_flag("-march=native" COMPILER_SUPPORTS_MARCH_NATIVE)
+
+# Optimization flags for auto-vectorization
+if(COMPILER_SUPPORTS_VECTORIZE)
+    add_compile_options(-fvectorize)
 endif()
 
-if(COMPILER_SUPPORTS_AVX2)
-    add_compile_options(-mavx2)
-    add_definitions(-DCPP2_SIMD_AVX2)
+if(COMPILER_SUPPORTS_TREE_VECTORIZE)
+    add_compile_options(-ftree-vectorize)
 endif()
+
+if(COMPILER_SUPPORTS_MARCH_NATIVE)
+    add_compile_options(-march=native)
+endif()
+
+# General optimization flags
+add_compile_options(
+    -O3
+    -ffast-math
+    -funroll-loops
+    -fomit-frame-pointer
+)
+
+# Debug vectorization (Clang)
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options(
+        -Rpass=loop-vectorize
+        -Rpass-analysis=loop-vectorize
+    )
+endif()
+
+# Feature detection
+add_definitions(-DCPP2_AUTO_VECTORIZE)
 ```
 
 ## Testing and Validation
@@ -267,21 +392,34 @@ endif()
 
 ## Future Extensions
 
-### Advanced SIMD Features
+### Advanced Auto-Vectorization Features
 
-- **AVX-512**: 512-bit vectors for maximum parallelism
-- **Masked Operations**: Conditional processing within vectors
-- **Gather/Scatter**: Non-contiguous memory access patterns
+- **Profile-Guided Optimization**: Use PGO to improve vectorization decisions
+- **Loop Transformations**: Advanced loop unrolling and interleaving
+- **Memory Prefetching**: Compiler-guided memory access optimization
+- **SIMD Function Libraries**: Leverage compiler-built-in vector functions
 
 ### Integration Opportunities
 
-- **Regex Engine**: SIMD acceleration for pattern matching
-- **Parser Integration**: SIMD-assisted syntax analysis
-- **Code Generation**: SIMD-aware code emission
+- **Regex Engine**: Auto-vectorization for pattern matching loops
+- **Parser Integration**: Vectorizable syntax analysis patterns
+- **Code Generation**: Vectorization-aware code emission
+- **Memory Management**: Vector-aligned memory allocation
+
+### Compiler Evolution
+
+- **New Vectorization Heuristics**: Benefit from compiler improvements automatically
+- **Cross-Platform Consistency**: Same optimizations across all supported platforms
+- **Debugging Tools**: Better vectorization reports and diagnostics
+- **Performance Monitoring**: Runtime vectorization effectiveness tracking
 
 ## Conclusion
 
-Wide-scanners represent a significant performance enhancement opportunity for cppfront's lexical analysis. By leveraging SIMD instructions for parallel character processing, we can achieve substantial speedups while maintaining full compatibility with the existing codebase. The implementation follows a phased approach, starting with foundational SIMD primitives and progressing to comprehensive lexer acceleration.
+Wide-scanners represent a significant performance enhancement opportunity for cppfront's lexical analysis through compiler auto-vectorization. By writing scalar code that exhibits vectorization-friendly patterns, we can achieve substantial speedups while maintaining:
 
-This initiative aligns with modern compiler optimization trends and positions cppfront as a high-performance C++ compilation toolchain capable of handling large-scale codebases efficiently.</content>
-<parameter name="filePath">/Users/jim/work/cppfront/docs/wide-scanners.md
+- **Platform Independence**: No architecture-specific code required
+- **Future Compatibility**: Automatic adaptation to new SIMD capabilities
+- **Maintainability**: Clean, readable code without intrinsics
+- **Robustness**: Compiler handles optimization complexity
+
+The implementation follows a phased approach, starting with foundational vectorization patterns and progressing to comprehensive lexer acceleration. This auto-vectorization strategy aligns with modern compiler optimization trends and positions cppfront as a high-performance C++ compilation toolchain capable of handling large-scale codebases efficiently without platform-specific tuning.
