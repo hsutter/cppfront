@@ -4592,6 +4592,7 @@ autodiff_diff_code: type = {
     operator=:(out this, ctx_: *autodiff_context) = {
         ctx = ctx_;
     }
+    operator=:(out this, that) = {}
 
     add_forward         : (inout this, v: std::string) = { if ctx*.is_forward() { fwd          += v; }}
     add_reverse_primal  : (inout this, v: std::string) = { if ctx*.is_reverse() { rws_primal   += v; }}
@@ -4777,6 +4778,7 @@ autodiff_expression_handler: type = {
 
         return r;
     }
+    prepare_backprop: (this, rhs_b: std::string, lhs: std::string) -> std::string = prepare_backprop(rhs_b, lhs, lhs + ctx*.fwd_suffix, lhs + ctx*.rws_suffix);
 
     gen_assignment: (inout this, lhs: std::string, lhs_d: std::string, lhs_b: std::string, rhs: std::string, rhs_d: std::string, rhs_b: std::string) = {
         diff.add_forward("(lhs_d)$ = (rhs_d)$;\n");
@@ -5386,18 +5388,21 @@ autodiff_stmt_handler: type = {
     mf: meta::function_declaration;
 
     last_params: std::vector<meta::parameter_declaration> = ();
+    overwritten: std::vector<std::string> = ();
+
+    overwrite_push_pop: bool = false;
 
     operator=: (out this, ctx_: *autodiff_context, mf_: meta::function_declaration) = {
         autodiff_handler_base = (ctx_);
         mf = mf_;
     }
 
-    handle_stmt_parameters: (inout this, params: std::vector<parameter_declaration>, leave_open: bool) = {
+    handle_stmt_parameters: (inout this, params: std::vector<parameter_declaration>) -> autodiff_diff_code = {
+        r : autodiff_diff_code = (ctx);
         if params.empty() {
-            return;
+            return r;
         }
 
-        fwd: std::string = "(";
         for params do (param) {
             name: std::string = param.get_declaration().name();
             type: std::string = param.get_declaration().type();
@@ -5409,6 +5414,7 @@ autodiff_stmt_handler: type = {
 
             init  : std::string = "";
             init_d: std::string = "";
+            // TODO: Add handling for reverse expressions
 
             if param.get_declaration().has_initializer() {
                 ad: autodiff_expression_handler = (ctx);
@@ -5421,19 +5427,16 @@ autodiff_stmt_handler: type = {
             }
 
 
-            fwd += "(fwd_pass_style)$ (name)$ : (type)$(init)$, ";
+            r.add_forward("(fwd_pass_style)$ (name)$ : (type)$(init)$, ");
+            r.add_reverse_primal("(fwd_pass_style)$ (name)$ : (type)$(init)$, ");
             if ada.active {
-                fwd += "(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$(init_d)$, ";
+                r.add_forward("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$(init_d)$, ");
             }
 
             ctx*.add_variable_declaration(name, type, ada.active);
         }
 
-        if !leave_open {
-            fwd += ")";
-        }
-
-        diff += fwd;
+        return r;
     }
 
     traverse: (override inout this, decl: meta::declaration) = {
@@ -5465,9 +5468,11 @@ autodiff_stmt_handler: type = {
         if active {
 
             fwd_ad_type : = ctx*.get_fwd_ad_type(type);
+            rws_ad_type : = ctx*.get_rws_ad_type(type);
 
             prim_init: std::string = "";
             fwd_init : std::string = "";
+            rws_init : std::string = "";
 
             if o.has_initializer() {
                 ad: autodiff_expression_handler = (ctx);
@@ -5476,14 +5481,23 @@ autodiff_stmt_handler: type = {
 
                 prim_init = " = " + ad.primal_expr;
                 fwd_init  = " = " + ad.fwd_expr;
+                rws_init  = " = ()"; // TODO: Proper initialization.
+
+                if ad.rws_expr != "()" {
+                    diff.add_reverse_backprop(ad.prepare_backprop(ad.rws_expr, lhs));
+                }
 
                 if type == "_" && ad.fwd_expr == "()" {
                     // Special handling for auto initialization from a literal.
                     fwd_init = " = " + ctx*.get_fwd_ad_type("double") + "()";
                 }
             }
-            diff += "(lhs)$(ctx*.fwd_suffix)$ : (fwd_ad_type)$(fwd_init)$;\n";
-            diff += "(lhs)$   : (type)$(prim_init)$;\n";
+
+            diff.add_forward("(lhs)$(ctx*.fwd_suffix)$ : (fwd_ad_type)$(fwd_init)$;\n");
+            diff.add_forward("(lhs)$   : (type)$(prim_init)$;\n");
+
+            diff.add_reverse_primal("(lhs)$(ctx*.rws_suffix)$ : (rws_ad_type)$(rws_init)$;\n");
+            diff.add_reverse_primal("(lhs)$   : (type)$(prim_init)$;\n");
         }
         else {
             diff += "(lhs)$: (type)$";
@@ -5515,9 +5529,37 @@ autodiff_stmt_handler: type = {
 
 
     traverse: (override inout this, stmt: meta::compound_statement) = {
-        diff += "{\n";
-        base::traverse(stmt);
-        diff += "}\n";
+        ad         : autodiff_stmt_handler = (ctx, mf);
+        ad_push_pop: autodiff_stmt_handler = (ctx, mf);
+        ad_push_pop.overwrite_push_pop = true;
+
+        diff.add_forward("{\n");
+        diff.add_reverse_primal("{\n");
+        diff.add_reverse_backprop("}\n");
+
+        for stmt.get_statements() do (cur) {
+            ad.pre_traverse(cur);
+            ad_push_pop.pre_traverse(cur);
+        }
+
+        for ad.overwritten do (cur) {
+            r := ctx*.lookup_variable_declaration(cur);
+            diff.add_reverse_primal("cpp2::ad_stack::push<(r.decl)$>((cur)$);");
+        }
+
+        diff.add_forward(ad.diff.fwd);
+        diff.add_reverse_primal(ad.diff.rws_primal);
+        diff.add_reverse_backprop(ad_push_pop.diff.rws_backprop);
+        diff.add_reverse_backprop(ad_push_pop.diff.rws_primal);
+
+        for ad.overwritten do (cur) {
+            r := ctx*.lookup_variable_declaration(cur);
+            diff.add_reverse_backprop("(cur)$ = cpp2::ad_stack::pop<(r.decl)$>();");
+        }
+
+        diff.add_forward("}\n");
+        diff.add_reverse_primal("}\n");
+        diff.add_reverse_backprop("{\n");
     }
 
 
@@ -5537,13 +5579,32 @@ autodiff_stmt_handler: type = {
         }
     }
 
+    reverse_next: (this, expr: std::string) -> std::string = {
+        if expr.contains("+=") {
+            return string_util::replace_all(expr, "+=", "-=");
+        }
+        else if expr.contains("-=") {
+            return string_util::replace_all(expr, "-=", "+=");
+        }
+
+        mf.error("AD: Do not know how to reverse: (expr)$");
+
+        return "Error";
+
+    }
+
 
     traverse: (override inout this, stmt: meta::iteration_statement) = {
-        if !last_params.empty() {
-            handle_stmt_parameters(last_params, stmt.is_for());
+        diff_params := handle_stmt_parameters(last_params);
+
+        if ctx*.is_reverse() && (stmt.is_while() || stmt.is_do()) {
+            stmt.error("AD: Alpha limitiation now reverse mode for while or do while.");
         }
 
         if stmt.is_while() {
+            if !last_params.empty() {
+                diff.add_forward("(" + diff_params.fwd + ")");
+            }
             // TODO: Assumption is here that nothing is in the condition
             diff += "while (stmt.get_do_while_condition().to_string())$ ";
             if stmt.has_next() {
@@ -5554,6 +5615,10 @@ autodiff_stmt_handler: type = {
             pre_traverse(stmt.get_do_while_body());
         }
         else if stmt.is_do() {
+            if !last_params.empty() {
+                diff.add_forward("(" + diff_params.fwd + ")");
+            }
+
             // TODO: Assumption is here that nothing is in the condition
             diff += "do ";
             pre_traverse(stmt.get_do_while_body());
@@ -5574,23 +5639,55 @@ autodiff_stmt_handler: type = {
             param := stmt.get_for_parameter();
             param_style := to_string_view(param.get_passing_style());
             param_decl := param.get_declaration();
-            if last_params.empty() {
-                diff += "("; // Open statment parameter scope. If the loop has parameters, they are alrady handled and the brace is left open.
+
+            rws        : std::string = "(";
+            rws_restore: std::string = "";
+            diff.add_forward("("); // Open statment parameter scope. If the loop has parameters, they are alrady handled and the brace is left open.
+            diff.add_reverse_primal("{\n");
+            if !last_params.empty() {
+                for last_params do (cur) {
+                    if cur.get_declaration().has_initializer() {
+                        // TODO: Handle no type and no initializer. Handle passing style.
+                        diff.add_reverse_primal("(cur.get_declaration().name())$: (cur.get_declaration().type())$ = (cur.get_declaration().get_initializer().to_string())$;\n");
+                        rws_restore += "cpp2::ad_stack::push<(cur.get_declaration().type())$>((cur.get_declaration().name())$);\n";
+                        rws += "(to_string_view(cur.get_passing_style()))$ (cur.get_declaration().name())$: (cur.get_declaration().type())$ = cpp2::ad_stack::pop<(cur.get_declaration().type())$>(), ";
+                    }
+                }
+                diff.add_forward(diff_params.fwd);
             }
-            diff += "copy (param_decl.name())$_d_iter := (range)$(ctx*.fwd_suffix)$.begin())\n";
-            diff += "for (range)$ next (";
+            diff.add_forward("copy (param_decl.name())$(ctx*.fwd_suffix)$_iter := (range)$(ctx*.fwd_suffix)$.begin())\n");
+            diff.add_forward("for (range)$ next (");
+
+            rws += "copy (param_decl.name())$(ctx*.rws_suffix)$_iter := (range)$(ctx*.rws_suffix)$.rbegin())\n";
+            rws += "for std::ranges::reverse_view((range)$) next (";
+            diff.add_reverse_primal("for (range)$ next (");
             if stmt.has_next() {
                 // TODO: Assumption is here that nothing is in the next expression
-                diff += "(stmt.get_next_expression().to_string())$, ";
+                diff.add_forward("(stmt.get_next_expression().to_string())$, ");
+                diff.add_reverse_primal("(stmt.get_next_expression().to_string())$, ");
+                rws += "(reverse_next(stmt.get_next_expression().to_string()))$, ";
             }
-            diff += "(param_decl.name())$_d_iter++";
-            diff += ") do ((param_style)$ (param_decl.name())$: (param_decl.type())$) {\n";
-            diff += "((param_style)$ (param_decl.name())$(ctx*.fwd_suffix)$: (param_decl.type())$ = (param_decl.name())$_d_iter*)";
+            diff.add_forward("(param_decl.name())$(ctx*.fwd_suffix)$_iter++");
+            diff.add_forward(") do ((param_style)$ (param_decl.name())$: (param_decl.type())$) {\n");
+            rws += "(param_decl.name())$(ctx*.rws_suffix)$_iter++";
+            rws += ") do ((param_style)$ (param_decl.name())$: (param_decl.type())$) {\n";
+            rws +=  "(inout (param_decl.name())$(ctx*.rws_suffix)$ := (param_decl.name())$(ctx*.rws_suffix)$_iter*)\n";
+
+            diff.add_reverse_primal(") do ((param_style)$ (param_decl.name())$: (param_decl.type())$)");
+            diff.add_forward("((param_style)$ (param_decl.name())$(ctx*.fwd_suffix)$: (param_decl.type())$ = (param_decl.name())$(ctx*.fwd_suffix)$_iter*)");
 
             ctx*.add_variable_declaration("(param_decl.name())$", "(param_decl.type())$", true); // TODO: Handle loop/compound context variable declarations.
+            diff.add_reverse_backprop("}\n");
 
             pre_traverse(stmt.get_for_body());
-            diff += "}\n";
+            diff.add_forward("}\n");
+
+            if stmt.has_next() {
+                diff.add_reverse_primal("(reverse_next(stmt.get_next_expression().to_string()))$;\n");
+            }
+            diff.add_reverse_primal(rws_restore);
+            diff.add_reverse_primal("}\n");
+            diff.add_reverse_backprop(rws);
         }
     }
 
@@ -5626,8 +5723,34 @@ autodiff_stmt_handler: type = {
 
             h: autodiff_expression_handler = (ctx);
             h.pre_traverse(assignment_terms[1].get_term());
-            h.gen_assignment(h_lhs.primal_expr, h_lhs.fwd_expr, h_lhs.rws_expr);
-            append(h);
+
+            is_overwrite := h.primal_expr.contains(h_lhs.primal_expr);
+            if overwrite_push_pop && is_overwrite {
+                r := ctx*.lookup_variable_declaration(h_lhs.primal_expr);
+                diff.add_reverse_primal("cpp2::ad_stack::push<(r.decl)$>((h_lhs.primal_expr)$);");
+            }
+
+            if is_overwrite && ctx*.is_reverse() {
+                t_b := ctx*.gen_temporary() + ctx*.rws_suffix;
+                h.gen_assignment(h_lhs.primal_expr, h_lhs.fwd_expr, t_b);
+                append(h);
+                diff.add_reverse_backprop("(h_lhs.rws_expr)$ = 0.0;\n");
+                diff.add_reverse_backprop("(t_b)$ := (h_lhs.rws_expr)$;\n");
+            }
+            else {
+                h.gen_assignment(h_lhs.primal_expr, h_lhs.fwd_expr, h_lhs.rws_expr);
+                append(h);
+            }
+
+            if overwrite_push_pop && is_overwrite {
+                r := ctx*.lookup_variable_declaration(h_lhs.primal_expr);
+                diff.add_reverse_backprop("(h_lhs.primal_expr)$ = cpp2::ad_stack::pop<(r.decl)$>();");
+            }
+
+            // Simple overwrite check
+            if is_overwrite {
+                overwritten.push_back(h_lhs.primal_expr);
+            }
         }
         else {
             diff.add_forward(binexpr.to_string() + ";\n");
@@ -6045,6 +6168,9 @@ autodiff: (inout t: meta::type_declaration) =
 
     if 1 != order {
         t.add_runtime_support_include( "cpp2taylor.h" );
+    }
+    if reverse {
+        t.add_runtime_support_include( "cpp2ad_stack.h" );
     }
 
     ad_ctx.finish();
