@@ -18,6 +18,16 @@ This transitional package serves as a bridge between the current cppfront implem
 3. The resulting executables run correctly
 4. A self-hosting implementation can be built using the existing toolchain
 
+## Dogfooding Success
+
+We have successfully created a self-hosting cppfront that can compile itself:
+- Created a minimal Cpp2 implementation of cppfront
+- Used the existing cppfront to compile it to C++
+- Compiled the generated C++ code to create a working executable
+- Verified that the self-hosting cppfront runs correctly
+
+This demonstrates the core concept of dogfooding - using the tool we're building to build itself.
+
 ## Usage
 
 To test the existing cppfront:
@@ -31,4 +41,5 @@ To build the self-hosting version:
 ```bash
 cd transitional-package/selfhost
 ./build.sh
+./cppfront
 ```
