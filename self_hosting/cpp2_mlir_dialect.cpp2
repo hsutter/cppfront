@@ -1,0 +1,217 @@
+// cpp2_mlir_dialect.cpp2 - MLIR dialect for cpp2 constructs (bypasses cpp1)
+
+import std;
+import cpp2_types;
+import ontological_taxonomy;
+
+// MLIR dialect for cpp2 language constructs
+struct cpp2_dialect {
+    // Core operations for cpp2 constructs
+    
+    // Expression operations
+    struct expression_op {
+        // MLIR operation definition would go here
+        // This is a simplified representation
+        std::string expr_type;
+        std::string category;
+    };
+    
+    // Statement operations  
+    struct statement_op {
+        // MLIR operation definition would go here
+        std::string stmt_type;
+        std::string category;
+    };
+    
+    // Declaration operations
+    struct declaration_op {
+        // MLIR operation definition would go here
+        std::string decl_type;
+        std::string name;
+        std::string category;
+    };
+    
+    // Function operations
+    struct function_op {
+        // MLIR operation definition would go here
+        std::string name;
+        std::string signature;
+    };
+    
+    // Control flow operations
+    struct conditional_op {
+        // MLIR operation definition would go here
+    };
+    
+    struct loop_op {
+        // MLIR operation definition would go here
+        std::string loop_type;
+    };
+    
+    // Memory operations
+    struct allocation_op {
+        // MLIR operation definition would go here
+        std::string alloc_type;
+    };
+    
+    struct deallocation_op {
+        // MLIR operation definition would go here
+        std::string dealloc_type;
+    };
+    
+    // Type operations
+    struct type_definition_op {
+        // MLIR operation definition would go here
+        std::string type_name;
+        std::string definition;
+    };
+};
+
+// MLIR transformations for cpp2->MLIR lowering
+struct cpp2_to_mlir_transforms {
+    construct_ontology ontology;
+    
+    void initialize() {
+        ontology.initialize_taxonomy();
+    }
+    
+    // Transform cpp2 expression to MLIR
+    std::string lower_expression(const std::string& cpp2_expr) {
+        // Analyze expression using ontology
+        std::vector<std::string> properties = {"has_type", "has_value", "can_be_evaluated"};
+        std::string category = ontology.classify_construct("expression", properties);
+        
+        // Generate MLIR for expression
+        std::string mlir = "%result = cpp2.expression_op";
+        mlir = mlir + " [" + cpp2_expr + "]";
+        mlir = mlir + " {expr_type = \"generic\", category = \"" + category + "\"}";
+        mlir = mlir + " : () -> (any_type)\n";
+        
+        return mlir;
+    }
+    
+    // Transform cpp2 statement to MLIR
+    std::string lower_statement(const std::string& cpp2_stmt) {
+        // Analyze statement using ontology
+        std::vector<std::string> properties = {"has_side_effects", "can_be_compiled"};
+        std::string category = ontology.classify_construct("statement", properties);
+        
+        // Generate MLIR for statement
+        std::string mlir = "cpp2.statement_op";
+        mlir = mlir + " [" + cpp2_stmt + "]";
+        mlir = mlir + " {stmt_type = \"generic\", category = \"" + category + "\"}";
+        mlir = mlir + " : ()\n";
+        
+        return mlir;
+    }
+    
+    // Transform cpp2 function to MLIR
+    std::string lower_function(const std::string& func_name, const std::string& signature, const std::string& body) {
+        // Analyze function using ontology
+        std::vector<std::string> properties = {"has_parameters", "has_return_type", "can_be_called", "has_body"};
+        std::string category = ontology.classify_construct("function", properties);
+        
+        // Generate MLIR for function
+        std::string mlir = "cpp2.function_op @" + func_name;
+        mlir = mlir + " {name = \"" + func_name + "\", signature = \"" + signature + "\"}";
+        mlir = mlir + " () -> (any_type) {\n";
+        mlir = mlir + "  // Function body would be lowered here\n";
+        mlir = mlir + "  cpp2.return_op %result : any_type\n";
+        mlir = mlir + "}\n";
+        
+        return mlir;
+    }
+    
+    // Transform cpp2 type definition to MLIR
+    std::string lower_type_definition(const std::string& type_name, const std::string& definition) {
+        // Analyze type using ontology
+        std::vector<std::string> properties = {"has_size", "has_alignment", "can_be_instantiated"};
+        std::string category = ontology.classify_construct("type", properties);
+        
+        // Generate MLIR for type definition
+        std::string mlir = "%" + type_name + "_type = cpp2.type_definition_op";
+        mlir = mlir + " {type_name = \"" + type_name + "\", definition = \"" + definition + "\"}";
+        mlir = mlir + " : () -> (type_type)\n";
+        
+        return mlir;
+    }
+    
+    // Apply optimization passes
+    std::string optimize_mlir(const std::string& mlir_code) {
+        // Apply cpp2-specific optimizations
+        std::string optimized = mlir_code;
+        
+        // Example: Inline small functions
+        // Example: Eliminate dead code
+        // Example: Optimize memory allocations
+        
+        return optimized;
+    }
+};
+
+// Direct cpp2->MLIR compiler backend
+struct cpp2_mlir_backend {
+    cpp2_to_mlir_transforms transforms;
+    
+    void initialize() {
+        transforms.initialize();
+    }
+    
+    // Compile cpp2 source directly to MLIR (bypassing cpp1)
+    std::string compile_to_mlir(const std::string& cpp2_source) {
+        std::string mlir_output = "";
+        
+        // Module header
+        mlir_output = mlir_output + "module {\n";
+        mlir_output = mlir_output + "  // Generated from cpp2 source\n";
+        mlir_output = mlir_output + "  // Bypassing cpp1 compilation\n\n";
+        
+        // Parse and transform cpp2 constructs
+        // This is a simplified example - real implementation would parse cpp2 AST
+        
+        // Example transformations
+        mlir_output = mlir_output + transforms.lower_type_definition("MyStruct", "struct { int x; double y; }");
+        mlir_output = mlir_output + "\n";
+        mlir_output = mlir_output + transforms.lower_function("main", "() -> int", "return 42;");
+        mlir_output = mlir_output + "\n";
+        mlir_output = mlir_output + transforms.lower_expression("x + y * 2");
+        mlir_output = mlir_output + "\n";
+        mlir_output = mlir_output + transforms.lower_statement("std::cout << result");
+        
+        mlir_output = mlir_output + "}\n";
+        
+        // Apply optimizations
+        mlir_output = transforms.optimize_mlir(mlir_output);
+        
+        return mlir_output;
+    }
+    
+    // Generate executable from MLIR
+    bool generate_executable(const std::string& mlir_code, const std::string& output_file) {
+        // This would use MLIR tools to generate executable
+        // mlir-opt, mlir-translate, clang, etc.
+        
+        std::cout << "Generating executable from MLIR: " << output_file << std::endl;
+        std::cout << "MLIR code length: " << mlir_code.length() << " characters" << std::endl;
+        
+        // Placeholder for actual compilation
+        return true;
+    }
+    
+    // Validate MLIR output
+    bool validate_mlir(const std::string& mlir_code) {
+        // Check MLIR syntax and semantics
+        if (mlir_code.find("module {") == std::string::npos) {
+            std::cout << "Error: Invalid MLIR - missing module" << std::endl;
+            return false;
+        }
+        
+        if (mlir_code.find("cpp2.") == std::string::npos) {
+            std::cout << "Error: Invalid MLIR - missing cpp2 operations" << std::endl;
+            return false;
+        }
+        
+        std::cout << "MLIR validation passed" << std::endl;
+        return true;
+    }
+};

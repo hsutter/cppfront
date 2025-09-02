@@ -1,2 +1,0 @@
-regression-tests/pure2-trailing-comma-assert.cpp2... ok (all Cpp2, passes safety checks)
-

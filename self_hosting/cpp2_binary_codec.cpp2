@@ -1,0 +1,402 @@
+// cpp2_binary_codec.cpp2 - Binary codec transform for cpp2 (alternative to C++1 backend)
+// Supports code as data for Oroboros-CouchDB with git repo hosting in attachments
+
+import std;
+import cpp2_types;
+import ontological_taxonomy;
+
+// Binary schema opcodes for cpp2 constructs
+enum class BinaryOpcode : uint8_t {
+    // Core constructs
+    MODULE_START = 0x01,
+    MODULE_END = 0x02,
+    FUNCTION_DEF = 0x03,
+    STRUCT_DEF = 0x04,
+    CLASS_DEF = 0x05,
+    INTERFACE_DEF = 0x06,
+    
+    // Expressions
+    LITERAL_INT = 0x10,
+    LITERAL_FLOAT = 0x11,
+    LITERAL_STRING = 0x12,
+    LITERAL_BOOL = 0x13,
+    IDENTIFIER = 0x14,
+    BINARY_OP = 0x15,
+    UNARY_OP = 0x16,
+    CALL_EXPR = 0x17,
+    MEMBER_ACCESS = 0x18,
+    
+    // Statements
+    RETURN_STMT = 0x20,
+    IF_STMT = 0x21,
+    FOR_STMT = 0x22,
+    WHILE_STMT = 0x23,
+    ASSIGN_STMT = 0x24,
+    DECL_STMT = 0x25,
+    EXPR_STMT = 0x26,
+    
+    // Types
+    TYPE_INT = 0x30,
+    TYPE_FLOAT = 0x31,
+    TYPE_STRING = 0x32,
+    TYPE_BOOL = 0x33,
+    TYPE_VOID = 0x34,
+    TYPE_CUSTOM = 0x35,
+    
+    // Control
+    END_BLOCK = 0xFE,
+    EXTENSION = 0xFF
+};
+
+// Binary schema for cpp2 code as data
+struct Cpp2BinarySchema {
+    std::vector<uint8_t> bytecode;
+    std::unordered_map<std::string, uint32_t> symbol_table;
+    std::vector<std::string> string_table;
+    construct_ontology ontology;
+    
+    Cpp2BinarySchema() = default;
+    
+    // Initialize the binary codec
+    void initialize() {
+        ontology.initialize_taxonomy();
+    }
+    
+    // Encode cpp2 source to binary schema
+    std::vector<uint8_t> encode_cpp2(const std::string& cpp2_source) {
+        bytecode.clear();
+        symbol_table.clear();
+        string_table.clear();
+        
+        // Parse cpp2 source (simplified - would need proper parser)
+        auto tokens = tokenize_cpp2(cpp2_source);
+        
+        // Encode tokens to binary
+        for (const auto& token : tokens) {
+            encode_token(token);
+        }
+        
+        // Add end marker
+        bytecode.push_back(static_cast<uint8_t>(BinaryOpcode::MODULE_END));
+        
+        return bytecode;
+    }
+    
+    // Decode binary schema back to cpp2 source
+    std::string decode_cpp2(const std::vector<uint8_t>& binary_data) {
+        std::string cpp2_source;
+        size_t pos = 0;
+        
+        while (pos < binary_data.size()) {
+            auto opcode = static_cast<BinaryOpcode>(binary_data[pos]);
+            pos++;
+            
+            switch (opcode) {
+                case BinaryOpcode::MODULE_START:
+                    cpp2_source += "// Module start\n";
+                    break;
+                    
+                case BinaryOpcode::FUNCTION_DEF: {
+                    auto name_idx = read_u32(binary_data, pos);
+                    auto name = string_table[name_idx];
+                    cpp2_source += "function " + name + "() {\n";
+                    break;
+                }
+                
+                case BinaryOpcode::LITERAL_STRING: {
+                    auto str_idx = read_u32(binary_data, pos);
+                    auto str = string_table[str_idx];
+                    cpp2_source += "\"" + str + "\"";
+                    break;
+                }
+                
+                case BinaryOpcode::RETURN_STMT:
+                    cpp2_source += "return ";
+                    break;
+                    
+                case BinaryOpcode::END_BLOCK:
+                    cpp2_source += "}\n";
+                    break;
+                    
+                case BinaryOpcode::MODULE_END:
+                    cpp2_source += "// Module end\n";
+                    return cpp2_source;
+                    
+                default:
+                    cpp2_source += "// Unknown opcode: " + std::to_string(static_cast<uint8_t>(opcode)) + "\n";
+                    break;
+            }
+        }
+        
+        return cpp2_source;
+    }
+    
+    // Store binary schema in CouchDB attachment format
+    std::string to_couchdb_attachment() {
+        // Create JSON attachment metadata for git repo hosting
+        std::string json = "{";
+        json += "\"content_type\": \"application/x-cpp2-binary\",";
+        json += "\"length\": " + std::to_string(bytecode.size()) + ",";
+        json += "\"digest\": \"sha256-" + compute_sha256(bytecode) + "\",";
+        json += "\"data\": \"" + base64_encode(bytecode) + "\",";
+        json += "\"git_repo\": true,";
+        json += "\"project_meta\": {";
+        json += "\"language\": \"cpp2\",";
+        json += "\"schema_version\": \"1.0\",";
+        json += "\"symbols\": " + std::to_string(symbol_table.size()) + ",";
+        json += "\"strings\": " + std::to_string(string_table.size());
+        json += "}";
+        json += "}";
+        
+        return json;
+    }
+    
+    // Load from CouchDB attachment format
+    void from_couchdb_attachment(const std::string& json_attachment) {
+        // Parse JSON and extract binary data
+        // Simplified - would need proper JSON parser
+        auto binary_start = json_attachment.find("\"data\": \"") + 9;
+        auto binary_end = json_attachment.find("\"", binary_start);
+        auto b64_data = json_attachment.substr(binary_start, binary_end - binary_start);
+        
+        bytecode = base64_decode(b64_data);
+    }
+    
+    // Execute binary schema as code (JIT compilation)
+    void execute_as_code() {
+        // Would integrate with JIT compiler
+        // For now, just decode and print
+        auto cpp2_source = decode_cpp2(bytecode);
+        std::cout << "Decoded C++2 source:\n" << cpp2_source << std::endl;
+    }
+    
+    // Query binary schema using code as data
+    std::vector<std::string> query_symbols(const std::string& pattern) {
+        std::vector<std::string> matches;
+        
+        for (const auto& symbol : symbol_table) {
+            if (symbol.first.find(pattern) != std::string::npos) {
+                matches.push_back(symbol.first);
+            }
+        }
+        
+        return matches;
+    }
+    
+    // Transform binary schema to different representations
+    std::string to_json_view() {
+        std::string json = "{";
+        json += "\"type\": \"cpp2_binary_schema\",";
+        json += "\"bytecode_size\": " + std::to_string(bytecode.size()) + ",";
+        json += "\"symbols\": [";
+        
+        bool first = true;
+        for (const auto& symbol : symbol_table) {
+            if (!first) json += ",";
+            json += "\"" + symbol.first + "\"";
+            first = false;
+        }
+        
+        json += "],";
+        json += "\"strings\": [";
+        
+        first = true;
+        for (const auto& str : string_table) {
+            if (!first) json += ",";
+            json += "\"" + escape_json_string(str) + "\"";
+            first = false;
+        }
+        
+        json += "]";
+        json += "}";
+        
+        return json;
+    }
+    
+private:
+    // Tokenize cpp2 source (simplified)
+    std::vector<std::string> tokenize_cpp2(const std::string& source) {
+        std::vector<std::string> tokens;
+        std::string token;
+        
+        for (char c : source) {
+            if (c == ' ' || c == '\n' || c == '\t' || c == ';' || c == '{' || c == '}') {
+                if (!token.empty()) {
+                    tokens.push_back(token);
+                    token.clear();
+                }
+                if (c == ';' || c == '{' || c == '}') {
+                    tokens.push_back(std::string(1, c));
+                }
+            } else {
+                token += c;
+            }
+        }
+        
+        if (!token.empty()) {
+            tokens.push_back(token);
+        }
+        
+        return tokens;
+    }
+    
+    // Encode a token to binary
+    void encode_token(const std::string& token) {
+        if (token == "function") {
+            bytecode.push_back(static_cast<uint8_t>(BinaryOpcode::FUNCTION_DEF));
+        } else if (token == "return") {
+            bytecode.push_back(static_cast<uint8_t>(BinaryOpcode::RETURN_STMT));
+        } else if (token == "{") {
+            // Block start - no special encoding needed
+        } else if (token == "}") {
+            bytecode.push_back(static_cast<uint8_t>(BinaryOpcode::END_BLOCK));
+        } else if (token == ";") {
+            // Statement end - no special encoding needed
+        } else if (is_string_literal(token)) {
+            bytecode.push_back(static_cast<uint8_t>(BinaryOpcode::LITERAL_STRING));
+            encode_string(token.substr(1, token.size() - 2)); // Remove quotes
+        } else {
+            // Identifier
+            bytecode.push_back(static_cast<uint8_t>(BinaryOpcode::IDENTIFIER));
+            encode_string(token);
+        }
+    }
+    
+    // Check if token is a string literal
+    bool is_string_literal(const std::string& token) {
+        return token.size() >= 2 && token[0] == '"' && token.back() == '"';
+    }
+    
+    // Encode string to binary (with deduplication)
+    void encode_string(const std::string& str) {
+        // Check if string already exists
+        for (size_t i = 0; i < string_table.size(); ++i) {
+            if (string_table[i] == str) {
+                write_u32(bytecode, i);
+                return;
+            }
+        }
+        
+        // Add new string
+        string_table.push_back(str);
+        write_u32(bytecode, string_table.size() - 1);
+    }
+    
+    // Read 32-bit unsigned integer from binary data
+    uint32_t read_u32(const std::vector<uint8_t>& data, size_t& pos) {
+        uint32_t value = 0;
+        value |= static_cast<uint32_t>(data[pos++]) << 24;
+        value |= static_cast<uint32_t>(data[pos++]) << 16;
+        value |= static_cast<uint32_t>(data[pos++]) << 8;
+        value |= static_cast<uint32_t>(data[pos++]);
+        return value;
+    }
+    
+    // Write 32-bit unsigned integer to binary data
+    void write_u32(std::vector<uint8_t>& data, uint32_t value) {
+        data.push_back((value >> 24) & 0xFF);
+        data.push_back((value >> 16) & 0xFF);
+        data.push_back((value >> 8) & 0xFF);
+        data.push_back(value & 0xFF);
+    }
+    
+    // Compute SHA256 hash (placeholder)
+    std::string compute_sha256(const std::vector<uint8_t>& data) {
+        // Placeholder - would use actual SHA256 implementation
+        return "placeholder_hash";
+    }
+    
+    // Base64 encode (placeholder)
+    std::string base64_encode(const std::vector<uint8_t>& data) {
+        // Placeholder - would use actual base64 implementation
+        std::string result;
+        for (auto byte : data) {
+            result += std::to_string(byte) + ",";
+        }
+        return result;
+    }
+        return result;
+    }
+    
+    // Base64 decode (placeholder)
+    std::vector<uint8_t> base64_decode(const std::string& b64) {
+        // Placeholder - would use actual base64 implementation
+        std::vector<uint8_t> result;
+        std::stringstream ss(b64);
+        std::string token;
+        while (std::getline(ss, token, ',')) {
+            if (!token.empty()) {
+                result.push_back(static_cast<uint8_t>(std::stoi(token)));
+            }
+        }
+        return result;
+    }
+    
+    // Escape JSON string
+    std::string escape_json_string(const std::string& str) {
+        std::string escaped;
+        for (char c : str) {
+            if (c == '"') escaped += "\\\"";
+            else if (c == '\\') escaped += "\\\\";
+            else if (c == '\n') escaped += "\\n";
+            else if (c == '\t') escaped += "\\t";
+            else escaped += c;
+        }
+        return escaped;
+    }
+};
+
+// Binary codec transformer (alternative to C++1 backend)
+struct Cpp2BinaryCodecTransformer {
+    Cpp2BinarySchema schema;
+    
+    Cpp2BinaryCodecTransformer() {
+        schema.initialize();
+    }
+    
+    // Transform cpp2 source to binary schema
+    std::vector<uint8_t> transform_to_binary(const std::string& cpp2_source) {
+        return schema.encode_cpp2(cpp2_source);
+    }
+    
+    // Transform binary schema back to cpp2
+    std::string transform_from_binary(const std::vector<uint8_t>& binary_data) {
+        return schema.decode_cpp2(binary_data);
+    }
+    
+    // Create CouchDB attachment for git repo hosting
+    std::string create_couchdb_attachment(const std::string& cpp2_source, 
+                                        const std::string& project_name,
+                                        const std::string& git_commit) {
+        auto binary = transform_to_binary(cpp2_source);
+        
+        std::string attachment = "{";
+        attachment += "\"_id\": \"" + project_name + "\",";
+        attachment += "\"type\": \"cpp2_project\",";
+        attachment += "\"git_commit\": \"" + git_commit + "\",";
+        attachment += "\"_attachments\": {";
+        attachment += "\"code.bin\": " + schema.to_couchdb_attachment();
+        attachment += "}";
+        attachment += "}";
+        
+        return attachment;
+    }
+    
+    // Extract cpp2 source from CouchDB document
+    std::string extract_from_couchdb(const std::string& couchdb_doc) {
+        // Parse CouchDB document and extract binary attachment
+        // Simplified - would need proper JSON parser
+        schema.from_couchdb_attachment(couchdb_doc);
+        return transform_from_binary(schema.bytecode);
+    }
+    
+    // Query code as data
+    std::vector<std::string> query_code_symbols(const std::string& pattern) {
+        return schema.query_symbols(pattern);
+    }
+    
+    // Generate JSON view for CouchDB
+    std::string generate_json_view() {
+        return schema.to_json_view();
+    }
+};

@@ -1,0 +1,118 @@
+// cpp2_codec_consumer.cpp2 - Consumer for Cpp2 binary codec that produces MLIR dialect projections
+
+import std;
+import module_transform_schema;
+import cpp2_mlir_dialect;
+import ontological_taxonomy;
+
+// Consumer that takes a Cpp2BinarySchema and projects MLIR dialect operations
+cpp2_codec_consumer: @metaclass type = {
+    // Produce MLIR projection from an existing binary schema
+    project_to_mlir: (in schema: Cpp2BinarySchema) -> string = {
+        mlir := "module {\n";
+        pos := 0;
+
+        while pos < schema.bytecode.size() {
+            opcode := schema.bytecode[pos] as uint8_t;
+            pos += 1;
+
+            if opcode == BinaryOpcode::MODULE_START as uint8_t {
+                mlir = mlir + "  // module start\n";
+                continue;
+            }
+
+            if opcode == BinaryOpcode::FUNCTION_DEF as uint8_t {
+                // Next token is a string index (u32 big-endian)
+                if pos + 4 <= schema.bytecode.size() {
+                    name_idx := read_u32(schema.bytecode, pos) as usize;
+                    name := schema.string_table[name_idx];
+                    mlir = mlir + "  func @" + name + "() {\n";
+                } else {
+                    mlir = mlir + "  // malformed function_def\n";
+                }
+                continue;
+            }
+
+            if opcode == BinaryOpcode::LITERAL_STRING as uint8_t {
+                if pos + 4 <= schema.bytecode.size() {
+                    str_idx := read_u32(schema.bytecode, pos) as usize;
+                    lit := schema.string_table[str_idx];
+                    mlir = mlir + "    " + lit + "\n";
+                } else {
+                    mlir = mlir + "    // malformed literal_string\n";
+                }
+                continue;
+            }
+
+            if opcode == BinaryOpcode::LITERAL_INT as uint8_t {
+                // read next byte as immediate
+                if pos < schema.bytecode.size() {
+                    val := schema.bytecode[pos] as int;
+                    pos += 1;
+                    mlir = mlir + "    constant " + std::to_string(val) + " : i64\n";
+                }
+                continue;
+            }
+
+            if opcode == BinaryOpcode::END_BLOCK as uint8_t {
+                mlir = mlir + "  }\n";
+                continue;
+            }
+
+            if opcode == BinaryOpcode::MODULE_END as uint8_t {
+                mlir = mlir + "  // module end\n";
+                break;
+            }
+
+            // Fallback for unknown opcodes
+            mlir = mlir + "  // unknown opcode: " + std::to_string(opcode) + "\n";
+        }
+
+        mlir = mlir + "}\n";
+        return mlir;
+    };
+
+    // Helper: read big-endian u32 from byte vector and advance pos
+    read_u32: (in data: vector<u8>, inout pos: usize) -> uint32_t = {
+        if pos + 4 > data.size() { return 0u; }
+        v0 := (data[pos] as uint32_t) << 24;
+        pos += 1;
+        v1 := (data[pos] as uint32_t) << 16;
+        pos += 1;
+        v2 := (data[pos] as uint32_t) << 8;
+        pos += 1;
+        v3 := (data[pos] as uint32_t);
+        pos += 1;
+        return v0 | v1 | v2 | v3;
+    };
+
+    // Register projections with a ModuleTransformSchema instance (store generated MLIR)
+    register_projections: (inout mts: ModuleTransformSchema, in schema: Cpp2BinarySchema) -> void = {
+        mlir := project_to_mlir(schema);
+        // For now attach generated mlir text into a fake field in binary_schema's ontology (lightweight)
+        // In a real system we'd store this in a proper MLIR module structure.
+        // We'll place the MLIR text into the ontology by recording a pseudo-key
+        key := "mlir_projection_" + std::to_string(mts.binary_schema.bytecode.size());
+        mts.binary_schema.encode_string(key);
+        mts.binary_schema.encode_string(mlir);
+    };
+};
+
+// Small demo runner to validate consumer behaviour
+main: () -> int = {
+    // Build a small schema using existing ModuleTransformSchema
+    mts: ModuleTransformSchema = ();
+    mts.initialize();
+
+    // Produce binary for a sample protocol
+    proto: ProtocolSpecification = (name: "demo", version: "1.0", description: "demo");
+    bin := mts.transform_to_binary(proto);
+
+    // Consume and project to MLIR
+    consumer: Cpp2CodecConsumer = ();
+    mlir := consumer.project_to_mlir(mts.binary_schema);
+
+    std::cout << "Generated MLIR:\n" << mlir << std::endl;
+
+    return 0;
+}

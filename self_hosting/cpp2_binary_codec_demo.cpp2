@@ -1,0 +1,138 @@
+// cpp2_binary_codec_demo.cpp2 - Demo of binary codec transform for cpp2
+
+import std;
+import cpp2_binary_codec;
+
+// Demonstrate the binary codec transform
+demonstrate_binary_codec: () -> void = {
+    print("🔧 C++2 Binary Codec Transform Demo");
+    print("=====================================");
+    
+    // Create binary codec transformer
+    transformer: Cpp2BinaryCodecTransformer = ();
+    
+    // Sample cpp2 source code
+    cpp2_source := R"(
+        function hello_world() {
+            print("Hello, World!");
+            return 42;
+        }
+        
+        struct Point {
+            x: int;
+            y: int;
+        }
+    )";
+    
+    print("\n📝 Original C++2 Source:");
+    print(cpp2_source);
+    
+    // Transform to binary
+    binary_data := transformer.transform_to_binary(cpp2_source);
+    print("\n🔢 Binary Size: " + std::to_string(binary_data.size()) + " bytes");
+    
+    // Transform back to cpp2
+    decoded_source := transformer.transform_from_binary(binary_data);
+    print("\n🔄 Decoded C++2 Source:");
+    print(decoded_source);
+    
+    // Create CouchDB attachment for git repo hosting
+    couchdb_attachment := transformer.create_couchdb_attachment(
+        cpp2_source, 
+        "my_cpp2_project", 
+        "abc123def456"
+    );
+    
+    print("\n🗄️ CouchDB Attachment (Git Repo Hosting):");
+    print(couchdb_attachment);
+    
+    // Extract from CouchDB attachment
+    extracted_source := transformer.extract_from_couchdb(couchdb_attachment);
+    print("\n📤 Extracted Source from CouchDB:");
+    print(extracted_source);
+    
+    // Query code as data
+    symbols := transformer.query_code_symbols("function");
+    print("\n🔍 Symbols containing 'function':");
+    for symbol : symbols {
+        print("  - " + symbol);
+    }
+    
+    // Generate JSON view
+    json_view := transformer.generate_json_view();
+    print("\n📊 JSON View for Viewserver:");
+    print(json_view);
+    
+    print("\n✅ Binary Codec Transform Complete!");
+    print("   - Alternative to C++1 backend");
+    print("   - Code as data support");
+    print("   - Git repo hosting in attachments");
+    print("   - JSON viewserver integration");
+}
+
+// Demonstrate code as data capabilities
+demonstrate_code_as_data: () -> void = {
+    print("\n🧬 Code as Data Demo");
+    print("===================");
+    
+    transformer: Cpp2BinaryCodecTransformer = ();
+    
+    // Multiple code snippets as data
+    code_snippets := std::vector<std::string>{
+        "function add(a: int, b: int) -> int { return a + b; }",
+        "function multiply(x: int, y: int) -> int { return x * y; }",
+        "struct Calculator { add: function; multiply: function; }"
+    };
+    
+    // Store code snippets as binary data in "database"
+    code_database := std::unordered_map<std::string, std::vector<uint8_t>>();
+    
+    for i := 0; i < code_snippets.size(); ++i {
+        key := "snippet_" + std::to_string(i);
+        code_database[key] = transformer.transform_to_binary(code_snippets[i]);
+    }
+    
+    print("📦 Stored " + std::to_string(code_snippets.size()) + " code snippets as binary data");
+    
+    // Query and compose new code from stored snippets
+    composed_code := std::string();
+    
+    for entry : code_database {
+        decoded := transformer.transform_from_binary(entry.second);
+        composed_code += decoded + "\n";
+    }
+    
+    print("\n🎯 Composed Code from Binary Data:");
+    print(composed_code);
+    
+    // Create project with multiple git repos as attachments
+    project_doc := std::string();
+    project_doc += "{";
+    project_doc += "\"_id\": \"multi_repo_project\",";
+    project_doc += "\"type\": \"cpp2_multi_repo\",";
+    project_doc += "\"_attachments\": {";
+    
+    bool first := true;
+    for entry : code_database {
+        if !first { project_doc += ","; }
+        attachment_name := entry.first + ".bin";
+        transformer.schema.bytecode = entry.second;
+        attachment_content := transformer.schema.to_couchdb_attachment();
+        project_doc += "\"" + attachment_name + "\": " + attachment_content;
+        first = false;
+    }
+    
+    project_doc += "}";
+    project_doc += "}";
+    
+    print("\n🏗️ Multi-Repo Project Document:");
+    print(project_doc);
+}
+
+// Main demo function
+main: () -> int = {
+    demonstrate_binary_codec();
+    demonstrate_code_as_data();
+    
+    return 0;
+}

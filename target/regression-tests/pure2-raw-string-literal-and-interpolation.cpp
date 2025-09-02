@@ -1,2 +1,0 @@
-regression-tests/pure2-raw-string-literal-and-interpolation.cpp2... ok (all Cpp2, passes safety checks)
-

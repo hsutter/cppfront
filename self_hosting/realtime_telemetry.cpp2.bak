@@ -1,0 +1,96 @@
+// realtime_telemetry.cpp2
+// Lightweight realtime telemetry collector for cppfront compilation metrics
+
+import std;
+import cpp2_types;
+
+performance_metric: @metaclass type = {
+    name: string;
+    compilation_time_ms: double = 0.0;
+    memory_mb: double = 0.0;
+    error_rate: double = 0.0;
+};
+
+performance_telemetry: @metaclass type = {
+    metrics: vector<performance_metric> = {};
+    monitoring_active: bool = false;
+
+    start_monitoring: () -> void = {
+        monitoring_active = true;
+        // In production implementation, spawn background thread for metric collection
+    };
+
+    stop_monitoring: () -> void = {
+        monitoring_active = false;
+    };
+
+    collect_metric: (in m: performance_metric) -> void = {
+        if monitoring_active {
+            metrics.push_back(m);
+        }
+    };
+
+    latest_context: () -> performance_metric = {
+        if metrics.size() == 0 {
+            return performance_metric{ "idle", 0.0, 0.0, 0.0 };
+        }
+        return metrics[metrics.size() - 1];
+    };
+
+    // Generate diagnostic summary of collected metrics
+    diagnostic_summary: () -> void = {
+        std::cout << "Telemetry metrics collected: " << metrics.size() << std::endl;
+        if metrics.size() > 0 {
+            last := latest_context();
+            std::cout << "  Latest: " << last.name 
+                     << ", compilation_time=" << last.compilation_time_ms << "ms"
+                     << ", memory=" << last.memory_mb << "MB" << std::endl;
+        }
+    };
+};
+
+import std;
+import cpp2_types;
+
+performance_metric: @metaclass type = {
+    name: string;
+    compilation_time_ms: double = 0.0;
+    memory_mb: double = 0.0;
+    error_rate: double = 0.0;
+};
+
+performance_telemetry: @metaclass type = {
+    metrics: vector<performance_metric> = {};
+    monitoring_active: bool = false;
+
+    start_monitoring: () -> void = {
+        monitoring_active = true;
+        // In a real implementation we'd spawn a thread collecting metrics
+    };
+
+    stop_monitoring: () -> void = {
+        monitoring_active = false;
+    };
+
+    collect_metric: (in m: performance_metric) -> void = {
+        if monitoring_active {
+            metrics.push_back(m);
+        }
+    };
+
+    latest_context: () -> performance_metric = {
+        if metrics.size() == 0 {
+            return performance_metric{ "idle", 0.0, 0.0, 0.0 };
+        }
+        return metrics[metrics.size() - 1];
+    };
+
+    // Simple debug printer
+    debug_summary: () -> void = {
+        std::cout << "cppfront telemetry metrics collected: " << metrics.size() << std::endl;
+        if metrics.size() > 0 {
+            last := latest_context();
+            std::cout << "  last: " << last.name << ", time=" << last.compilation_time_ms << "ms, mem=" << last.memory_mb << "MB" << std::endl;
+        }
+    };
+};

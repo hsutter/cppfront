@@ -1,2 +1,0 @@
-regression-tests/pure2-assert-optional-not-null.cpp2... ok (all Cpp2, passes safety checks)
-

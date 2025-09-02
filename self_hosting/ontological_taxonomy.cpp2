@@ -1,0 +1,193 @@
+// ontological_taxonomy.cpp2 - Taxonomical ontological system for cpp2 constructs
+
+import std;
+import cpp2_types;
+
+// Core ontological categories for cpp2 language constructs
+struct ontology_category {
+    std::string name;
+    std::string description;
+    std::optional<std::string> parent_category;
+    std::vector<std::string> properties;
+    std::unordered_map<std::string, std::vector<std::string>> relationships;
+    
+    ontology_category() = default;
+    ontology_category(const std::string& n, const std::string& desc, 
+                     const std::optional<std::string>& parent = {},
+                     const std::vector<std::string>& props = {})
+        : name(n), description(desc), parent_category(parent), properties(props) {}
+};
+
+struct construct_ontology {
+    std::unordered_map<std::string, ontology_category> categories;
+    
+    // Initialize the ontological taxonomy
+    void initialize_taxonomy() {
+        // Fundamental categories
+        categories["expression"] = ontology_category{
+            "expression", 
+            "Any construct that produces a value",
+            {}, 
+            {"has_type", "has_value", "can_be_evaluated"}
+        };
+        
+        categories["statement"] = ontology_category{
+            "statement",
+            "Any construct that performs an action",
+            {},
+            {"has_side_effects", "can_be_compiled"}
+        };
+        
+        categories["declaration"] = ontology_category{
+            "declaration", 
+            "Any construct that introduces a name",
+            "statement",
+            {"introduces_name", "has_scope", "has_lifetime"}
+        };
+        
+        categories["type"] = ontology_category{
+            "type",
+            "Any construct that defines a data type",
+            "declaration",
+            {"has_size", "has_alignment", "can_be_instantiated"}
+        };
+        
+        // Function-related categories
+        categories["function"] = ontology_category{
+            "function",
+            "A callable construct with parameters and return type",
+            "declaration",
+            {"has_parameters", "has_return_type", "can_be_called", "has_body"}
+        };
+        
+        categories["lambda"] = ontology_category{
+            "lambda",
+            "An anonymous function construct",
+            "function",
+            {"captures_variables", "has_capture_list"}
+        };
+        
+        // Control flow categories
+        categories["conditional"] = ontology_category{
+            "conditional",
+            "A construct that chooses between alternatives",
+            "statement",
+            {"has_condition", "has_branches"}
+        };
+        
+        categories["loop"] = ontology_category{
+            "loop",
+            "A construct that repeats execution",
+            "statement", 
+            {"has_condition", "has_body", "can_be_terminated"}
+        };
+        
+        // Data structure categories
+        categories["class"] = ontology_category{
+            "class",
+            "A user-defined type with members",
+            "type",
+            {"has_members", "has_methods", "supports_inheritance"}
+        };
+        
+        categories["struct"] = ontology_category{
+            "struct", 
+            "A simple aggregate type",
+            "type",
+            {"has_members", "is_aggregate"}
+        };
+        
+        // Memory management categories
+        categories["allocation"] = ontology_category{
+            "allocation",
+            "A construct that allocates memory",
+            "expression",
+            {"has_size", "has_lifetime", "can_fail"}
+        };
+        
+        categories["deallocation"] = ontology_category{
+            "deallocation",
+            "A construct that deallocates memory", 
+            "statement",
+            {"has_target", "releases_resources"}
+        };
+        
+        // Set up relationships
+        setup_relationships();
+    }
+    
+    void setup_relationships() {
+        // Expression relationships
+        categories["expression"].relationships["can_contain"] = {"expression", "allocation"};
+        categories["expression"].relationships["can_be_contained_in"] = {"statement", "function", "conditional", "loop"};
+        
+        // Statement relationships  
+        categories["statement"].relationships["can_contain"] = {"expression", "statement", "declaration"};
+        categories["statement"].relationships["can_be_contained_in"] = {"function", "conditional", "loop", "class"};
+        
+        // Function relationships
+        categories["function"].relationships["can_contain"] = {"statement", "declaration", "expression"};
+        categories["function"].relationships["specializes"] = {"declaration"};
+        
+        // Type relationships
+        categories["type"].relationships["can_be_used_in"] = {"declaration", "function", "expression"};
+        categories["type"].relationships["can_contain"] = {"function", "declaration"};
+    }
+    
+    // Classify a construct by its properties
+    std::string classify_construct(const std::string& construct_name, const std::vector<std::string>& properties) {
+        std::string best_match = "";
+        int best_score = 0;
+        
+        for (const auto& cat : categories) {
+            int score = 0;
+            for (const auto& prop : properties) {
+                if (std::find(cat.second.properties.begin(), cat.second.properties.end(), prop) != cat.second.properties.end()) {
+                    score += 1;
+                }
+            }
+            if (score > best_score) {
+                best_score = score;
+                best_match = cat.first;
+            }
+        }
+        
+        return best_match;
+    }
+    
+    // Get ontological relationships for a category
+    std::optional<std::unordered_map<std::string, std::vector<std::string>>> get_relationships(const std::string& category_name) {
+        if (categories.contains(category_name)) {
+            return categories[category_name].relationships;
+        }
+        return {};
+    }
+    
+    // Validate ontological consistency
+    bool validate_consistency() {
+        // Check that all referenced parent categories exist
+        for (const auto& cat : categories) {
+            if (cat.second.parent_category.has_value()) {
+                std::string parent = cat.second.parent_category.value();
+                if (!categories.contains(parent)) {
+                    std::cout << "Error: Parent category '" << parent << "' not found for '" << cat.first << "'" << std::endl;
+                    return false;
+                }
+            }
+        }
+        
+        // Check that all relationship targets exist
+        for (const auto& cat : categories) {
+            for (const auto& rel : cat.second.relationships) {
+                for (const auto& target : rel.second) {
+                    if (!categories.contains(target)) {
+                        std::cout << "Error: Relationship target '" << target << "' not found for '" << cat.first << "'" << std::endl;
+                        return false;
+                    }
+                }
+            }
+        }
+        
+        return true;
+    }
+};

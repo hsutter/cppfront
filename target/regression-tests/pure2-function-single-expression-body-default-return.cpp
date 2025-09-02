@@ -1,2 +1,0 @@
-regression-tests/pure2-function-single-expression-body-default-return.cpp2... ok (all Cpp2, passes safety checks)
-
