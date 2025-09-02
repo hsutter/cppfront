@@ -1,0 +1,142 @@
+// cppfront.cpp2
+// Minimal self-hosting Cppfront implementation
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <memory>
+
+// Include other modules
+#include "lexer.cpp2"
+#include "parser.cpp2"
+#include "semantic_analyzer.cpp2"
+#include "code_generator.cpp2"
+
+// Forward declarations
+class token;
+
+// Token structure (from lexer.cpp2)
+token: @value type = {
+    type: enum = ();
+    text: std::string = "";
+    line: int = 0;
+    column: int = 0;
+}
+
+// Main compiler class
+class cppfront {
+public:
+    cppfront(const std::string& filename);
+    
+    bool compile();
+    
+private:
+    std::string source_file;
+    std::string source_code;
+    
+    std::unique_ptr<lexer> lex;
+    std::unique_ptr<parser> parse;
+    std::unique_ptr<semantic_analyzer> sema;
+    std::unique_ptr<code_generator> codegen;
+    
+    bool load_source();
+    bool run_pipeline();
+};
+
+// Constructor
+cppfront: (filename: std::string) -> cppfront = {
+    this->source_file = filename;
+    this->lex = std::make_unique<lexer>();
+    this->parse = std::make_unique<parser>();
+    this->sema = std::make_unique<semantic_analyzer>();
+    this->codegen = std::make_unique<code_generator>();
+}
+
+// Compile the source file
+compile: (this) -> bool = {
+    if !load_source() {
+        return false;
+    }
+    
+    return run_pipeline();
+}
+
+// Load source code from file
+load_source: (this) -> bool = {
+    std::ifstream file(source_file);
+    if !file.is_open() {
+        std::cerr << "Error: Could not open file " << source_file << std::endl;
+        return false;
+    }
+    
+    std::ostringstream ss;
+    ss << file.rdbuf();
+    source_code = ss.str();
+    
+    file.close();
+    return true;
+}
+
+// Run the compilation pipeline
+run_pipeline: (this) -> bool = {
+    // Lexical analysis
+    lex->source = source_code;
+    std::vector<token> tokens = ();
+    
+    while true {
+        tok: token = lex->next_token();
+        tokens.push_back(tok);
+        if tok.type == enum::eof {
+            break;
+        }
+    }
+    
+    std::cout << "Lexical analysis completed. Found " << tokens.size() << " tokens." << std::endl;
+    
+    // Parsing
+    parse->tokens = tokens;
+    program: std::unique_ptr<program_node> = parse->parse_program();
+    
+    if !program {
+        std::cerr << "Error: Parsing failed." << std::endl;
+        return false;
+    }
+    
+    std::cout << "Parsing completed." << std::endl;
+    
+    // Semantic analysis
+    if !sema->analyze(program) {
+        std::cerr << "Error: Semantic analysis failed." << std::endl;
+        for error: std::string in sema->get_errors() {
+            std::cerr << error << std::endl;
+        }
+        return false;
+    }
+    
+    std::cout << "Semantic analysis completed." << std::endl;
+    
+    // Code generation
+    generated_code: std::string = codegen->generate(program);
+    
+    // Output generated code
+    std::cout << "Generated C++ code:" << std::endl;
+    std::cout << generated_code << std::endl;
+    
+    return true;
+}
+
+// Main function
+main: (argc: int, argv: std::vector<std::string>) -> int = {
+    if argc < 2 {
+        std::cerr << "Usage: cppfront <source.cpp2>" << std::endl;
+        return 1;
+    }
+    
+    compiler: cppfront = cppfront(argv[1]);
+    if compiler.compile() {
+        return 0;
+    } else {
+        return 1;
+    }
+}

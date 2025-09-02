@@ -1,0 +1,15 @@
+// test.cpp2
+// Simple test file for our self-hosting cppfront
+
+class MyClass {
+    func myFunction() -> int {
+        var x: int = 42;
+        return x;
+    }
+}
+
+func main() -> int {
+    var obj: MyClass = MyClass();
+    var result: int = obj.myFunction();
+    return result;
+}

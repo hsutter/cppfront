@@ -1,0 +1,77 @@
+// code_generator.cpp2
+// Code generator that converts Cpp2 AST to C++1
+
+#include <string>
+#include <vector>
+#include <memory>
+#include <sstream>
+
+// Forward declarations
+class ast_node;
+class program_node;
+
+// Code generator class
+code_generator: @value type = {
+    output: std::ostringstream = std::ostringstream();
+    
+    // Generate C++ code from the program
+    generate: (this, program: std::unique_ptr<program_node>) -> std::string = {
+        // Clear previous output
+        output.str("");
+        output.clear();
+        
+        // Generate standard includes
+        output << "// Auto-generated C++ code from Cpp2\n";
+        output << "#include <iostream>\n";
+        output << "#include <string>\n";
+        output << "#include <vector>\n\n";
+        
+        // Generate declarations
+        for decl: std::unique_ptr<ast_node>& in program->declarations {
+            generate_declaration(decl);
+        }
+        
+        // Return generated code
+        return output.str();
+    }
+    
+    // Generate code for a declaration
+    generate_declaration: (this, decl: std::unique_ptr<ast_node>) -> void = {
+        if decl->type == enum::class_declaration {
+            generate_class_declaration(decl);
+        } else if decl->type == enum::function_declaration {
+            generate_function_declaration(decl);
+        } else if decl->type == enum::variable_declaration {
+            generate_variable_declaration(decl);
+        }
+    }
+    
+    // Generate code for a class declaration
+    generate_class_declaration: (this, decl: std::unique_ptr<ast_node>) -> void = {
+        // In a real implementation, we would generate a C++ class
+        // For now, just a placeholder
+        output << "// Class declaration\n";
+        output << "class GeneratedClass {\n";
+        output << "public:\n";
+        output << "    GeneratedClass() = default;\n";
+        output << "};\n\n";
+    }
+    
+    // Generate code for a function declaration
+    generate_function_declaration: (this, decl: std::unique_ptr<ast_node>) -> void = {
+        // In a real implementation, we would generate a C++ function
+        // For now, just a placeholder
+        output << "// Function declaration\n";
+        output << "void generated_function() {\n";
+        output << "    // Function body\n";
+        output << "}\n\n";
+    }
+    
+    // Generate code for a variable declaration
+    generate_variable_declaration: (this, decl: std::unique_ptr<ast_node>) -> void = {
+        // In a real implementation, we would generate a C++ variable
+        // For now, just a placeholder
+        output << "// Variable declaration\n";
+        output << "int generated_variable = 0;\n\n";
+    }
+}

@@ -1,0 +1,7 @@
+// test.cpp2
+// Simple test to see if cppfront works
+
+main: () -> int = {
+    std::cout << "Hello from cppfront!\n";
+    return 0;
+}

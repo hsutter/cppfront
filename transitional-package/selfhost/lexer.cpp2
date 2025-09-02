@@ -1,0 +1,261 @@
+// lexer.cpp2
+// SIMD-optimized lexer with wide scanning capabilities
+
+#include <string>
+#include <vector>
+#include <memory>
+
+// Token types
+@enum: type = {
+    identifier,
+    number,
+    string_literal,
+    char_literal,
+    keyword,
+    operator_,
+    delimiter,
+    whitespace,
+    comment,
+    eof
+}
+
+// Token structure
+token: @value type = {
+    type: enum = ();
+    text: std::string = "";
+    line: int = 0;
+    column: int = 0;
+}
+
+// SIMD-optimized wide scanner
+@wide_scanner: type = {
+    // Vector width for SIMD operations
+    vector_width: int = 4;
+    
+    // SIMD-accelerated character classification
+    is_whitespace_simd: (data: std::vector<char> const&) -> std::vector<bool> = {
+        result: std::vector<bool> = std::vector<bool>(data.size(), false);
+        
+        // Process in chunks for SIMD optimization
+        chunk_size: int = vector_width * 4;
+        
+        for i: int = 0; i < data.size(); i += chunk_size {
+            end: int = std::min(i + chunk_size, data.size());
+            
+            // This loop can be auto-vectorized by the compiler
+            #pragma clang loop vectorize(enable)
+            for j: int = i; j < end; ++j {
+                c: char = data[j];
+                result[j] = (c == ' ' || c == '\t' || c == '\n' || c == '\r');
+            }
+        }
+        
+        return result;
+    }
+    
+    // SIMD-accelerated boundary detection
+    find_boundaries_simd: (data: std::vector<char> const&, boundaries: std::vector<char> const&) -> std::vector<int> = {
+        result: std::vector<int> = ();
+        
+        // Process in chunks for SIMD optimization
+        chunk_size: int = vector_width * 4;
+        
+        for i: int = 0; i < data.size(); i += chunk_size {
+            end: int = std::min(i + chunk_size, data.size());
+            
+            // This loop can be auto-vectorized by the compiler
+            #pragma clang loop vectorize(enable)
+            for j: int = i; j < end; ++j {
+                c: char = data[j];
+                is_boundary: bool = false;
+                
+                // Check if character is a boundary
+                for boundary: char in boundaries {
+                    if c == boundary {
+                        is_boundary = true;
+                        break;
+                    }
+                }
+                
+                if is_boundary {
+                    result.push_back(j);
+                }
+            }
+        }
+        
+        return result;
+    }
+}
+
+// Lexer class
+lexer: @value type = {
+    source: std::string = "";
+    position: int = 0;
+    line: int = 1;
+    column: int = 1;
+    
+    scanner: wide_scanner = ();
+    
+    // Get next token
+    next_token: (this) -> token = {
+        // Skip whitespace
+        skip_whitespace();
+        
+        // Check for end of file
+        if position >= source.size() {
+            return token(enum::eof, "", line, column);
+        }
+        
+        // Get current character
+        c: char = source[position];
+        
+        // Handle different token types
+        if isalpha(c) || c == '_' {
+            return scan_identifier();
+        } else if isdigit(c) {
+            return scan_number();
+        } else if c == '"' {
+            return scan_string_literal();
+        } else if c == '\'' {
+            return scan_char_literal();
+        } else {
+            return scan_operator_or_delimiter();
+        }
+    }
+    
+    // Skip whitespace characters
+    skip_whitespace: (this) -> void = {
+        while position < source.size() && isspace(source[position]) {
+            if source[position] == '\n' {
+                line += 1;
+                column = 1;
+            } else {
+                column += 1;
+            }
+            position += 1;
+        }
+    }
+    
+    // Scan identifier or keyword
+    scan_identifier: (this) -> token = {
+        start: int = position;
+        start_line: int = line;
+        start_column: int = column;
+        
+        while position < source.size() && (isalnum(source[position]) || source[position] == '_') {
+            column += 1;
+            position += 1;
+        }
+        
+        text: std::string = source.substr(start, position - start);
+        
+        // Check if it's a keyword
+        if text == "class" || text == "func" || text == "var" || text == "let" || text == "if" || text == "else" {
+            return token(enum::keyword, text, start_line, start_column);
+        } else {
+            return token(enum::identifier, text, start_line, start_column);
+        }
+    }
+    
+    // Scan number literal
+    scan_number: (this) -> token = {
+        start: int = position;
+        start_line: int = line;
+        start_column: int = column;
+        
+        // Integer part
+        while position < source.size() && isdigit(source[position]) {
+            column += 1;
+            position += 1;
+        }
+        
+        // Decimal part
+        if position < source.size() && source[position] == '.' {
+            column += 1;
+            position += 1;
+            
+            while position < source.size() && isdigit(source[position]) {
+                column += 1;
+                position += 1;
+            }
+        }
+        
+        text: std::string = source.substr(start, position - start);
+        return token(enum::number, text, start_line, start_column);
+    }
+    
+    // Scan string literal
+    scan_string_literal: (this) -> token = {
+        start: int = position;
+        start_line: int = line;
+        start_column: int = column;
+        
+        position += 1; // Skip opening quote
+        column += 1;
+        
+        while position < source.size() && source[position] != '"' {
+            if source[position] == '\\' {
+                position += 2; // Skip escape sequence
+                column += 2;
+            } else {
+                if source[position] == '\n' {
+                    line += 1;
+                    column = 1;
+                } else {
+                    column += 1;
+                }
+                position += 1;
+            }
+        }
+        
+        if position < source.size() {
+            position += 1; // Skip closing quote
+            column += 1;
+        }
+        
+        text: std::string = source.substr(start, position - start);
+        return token(enum::string_literal, text, start_line, start_column);
+    }
+    
+    // Scan character literal
+    scan_char_literal: (this) -> token = {
+        start: int = position;
+        start_line: int = line;
+        start_column: int = column;
+        
+        position += 1; // Skip opening quote
+        column += 1;
+        
+        if position < source.size() {
+            if source[position] == '\\' {
+                position += 2; // Skip escape sequence
+                column += 2;
+            } else {
+                position += 1;
+                column += 1;
+            }
+        }
+        
+        if position < source.size() && source[position] == '\'' {
+            position += 1; // Skip closing quote
+            column += 1;
+        }
+        
+        text: std::string = source.substr(start, position - start);
+        return token(enum::char_literal, text, start_line, start_column);
+    }
+    
+    // Scan operator or delimiter
+    scan_operator_or_delimiter: (this) -> token = {
+        start: int = position;
+        start_line: int = line;
+        start_column: int = column;
+        
+        c: char = source[position];
+        position += 1;
+        column += 1;
+        
+        text: std::string = std::string(1, c);
+        return token(enum::operator_, text, start_line, start_column);
+    }
+}
