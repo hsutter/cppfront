@@ -1,5 +1,6 @@
 
 #define CPP2_IMPORT_STD          Yes
+#include "cpp2ad_stack.h"
 
 //=== Cpp2 type declarations ====================================================
 
