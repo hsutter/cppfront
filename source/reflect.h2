@@ -5187,7 +5187,8 @@ autodiff_expression_handler: type = {
     traverse: (override inout this, binexpr: meta::additive_expression) = {
         terms := binexpr.get_terms();
 
-        first := true;
+        first     := true;
+        first_fwd := true;
         op  :   std::string = "+";
         fwd :   std::string = "";
         rws :   std::string = "";
@@ -5195,15 +5196,25 @@ autodiff_expression_handler: type = {
         for terms do (term) {
             if !first {
                 op      = term.get_op().to_string();
-                fwd    += " (op)$ ";
                 primal += " (op)$ ";
-
             }
 
             var   := handle_expression_term(term.get_term());
             if var.active {
-                fwd    += var.fwd;
+                if first_fwd {
+                    if op == "-" {// Special handling for first fwd termn with minus
+                        fwd += "-(var.fwd)$";
+                    }
+                    else { // Special handling for first fwd term with plus
+                        fwd += var.fwd;
+                    }
+                }
+                else {
+                    fwd += "(op)$ (var.fwd)$";
+                }
                 rws    += "(var.rws)$ (op)$= _rb_;\n";
+
+                first_fwd = false;
             }
             primal += var.primal;
 
