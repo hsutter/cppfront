@@ -465,8 +465,8 @@ auto j{1};
 
 #line 215 "cpp2taylor.h2"
             for( ; cpp2::impl::cmp_less_eq(j,k); j += 1 ) {
-                CPP2_ASSERT_IN_BOUNDS(s.v, k - 1) += j * u.get(j, u0) * CPP2_UFCS(get)(c, k - j, c0);
-                CPP2_ASSERT_IN_BOUNDS(c.v, k - 1) -= j * u.get(j, u0) * CPP2_UFCS(get)(s, k - j, s0);
+                CPP2_ASSERT_IN_BOUNDS(s.v, k - 1) += j * u.get(j, u0) * c.get(k - j, c0);
+                CPP2_ASSERT_IN_BOUNDS(c.v, k - 1) -= j * u.get(j, u0) * s.get(k - j, s0);
             }
 }
 #line 219 "cpp2taylor.h2"

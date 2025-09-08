@@ -231,7 +231,7 @@ reflection_base: @polymorphic_base @copy_constructible <T> type =
     print: (this) -> std::string = n*.pretty_print_visualize(0);
 
     is_same:      (this, o: reflection_base)     -> bool = n == o.n;  // Test pointers
-    is_same: <TO> (this, o: reflection_base<TO>) -> bool = false;     // Different types => false
+    is_same: <TO> (this, _: reflection_base<TO>) -> bool = false;     // Different types => false
 }
 
 
@@ -4103,7 +4103,7 @@ sample_traverser: (idexpr: meta::id_expression, indent: i32) =
 
 //-----------------------------------------------------------------------
 //
-//  autodiff - stub
+//  autodiff
 //
 
 autodiff_special_func: type = {
@@ -4150,7 +4150,7 @@ autodiff_special_func: type = {
     }
 }
 
-autodiff_declared_variable: type = {
+autodiff_declared_variable: @copy_constructible type = {
     public name     : std::string = "";
     public decl     : std::string = ""; // TODO: Maybe use variant here.
     public is_active: bool        = false;
@@ -4193,8 +4193,13 @@ autodiff_declaration_stack_item: @copy_constructible type = {
     }
 
     lookup_variable_declaration: (this, decl_name: std::string) -> (found: bool = false, r: autodiff_declared_variable = ()) = {
-        for std::ranges::views::reverse(declared_variables_stack) do (cur_context) {
-            for cur_context do (cur) {
+        //  Note: Not using "for std::ranges::views::reverse(...)" because
+        //  that does not work correctly in Clang 12 + older libstdc++
+        (copy cur_context := declared_variables_stack.rbegin())
+        while cur_context != declared_variables_stack.rend()
+        next  cur_context++
+        {
+            for cur_context* do (cur) {
                 if cur.name == decl_name {
                     found = true;
                     r = cur;
@@ -4406,12 +4411,16 @@ autodiff_context: type = {
     }
 
     lookup_declaration: (inout this, decl_name: std::string) -> (r : std::vector<meta::declaration> = ()) = {
-        for std::ranges::views::reverse(declaration_stack) do (cur) {
-
-            cur_full_name : std::string = cur.full_name + "::" + decl_name;
+        //  Note: Not using "for std::ranges::views::reverse(...)" because
+        //  that does not work correctly in Clang 12 + older libstdc++
+        (copy cur := declaration_stack.rbegin())
+        while cur != declaration_stack.rend()
+        next  cur++
+        {
+            cur_full_name : std::string = cur*.full_name + "::" + decl_name;
             ele := declaration_map.find(cur_full_name);
             if ele == declaration_map.end() {
-                ele = declaration_map.insert_or_assign(cur_full_name, cur.lookup_declaration(decl_name)).first;
+                ele = declaration_map.insert_or_assign(cur_full_name, cur*.lookup_declaration(decl_name)).first;
             }
 
             if !ele*.second.empty() {
@@ -4433,8 +4442,13 @@ autodiff_context: type = {
             return autodiff_declared_variable(name, "_", false, false);
         }
 
-        for std::ranges::views::reverse(declaration_stack) do (cur_context) {
-            r := cur_context.lookup_variable_declaration(name);
+        //  Note: Not using "for std::ranges::views::reverse(...)" because
+        //  that does not work correctly in Clang 12 + older libstdc++
+        (copy cur_context := declaration_stack.rbegin())
+        while cur_context != declaration_stack.rend()
+        next  cur_context++
+        {
+            r := cur_context*.lookup_variable_declaration(name);
             if r.found {
                 return r.r;
             }
@@ -4512,10 +4526,16 @@ autodiff_context: type = {
         t_parent := t.get_parent();
 
         found := false;
-        for std::ranges::views::reverse(declaration_stack) do (inout cur) {
-            if t_parent.is_same(cur.decl) {
-                if !is_in_list(t, cur.diff_request) {
-                    cur.diff_request.push_back(t);
+
+        //  Note: Not using "for std::ranges::views::reverse(...)" because
+        //  that does not work correctly in Clang 12 + older libstdc++
+        (copy cur := declaration_stack.rbegin())
+        while cur != declaration_stack.rend()
+        next  cur++
+        {
+            if t_parent.is_same(cur*.decl) {
+                if !is_in_list(t, cur*.diff_request) {
+                    cur*.diff_request.push_back(t);
                 }
 
                 found = true;
@@ -4818,7 +4838,7 @@ autodiff_expression_handler: type = {
 
 
 
-    primal_fwd_rws_name: @struct type = {
+    primal_fwd_rws_name: @struct<noforward> type = {
         primal: std::string = "";
         fwd   : std::string = "";
         rws   : std::string = "";
@@ -5077,7 +5097,7 @@ autodiff_expression_handler: type = {
 
     handle_special_function: (inout this, object: std::string, object_d: std::string, object_b: std::string, function_name: std::string, args: std::vector<primal_fwd_rws_name>) -> bool = {
 
-        r := ctx*.lookup_special_function_handling(function_name, args.ssize(), !object.empty());
+        r := ctx*.lookup_special_function_handling(function_name, unchecked_narrow<int>(args.ssize()), !object.empty());
 
         if !r.m {
             return false; // No match
@@ -5219,7 +5239,7 @@ autodiff_expression_handler: type = {
                         rws += "(var_a.rws)$ += (var_b.fwd)$..mul(_rb_, (var_b.primal)$, _r_);\n";
                     }
                     if var_b.active {
-                        if !fwd.empty() { fwd += " + "; }
+                        //if !fwd.empty() { fwd += " + "; }
                         //fwd += "(var_a.primal)$ * (var_b.fwd)$";
                         rws += "(var_b.rws)$ += (var_a.fwd)$..mul(_rb_, (var_a.primal)$, _r_);\n";
                     }
@@ -5865,8 +5885,8 @@ autodiff_declaration_handler: type = {
         decl = decl_;
     }
 
-    traverse: (override inout this, decl: meta::declaration) = {
-        base::traverse(decl);
+    traverse: (override inout this, decl_: meta::declaration) = {
+        base::traverse(decl_);
     }
 
 
@@ -5976,7 +5996,7 @@ autodiff_declaration_handler: type = {
                 type := param.get_declaration().type();
 
                 fwd_pass_style := to_string_view(param.get_passing_style());
-                rws_pass_style := to_string_view(ctx*.get_reverse_passing_style(param.get_passing_style()));
+                //rws_pass_style := to_string_view(ctx*.get_reverse_passing_style(param.get_passing_style()));
                 diff.add_forward("(fwd_pass_style)$ (name)$ : (param.get_declaration().type())$ = 0.0, ");
                 diff.add_forward("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$ = 0.0, ");
 

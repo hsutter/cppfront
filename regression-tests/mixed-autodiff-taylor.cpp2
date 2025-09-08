@@ -61,6 +61,8 @@ test_cos: (x0: double, x: taylor) -> (y0: double, y: taylor) = {
 }
 
 write_output: (func: std::string, x: double, x_d: taylor, ret) = {
+    _ = x;
+    _ = x_d;
     std::cout << "(func)$ = (ret.y0)$" << std::endl;
     (copy i:=1)
     while i <= order next i += 1 {

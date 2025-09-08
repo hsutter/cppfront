@@ -73,7 +73,7 @@ struct test_cos_ret { double y0; taylor y; };
 #line 63 "mixed-autodiff-taylor.cpp2"
 auto write_output(cpp2::impl::in<std::string> func, cpp2::impl::in<double> x, cpp2::impl::in<taylor> x_d, auto const& ret) -> void;
 
-#line 71 "mixed-autodiff-taylor.cpp2"
+#line 73 "mixed-autodiff-taylor.cpp2"
 auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -182,19 +182,21 @@ return  { std::move(y0.value()), std::move(y.value()) }; }
 
 #line 63 "mixed-autodiff-taylor.cpp2"
 auto write_output(cpp2::impl::in<std::string> func, cpp2::impl::in<double> x, cpp2::impl::in<taylor> x_d, auto const& ret) -> void{
+    static_cast<void>(x);
+    static_cast<void>(x_d);
     std::cout << "" + cpp2::to_string(func) + " = " + cpp2::to_string(ret.y0) + "" << std::endl;
 {
 auto i{1};
 
-#line 66 "mixed-autodiff-taylor.cpp2"
+#line 68 "mixed-autodiff-taylor.cpp2"
     for( ; cpp2::impl::cmp_less_eq(i,order); i += 1 ) {
        std::cout << "" + cpp2::to_string(func) + " diff order " + cpp2::to_string(i) + " = " + cpp2::to_string(CPP2_ASSERT_IN_BOUNDS(ret.y, i)) + "" << std::endl;
     }
 }
-#line 69 "mixed-autodiff-taylor.cpp2"
+#line 71 "mixed-autodiff-taylor.cpp2"
 }
 
-#line 71 "mixed-autodiff-taylor.cpp2"
+#line 73 "mixed-autodiff-taylor.cpp2"
 auto main() -> int{
 
     double x {2.0}; 

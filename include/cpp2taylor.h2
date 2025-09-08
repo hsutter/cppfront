@@ -213,8 +213,8 @@ taylor: <R, dim: int> type  = {
         while k <= dim next k += 1 {
             (copy j :=  1)
             while j <= k next j += 1 {
-                s..v[k - 1] += j * u..get(j, u0) * c.get(k - j, c0);
-                c..v[k - 1] -= j * u..get(j, u0) * s.get(k - j, s0);
+                s..v[k - 1] += j * u..get(j, u0) * c..get(k - j, c0);
+                c..v[k - 1] -= j * u..get(j, u0) * s..get(k - j, s0);
             }
             s..v[k - 1] /= k;
             c..v[k - 1] /= k;
