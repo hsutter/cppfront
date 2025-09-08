@@ -411,7 +411,7 @@ ad_test:/* @autodiff<"order=6"> @print */ type =
             out r_d: cpp2::taylor<double, 6> = 0.0, 
         ) = 
     {
-        r_d = x_d.mul(y_d, x, y);
+        r_d = x_d..mul(y_d, x, y);
         r = x * y;
         return;
     }
@@ -426,9 +426,9 @@ ad_test:/* @autodiff<"order=6"> @print */ type =
             out r_d: cpp2::taylor<double, 6> = 0.0, 
         ) = 
     {
-        temp_1_d: _ = x_d.mul(y_d, x, y);
+        temp_1_d: _ = x_d..mul(y_d, x, y);
         temp_1: _ = x * y;
-        r_d = temp_1_d.mul(x_d, temp_1, x);
+        r_d = temp_1_d..mul(x_d, temp_1, x);
         r = temp_1 * x;
         return;
     }
@@ -475,7 +475,7 @@ ad_test:/* @autodiff<"order=6"> @print */ type =
             out r_d: cpp2::taylor<double, 6> = 0.0, 
         ) = 
     {
-        temp_1_d: _ = x_d.mul(y_d, x, y);
+        temp_1_d: _ = x_d..mul(y_d, x, y);
         temp_1: _ = x * y;
         r_d = temp_1_d.div(x_d, temp_1, x);
         r = temp_1 / x;
@@ -494,7 +494,7 @@ ad_test:/* @autodiff<"order=6"> @print */ type =
     {
         temp_1_d: cpp2::taylor<double, 6> = x_d + y_d;
         temp_1: double = x + y;
-        r_d = x_d.mul(temp_1_d, x, temp_1);
+        r_d = x_d..mul(temp_1_d, x, temp_1);
         r = x * temp_1;
         return;
     }
@@ -509,7 +509,7 @@ ad_test:/* @autodiff<"order=6"> @print */ type =
             out r_d: cpp2::taylor<double, 6> = 0.0, 
         ) = 
     {
-        temp_1_d: cpp2::taylor<double, 6> = x_d.mul(y_d, x, y);
+        temp_1_d: cpp2::taylor<double, 6> = x_d..mul(y_d, x, y);
         temp_1: double = x * y;
         r_d = x_d + temp_1_d;
         r = x + temp_1;
@@ -577,8 +577,8 @@ ad_test:/* @autodiff<"order=6"> @print */ type =
     {
         temp_1: _ = func_d(x, x_d, y, y_d);
         temp_2_d: cpp2::taylor<double, 6> = temp_1.ret_d;
-        temp_2: double = temp_1.ret;
-        r_d = x_d.mul(temp_2_d, x, temp_2);
+        temp_2: double = func(x, y);
+        r_d = x_d..mul(temp_2_d, x, temp_2);
         r = x * temp_2;
         return;
     }
@@ -595,8 +595,8 @@ ad_test:/* @autodiff<"order=6"> @print */ type =
     {
         temp_1: _ = func_outer_d(x, x_d, y, y_d);
         temp_2_d: cpp2::taylor<double, 6> = temp_1.ret_d;
-        temp_2: double = temp_1.ret;
-        r_d = x_d.mul(temp_2_d, x, temp_2);
+        temp_2: double = func_outer(x, y);
+        r_d = x_d..mul(temp_2_d, x, temp_2);
         r = x * temp_2;
         return;
     }
@@ -706,13 +706,10 @@ ad_test:/* @autodiff<"order=6"> @print */ type =
             out r_d: cpp2::taylor<double, 6> = 0.0, 
         ) = 
     {
-        i_d: int = ();
         i: int = ();
         r_d = x_d + y_d;
         r = x + y;
-        i_d = ();
         i = 2;
-        _ = i_d;
         _ = i;
         return;
     }
@@ -784,7 +781,6 @@ ad_test:/* @autodiff<"order=6"> @print */ type =
             out r_d: cpp2::taylor<double, 6> = 0.0, 
         ) = 
     {
-        i_d: int = ();
         i: int = 0;
         r_d = x_d;
         r = x;
@@ -807,7 +803,6 @@ ad_test:/* @autodiff<"order=6"> @print */ type =
             out r_d: cpp2::taylor<double, 6> = 0.0, 
         ) = 
     {
-        i_d: int = ();
         i: int = 0;
         r_d = x_d;
         r = x;
@@ -890,7 +885,7 @@ ad_test:/* @autodiff<"order=6"> @print */ type =
         t.a = x;
         temp_1: _ = t.add_d(t_d, y, y_d);
         r_d = temp_1.r_d;
-        r = temp_1.r;
+        r = t.add(y);
         return;
     }
 }
