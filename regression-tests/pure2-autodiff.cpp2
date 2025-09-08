@@ -277,6 +277,23 @@ write_output_reverse: (func: std::string, x: double, inout x_b: double, y: doubl
     y_b = 0.0;
 }
 
+ad_test_2: @autodiff<"order=2"> @print type = {
+    f: (x: double) -> (y: double) = {
+        if x < -3
+        {
+            y = x * x;
+        }
+        else if x < 3
+        {
+            y = x + sin(x) + 10;
+        }
+        else
+        {
+            y = sin(x) * x*x;
+        }
+    }
+}
+
 main: () = {
 
     x:   double = 2.0;

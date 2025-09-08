@@ -1,6 +1,7 @@
 
 #define CPP2_IMPORT_STD          Yes
 #include "cpp2ad_stack.h"
+#include "cpp2taylor.h"
 
 //=== Cpp2 type declarations ====================================================
 
@@ -26,6 +27,10 @@ class ad_test_reverse;
 }
 
 class ad_test_twice;
+    
+
+#line 280 "pure2-autodiff.cpp2"
+class ad_test_2;
     
 
 //=== Cpp2 type definitions and function declarations ===========================
@@ -532,6 +537,24 @@ auto write_output(cpp2::impl::in<std::string> func, cpp2::impl::in<double> x, cp
 auto write_output_reverse(cpp2::impl::in<std::string> func, cpp2::impl::in<double> x, double& x_b, cpp2::impl::in<double> y, double& y_b, double& r_b, auto const& ret) -> void;
 
 #line 280 "pure2-autodiff.cpp2"
+class ad_test_2 {
+using f_ret = double;
+
+#line 281 "pure2-autodiff.cpp2"
+    public: [[nodiscard]] static auto f(cpp2::impl::in<double> x) -> f_ret;
+struct f_d_ret { double y; cpp2::taylor<double,2> y_d; };
+
+
+    public: [[nodiscard]] static auto f_d(cpp2::impl::in<double> x, cpp2::impl::in<cpp2::taylor<double,2>> x_d) -> f_d_ret;
+
+    public: ad_test_2() = default;
+    public: ad_test_2(ad_test_2 const&) = delete; /* No 'that' constructor, suppress copy */
+    public: auto operator=(ad_test_2 const&) -> void = delete;
+
+
+#line 295 "pure2-autodiff.cpp2"
+};
+
 auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -1552,7 +1575,56 @@ auto write_output_reverse(cpp2::impl::in<std::string> func, cpp2::impl::in<doubl
     y_b = 0.0;
 }
 
-#line 280 "pure2-autodiff.cpp2"
+#line 281 "pure2-autodiff.cpp2"
+    [[nodiscard]] auto ad_test_2::f(cpp2::impl::in<double> x) -> f_ret{
+            cpp2::impl::deferred_init<double> y;
+#line 282 "pure2-autodiff.cpp2"
+        if (cpp2::impl::cmp_less(x,-3)) 
+        {
+            y.construct(x * x);
+        }
+        else {if (cpp2::impl::cmp_less(x,3)) 
+        {
+            y.construct(x + sin(x) + 10);
+        }
+        else 
+        {
+            y.construct(sin(x) * x * x);
+        }}return std::move(y.value()); 
+    }
+
+    [[nodiscard]] auto ad_test_2::f_d(cpp2::impl::in<double> x, cpp2::impl::in<cpp2::taylor<double,2>> x_d) -> f_d_ret{
+                                                                                                                                     double y {0.0};
+                                                                                                                                     cpp2::taylor<double,2> y_d {0.0};if (cpp2::impl::cmp_less(x,-3)) {
+    y_d = x_d.mul(x_d, x, x);
+    y = x * x;
+    }
+    else {
+    if (cpp2::impl::cmp_less(x,3)) {
+
+    cpp2::taylor<double,2> temp_1_d {CPP2_UFCS(sin)(x_d, x)}; 
+
+    double temp_1 {sin(x)}; 
+    y_d = x_d + cpp2::move(temp_1_d);
+    y = x + cpp2::move(temp_1) + 10;
+    }
+    else {
+
+    cpp2::taylor<double,2> temp_3_d {CPP2_UFCS(sin)(x_d, x)}; 
+
+    double temp_3 {sin(x)}; 
+
+    auto temp_4_d {cpp2::move(temp_3_d).mul(x_d, temp_3, x)}; 
+
+    auto temp_4 {cpp2::move(temp_3) * x}; 
+    y_d = cpp2::move(temp_4_d).mul(x_d, temp_4, x);
+    y = cpp2::move(temp_4) * x;
+    }
+    }
+    return  { std::move(y), std::move(y_d) }; 
+    }
+
+#line 297 "pure2-autodiff.cpp2"
 auto main() -> int{
 
     double x {2.0}; 
