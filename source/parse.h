@@ -5453,9 +5453,9 @@ auto pretty_print_visualize(is_as_expression_node const& n, int indent)
     -> std::string;
 auto pretty_print_visualize(id_expression_node const& n, int indent)
     -> std::string;
-auto pretty_print_visualize(compound_statement_node const& n, int indent)
+auto pretty_print_visualize(compound_statement_node const& n, int indent, bool after_else = false)
     -> std::string;
-auto pretty_print_visualize(selection_statement_node const& n, int indent)
+auto pretty_print_visualize(selection_statement_node const& n, int indent, bool no_indent = false)
     -> std::string;
 auto pretty_print_visualize(iteration_statement_node const& n, int indent)
     -> std::string;
@@ -5471,7 +5471,7 @@ auto pretty_print_visualize(jump_statement_node const& n, int indent)
     -> std::string;
 auto pretty_print_visualize(using_statement_node const& n, int indent)
     -> std::string;
-auto pretty_print_visualize(statement_node const& n, int indent)
+auto pretty_print_visualize(statement_node const& n, int indent, bool no_indent = false)
     -> std::string;
 auto pretty_print_visualize(parameter_declaration_node const& n, int indent, bool is_template_param = false)
     -> std::string;
@@ -5837,30 +5837,51 @@ auto pretty_print_visualize(id_expression_node const& n, int indent)
 }
 
 
-auto pretty_print_visualize(compound_statement_node const& n, int indent)
+auto pretty_print_visualize(compound_statement_node const& n, int indent, bool after_else /* = false */ )
     -> std::string
 {
-    auto ret = std::string{"\n"} + pre(indent) + "{";
+    auto ret = std::string{};
 
-    for (auto& stmt : n.statements) {
-        assert (stmt);
-        ret += pretty_print_visualize(*stmt, indent+1);
+    //  If this is just a plain "if" right after an "else", pull them together visually
+    if (
+        after_else
+        && std::ssize(n.statements) == 1
+        && n.statements[0]
+        && n.statements[0]->is_selection()
+        && n.statements[0]->get_parameters().empty()
+        )
+    {
+        ret += pretty_print_visualize(*n.statements[0], indent, true);
     }
 
-    ret += std::string{"\n"} + pre(indent) + "}";
+    else
+    {
+        ret += std::string{"\n"} + pre(indent) + "{";
+
+        for (auto& stmt : n.statements) {
+            assert (stmt);
+            ret += pretty_print_visualize(*stmt, indent+1);
+        }
+
+        ret += std::string{"\n"} + pre(indent) + "}";
+    }
 
     return ret;
 }
 
 
-auto pretty_print_visualize(selection_statement_node const& n, int indent)
+auto pretty_print_visualize(selection_statement_node const& n, int indent, bool no_indent /* = false */)
     -> std::string
 {
     assert (n.identifier && n.expression && n.true_branch && n.false_branch);
 
     auto ret = std::string{};
 
-    ret += std::string{"\n"} + pre(indent) + n.identifier->as_string_view() + " ";
+    if (!no_indent) {
+        ret += std::string{"\n"} + pre(indent);
+    }
+    ret += n.identifier->as_string_view();
+    ret += " ";
 
     if (n.is_constexpr) {
         ret += "constexpr ";
@@ -5871,7 +5892,7 @@ auto pretty_print_visualize(selection_statement_node const& n, int indent)
 
     if (n.has_source_false_branch) {
         ret += std::string{"\n"} + pre(indent) + "else "
-            + pretty_print_visualize(*n.false_branch, indent);
+            + pretty_print_visualize(*n.false_branch, indent, true);
     }
 
     return ret;
@@ -6076,7 +6097,7 @@ auto pretty_print_visualize(using_statement_node const& n, int indent)
 }
 
 
-auto pretty_print_visualize(statement_node const& n, int indent)
+auto pretty_print_visualize(statement_node const& n, int indent, bool no_indent /* = false */ )
     -> std::string
 {
     auto ret = std::string{};
@@ -6097,7 +6118,7 @@ auto pretty_print_visualize(statement_node const& n, int indent)
         }
 
         ret += try_pretty_print_visualize<statement_node::compound   >(n.statement, indent);
-        ret += try_pretty_print_visualize<statement_node::selection  >(n.statement, indent);
+        ret += try_pretty_print_visualize<statement_node::selection  >(n.statement, indent, no_indent);
         ret += try_pretty_print_visualize<statement_node::declaration>(n.statement, indent);
         ret += try_pretty_print_visualize<statement_node::return_    >(n.statement, indent);
         ret += try_pretty_print_visualize<statement_node::iteration  >(n.statement, indent);

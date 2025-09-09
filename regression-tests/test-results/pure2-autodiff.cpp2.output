@@ -1396,16 +1396,13 @@ ad_test_2:/* @autodiff<"order=2"> @print */ type =
         {
             y = x * x;
         }
+        else if x < 3
+        {
+            y = x + sin(x) + 10;
+        }
         else 
         {
-            if x < 3
-            {
-                y = x + sin(x) + 10;
-            }
-            else 
-            {
-                y = sin(x) * x * x;
-            }
+            y = sin(x) * x * x;
         }
         return;
     }
@@ -1423,24 +1420,21 @@ ad_test_2:/* @autodiff<"order=2"> @print */ type =
             y_d = x_d..mul(x_d, x, x);
             y = x * x;
         }
+        else if x < 3
+        {
+            temp_1_d: cpp2::taylor<double, 2> = x_d.sin(x);
+            temp_1: double = sin(x);
+            y_d = x_d + temp_1_d;
+            y = x + temp_1 + 10;
+        }
         else 
         {
-            if x < 3
-            {
-                temp_1_d: cpp2::taylor<double, 2> = x_d.sin(x);
-                temp_1: double = sin(x);
-                y_d = x_d + temp_1_d;
-                y = x + temp_1 + 10;
-            }
-            else 
-            {
-                temp_3_d: cpp2::taylor<double, 2> = x_d.sin(x);
-                temp_3: double = sin(x);
-                temp_4_d: _ = temp_3_d..mul(x_d, temp_3, x);
-                temp_4: _ = temp_3 * x;
-                y_d = temp_4_d..mul(x_d, temp_4, x);
-                y = temp_4 * x;
-            }
+            temp_3_d: cpp2::taylor<double, 2> = x_d.sin(x);
+            temp_3: double = sin(x);
+            temp_4_d: _ = temp_3_d..mul(x_d, temp_3, x);
+            temp_4: _ = temp_3 * x;
+            y_d = temp_4_d..mul(x_d, temp_4, x);
+            y = temp_4 * x;
         }
         return;
     }

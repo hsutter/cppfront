@@ -64,16 +64,13 @@ outer:/* @print */ type =
             {
                 a();
             }
+            else if !m.empty()
+            {
+                b();
+            }
             else 
             {
-                if !m.empty()
-                {
-                    b();
-                }
-                else 
-                {
-                    c();
-                }
+                c();
             }
             assert( true );
             return :() -> move std::string = (s + m[0])$;();
