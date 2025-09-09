@@ -1,0 +1,87 @@
+#include <cpp2taylor.h>
+
+order : int == 6;
+taylor: type == cpp2::taylor<double, order>;
+
+test_add: (x0: double, x: taylor) -> (y0: double, y: taylor) = {
+  y = x.add(x, x0, x0);
+  y0 = x0 + x0;
+}
+
+test_sub: (x0: double, x: taylor) -> (y0: double, y: taylor) = {
+  y0 = 0.0;
+  y  = taylor();
+
+  y = y.sub(x, y0, x0);
+  y0 = y0 - x0;
+}
+
+test_mul: (x0: double, x: taylor) -> (y0: double, y: taylor) = {
+  y0 = x0;
+  y  = x;
+
+  (copy i:=0)
+  while i < 6 next i += 1 {
+    y = y..mul(x, y0, x0);
+    y0 *= x0;
+  }
+}
+
+test_div: (x0: double, x: taylor) -> (y0: double, y: taylor) = {
+  y0 = 1.0;
+  y  = taylor();
+
+  y = y.div(x, y0, x0);
+  y0 /= x0;
+}
+
+test_sqrt: (x0: double, x: taylor) -> (y0: double, y: taylor) = {
+  y0 = sqrt(x0);
+  y  = x.sqrt(x0);
+}
+
+test_log: (x0: double, x: taylor) -> (y0: double, y: taylor) = {
+  y0 = log(x0);
+  y  = x.log(x0);
+}
+
+test_exp: (x0: double, x: taylor) -> (y0: double, y: taylor) = {
+  y0 = exp(x0);
+  y  = x.exp(x0);
+}
+
+test_sin: (x0: double, x: taylor) -> (y0: double, y: taylor) = {
+  y0 = sin(x0);
+  y  = x.sin(x0);
+}
+
+test_cos: (x0: double, x: taylor) -> (y0: double, y: taylor) = {
+  y0 = cos(x0);
+  y  = x.cos(x0);
+}
+
+write_output: (func: std::string, x: double, x_d: taylor, ret) = {
+    _ = x;
+    _ = x_d;
+    std::cout << "(func)$ = (ret.y0)$" << std::endl;
+    (copy i:=1)
+    while i <= order next i += 1 {
+       std::cout << "(func)$ diff order (i)$ = (ret.y[i])$" << std::endl;
+    }
+}
+
+main: () = {
+
+    x:   double = 2.0;
+    x_d: taylor = (1.0);
+
+    write_output("x + x", x, x_d, test_add(x, x_d));
+    write_output("0 - x", x, x_d, test_sub(x, x_d));
+    write_output("x^7", x, x_d, test_mul(x, x_d));
+    write_output("1/x", x, x_d, test_div(x, x_d));
+    write_output("sqrt(x)", x, x_d, test_sqrt(x, x_d));
+    write_output("log(x)", x, x_d, test_log(x, x_d));
+    write_output("exp(x)", x, x_d, test_exp(x, x_d));
+    write_output("sin(x)", x, x_d, test_sin(x, x_d));
+    write_output("cos(x)", x, x_d, test_cos(x, x_d));
+}

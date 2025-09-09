@@ -1,0 +1,893 @@
+pure2-autodiff-higher-order.cpp2...
+
+ad_test:/* @autodiff<"order=6"> @print */ type = 
+{
+    add_1:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x + y;
+        return;
+    }
+
+    add_2:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x + y + x;
+        return;
+    }
+
+    sub_1:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x - y;
+        return;
+    }
+
+    sub_2:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x - y - x;
+        return;
+    }
+
+    add_sub_2:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x + y - x;
+        return;
+    }
+
+    mul_1:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x * y;
+        return;
+    }
+
+    mul_2:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x * y * x;
+        return;
+    }
+
+    div_1:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x / y;
+        return;
+    }
+
+    div_2:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x / y / y;
+        return;
+    }
+
+    mul_div_2:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x * y / x;
+        return;
+    }
+
+    mul_add:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x * (x + y);
+        return;
+    }
+
+    add_mul:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x + x * y;
+        return;
+    }
+
+    prefix_add:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = +x + y;
+        return;
+    }
+
+    prefix_sub:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = -x + y;
+        return;
+    }
+
+    func:(
+        in x: double, 
+        in y: double, 
+    ) -> (out ret: double, ) = 
+    {
+        ret = x + y;
+        return;
+    }
+
+    func_call:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x * func(x, y);
+        return;
+    }
+
+    func_outer_call:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x * func_outer(x, y);
+        return;
+    }
+
+    sin_call:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = sin(x - y);
+        return;
+    }
+
+    if_branch:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        r = x;
+        if x < 0.0
+        {
+            r = y;
+        }
+        return;
+    }
+
+    if_else_branch:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        if x < 0.0
+        {
+            r = y;
+        }
+        else 
+        {
+            r = x;
+        }
+        return;
+    }
+
+    direct_return:(
+        in x: double, 
+        in y: double, 
+    ) -> move double = 
+    {
+        return x + y;
+    }
+
+    intermediate_var:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        t: double = x + y;
+        r = t;
+        return;
+    }
+
+    intermediate_passive_var:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        i: int = ();
+        r = x + y;
+        i = 2;
+        _ = i;
+        return;
+    }
+
+    intermediate_untyped:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        t: _ = 0.0;
+        t = x + y;
+        r = t;
+        return;
+    }
+
+    intermediate_default_init:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        t: double = ();
+        t = x + y;
+        r = t;
+        return;
+    }
+
+    intermediate_no_init:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        t: double;
+        t = x + y;
+        r = t;
+        return;
+    }
+
+    while_loop:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        i: int = 0;
+        r = x;
+        while i < 2
+        next (i += 1)
+            {
+                r = r + y;
+            }
+        return;
+    }
+
+    do_while_loop:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        i: int = 0;
+        r = x;
+        do 
+            {
+                r = r + y;
+            }
+        next (i += 1)
+        while i < 2;
+        return;
+    }
+
+    for_loop:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        v: std::vector<double> = ();
+        v.push_back(x);
+        v.push_back(y);
+        r = 0.0;
+        for v
+        do (in t: _)
+            {
+                r = r + t;
+            }
+        return;
+    }
+
+    type_outer_use:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        t: type_outer = ();
+        t.a = x;
+        r = t.a + y;
+        return;
+    }
+
+    type_outer_call:(
+        in x: double, 
+        in y: double, 
+    ) -> (out r: double, ) = 
+    {
+        t: type_outer = ();
+        t.a = x;
+        r = t.add(y);
+        return;
+    }
+
+    add_1_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        r_d = x_d + y_d;
+        r = x + y;
+        return;
+    }
+
+    add_2_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        r_d = x_d + y_d + x_d;
+        r = x + y + x;
+        return;
+    }
+
+    sub_1_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        r_d = x_d - y_d;
+        r = x - y;
+        return;
+    }
+
+    sub_2_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        r_d = x_d - y_d - x_d;
+        r = x - y - x;
+        return;
+    }
+
+    add_sub_2_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        r_d = x_d + y_d - x_d;
+        r = x + y - x;
+        return;
+    }
+
+    mul_1_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        r_d = x_d..mul(y_d, x, y);
+        r = x * y;
+        return;
+    }
+
+    mul_2_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        temp_1_d: _ = x_d..mul(y_d, x, y);
+        temp_1: _ = x * y;
+        r_d = temp_1_d..mul(x_d, temp_1, x);
+        r = temp_1 * x;
+        return;
+    }
+
+    div_1_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        r_d = x_d.div(y_d, x, y);
+        r = x / y;
+        return;
+    }
+
+    div_2_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        temp_1_d: _ = x_d.div(y_d, x, y);
+        temp_1: _ = x / y;
+        r_d = temp_1_d.div(y_d, temp_1, y);
+        r = temp_1 / y;
+        return;
+    }
+
+    mul_div_2_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        temp_1_d: _ = x_d..mul(y_d, x, y);
+        temp_1: _ = x * y;
+        r_d = temp_1_d.div(x_d, temp_1, x);
+        r = temp_1 / x;
+        return;
+    }
+
+    mul_add_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        temp_1_d: cpp2::taylor<double, 6> = x_d + y_d;
+        temp_1: double = x + y;
+        r_d = x_d..mul(temp_1_d, x, temp_1);
+        r = x * temp_1;
+        return;
+    }
+
+    add_mul_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        temp_1_d: cpp2::taylor<double, 6> = x_d..mul(y_d, x, y);
+        temp_1: double = x * y;
+        r_d = x_d + temp_1_d;
+        r = x + temp_1;
+        return;
+    }
+
+    prefix_add_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        temp_1_d: cpp2::taylor<double, 6> = +x_d;
+        temp_1: double = +x;
+        r_d = temp_1_d + y_d;
+        r = temp_1 + y;
+        return;
+    }
+
+    prefix_sub_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        temp_1_d: cpp2::taylor<double, 6> = -x_d;
+        temp_1: double = -x;
+        r_d = temp_1_d + y_d;
+        r = temp_1 + y;
+        return;
+    }
+
+    func_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out ret: double = 0.0, 
+            out ret_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        ret_d = x_d + y_d;
+        ret = x + y;
+        return;
+    }
+
+    func_call_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        temp_1: _ = func_d(x, x_d, y, y_d);
+        temp_2_d: cpp2::taylor<double, 6> = temp_1.ret_d;
+        temp_2: double = func(x, y);
+        r_d = x_d..mul(temp_2_d, x, temp_2);
+        r = x * temp_2;
+        return;
+    }
+
+    func_outer_call_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        temp_1: _ = func_outer_d(x, x_d, y, y_d);
+        temp_2_d: cpp2::taylor<double, 6> = temp_1.ret_d;
+        temp_2: double = func_outer(x, y);
+        r_d = x_d..mul(temp_2_d, x, temp_2);
+        r = x * temp_2;
+        return;
+    }
+
+    sin_call_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        temp_1_d: cpp2::taylor<double, 6> = x_d - y_d;
+        temp_1: double = x - y;
+        r_d = temp_1_d.sin(temp_1);
+        r = sin(temp_1);
+        return;
+    }
+
+    if_branch_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        r_d = x_d;
+        r = x;
+        if x < 0.0
+        {
+            r_d = y_d;
+            r = y;
+        }
+        else 
+        {
+        }
+        return;
+    }
+
+    if_else_branch_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        if x < 0.0
+        {
+            r_d = y_d;
+            r = y;
+        }
+        else 
+        {
+            r_d = x_d;
+            r = x;
+        }
+        return;
+    }
+
+    direct_return_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = (), 
+            out r_d: cpp2::taylor<double, 6> = (), 
+        ) = 
+    {
+        r_d = x_d + y_d;
+        r = x + y;
+        return;
+    }
+
+    intermediate_var_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        t_d: cpp2::taylor<double, 6> = x_d + y_d;
+        t: double = x + y;
+        r_d = t_d;
+        r = t;
+        return;
+    }
+
+    intermediate_passive_var_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        i: int = ();
+        r_d = x_d + y_d;
+        r = x + y;
+        i = 2;
+        _ = i;
+        return;
+    }
+
+    intermediate_untyped_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        t_d: _ = cpp2::taylor<double, 6>();
+        t: _ = 0.0;
+        t_d = x_d + y_d;
+        t = x + y;
+        r_d = t_d;
+        r = t;
+        return;
+    }
+
+    intermediate_default_init_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        t_d: cpp2::taylor<double, 6> = ();
+        t: double = ();
+        t_d = x_d + y_d;
+        t = x + y;
+        r_d = t_d;
+        r = t;
+        return;
+    }
+
+    intermediate_no_init_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        t_d: cpp2::taylor<double, 6>;
+        t: double;
+        t_d = x_d + y_d;
+        t = x + y;
+        r_d = t_d;
+        r = t;
+        return;
+    }
+
+    while_loop_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        i: int = 0;
+        r_d = x_d;
+        r = x;
+        while i < 2
+        next (i += 1)
+            {
+                r_d = r_d + y_d;
+                r = r + y;
+            }
+        return;
+    }
+
+    do_while_loop_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        i: int = 0;
+        r_d = x_d;
+        r = x;
+        do 
+            {
+                r_d = r_d + y_d;
+                r = r + y;
+            }
+        next (i += 1)
+        while i < 2;
+        return;
+    }
+
+    for_loop_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        v_d: std::vector<cpp2::taylor<double, 6>> = ();
+        v: std::vector<double> = ();
+        v_d.push_back(x_d);
+        v.push_back(x);
+        v_d.push_back(y_d);
+        v.push_back(y);
+        r_d = ();
+        r = 0.0;
+        (copy t_d_iter: _ = v_d.begin(), )
+        for v
+        next (t_d_iter++)
+        do (in t: _)
+            {
+                (in t_d: _ = t_d_iter*, )
+                {
+                    r_d = r_d + t_d;
+                    r = r + t;
+                }
+            }
+        return;
+    }
+
+    type_outer_use_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        t_d: type_outer_d = ();
+        t: type_outer = ();
+        t_d.a_d = x_d;
+        t.a = x;
+        temp_1_d: cpp2::taylor<double, 6> = t_d.a_d;
+        temp_1: double = t.a;
+        r_d = temp_1_d + y_d;
+        r = temp_1 + y;
+        return;
+    }
+
+    type_outer_call_d:(
+        in x: double, 
+        in x_d: cpp2::taylor<double, 6>, 
+        in y: double, 
+        in y_d: cpp2::taylor<double, 6>, 
+    ) -> (
+            out r: double = 0.0, 
+            out r_d: cpp2::taylor<double, 6> = 0.0, 
+        ) = 
+    {
+        t_d: type_outer_d = ();
+        t: type_outer = ();
+        t_d.a_d = x_d;
+        t.a = x;
+        temp_1: _ = t.add_d(t_d, y, y_d);
+        r_d = temp_1.r_d;
+        r = t.add(y);
+        return;
+    }
+}
+ ok (all Cpp2, passes safety checks)
+

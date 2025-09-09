@@ -1,0 +1,361 @@
+ad_name: namespace = {
+
+func_outer: (x: double, y: double) -> (ret: double) = {
+  ret = x + y;
+}
+
+type_outer: type = {
+  public a: double = 0.0;
+
+  add: (this, b: double) -> double = {
+    return a + b;
+  }
+}
+
+ad_test: @autodiff @print type = {
+
+    add_1: (x: double, y: double) -> (r: double) = {
+        r = x + y;
+    }
+
+    add_2: (x: double, y: double) -> (r: double) = {
+        r = x + y + x;
+    }
+
+    sub_1: (x: double, y: double) -> (r: double) = {
+        r = x - y;
+    }
+
+    sub_2: (x: double, y: double) -> (r: double) = {
+        r = x - y - x;
+    }
+
+    add_sub_2: (x: double, y: double) -> (r: double) = {
+        r = x + y - x;
+    }
+
+    mul_1: (x: double, y: double) -> (r: double) = {
+        r = x * y;
+    }
+
+    mul_2: (x: double, y: double) -> (r: double) = {
+        r = x * y * x;
+    }
+
+    div_1: (x: double, y: double) -> (r: double) = {
+        r = x / y;
+    }
+
+    div_2: (x: double, y: double) -> (r: double) = {
+        r = x / y / y;
+    }
+
+    mul_div_2: (x: double, y: double) -> (r: double) = {
+        r = x * y / x;
+    }
+
+    mul_add: (x: double, y: double) -> (r: double) = {
+        r = x * (x + y);
+    }
+
+    add_mul: (x: double, y: double) -> (r: double) = {
+        r = x + x * y;
+    }
+
+    prefix_add: (x: double, y: double) -> (r: double) = {
+        r = +x + y;
+    }
+
+    prefix_sub: (x: double, y: double) -> (r: double) = {
+        r = -x + y;
+    }
+
+    func: (x: double, y: double) -> (ret: double) = {
+      ret = x + y;
+    }
+
+    func_call: (x: double, y: double) -> (r: double) = {
+      r = x * func(x, y);
+    }
+
+    func_outer_call: (x: double, y: double) -> (r: double) = {
+      r = x * func_outer(x, y);
+    }
+
+    sin_call: (x: double, y: double) -> (r: double) = {
+      r = sin(x - y);
+    }
+
+    if_branch: (x: double, y: double) -> (r: double) = {
+      r = x;
+
+      if x < 0.0 {
+        r = y;
+      }
+    }
+
+    if_else_branch: (x: double, y: double) -> (r: double) = {
+      if x < 0.0 {
+        r = y;
+      }
+      else {
+        r = x;
+      }
+    }
+
+    direct_return: (x: double, y: double) -> double = {
+      return x + y;
+    }
+
+    intermediate_var: (x: double, y: double) -> (r: double) = {
+      t: double = x + y;
+
+      r = t;
+    }
+
+    intermediate_passive_var: (x: double, y: double) -> (r: double) = {
+      i: int = ();
+      r = x + y;
+      i = 2;
+
+      _ = i;
+    }
+
+    intermediate_untyped: (x: double, y: double) -> (r: double) = {
+      t := 0.0;
+      t = x + y;
+
+      r = t;
+    }
+
+    intermediate_default_init: (x: double, y: double) -> (r: double) = {
+      t: double = ();
+      t = x + y;
+
+      r = t;
+    }
+
+    intermediate_no_init: (x: double, y: double) -> (r: double) = {
+      t: double;
+      t = x + y;
+
+      r = t;
+    }
+
+    while_loop: (x: double, y: double) -> (r: double) = {
+      r = x;
+
+      (copy i: int = 0, copy t: double = 0.0)
+      while i < 2 next (i += 1) {
+        t = y;
+        r = r + t;
+      }
+    }
+
+    do_while_loop: (x: double, y: double) -> (r: double) = {
+      r = x;
+
+      (copy i: = 0)
+      do {
+        r = r + y ;
+      }
+      next (i += 1)
+      while i < 2;
+    }
+
+    for_loop: (x: double, y: double) -> (r: double) = {
+      v: std::vector<double> = ();
+
+      v.push_back(x);
+      v.push_back(y);
+
+      r = 0.0;
+      for v
+      do (t)
+      {
+        r = r + t;
+      }
+    }
+
+    type_outer_use: (x: double, y: double) -> (r: double) = {
+      t : type_outer = ();
+      t.a = x;
+
+      r = t.a + y;
+    }
+
+    type_outer_call: (x: double, y: double) -> (r: double) = {
+      t : type_outer = ();
+      t.a = x;
+
+      r = t.add(y);
+    }
+}
+
+ad_test_reverse: @autodiff<"reverse"> @print type = {
+
+    add_1: (x: double, y: double) -> (r: double) = {
+        r = x + y;
+    }
+
+    add_2: (x: double, y: double) -> (r: double) = {
+        r = x + y + x;
+    }
+
+    sub_1: (x: double, y: double) -> (r: double) = {
+        r = x - y;
+    }
+
+    sub_2: (x: double, y: double) -> (r: double) = {
+        r = x - y - x;
+    }
+
+    add_sub_2: (x: double, y: double) -> (r: double) = {
+        r = x + y - x;
+    }
+
+    mul_1: (x: double, y: double) -> (r: double) = {
+        r = x * y;
+    }
+
+    mul_2: (x: double, y: double) -> (r: double) = {
+        r = x * y * x;
+    }
+
+    div_1: (x: double, y: double) -> (r: double) = {
+        r = x / y;
+    }
+
+    div_2: (x: double, y: double) -> (r: double) = {
+        r = x / y / y;
+    }
+
+    mul_div_2: (x: double, y: double) -> (r: double) = {
+        r = x * y / x;
+    }
+
+    mul_add: (x: double, y: double) -> (r: double) = {
+        r = x * (x + y);
+    }
+
+    add_mul: (x: double, y: double) -> (r: double) = {
+        r = x + x * y;
+    }
+
+    sin_call: (x: double, y: double) -> (r: double) = {
+      r = sin(x - y);
+    }
+
+    func: (x: double, y: double) -> (ret: double) = {
+      ret = x + y;
+    }
+
+    func_call: (x: double, y: double) -> (r: double) = {
+      r = x * func(x, y);
+    }
+
+    func_outer_call: (x: double, y: double) -> (r: double) = {
+      r = x * func_outer(x, y);
+    }
+}
+}
+
+ad_test_twice: @autodiff @autodiff<"suffix=_d2"> @print type = {
+    mul_1: (x: double) -> (r: double) = {
+        r = x * x;
+    }
+}
+
+write_output: (func: std::string, x: double, x_d: double, y: double, y_d: double, ret) = {
+    std::cout << "diff((func)$) at (x = (x)$, x_d = (x_d)$, y = (y)$, y_d = (y_d)$) = (r = (ret.r)$, r_d = (ret.r_d)$)" << std::endl;
+}
+
+write_output_reverse: (func: std::string, x: double, inout x_b: double, y: double, inout y_b: double, inout r_b: double, ret) = {
+    r_b = 1.0;
+    std::cout << "diff((func)$) at (x = (x)$, y = (y)$, r_b = (r_b)$) = (r = (ret)$, x_b = (x_b)$, y_b = (y_b)$)" << std::endl;
+    x_b = 0.0;
+    y_b = 0.0;
+}
+
+ad_test_2: @autodiff<"order=2"> @print type = {
+    f: (x: double) -> (y: double) = {
+        if x < -3
+        {
+            y = x * x;
+        }
+        else if x < 3
+        {
+            y = x + sin(x) + 10;
+        }
+        else
+        {
+            y = sin(x) * x*x;
+        }
+    }
+}
+
+main: () = {
+
+    x:   double = 2.0;
+    x_d: double = 1.0;
+    y:   double = 3.0;
+    y_d: double = 2.0;
+
+    write_output("x + y", x, x_d, y, y_d, ad_name::ad_test::add_1_d(x, x_d, y, y_d));
+    write_output("x + y + x", x, x_d, y, y_d, ad_name::ad_test::add_2_d(x, x_d, y, y_d));
+    write_output("x - y", x, x_d, y, y_d, ad_name::ad_test::sub_1_d(x, x_d, y, y_d));
+    write_output("x - y - x", x, x_d, y, y_d, ad_name::ad_test::sub_2_d(x, x_d, y, y_d));
+    write_output("x + y - x", x, x_d, y, y_d, ad_name::ad_test::add_sub_2_d(x, x_d, y, y_d));
+    write_output("x * y", x, x_d, y, y_d, ad_name::ad_test::mul_1_d(x, x_d, y, y_d));
+    write_output("x * y * x", x, x_d, y, y_d, ad_name::ad_test::mul_2_d(x, x_d, y, y_d));
+    write_output("x / y", x, x_d, y, y_d, ad_name::ad_test::div_1_d(x, x_d, y, y_d));
+    write_output("x / y / y", x, x_d, y, y_d, ad_name::ad_test::div_2_d(x, x_d, y, y_d));
+    write_output("x * y / x", x, x_d, y, y_d, ad_name::ad_test::mul_div_2_d(x, x_d, y, y_d));
+    write_output("x * (x + y)", x, x_d, y, y_d, ad_name::ad_test::mul_add_d(x, x_d, y, y_d));
+    write_output("x + x * y", x, x_d, y, y_d, ad_name::ad_test::add_mul_d(x, x_d, y, y_d));
+    write_output("+x + y)", x, x_d, y, y_d, ad_name::ad_test::prefix_add_d(x, x_d, y, y_d));
+    write_output("-x + y)", x, x_d, y, y_d, ad_name::ad_test::prefix_sub_d(x, x_d, y, y_d));
+    write_output("x * func(x, y)", x, x_d, y, y_d, ad_name::ad_test::func_call_d(x, x_d, y, y_d));
+    write_output("x * func_outer(x, y)", x, x_d, y, y_d, ad_name::ad_test::func_outer_call_d(x, x_d, y, y_d));
+    write_output("sin(x - y)", x, x_d, y, y_d, ad_name::ad_test::sin_call_d(x, x_d, y, y_d));
+    write_output("if branch", x, x_d, y, y_d, ad_name::ad_test::if_branch_d(x, x_d, y, y_d));
+    write_output("if else branch", x, x_d, y, y_d, ad_name::ad_test::if_else_branch_d(x, x_d, y, y_d));
+    write_output("direct return", x, x_d, y, y_d, ad_name::ad_test::direct_return_d(x, x_d, y, y_d));
+    write_output("intermediate var", x, x_d, y, y_d, ad_name::ad_test::intermediate_var_d(x, x_d, y, y_d));
+    write_output("intermediate passive var", x, x_d, y, y_d, ad_name::ad_test::intermediate_passive_var_d(x, x_d, y, y_d));
+    write_output("intermediate untyped", x, x_d, y, y_d, ad_name::ad_test::intermediate_untyped_d(x, x_d, y, y_d));
+    write_output("intermediate default init", x, x_d, y, y_d, ad_name::ad_test::intermediate_default_init_d(x, x_d, y, y_d));
+    write_output("intermediate no init", x, x_d, y, y_d, ad_name::ad_test::intermediate_no_init_d(x, x_d, y, y_d));
+    write_output("while loop", x, x_d, y, y_d, ad_name::ad_test::while_loop_d(x, x_d, y, y_d));
+    write_output("do while loop", x, x_d, y, y_d, ad_name::ad_test::do_while_loop_d(x, x_d, y, y_d));
+    write_output("for loop", x, x_d, y, y_d, ad_name::ad_test::for_loop_d(x, x_d, y, y_d));
+    write_output("tye_outer.a + y", x, x_d, y, y_d, ad_name::ad_test::type_outer_use_d(x, x_d, y, y_d));
+    write_output("type_outer.add(y)", x, x_d, y, y_d, ad_name::ad_test::type_outer_call_d(x, x_d, y, y_d));
+
+    x_b: double = 0.0;
+    y_b: double = 0.0;
+    w_b: double = 1.0;
+
+    write_output_reverse("x + y", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::add_1_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x + y + x", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::add_2_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x - y", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::sub_1_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x - y - x", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::sub_2_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x + y - x", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::add_sub_2_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x * y", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::mul_1_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x * y * x", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::mul_2_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x / y", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::div_1_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x / y / y", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::div_2_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x * y / x", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::mul_div_2_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x * (x + y)", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::mul_add_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x + x * y", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::add_mul_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("sin(x-y)", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::sin_call_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x * func(x-y)", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::func_call_b(x, x_b, y, y_b, w_b));
+    write_output_reverse("x * func_outer(x-y)", x, x_b, y, y_b, w_b, ad_name::ad_test_reverse::func_outer_call_b(x, x_b, y, y_b, w_b));
+
+    _ = x_b;
+    _ = y_b;
+    _ = w_b;
+
+    r_twice := ad_test_twice::mul_1_d_d2(x, x_d, x_d, 0.0);
+    std::cout << "2nd order diff of x*x at (x)$ = (r_twice.r_d_d2)$" << std::endl;
+}

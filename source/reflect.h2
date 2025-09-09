@@ -229,6 +229,9 @@ reflection_base: @polymorphic_base @copy_constructible <T> type =
     position: (override this) -> source_position = n*.position();
 
     print: (this) -> std::string = n*.pretty_print_visualize(0);
+
+    is_same:      (this, o: reflection_base)     -> bool = n == o.n;  // Test pointers
+    is_same: <TO> (this, _: reflection_base<TO>) -> bool = false;     // Different types => false
 }
 
 
@@ -572,6 +575,7 @@ type_or_namespace_declaration: @copy_constructible type =
         if !decl*.is_declaration() {
             error("cannot add a member that is not a declaration");
         }
+
         require( n*.add_type_or_namespace_member(move decl),
                  std::string("unexpected error while attempting to add member:\n") + source );
     }
@@ -2610,6 +2614,713 @@ sample_print: (s: std::string_view, indent: i32) =
         << "\n";
 }
 
+simple_traverser: type = {
+
+    pre_traverse: (virtual inout this, decl: meta::declaration) = {
+        traverse(decl);
+    }
+
+    traverse: (virtual inout this, decl: meta::declaration) =
+    {
+        if decl.is_function() {
+            pre_traverse(decl.as_function());
+        }
+
+        if decl.is_object() {
+            pre_traverse(decl.as_object());
+        }
+
+        if decl.is_type() {
+            pre_traverse(decl.as_type());
+        }
+
+        // ...
+        // ... extend as desired to namespace, alias, etc.
+        // ...
+    }
+
+
+    pre_traverse: (virtual inout this, f: meta::function_declaration) = {
+        traverse(f);
+    }
+
+    traverse: (virtual inout this, f: meta::function_declaration) =
+    {
+        parameters := f.get_parameters();
+        for parameters do (param) {
+            pre_traverse(param);
+        }
+
+        returns := f.get_returns();
+        for returns do (param) {
+            pre_traverse(param);
+        }
+
+        if !f.has_compound_body() {
+            pre_traverse(f.get_body());
+        }
+        else {
+            pre_traverse(f.get_compound_body());
+        }
+    }
+
+
+    pre_traverse: (virtual inout this, o: meta::object_declaration) = {
+        traverse(o);
+    }
+
+    traverse: (virtual inout this, o: meta::object_declaration) =
+    {
+        if o.has_initializer() {
+            pre_traverse(o.get_initializer());
+        }
+    }
+
+
+    pre_traverse: (virtual inout this, t: meta::type_declaration) = {
+        traverse(t);
+    }
+
+    traverse: (virtual inout this, t: meta::type_declaration) =
+    {
+        for t.get_members() do (m) {
+            pre_traverse(m);
+        }
+    }
+
+
+    pre_traverse: (virtual inout this, t: meta::parameter_declaration) = {
+        traverse(t);
+    }
+
+    traverse: (virtual inout this, t: meta::parameter_declaration) =
+    {
+        pre_traverse(t.get_declaration());
+    }
+
+    pre_traverse: (virtual inout this, stmt: meta::statement) = {
+        traverse(stmt);
+    }
+
+    traverse: (virtual inout this, stmt: meta::statement) =
+    {
+        if stmt.is_expression_statement() {
+            pre_traverse(stmt.as_expression_statement().get_expression());
+        }
+
+        if stmt.is_compound_statement() {
+            pre_traverse(stmt.as_compound_statement());
+        }
+
+        if stmt.is_selection_statement()
+        {
+            pre_traverse(stmt.as_selection_statement());
+        }
+
+        if stmt.is_declaration() {
+            pre_traverse(stmt.as_declaration());
+        }
+
+        if stmt.is_return_statement() {
+            pre_traverse(stmt.as_return_statement());
+        }
+
+        if stmt.is_iteration_statement() {
+            pre_traverse(stmt.as_iteration_statement());
+        }
+
+        // TODO:
+        //  using
+        //  contract
+        //  inspect
+        //  jump
+    }
+
+
+    pre_traverse: (virtual inout this, stmt: meta::compound_statement) = {
+        traverse(stmt);
+    }
+
+    traverse: (virtual inout this, stmt: meta::compound_statement) =
+    {
+        stmts := stmt.get_statements();
+
+        for stmts do (cur) {
+            pre_traverse(cur);
+        }
+    }
+
+
+    pre_traverse: (virtual inout this, stmt: meta::return_statement) = {
+        traverse(stmt);
+    }
+
+    traverse: (virtual inout this, stmt: meta::return_statement) =
+    {
+        if stmt.has_expression() {
+            pre_traverse(stmt.get_expression());
+        }
+    }
+
+
+    pre_traverse: (virtual inout this, stmt: meta::iteration_statement) = {
+        traverse(stmt);
+    }
+
+    traverse: (virtual inout this, stmt: meta::iteration_statement) =
+    {
+        if stmt.is_do() || stmt.is_while() {
+            pre_traverse(stmt.get_do_while_condition());
+            pre_traverse(stmt.get_do_while_body());
+        }
+        else {
+            assert(stmt.is_for());
+            pre_traverse(stmt.get_for_range());
+            pre_traverse(stmt.get_for_parameter());
+            pre_traverse(stmt.get_for_body());
+        }
+
+        if stmt.has_next() {
+            pre_traverse(stmt.get_next_expression());
+        }
+    }
+
+
+    pre_traverse: (virtual inout this, stmt: meta::selection_statement) = {
+        traverse(stmt);
+    }
+
+    traverse: (virtual inout this, stmt: meta::selection_statement) =
+    {
+        pre_traverse(stmt.get_expression());
+        pre_traverse(stmt.get_true_branch());
+
+        if stmt.has_false_branch() {
+            pre_traverse(stmt.get_false_branch());
+        }
+    }
+
+
+    pre_traverse: (virtual inout this, expr: meta::expression) =
+    {
+        // Nothing to select here.
+        traverse(expr);
+    }
+
+    traverse: (virtual inout this, expr: meta::expression) =
+    {
+        //  An expression has other shortcuts to query deeper properties,
+        //  but let's just traverse all the nested grammer elements to
+        //  show how that traversal works
+
+        // The expressions use the pre_traverse function to decide which expression
+        // they are. The correct one calls traverse only once.
+
+        //  The expression's basic payload is just an assignment expression
+        pre_traverse(expr.as_assignment_expression());
+    }
+
+
+    pre_traverse: (virtual inout this, binexpr: meta::assignment_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual assignment,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::assignment_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+    pre_traverse: (virtual inout this, binexpr: meta::logical_or_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual logical-or,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::logical_or_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+
+    pre_traverse: (virtual inout this, binexpr: meta::logical_and_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual logical-and,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::logical_and_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+    pre_traverse: (virtual inout this, binexpr: meta::bit_or_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual bit-or,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::bit_or_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+    pre_traverse: (virtual inout this, binexpr: meta::bit_xor_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual bit-xor,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::bit_xor_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+
+    pre_traverse: (virtual inout this, binexpr: meta::bit_and_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual bit-and,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::bit_and_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+
+    pre_traverse: (virtual inout this, binexpr: meta::equality_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual equality,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::equality_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+    pre_traverse: (virtual inout this, binexpr: meta::relational_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual relational,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::relational_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+    pre_traverse: (virtual inout this, binexpr: meta::compare_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual compare,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::compare_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+    pre_traverse: (virtual inout this, binexpr: meta::shift_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual shift,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::shift_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+    pre_traverse: (virtual inout this, binexpr: meta::additive_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual additive,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::additive_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+
+    pre_traverse: (virtual inout this, binexpr: meta::multiplicative_expression) =
+    {
+        terms := binexpr.get_terms();
+        assert(!terms.empty());
+
+        //  If this has only one term, it's not an actual multiplicative,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.ssize() == 1 {
+            pre_traverse(terms.front().get_term());
+        }
+
+        //  Else we're at an actual binary expression with a rhs
+        else {
+            traverse(binexpr);
+        }
+    }
+
+    traverse: (virtual inout this, binexpr: meta::multiplicative_expression) =
+    {
+        terms := binexpr.get_terms();
+
+        for terms
+        do  (term)
+        {
+            traverse(term.get_term());
+        }
+    }
+
+    pre_traverse: (virtual inout this, isas: meta::is_as_expression) =
+    {
+        terms := isas.get_terms();
+
+        //  If this has no additional terms, it's not an actual is-as,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.empty() {
+            pre_traverse(isas.get_expression());
+        }
+
+        //  Else we're at an actual is-as expression with a rhs
+        else {
+            traverse(isas);
+        }
+    }
+
+    traverse: (virtual inout this, isas: meta::is_as_expression) =
+    {
+        terms := isas.get_terms();
+
+        pre_traverse(isas.get_expression());
+
+        for terms do (term) {
+            traverse(term.get_expr());
+        }
+    }
+
+    traverse: (virtual inout this, exprs: meta::expression_list) =
+    {
+        for exprs.get_expressions() do (expr) {
+            traverse(expr);
+        }
+    }
+
+    pre_traverse: (virtual inout this, prefix: meta::prefix_expression) =
+    {
+        ops := prefix.get_ops();
+
+        //  If this has no additional ops, it's not a naked prefix expr,
+        //  it's holding a lower grammar production so go traverse that
+        if ops.empty() {
+            pre_traverse(prefix.get_postfix_expression(),);
+        }
+
+        //  Else we're at an actual prefix expression with ops
+        else {
+            traverse(prefix);
+        }
+    }
+
+    traverse: (virtual inout this, prefix: meta::prefix_expression) =
+    {
+        pre_traverse(prefix.get_postfix_expression());
+    }
+
+    pre_traverse: (virtual inout this, postfix: meta::postfix_expression) =
+    {
+        terms := postfix.get_terms();
+
+        //  If this has no additional terms, it's not a naked postfix expr,
+        //  it's holding a lower grammar production so go traverse that
+        if terms.empty() {
+            traverse(postfix.get_primary_expression());
+        }
+
+        //  Else we're at an actual postfix expression with ops
+        else {
+            traverse(postfix);
+        }
+    }
+
+    traverse: (virtual inout this, postfix: meta::postfix_expression) =
+    {
+        terms := postfix.get_terms();
+
+        traverse(postfix.get_primary_expression());
+
+        for terms do (term) {
+            if term.is_id_expression() {
+                traverse(term.get_id_expression());
+            }
+            else if term.is_expression_list() {
+                traverse(term.get_expression_list());
+            }
+            else if term.is_expression() {
+                traverse(term.get_expression());
+            }
+        }
+    }
+
+    traverse: (virtual inout this, uid: meta::unqualified_id) =
+    {
+        _ = uid;
+    }
+
+
+    traverse: (virtual inout this, qid: meta::qualified_id) =
+    {
+        for qid.get_terms()
+        do  (term)
+        {
+            traverse(term.get_unqualified());
+        }
+    }
+
+
+    traverse: (virtual inout this, tid: meta::type_id) =
+    {
+        if tid.is_postfix_expression() {
+            traverse(tid.as_postfix_expression());
+        }
+        else if tid.is_qualified_id() {
+            traverse(tid.as_qualified_id());
+        }
+        else if tid.is_unqualified_id() {
+            traverse(tid.as_unqualified_id());
+        }
+        else {
+            // Regular type_id
+        }
+    }
+
+
+    traverse: (virtual inout this, primary: meta::primary_expression) =
+    {
+        if primary.is_identifier() {
+            // Regular identifier
+        }
+        else if primary.is_expression_list() {
+            traverse(primary.as_expression_list());
+        }
+        else if primary.is_literal() {
+            // Regular literal
+        }
+        else if primary.is_declaration() {
+            // TODO: traverse(primary.as_declaration());
+        }
+        else {
+            // Regular primary
+        }
+    }
+
+
+    traverse: (virtual inout this, idexpr: meta::id_expression) =
+    {
+        if idexpr.is_identifier() {
+            // Regular id
+        }
+        else if idexpr.is_qualified() {
+            traverse(idexpr.as_qualified());
+        }
+        else if idexpr.is_unqualified() {
+            traverse(idexpr.as_unqualified());
+        }
+        else {
+            // Regular id expr
+        }
+    }
+}
+
 
 //-----------------------------------------------------------------------
 //
@@ -3392,404 +4103,2110 @@ sample_traverser: (idexpr: meta::id_expression, indent: i32) =
 
 //-----------------------------------------------------------------------
 //
-//  autodiff - stub
+//  autodiff
 //
 
-autodiff_impl: type = {
+autodiff_special_func: type = {
+    public name      : std::string;
+    public n_args    : int;
+    public is_member : bool;
 
+    public code_primal             : std::string;
+    public code_fwd                : std::string;
+    public code_rws                : std::string;
+    public code_primal_higher_order: std::string;
+    public code_fwd_higher_order   : std::string;
+    public code_rws_higher_order   : std::string;
+
+    operator=: (out this, name_: std::string, n_args_: int, is_member_: bool, code_primal_: std::string = "", code_fwd_: std::string = "",
+                          code_rws_: std::string = "", code_primal_higher_order_: std::string = "", code_fwd_higher_order_: std::string = "",
+                          code_rws_higher_order_: std::string = "") = {
+        name      = name_;
+        n_args    = n_args_;
+        is_member = is_member_;
+
+        code_primal              = code_primal_;
+        code_fwd                 = code_fwd_;
+        code_rws                 = code_rws_;
+        code_primal_higher_order = code_primal_higher_order_;
+        code_fwd_higher_order    = code_fwd_higher_order_;
+        code_rws_higher_order    = code_rws_higher_order_;
+
+        if code_primal_higher_order.empty() {
+            code_primal_higher_order = code_primal;
+        }
+        if code_fwd_higher_order.empty() {
+            code_fwd_higher_order = code_fwd;
+        }
+        if code_rws_higher_order.empty() {
+            code_rws_higher_order = code_rws;
+        }
+    }
+
+    operator=: (out this, that) = {} // Default copy.
+
+    is_match: (this, o: autodiff_special_func) -> bool = {
+        return name == o.name && n_args == o.n_args && is_member == o.is_member;
+    }
+}
+
+autodiff_declared_variable: @copy_constructible type = {
+    public name     : std::string = "";
+    public decl     : std::string = ""; // TODO: Maybe use variant here.
+    public is_active: bool        = false;
+    public is_member: bool        = false;
+
+    operator=:(out this) = {}
+
+    operator=:(out this, name_: std::string, decl_: std::string, is_active_: bool, is_member_: bool) = {
+        name      = name_;
+        decl      = decl_;
+        is_active = is_active_;
+        is_member = is_member_;
+    }
+
+    operator=:(out this, that) = {}
+}
+
+autodiff_declaration_stack_item: @copy_constructible type = {
+    public full_name:   std::string;  // namespace + type name
+    public decl: meta::type_or_namespace_declaration;
+
+    public diff_request: std::vector<meta::declaration> = ();
+    public diff_done:    std::vector<meta::declaration> = ();
+
+    public declared_variables_stack: std::vector<std::vector<autodiff_declared_variable>> = (1);
+
+    operator=: (out this, full_name_: std::string, decl_: meta::type_or_namespace_declaration) = {
+        full_name = full_name_;
+        decl      = decl_;
+    }
+
+    lookup_declaration: (this, decl_name: std::string) -> (r: std::vector<meta::declaration> = ()) = {
+        for decl.get_members() do (cur) {
+            if cur.has_name() && decl_name  == cur.name() {
+                r.push_back(cur);
+
+                // Do not break for overloads. <3
+            }
+        }
+    }
+
+    lookup_variable_declaration: (this, decl_name: std::string) -> (found: bool = false, r: autodiff_declared_variable = ()) = {
+        //  Note: Not using "for std::ranges::views::reverse(...)" because
+        //  that does not work correctly in Clang 12 + older libstdc++
+        (copy cur_context := declared_variables_stack.rbegin())
+        while cur_context != declared_variables_stack.rend()
+        next  cur_context++
+        {
+            for cur_context* do (cur) {
+                if cur.name == decl_name {
+                    found = true;
+                    r = cur;
+                    return;
+                }
+            }
+        }
+    }
+
+
+}
+
+autodiff_context: type = {
     private temporary_count : int = 0;
 
-    public diff : std::string = "";
+    // Code in special function is replaced. Placeholders are:
+    //   _o_  : name of object for member functions.
+    //   _o_  : name of derivative object for member functions.
+    //   _a1_ : First argument value
+    //   _ad1_: First derivative argument value
+    //   _a2_ : Second argument value
+    //   _ad2_: Second derivative argument value
+    public special_funcs : std::vector<autodiff_special_func> = (
+        autodiff_special_func("sin", 1, /* is_member = */ false,
+            "sin(_a1_)",
+            "cos(_a1_) * _ad1_",
+            "_ab1_ += cos(_a1_) * _rb_;\n",
+            "sin(_a1_)",
+            "_ad1_.sin(_a1_)",
+            "TODO",
+
+        ),
+        autodiff_special_func("cos", 1, /* is_member = */ false,
+            "cos(_a1_)",
+            "-sin(_a1_) * _ad1_",
+            "_ab1_ += -sin(_a1_) * _rb_;\n",
+            "cos(_a1_)",
+            "_ad1_.cos(_a1_)",
+            "TODO",
+        ),
+        autodiff_special_func("exp", 1, /* is_member = */ false,
+            "exp(_a1_)",
+            "exp(_a1_) * _ad1_",
+            "_ab1_ += exp(_a1_) * _rb_;\n",
+            "exp(_a1_)",
+            "_ad1_.exp(_a1_)",
+            "TODO",
+        ),
+        autodiff_special_func("sqrt", 1, /* is_member = */ false,
+            "sqrt(_a1_)",
+            "0.5 * _ad1_ / sqrt(_a1_)",
+            "_ab1_ += 0.5 * _rb_ / sqrt(_a1_);\n",
+            "sqrt(_a1_)",
+            "_ad1_.sqrt(_a1_)",
+            "TODO",
+        ),
+        autodiff_special_func("push_back", 1, /* is_member = */ true,
+            "_o_.push_back(_a1_);",
+            "_od_.push_back(_ad1_);",
+            "TODO")
+    );
+
+    public  fwd_suffix : std::string = "_d";
+    public  rws_suffix : std::string = "_b";
+    private order  : int         = 1;
+    public  reverse: bool        = false;
+
+    // Members depending on order
+    public fwd_ad_type: std::string = "double";
+    public rws_ad_type: std::string = "double";
+
+    public declaration_map  : std::map<std::string, std::vector<meta::declaration>> = ();
+    public declaration_stack: std::vector<autodiff_declaration_stack_item> = ();
+
+    operator=:(out this) = {}
+    operator=:(out this, order_: int, reverse_: bool) = {
+        order = order_;
+        reverse = reverse_;
+
+        if 1 != order {
+            if reverse {
+                fwd_ad_type = "cpp2::taylor<double, (order-1)$>";
+                rws_ad_type = "cpp2::taylor<double, (order)$>";
+            }
+            else {
+                fwd_ad_type = "cpp2::taylor<double, (order)$>";
+            }
+        }
+
+    }
+
+    add_variable_declaration: (inout this, name: std::string, type: std::string, is_active: bool, is_member: bool = false) = {
+        declaration_stack.back().declared_variables_stack.back().push_back(autodiff_declared_variable(name, type, is_active, is_member));
+    }
+
+    is_variable_active: (inout this, name: std::string) -> bool = {
+        return lookup_variable_declaration(name).is_active;
+    }
+
+    create_namespace_stack: (inout this, t: meta::type_or_namespace_declaration) = {
+        if t.parent_is_nonglobal_namespace() {
+            create_namespace_stack(t.get_parent().as_nonglobal_namespace());
+        }
+        else if t.parent_is_type() {
+            create_namespace_stack(t.get_parent().as_type());
+        }
+
+        full_name: std::string = "::";
+        if !declaration_stack.empty() {
+            full_name = declaration_stack.back().full_name + "::";
+        }
+        full_name += t.name();
+
+        _ = declaration_stack.push_back(autodiff_declaration_stack_item(full_name, t));
+    }
+
+    is_forward: (this) = !reverse || (reverse && order != 1);
+    is_reverse: (this) = reverse;
+    is_taylor : (this) = order != 1;
 
     gen_temporary : (inout this) -> std::string = {
         temporary_count += 1;
         return "temp_(temporary_count)$";
     }
 
-    handle_expression_term :(inout this, inout _ /*mf*/, term) -> std::string = {
-        if term.is_identifier() {
-            return term.to_string();
+    is_type_active: (inout this, type: std::string) -> bool = {
+        decls := lookup_type_declaration(type);
+        r := false;
+
+        if !decls.empty() {
+            assert(decls.ssize() == 1);
+            ada: autodiff_activity_check = (this&);
+            ada.pre_traverse(decls[0]);
+            r = ada.active;
         }
-        else {
-            t := gen_temporary();
-            std::cout << "Handle generation for: (term.to_string())$" << std::endl;
-            //handle_expression_terms(mf, t, term..get_expression_list());
-            return t;
+
+        // TODO: Add template activity lookup.
+
+        if !r {
+            // Declaration lookup did not yield an activity: Apply some heuristics.
+            r = type.contains("double");
+        }
+
+        return r;
+    }
+
+    get_fwd_ad_type: (inout this, type: std::string) -> std::string = {
+        type_d := type;
+
+        if "double" != type {
+            type_decls := lookup_type_declaration(type);
+            if !type_decls.empty() {
+                // We found a cpp2 type declaration, mark it for differentiation.
+                add_for_differentiation(type_decls[0]);
+
+                // Add the AD suffix to the type
+                type_d += fwd_suffix;
+            }
+        }
+
+        // Replace with AD type for the AD order.
+        return string_util::replace_all(type_d, "double", fwd_ad_type);
+    }
+
+    get_rws_ad_type: (inout this, type: std::string) -> std::string = {
+        type_d := type;
+
+        if "double" != type {
+            type_decls := lookup_type_declaration(type);
+            if !type_decls.empty() {
+                // We found a cpp2 type declaration, mark it for differentiation.
+                add_for_differentiation(type_decls[0]);
+
+                // Add the AD suffix to the type
+                type_d += rws_suffix;
+            }
+        }
+
+        // Replace with AD type for the AD order.
+        return string_util::replace_all(type_d, "double", rws_ad_type);
+    }
+
+    get_reverse_passing_style: (this, p: passing_style) -> passing_style = {
+        // TODO: inspect does not work here: error: error: no matching function for call to ‘is<cpp2::passing_style::in>(const cpp2::passing_style&)’
+        // return inspect p -> passing_style  {
+        //     is passing_style::in          = passing_style::inout;
+        //     is passing_style::in_ref      = passing_style::inout;
+        //     is passing_style::copy        = passing_style::inout;
+        //     is passing_style::inout       = passing_style::inout;
+        //     is passing_style::out         = passing_style::inout;
+        //     is passing_style::move        = passing_style::inout;
+        //     is passing_style::forward     = passing_style::inout;
+        //     is passing_style::forward_ref = passing_style::inout;
+        //     is _                          = passing_style::inout;
+        // };
+        if p == passing_style::in          { return  passing_style::inout; }
+        if p == passing_style::in_ref      { return  passing_style::inout; }
+        if p == passing_style::copy        { return  passing_style::inout; }
+        if p == passing_style::inout       { return  passing_style::inout; }
+        if p == passing_style::out         { return  passing_style::inout; }
+        if p == passing_style::move        { return  passing_style::inout; }
+        if p == passing_style::forward     { return  passing_style::inout; }
+        if p == passing_style::forward_ref { return  passing_style::inout; }
+
+
+        declaration_stack.back().decl.error("AD: Do not know how to handle passing style:(p)$");
+
+        return  passing_style::inout;
+    }
+
+    lookup_declaration: (inout this, decl_name: std::string) -> (r : std::vector<meta::declaration> = ()) = {
+        //  Note: Not using "for std::ranges::views::reverse(...)" because
+        //  that does not work correctly in Clang 12 + older libstdc++
+        (copy cur := declaration_stack.rbegin())
+        while cur != declaration_stack.rend()
+        next  cur++
+        {
+            cur_full_name : std::string = cur*.full_name + "::" + decl_name;
+            ele := declaration_map.find(cur_full_name);
+            if ele == declaration_map.end() {
+                ele = declaration_map.insert_or_assign(cur_full_name, cur*.lookup_declaration(decl_name)).first;
+            }
+
+            if !ele*.second.empty() {
+                // A simple assignment or emplace_back did not work. It tired to use move copy operators.
+                for ele*.second do (cp) {
+                    r.push_back(cp);
+                }
+                //r = ele*.second;
+                break;
+                // TODO: For overload resolution we may want to continue here and just add everything for all parent namespaces.
+            }
+        }
+
+        return;
+    }
+
+    lookup_variable_declaration: (inout this, name: std::string) -> autodiff_declared_variable = {
+        if name == "_" {
+            return autodiff_declared_variable(name, "_", false, false);
+        }
+
+        //  Note: Not using "for std::ranges::views::reverse(...)" because
+        //  that does not work correctly in Clang 12 + older libstdc++
+        (copy cur_context := declaration_stack.rbegin())
+        while cur_context != declaration_stack.rend()
+        next  cur_context++
+        {
+            r := cur_context*.lookup_variable_declaration(name);
+            if r.found {
+                return r.r;
+            }
+        }
+
+        declaration_stack.back().decl.error("AD: Could not find declaration of variable with name `(name)$`.");
+
+        return autodiff_declared_variable();
+    }
+
+    lookup_function_declaration: (inout this, decl_name: std::string) -> (r : std::vector<meta::function_declaration> = ()) = {
+        r_all := lookup_declaration(decl_name);
+
+        for r_all do (cur) {
+            if cur.is_function() {
+                r.push_back(cur.as_function());
+            }
         }
     }
 
-    handle_expression_terms :(inout this, inout mf, lhs: std::string, terms) = {
-        //  Handle binary ||
-        logical_or_terms := terms;
-        if logical_or_terms.ssize() > 1
-        {
-            //  TODO: Do whatever is appropriate here...
-            //  For now, just list out what we found as a grammatical
-            //  identifier (this won't compile as Cpp1, but it will
-            //  be visible via @print for development/debugging)
-            diff += "found_logical_or_with_____";
-            count := 0;
-            for logical_or_terms do (term) {
-                if count++ > 1 {
-                    diff += term.get_op() + "___";
-                }
-                diff += term.get_term().to_string() + "___";
-            }
-            diff += ";";
+    lookup_member_function_declaration: (inout this, obj_type: meta::type_declaration, decl_name: std::string) -> (r : std::vector<meta::function_declaration> = ()) = {
+        for obj_type.get_members() do (cur) {
+            if cur.is_function() && cur.has_name() && decl_name  == cur.name() {
+                r.push_back(cur.as_function());
 
-            return;
-        }
-
-        //  Handle binary &&
-        if logical_or_terms.ssize() != 1 {
-            mf.error( "ICE: there should be exactly one logical or term here" );
-        }
-        logical_and_terms := logical_or_terms.front().get_term().get_terms();
-        if logical_and_terms.ssize() > 1
-        {
-            //  TODO: Do whatever is appropriate here...
-            //  For now, just list out what we found (visible via @print)...
-            diff += "found_logical_and_with_____";
-            count := 0;
-            for logical_and_terms do (term) {
-                if count++ > 1 {
-                    diff += term.get_op() + "___";
-                }
-                diff += term.get_term().to_string() + "___";
-            }
-            diff += ";";
-
-            return;
-        }
-
-        //  Handle binary |
-        if logical_and_terms.ssize() != 1 {
-            mf.error( "ICE: there should be exactly one logical and term here" );
-        }
-        bit_or_terms := logical_and_terms.front().get_term().get_terms();
-        if bit_or_terms.ssize() > 1
-        {
-            //  TODO: Do whatever is appropriate here...
-            //  For now, just list out what we found (visible via @print)...
-            diff += "found_bit_or_with_____";
-            count := 0;
-            for bit_or_terms do (term) {
-                if count++ > 1 {
-                    diff += term.get_op() + "___";
-                }
-                diff += term.get_term().to_string() + "___";
-            }
-            diff += ";";
-
-            return;
-        }
-
-        //  Handle binary ^
-        if bit_or_terms.ssize() != 1 {
-            mf.error( "ICE: there should be exactly one bit or term here" );
-        }
-        bit_xor_terms := bit_or_terms.front().get_term().get_terms();
-        if bit_xor_terms.ssize() > 1
-        {
-            //  TODO: Do whatever is appropriate here...
-            //  For now, just list out what we found (visible via @print)...
-            diff += "found_bit_xor_with_____";
-            count := 0;
-            for bit_xor_terms do (term) {
-                if count++ > 1 {
-                    diff += term.get_op() + "___";
-                }
-                diff += term.get_term().to_string() + "___";
-            }
-            diff += ";";
-
-            return;
-        }
-
-        //  Handle binary &
-        if bit_xor_terms.ssize() != 1 {
-            mf.error( "ICE: there should be exactly one bit xor term here" );
-        }
-        bit_and_terms := bit_xor_terms.front().get_term().get_terms();
-        if bit_and_terms.ssize() > 1
-        {
-            //  TODO: Do whatever is appropriate here...
-            //  For now, just list out what we found (visible via @print)...
-            diff += "found_bit_and_with_____";
-            count := 0;
-            for bit_and_terms do (term) {
-                if count++ > 1 {
-                    diff += term.get_op() + "___";
-                }
-                diff += term.get_term().to_string() + "___";
-            }
-            diff += ";";
-
-            return;
-        }
-
-        //  Handle binary == and !=
-        if bit_and_terms.ssize() != 1 {
-            mf.error( "ICE: there should be exactly one bit and term here" );
-        }
-        equality_terms := bit_and_terms.front().get_term().get_terms();
-        if equality_terms.ssize() > 1
-        {
-            //  TODO: Do whatever is appropriate here...
-            //  For now, just list out what we found (visible via @print)...
-            diff += "found_equality_with_____";
-            count := 0;
-            for equality_terms do (term) {
-                if count++ > 1 {
-                    diff += term.get_op() + "___";
-                }
-                diff += term.get_term().to_string() + "___";
-            }
-            diff += ";";
-
-            return;
-        }
-
-        //  Handle binary < > <= >=
-        if equality_terms.ssize() != 1 {
-            mf.error( "ICE: there should be exactly one equality term here" );
-        }
-        relational_terms := equality_terms.front().get_term().get_terms();
-        if relational_terms.ssize() > 1
-        {
-            //  TODO: Do whatever is appropriate here...
-            //  For now, just list out what we found (visible via @print)...
-            diff += "found_relational_with_____";
-            count := 0;
-            for relational_terms do (term) {
-                if count++ > 1 {
-                    diff += term.get_op() + "___";
-                }
-                diff += term.get_term().to_string() + "___";
-            }
-            diff += ";";
-
-            return;
-        }
-
-        //  Handle binary <=>
-        if relational_terms.ssize() != 1 {
-            mf.error( "ICE: there should be exactly one relational term here" );
-        }
-        compare_terms := relational_terms.front().get_term().get_terms();
-        if compare_terms.ssize() > 1
-        {
-            //  TODO: Do whatever is appropriate here...
-            //  For now, just list out what we found (visible via @print)...
-            diff += "found_compare_with_____";
-            count := 0;
-            for compare_terms do (term) {
-                if count++ > 1 {
-                    diff += term.get_op() + "___";
-                }
-                diff += term.get_term().to_string() + "___";
-            }
-            diff += ";";
-
-            return;
-        }
-
-        //  Handle binary << and >>
-        if compare_terms.ssize() != 1 {
-            mf.error( "ICE: there should be exactly one compare term here" );
-        }
-        shift_terms := compare_terms.front().get_term().get_terms();
-        if shift_terms.ssize() > 1
-        {
-            //  TODO: Do whatever is appropriate here...
-            //  For now, just list out what we found (visible via @print)...
-            diff += "found_shift_with_____";
-            count := 0;
-            for shift_terms do (term) {
-                if count++ > 1 {
-                    diff += term.get_op() + "___";
-                }
-                diff += term.get_term().to_string() + "___";
-            }
-            diff += ";";
-
-            return;
-        }
-
-        //  Handle binary + and -
-        if shift_terms.ssize() != 1 {
-            mf.error( "ICE: there should be exactly one shift term here" );
-        }
-        additive_terms := shift_terms.front().get_term().get_terms();
-        if additive_terms.ssize() > 1
-        {
-            first := true;
-            fwd :   std::string = "(lhs)$_d = ";
-            primal: std::string = "(lhs)$   = ";
-            for additive_terms do (term) {
-                if !first {
-                    op := term.get_op().to_string();
-                    fwd    += " (op)$ ";
-                    primal += " (op)$ ";
-                }
-
-                var := handle_expression_term(mf, term.get_term());
-                fwd    += "(var)$_d";
-                primal += "(var)$";
-
-                first = false;
-            }
-
-            fwd    += ";";
-            primal += ";";
-
-            diff += fwd + primal;
-
-            return;
-        }
-
-        //  Handle binary * / %
-        if additive_terms.ssize() != 1 {
-            mf.error( "ICE: there should be exactly one additive term here" );
-        }
-        multiplicative_terms := additive_terms.front().get_term().get_terms();
-
-        //  Temporary test loop
-        if multiplicative_terms.ssize() > 1
-        {
-            std::cout << "debug: found (multiplicative_terms.ssize())$ is_as_expressions\n";
-            for multiplicative_terms do (isas) {
-                std::cout << "debug:   is_as term: \"(isas.get_term().to_string())$\"\n";
-                if isas.get_term().is_identifier() {
-                    std::cout << "debug:       identifier: (isas.get_term().get_identifier())$\n";
-                }
+                // Do not break for overloads. <3
             }
         }
-
-        if multiplicative_terms.ssize() > 1
-        {
-            arg_a := handle_expression_term(mf, multiplicative_terms[0].get_term());
-
-            i : int = 1;
-            while i < multiplicative_terms.ssize() next i += 1 {
-                arg_b := handle_expression_term(mf, multiplicative_terms[i].get_term());
-
-                op := multiplicative_terms[i].get_op().to_string();
-
-                fwd    : std::string = "";
-                primal : std::string = "";
-
-                if "*" == op {
-                    fwd    = "(arg_a)$ * (arg_b)$_d + (arg_b)$ * (arg_a)$_d";
-                    primal = "(arg_a)$ * (arg_b)$";
-                }
-                else if "/" == op {
-                    fwd    = "(arg_a)$_d / (arg_b)$ - (arg_a)$ * (arg_b)$_d / ((arg_b)$ * (arg_b)$)";
-                    primal = "(arg_a)$ / (arg_b)$";
-                }
-                else {
-                    mf.error( "unkown multiplicative operator '(op)$'");
-                }
-
-
-                if i + 1 == multiplicative_terms.ssize() {
-                    // Last item
-                    diff += "(lhs)$_d = (fwd)$;";
-                    diff += "(lhs)$   = (primal)$;";
-                }
-                else {
-                    // Temporary
-                    t := gen_temporary();
-                    // TODO: Get type of expression, in order to define the type of t.
-                    diff += "(t)$_d := (fwd)$;";
-                    diff += "(t)$   := (primal)$;";
-
-                    arg_a = t;
-                }
-            }
-        }
-
     }
 
-    handle_expression_statement : (inout this, inout mf, expr) = {
-        if expr.is_simple_assignment()
-        {
-            //  If this is not an assignment to a parameter or return object, skip it
-            lhs_rhs := expr.get_lhs_rhs_if_simple_assignment();
-            lhs     := lhs_rhs.lhs.get_first_token_ignoring_this();
-            if !mf.has_parameter_or_return_named(lhs)
-            {
+    lookup_type_declaration: (inout this, decl_name: std::string) -> (r : std::vector<meta::type_declaration> = ()) = {
+        r_all := lookup_declaration(decl_name);
+
+        for r_all do (cur) {
+            if cur.is_type() {
+                r.push_back(cur.as_type());
+            }
+        }
+    }
+
+    lookup_special_function_handling: (this, func_name: std::string, n_args: int, is_member: bool) -> (m: bool, code_primal: std::string, code_fwd: std::string, code_rws: std::string) = {
+        lookup : autodiff_special_func = (func_name, n_args, is_member);
+
+        m = false;
+        code_primal = "";
+        code_fwd    = "";
+        code_rws    = "";
+        for special_funcs do (func) {
+            if func.is_match(lookup) {
+                m = true;
+                if is_taylor() {
+                    code_primal = func.code_primal_higher_order;
+                    code_fwd    = func.code_fwd_higher_order;
+                    code_rws    = func.code_rws_higher_order;
+                }
+                else {
+                    code_primal = func.code_primal;
+                    code_fwd    = func.code_fwd;
+                    code_rws    = func.code_rws;
+                }
                 return;
             }
+        }
+    }
 
-            assignment := expr.as_assignment_expression();
+    add_as_differentiated: (inout this, t: meta::declaration) = {
+        top := declaration_stack.back()&;
 
-            //  Cpp2 doesn't allow chained assignment, so rhs must be a single logical_or_expression
-            assignment_terms := assignment.get_terms();
-            if assignment_terms.ssize() != 2 {
-                mf.error( "an assignment must have exactly one right-hand side expression" );
+        assert(t.get_parent().is_same(top*.decl));
+
+        top*.diff_done.push_back(t);
+    }
+
+    add_for_differentiation: (inout this, t: meta::declaration) = {
+        t_parent := t.get_parent();
+
+        found := false;
+
+        //  Note: Not using "for std::ranges::views::reverse(...)" because
+        //  that does not work correctly in Clang 12 + older libstdc++
+        (copy cur := declaration_stack.rbegin())
+        while cur != declaration_stack.rend()
+        next  cur++
+        {
+            if t_parent.is_same(cur*.decl) {
+                if !is_in_list(t, cur*.diff_request) {
+                    cur*.diff_request.push_back(t);
+                }
+
+                found = true;
+                break;
             }
+        }
 
-            //  Now we handle sequences of binary "expr1 @ expr2 @ ..." where each
-            //  @ is one of a list of operators at the same grammar precedence
+        if !found {
+            t.error("AD: Could not find parent type/namespace for: (t)$");
+        }
+    }
 
-            handle_expression_terms(mf, lhs.to_string(), assignment_terms[1].get_term().get_terms());
+    is_in_list: (v: meta::declaration, list: std::vector<meta::declaration>) -> bool = {
+        for list do (cur) {
+            if cur.is_same(v) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    enter_function: (inout this) = {
+        temporary_count = 0;
+        declaration_stack.back().declared_variables_stack.push_back(std::vector<autodiff_declared_variable>());
+    }
+
+    leave_function: (inout this) = {
+        declaration_stack.back().declared_variables_stack.pop_back();
+    }
+
+    push_stack: (inout this, decl: meta::type_or_namespace_declaration) = {
+        full_name: std::string = "";
+
+        if !declaration_stack.empty() {
+            full_name += declaration_stack.back().full_name;
+        }
+
+        full_name += "::";
+        full_name += decl.name();
+
+        declaration_stack.push_back(autodiff_declaration_stack_item(full_name, decl));
+    }
+
+    pop_stack: (inout this) = {
+        assert(!declaration_stack.empty());
+
+        top := declaration_stack.back()&;
+        ad: autodiff_declaration_handler = (this&, top*.decl);
+
+        for top*.diff_request do (cur) {
+            if !is_in_list(cur, top*.diff_done) {
+                ad.pre_traverse(cur);
+            }
+        }
+
+        declaration_stack.pop_back();
+    }
+
+    finish: (inout this) = {
+        while !declaration_stack.empty() {
+            pop_stack();
         }
     }
 }
 
-autodiff: (inout t: meta::type_declaration) =
-{
-    for t.get_members()
-    do  (m)
-    if  m.is_function()
-    {
-        mf := m.as_function();
+autodiff_diff_code: type = {
+    public ctx: *autodiff_context;
 
-        diff: std::string = "    (mf.name())$_diff: (";
+    public fwd         : std::string = "";
+    public rws_primal  : std::string = "";
+    public rws_backprop: std::string = "";
+
+    operator=:(out this, ctx_: *autodiff_context) = {
+        ctx = ctx_;
+    }
+    operator=:(out this, that) = {}
+
+    add_forward         : (inout this, v: std::string) = { if ctx*.is_forward() { fwd          += v; }}
+    add_reverse_primal  : (inout this, v: std::string) = { if ctx*.is_reverse() { rws_primal   += v; }}
+    add_reverse_backprop: (inout this, v: std::string) = { if ctx*.is_reverse() { rws_backprop = v + rws_backprop; }}
+
+    reset: (inout this) = {
+        fwd          = "";
+        rws_primal   = "";
+        rws_backprop = "";
+    }
+
+    // Temporary: TODO: remove when everything has been adapted to primal, fwd, rws pushes.
+    operator=:(inout this, v: std::string) = {
+        ctx = ctx;
+        fwd = v;
+    }
+
+    // Temporary: TODO: remove when everything has been adapted to primal, fwd, rws pushes.
+    operator+=: (inout this, v: std::string) = {
+        fwd += v;
+    }
+
+    // Temporary: TODO: remove when everything has been adapted to primal, fwd, rws pushes.
+    operator+=: (inout this, v: autodiff_diff_code) = {
+        fwd += v.fwd;
+    }
+
+    // Temporary: TODO: remove when everything has been adapted to primal, fwd, rws pushes.
+    empty: (this) -> bool = {
+        return fwd.empty();
+    }
+}
+
+// // Temporary: TODO: remove when everything has been adapted to primal, fwd, rws pushes.
+// to_string: (v: autodiff_diff_code) -> std::string = {
+//     return v.fwd;
+// }
+
+autodiff_activity_check: type = {
+    this: simple_traverser = ();
+
+    public ctx   : *autodiff_context;
+    public active: bool              = false;
+
+    operator=: (out this, ctx_: *autodiff_context) = {
+        ctx = ctx_;
+    }
+
+    traverse: (override inout this, t: meta::type_declaration) = {
+        for t.get_members()
+        do  (m)
+        {
+            if m.is_object() || m.is_member_object() {
+                pre_traverse(m);
+            }
+
+            // TODO: Maybe also add functions.
+        }
+    }
+
+    traverse: (override inout this, o: meta::object_declaration) = {
+
+        type := o.type();
+
+        if "_" == type {
+            if o.has_initializer() {
+                pre_traverse(o.get_initializer());
+            }
+            else {
+                // Assume active
+                active = true;
+            }
+        }
+        else {
+            active |= ctx*.is_type_active(type);
+        }
+    }
+
+    traverse: (override inout this, primary: meta::primary_expression) =
+    {
+        if primary.is_identifier() {
+            active |= ctx*.is_variable_active(primary.to_string());
+        }
+        else if primary.is_expression_list() {
+            for primary.as_expression_list().get_expressions() do (cur) {
+                pre_traverse(cur);
+            }
+        }
+        else if primary.is_literal() {
+            // TODO: Improve check
+            if primary.to_string().contains(".") {
+                active = true;
+            }
+        }
+        else if primary.is_declaration() {
+            pre_traverse(primary.as_declaration());
+        }
+        else {
+            primary.error("AD: Unknown primary expression kind: (primary.to_string())$");
+        }
+    }
+
+    traverse: (override inout this, postfix: meta::postfix_expression) =
+    {
+        terms := postfix.get_terms();
+
+        is_func  := false;
+
+        (copy i := 0)
+        for terms next i += 1 do (term)  {
+            if term.get_op() == "." {
+                continue;
+            }
+            if term.get_op() == "(" && i + 1 == terms.ssize() { // Function operator has to be the last
+                is_func = true;
+                continue;
+            }
+            else {
+                postfix.error("AD: Unknown operator for postfix expression. op: (term.get_op())$ expr: (postfix)$");
+            }
+        }
+
+        // TODO: Really check for members
+        if !is_func || terms.ssize() != 1 {
+            active |= ctx*.is_variable_active(postfix.get_primary_expression().to_string());
+        }
+
+        if is_func {
+            // Check arguments of function
+            for terms.back().get_expression_list().get_expressions() do (cur) {
+                pre_traverse(cur);
+            }
+        }
+    }
+}
+
+autodiff_handler_base: type = {
+    public ctx: *autodiff_context;
+
+    public diff : autodiff_diff_code;
+
+    operator=: (out this, ctx_: *autodiff_context) = {
+        ctx = ctx_;
+        diff = (ctx);
+    }
+
+    // Temporary: TODO: remove when everything has been adapted to primal, fwd, rws pushes.
+    append: (inout this, in_ref o: autodiff_handler_base) = {
+        diff.fwd          += o.diff.fwd;
+        diff.rws_primal   += o.diff.rws_primal;
+        diff.rws_backprop  = o.diff.rws_backprop + diff.rws_backprop;
+    }
+}
+
+autodiff_expression_handler: type = {
+    this: simple_traverser = ();
+    this: autodiff_handler_base;
+
+    base: type == simple_traverser;
+
+    public primal_expr: std::string = "";
+    public fwd_expr   : std::string = "";
+    public rws_expr   : std::string = "";
+
+    operator=: (out this, ctx_: *autodiff_context) = {
+        autodiff_handler_base = (ctx_);
+    }
+
+    add_suffix_if_not_wildcard: (this, lhs: std::string, suffix: std::string) -> std::string = {
+        if "_" == lhs {
+            return lhs;
+        }
+        else {
+            return lhs + suffix;
+        }
+    }
+
+    prepare_backprop: (this, rhs_b: std::string, lhs: std::string, lhs_d: std::string, lhs_b: std::string) -> std::string = {
+        r := rhs_b;
+        r  = string_util::replace_all(r, "_r_", lhs);
+        r  = string_util::replace_all(r, "_rd_", lhs_d);
+        r  = string_util::replace_all(r, "_rb_", lhs_b);
+
+        return r;
+    }
+    prepare_backprop: (this, rhs_b: std::string, lhs: std::string) -> std::string = prepare_backprop(rhs_b, lhs, lhs + ctx*.fwd_suffix, lhs + ctx*.rws_suffix);
+
+    gen_assignment: (inout this, lhs: std::string, lhs_d: std::string, lhs_b: std::string, rhs: std::string, rhs_d: std::string, rhs_b: std::string) = {
+        diff.add_forward("(lhs_d)$ = (rhs_d)$;\n");
+        diff.add_forward("(lhs)$   = (rhs)$;\n");
+
+        if ctx*.is_taylor() {
+            diff.add_reverse_primal("(lhs_d)$ = (rhs_d)$;\n");
+        }
+        diff.add_reverse_primal("(lhs)$   = (rhs)$;\n");
+        diff.add_reverse_backprop("(lhs_b)$ = 0.0;\n");
+        diff.add_reverse_backprop(prepare_backprop(rhs_b, lhs, lhs_d, lhs_b));
+    }
+    gen_assignment: (inout this, lhs: std::string, lhs_d: std::string, lhs_b: std::string)
+        = gen_assignment(lhs, lhs_d, lhs_b, primal_expr, fwd_expr, rws_expr);
+    gen_assignment: (inout this, lhs: std::string)
+        = gen_assignment(lhs, add_suffix_if_not_wildcard(lhs, ctx*.fwd_suffix), add_suffix_if_not_wildcard(lhs, ctx*.rws_suffix), primal_expr, fwd_expr, rws_expr);
+
+
+    gen_declaration: (inout this, lhs: std::string, lhs_d: std::string, lhs_b: std::string, rhs: std::string, rhs_d: std::string, rhs_b: std::string, type: std::string, type_d: std::string, type_b: std::string) = {
+        diff.add_forward("(lhs_d)$: (type_d)$ = (rhs_d)$;\n");
+        diff.add_forward("(lhs)$  : (type)$ = (rhs)$;\n");
+
+        if ctx*.is_taylor() {
+            diff.add_reverse_primal("(lhs_d)$: (type_d)$ = (rhs_d)$;\n");
+        }
+        diff.add_reverse_primal("(lhs_b)$ : (type_b)$ = 0.0;\n");
+        diff.add_reverse_primal("(lhs)$  : (type)$ = (rhs)$;\n");
+        diff.add_reverse_backprop("(lhs_b)$ = 0.0;\n");
+        diff.add_reverse_backprop(prepare_backprop(rhs_b, lhs, lhs_d, lhs_b));
+    }
+    gen_declaration: (inout this, lhs: std::string, lhs_d: std::string, lhs_b: std::string, rhs: std::string, rhs_d: std::string, rhs_b: std::string, type: std::string)
+        = gen_declaration(lhs, lhs_d, lhs_b, rhs, rhs_d, rhs_b, type, ctx*.get_fwd_ad_type(type) , ctx*.get_rws_ad_type(type));
+    gen_declaration: (inout this, lhs: std::string, lhs_d: std::string, lhs_b: std::string, type: std::string)
+        = gen_declaration(lhs, lhs_d, lhs_b, primal_expr, fwd_expr, rws_expr, type);
+    gen_declaration: (inout this, lhs: std::string, type: std::string)
+        = gen_declaration(lhs, lhs + ctx*.fwd_suffix, lhs + ctx*.rws_suffix, type);
+
+
+
+    primal_fwd_rws_name: @struct<noforward> type = {
+        primal: std::string = "";
+        fwd   : std::string = "";
+        rws   : std::string = "";
+        active: bool        = false;
+    }
+
+    handle_expression_list: (inout this, list: meta::expression_list) -> std::vector<primal_fwd_rws_name> = {
+        args : std::vector<primal_fwd_rws_name> = ();
+        for list.get_expressions() do (expr) {
+            args.push_back(handle_expression_term(expr));
+        }
+
+        return args;
+    }
+
+    handle_expression_term :(inout this, term) -> primal_fwd_rws_name = {
+        if term.is_identifier() {
+            primal := term.to_string();
+            fwd    := primal + ctx*.fwd_suffix;
+            rws    := primal + ctx*.rws_suffix;
+
+            decl := ctx*.lookup_variable_declaration(primal);
+            if decl.is_member {
+                fwd = "this(ctx*.fwd_suffix)$." + fwd;
+                rws = "this(ctx*.rws_suffix)$." + rws;
+            }
+
+            if decl.is_active {
+                return (primal, fwd, rws, true);
+            }
+            else {
+                return (primal, "", "", false);
+            }
+
+        }
+        else if term.is_expression_list() {
+            exprs := term..as_expression_list()..get_expressions();
+            if exprs.ssize() != 1 {
+                term.error("Can not handle multiple expressions. (term.to_string())");
+                return ("error", "", "", false);
+            }
+            expr := exprs[0];
+            bin_expr := expr..as_assignment_expression();
+
+            if bin_expr.terms_size() != 0 {
+                term.error("Can not handle assign expr inside of expression. (expr.to_string())$");
+                return ("error", "", "", false);
+            }
+
+            return handle_expression_term(bin_expr.get_terms().front().get_term());
+        }
+        else {
+            // Nothing special. A regular expression.
+            expr := term;
+
+            ada: autodiff_activity_check = (ctx);
+            ada.pre_traverse(expr);
+
+            if ada.active {
+
+                ad : autodiff_expression_handler = (ctx);
+                ad..pre_traverse(expr);
+                t := ctx*.gen_temporary();
+                ad.gen_declaration(t, "double"); // TODO: get type of expression
+                append(ad);
+
+                r : primal_fwd_rws_name = (t, t + ctx*.fwd_suffix, t + ctx*.rws_suffix, true); // TODO: Check why on return (t, t + ctx*.fwd_suffix) the primal is initialized empty. Probably because of the move(t)
+                _ = t;
+                return r;
+            }
+            else {
+                return (expr.to_string(), "", "", false);
+            }
+        }
+    }
+
+    handle_function_call: (inout this, postfix: meta::postfix_expression, has_return: bool) = {
+        terms := postfix.get_terms();
+
+        is_func  := true;
+
+        (copy i := 0)
+        for terms next i += 1 do (term)  {
+            if term.get_op() == "." {
+                continue;
+            }
+            if term.get_op() == "(" && i + 1 == terms.ssize() { // Function operator has to be the last
+                continue;
+            }
+
+            is_func = false;
+        }
+
+        // Check for function call, everything else is not handled.
+        if !(is_func) {
+            postfix.error( "AD: Postfix expressions are only handled for function calls, or member function calls. Do not know how to handle: (postfix.to_string())$" );
+            return;
+        }
+
+        object         : std::string = "";
+        object_d       : std::string = "";
+        object_b       : std::string = "";
+        function_name : std::string = "";
+        args          : std::vector<primal_fwd_rws_name> = ();
+
+        primary := postfix.get_primary_expression();
+
+        if 1 != terms.ssize() {
+            object   = primary.to_string();
+            object_d = primary.to_string() + ctx*.fwd_suffix;
+            object_b = primary.to_string() + ctx*.rws_suffix;
+        }
+        else {
+            function_name = primary.to_string();
+        }
+
+        (copy i := 0)
+        for terms next i += 1 do (term)  {
+            if term.get_op() == "." {
+                assert(term.is_id_expression());
+                name := term.get_id_expression().to_string();
+
+                if i + 2 == terms.ssize() { // Second last term is function name, last term is function argument list
+                    function_name = name;
+                }
+                else {
+                    object   += "." + name;
+                    object_d += "." + name + ctx*.fwd_suffix;
+                }
+            }
+            else if term.get_op() == "(" {
+                assert(term.is_expression_list());
+
+                args = handle_expression_list(term.get_expression_list());
+            }
+            else {
+                postfix.error("AD: Do not know how to handle postfix term: (term.to_string())$");
+            }
+        }
+
+        if handle_special_function(object, object_d, object_b, function_name, args) {
+            return;
+        }
+
+        if object.contains(".") {
+            postfix.error("AD: can not handle nested member function calls: (postfix.to_string())$");
+            return;
+        }
+
+        call_primal: std::string = "";
+        call_fwd   : std::string = "";
+        call_rws   : std::string = "";
+
+        // All arguments have now been handled. Form the function call
+        ret_temp : std::string = "";
+        if has_return {
+            ret_temp = ctx*.gen_temporary();
+            call_fwd += "(ret_temp)$ := ";
+        }
+
+        // TODO: This is untested for functions with no return value. Requires handling of out and inout parameters in functions.
+        if !object.empty() { // Prepend object call
+            call_primal += "(object)$.";
+            call_fwd    += "(object)$.";
+            call_rws    += "(object)$.";
+        }
+        call_primal += "(function_name)$(";
+        call_fwd    += "(function_name)$(ctx*.fwd_suffix)$(";
+        call_rws    += "(function_name)$(ctx*.rws_suffix)$(";
+        if !object.empty() { // Add this_d argument.
+            call_fwd += "(object_d)$, ";
+            call_rws += "(object_b)$, ";
+        }
+        for args do (arg) {
+            // TODO: Add taylor reverse handling.
+            call_primal += "(arg.primal)$, ";
+            call_fwd    += "(arg.primal)$, ";
+            call_rws    += "(arg.primal)$, ";
+            if arg.active {
+                call_fwd += "(arg.fwd)$, ";
+                call_rws += "(arg.rws)$, ";
+            }
+        }
+
+        if has_return {
+            functions : std::vector<meta::function_declaration> = ();
+            if !object.empty() {
+                obj_decl := ctx*.lookup_variable_declaration(object);
+                obj_decl_types := ctx*.lookup_type_declaration(obj_decl.decl);
+
+                if obj_decl_types.empty() {
+                    postfix.error("AD: Could not find type declaration for `(object)$ with type (obj_decl.decl)$`.\n"
+                              "    If cpp2 object: this is an alpha limitation, please declare it befor the current declaration.\n"
+                              "    If cpp function: please add a special handling for this member function.");
+                    return;
+                }
+                functions = ctx*.lookup_member_function_declaration(obj_decl_types[0], function_name);
+
+                ctx*.add_for_differentiation(obj_decl_types[0]); // TODO: Add more fine grained differentiation.
+            }
+            else {
+                functions = ctx*.lookup_function_declaration(function_name);
+                if functions.ssize() == 0 {
+                    postfix.error("AD: Could not find function declaration for `(function_name)$`.\n"
+                                "    If cpp2 function: this is an alpha limitation, please declare it befor the current declaration.\n"
+                                "    If cpp function: please add a special handling for this function.");
+                    return;
+                }
+                else if functions.ssize() != 1 {
+                    postfix.error("AD: No handling for overload resultion is currently implemented.");
+                    return;
+                }
+
+                ctx*.add_for_differentiation(functions[0]);
+            }
+
+            ret_name : std::string = "r"; // Default for regular return.
+            returns := functions[0].get_returns();
+            if !returns.empty() {
+                if returns.ssize() != 1 {
+                    postfix.error("AD: Expecting single return.");
+                }
+
+                for returns do (cur) {
+                    ret_name = cur.get_declaration().name();
+                }
+            }
+
+            ret_name_d : std::string = ret_name + ctx*.fwd_suffix;
+            ret_name_b : std::string = ret_name + ctx*.rws_suffix;
+
+            call_rws += "_rb_, ";
+
+            call_primal += ")";
+            call_fwd    += ");\n";
+            call_rws    += ");\n";
+
+            diff.add_forward(call_fwd);
+
+            primal_expr = call_primal;
+            fwd_expr    = "(ret_temp)$.(ret_name_d)$";
+            rws_expr    = "_ = (call_rws)$";
+        }
+        else {
+            call_primal += ");\n";
+            call_fwd    += ");\n";
+            call_rws    += ");\n";
+
+            diff.add_forward(call_fwd);
+            diff.add_reverse_primal(call_primal);
+            diff.add_reverse_backprop(call_rws);
+        }
+
+        // TODO: Add function to list of functions/objects for differentiation for the no return case.
+    }
+
+    handle_special_function: (inout this, object: std::string, object_d: std::string, object_b: std::string, function_name: std::string, args: std::vector<primal_fwd_rws_name>) -> bool = {
+
+        r := ctx*.lookup_special_function_handling(function_name, unchecked_narrow<int>(args.ssize()), !object.empty());
+
+        if !r.m {
+            return false; // No match
+        }
+
+        // Have a match, do the replacement
+        code_primal: std::string = r.code_primal;
+        code_fwd   : std::string = r.code_fwd;
+        code_rws   : std::string = r.code_rws;
+
+        if !object.empty() {
+            code_primal = string_util::replace_all(code_primal, "_o_", object);
+            code_primal = string_util::replace_all(code_primal, "_od_", object_d);
+
+            code_fwd = string_util::replace_all(code_fwd, "_o_", object);
+            code_fwd = string_util::replace_all(code_fwd, "_od_", object_d);
+
+            code_rws = string_util::replace_all(code_fwd, "_o_", object);
+            code_rws = string_util::replace_all(code_rws, "_od_", object_d);
+            code_rws = string_util::replace_all(code_fwd, "_ob_", object_b);
+        }
+
+        (copy i := 1)
+        for args do (arg) {
+            code_primal = string_util::replace_all(code_primal, "_a(i)$_", arg.primal);
+            code_primal = string_util::replace_all(code_primal, "_ad(i)$_", arg.fwd);
+
+            code_fwd = string_util::replace_all(code_fwd, "_a(i)$_", arg.primal);
+            code_fwd = string_util::replace_all(code_fwd, "_ad(i)$_", arg.fwd);
+
+            code_rws = string_util::replace_all(code_rws, "_a(i)$_", arg.primal);
+            code_rws = string_util::replace_all(code_rws, "_ad(i)$_", arg.fwd);
+            code_rws = string_util::replace_all(code_rws, "_ab(i)$_", arg.rws);
+        }
+
+        primal_expr = code_primal;
+        fwd_expr    = code_fwd;
+        rws_expr    = code_rws;
+
+        return true;
+    }
+
+    traverse: (override inout this, expr: meta::expression) = {
+        base::traverse(expr);
+    }
+
+    traverse: (override inout this, binexpr: meta::assignment_expression) = {
+        binexpr.error( "AD: Assign expressions are not yet handled." );
+    }
+
+    traverse: (override inout this, binexpr: meta::logical_or_expression) = {
+        binexpr.error( "AD: Logical or expressions are not yet handled." );
+    }
+
+    traverse: (override inout this, binexpr: meta::logical_and_expression) = {
+        binexpr.error( "AD: Logical and expressions are not yet handled." );
+    }
+
+    traverse: (override inout this, binexpr: meta::bit_or_expression) = {
+        binexpr.error( "AD: Bit or expressions are not yet handled." );
+    }
+
+    traverse: (override inout this, binexpr: meta::bit_xor_expression) = {
+        binexpr.error( "AD: Bit xor expressions are not yet handled." );
+    }
+
+    traverse: (override inout this, binexpr: meta::bit_and_expression) = {
+        binexpr.error( "AD: Bit and expressions are not yet handled." );
+    }
+
+    traverse: (override inout this, binexpr: meta::equality_expression) = {
+        binexpr.error( "AD: Equality or expressions are not yet handled." );
+    }
+
+    traverse: (override inout this, binexpr: meta::relational_expression) = {
+        binexpr.error( "AD: Relational expressions are not yet handled." );
+    }
+
+    traverse: (override inout this, binexpr: meta::compare_expression) = {
+        binexpr.error( "AD: Compare or expressions are not yet handled." );
+    }
+
+    traverse: (override inout this, binexpr: meta::shift_expression) = {
+        binexpr.error( "AD: Shift or expressions are not yet handled." );
+    }
+
+    traverse: (override inout this, binexpr: meta::additive_expression) = {
+        terms := binexpr.get_terms();
+
+        first     := true;
+        first_fwd := true;
+        op  :   std::string = "+";
+        fwd :   std::string = "";
+        rws :   std::string = "";
+        primal: std::string = "";
+        for terms do (term) {
+            if !first {
+                op      = term.get_op().to_string();
+                primal += " (op)$ ";
+            }
+
+            var   := handle_expression_term(term.get_term());
+            if var.active {
+                if first_fwd {
+                    if op == "-" {// Special handling for first fwd termn with minus
+                        fwd += "-(var.fwd)$";
+                    }
+                    else { // Special handling for first fwd term with plus
+                        fwd += var.fwd;
+                    }
+                }
+                else {
+                    fwd += "(op)$ (var.fwd)$";
+                }
+                rws    += "(var.rws)$ (op)$= _rb_;\n";
+
+                first_fwd = false;
+            }
+            primal += var.primal;
+
+            first = false;
+        }
+
+        primal_expr = primal;
+        fwd_expr    = fwd;
+        rws_expr    = rws;
+    }
+
+    traverse: (override inout this, binexpr: meta::multiplicative_expression) = {
+        terms := binexpr.get_terms();
+
+        var_a := handle_expression_term(terms[0].get_term());
+
+        i : int = 1;
+        while i < terms.ssize() next i += 1 {
+            var_b := handle_expression_term(terms[i].get_term());
+
+            op := terms[i].get_op().to_string();
+
+            fwd    : std::string = "";
+            rws    : std::string = "";
+            primal : std::string = "";
+
+            if "*" == op {
+                if ctx*.is_taylor() {
+                    // TODO: Add taylor overloads
+                    fwd = "(var_a.fwd)$..mul((var_b.fwd)$, (var_a.primal)$, (var_b.primal)$)";
+                    if var_a.active {
+                        //fwd += "(var_b.primal)$ * (var_a.fwd)$";
+                        rws += "(var_a.rws)$ += (var_b.fwd)$..mul(_rb_, (var_b.primal)$, _r_);\n";
+                    }
+                    if var_b.active {
+                        //if !fwd.empty() { fwd += " + "; }
+                        //fwd += "(var_a.primal)$ * (var_b.fwd)$";
+                        rws += "(var_b.rws)$ += (var_a.fwd)$..mul(_rb_, (var_a.primal)$, _r_);\n";
+                    }
+                }
+                else {
+                    if var_a.active {
+                        fwd += "(var_b.primal)$ * (var_a.fwd)$";
+                        rws += "(var_a.rws)$ += (var_b.primal)$ * _rb_;\n";
+                    }
+                    if var_b.active {
+                        if !fwd.empty() { fwd += " + "; }
+                        fwd += "(var_a.primal)$ * (var_b.fwd)$";
+                        rws += "(var_b.rws)$ += (var_a.primal)$ * _rb_;\n";
+                    }
+                }
+                primal = "(var_a.primal)$ * (var_b.primal)$";
+            }
+            else if "/" == op {
+                if ctx*.is_taylor() {
+                    // TODO: Add taylor overloads
+                    fwd = "(var_a.fwd)$.div((var_b.fwd)$, (var_a.primal)$, (var_b.primal)$)";
+                    if var_a.active {
+                        rws += "(var_a.rws)$ += _rb_.div((var_b.fwd)$, _r_, (var_b.primal)$);\n";
+                    }
+                    if var_b.active {
+                        rws += "(var_b.rws)$ -= (var_a.fwd)$.mul(_rb_, (var_a.primal)$, _r_).div((var_b.fwd)$.mul((var_b.fwd)$, (var_b.primal)$, (var_b.primal)$), (var_a.primal)$ * _r_, (var_b.primal)$ * (var_b.primal)$);\n";
+                    }
+                }
+                else {
+                    if var_a.active {
+                        fwd += "(var_a.fwd)$ / (var_b.primal)$";
+                        rws = "(var_a.rws)$ += _rb_ / (var_b.primal)$;\n";
+                    }
+                    if var_b.active {
+                        if !fwd.empty() { fwd += " + "; }
+                        fwd += "-(var_a.primal)$ * (var_b.fwd)$ / ((var_b.primal)$ * (var_b.primal)$)";
+                        rws += "(var_b.rws)$ -= (var_a.primal)$ * _rb_ / ((var_b.primal)$ * (var_b.primal)$);\n";
+                    }
+                }
+                primal = "(var_a.primal)$ / (var_b.primal)$";
+            }
+            else {
+                binexpr.error( "unkown multiplicative operator '(op)$'");
+            }
+
+
+            if i + 1 == terms.ssize() {
+                primal_expr = primal;
+                fwd_expr    = fwd;
+                rws_expr    = rws;
+            }
+            else {
+                // Temporary
+                var_a.primal = ctx*.gen_temporary();
+                var_a.fwd    = var_a.primal + ctx*.fwd_suffix;
+                var_a.rws    = var_a.primal + ctx*.rws_suffix;
+                var_a.active = var_a.active | var_b.active;
+                gen_declaration(var_a.primal, var_a.fwd, var_a.rws, primal, fwd, rws, "", "", "");
+            }
+        }
+    }
+
+    traverse: (override inout this, isas: meta::is_as_expression) = {
+        isas.error( "AD: Is as expressions are not yet handled." );
+    }
+
+    traverse: (override inout this, prefix: meta::prefix_expression) =
+    {
+        ops := prefix.get_ops();
+
+        if ops.ssize() != 1 {
+            prefix.error( "AD: Can only handle one prefix operation. Expression is: (prefix.to_string())$" );
+        }
+
+        ad: autodiff_expression_handler = (ctx);
+        ad.pre_traverse(prefix.get_postfix_expression());
+        append(ad);
+
+        primal_expr = ops[0] + ad.primal_expr;
+        fwd_expr    = ops[0] + ad.fwd_expr;
+    }
+
+    traverse: (override inout this, postfix: meta::postfix_expression) =
+    {
+        terms := postfix.get_terms();
+
+        is_func  := false;
+
+        (copy i := 0)
+        for terms next i += 1 do (term)  {
+            if term.get_op() == "." {
+                continue;
+            }
+            if term.get_op() == "(" && i + 1 == terms.ssize() { // Function operator has to be the last
+                is_func = true;
+                continue;
+            }
+            else {
+                postfix.error("AD: Unknown operator for postfix expression. op: (term.get_op())$ expr: (postfix)$");
+            }
+        }
+
+        if is_func {
+            handle_function_call(postfix, true);
+        }
+        else {
+            // Member access
+
+            primary      :             = postfix.get_primary_expression();
+            obj_access   : std::string = primary.to_string();
+            obj_access_d : std::string = obj_access + ctx*.fwd_suffix;
+
+            for terms do (term)  {
+                obj_access   += term.get_op() + term.get_id_expression().to_string();
+                obj_access_d += term.get_op() + term.get_id_expression().to_string() + ctx*.fwd_suffix;
+            }
+
+            primal_expr = obj_access;
+            fwd_expr    = obj_access_d;
+        }
+    }
+
+    traverse: (override inout this, primary: meta::primary_expression) =
+    {
+        if primary.is_identifier() {
+            primal_expr = primary.to_string();
+            fwd_expr    = add_suffix_if_not_wildcard(primal_expr, ctx*.fwd_suffix);
+            rws_expr    = add_suffix_if_not_wildcard(primal_expr, ctx*.rws_suffix);
+
+            decl := ctx*.lookup_variable_declaration(primal_expr);
+            if decl.is_member {
+                fwd_expr = "this(ctx*.fwd_suffix)$." + fwd_expr;
+                rws_expr = "this(ctx*.rws_suffix)$." + rws_expr;
+            }
+        }
+        else if primary.is_expression_list() {
+            if primary.as_expression_list().is_empty() {
+                primal_expr = "()";
+                fwd_expr    = "()";
+                rws_expr    = "()";   // TODO: Check for reverse
+            }
+            else {
+                primary.error("AD: Do not know how to handle non empty expression list inside of primary_expression: (primary.to_string())$");
+            }
+        }
+        else if primary.is_literal() {
+            primal_expr = primary.to_string();
+            fwd_expr    = "()";
+            rws_expr    = "()";  // TODO: Check for reverse
+        }
+        else if primary.is_declaration() {
+            primary.error("AD: Do not know how to handle declaration inside of primary_expression: (primary.to_string())$");
+        }
+        else {
+            primary.error("AD: Unknown primary expression kind: (primary.to_string())$");
+        }
+    }
+}
+
+autodiff_stmt_handler: type = {
+    this: simple_traverser      = ();
+    this: autodiff_handler_base;
+
+    base: type == simple_traverser;
+
+    mf: meta::function_declaration;
+
+    last_params: std::vector<meta::parameter_declaration> = ();
+    overwritten: std::vector<std::string> = ();
+
+    overwrite_push_pop: bool = false;
+
+    operator=: (out this, ctx_: *autodiff_context, mf_: meta::function_declaration) = {
+        autodiff_handler_base = (ctx_);
+        mf = mf_;
+    }
+
+    handle_stmt_parameters: (inout this, params: std::vector<parameter_declaration>) -> autodiff_diff_code = {
+        r : autodiff_diff_code = (ctx);
+        if params.empty() {
+            return r;
+        }
+
+        for params do (param) {
+            name: std::string = param.get_declaration().name();
+            type: std::string = param.get_declaration().type();
+
+            fwd_pass_style := to_string_view(param.get_passing_style());
+
+            ada: autodiff_activity_check = (ctx);
+            ada.pre_traverse(param);
+
+            init  : std::string = "";
+            init_d: std::string = "";
+            // TODO: Add handling for reverse expressions
+
+            if param.get_declaration().has_initializer() {
+                ad: autodiff_expression_handler = (ctx);
+                ad.pre_traverse(param.get_declaration().get_initializer());
+                init = " = (ad.primal_expr)$";
+
+                if ada.active {
+                    init_d = " = (ad.fwd_expr)$";
+                }
+            }
+
+
+            r.add_forward("(fwd_pass_style)$ (name)$ : (type)$(init)$, ");
+            r.add_reverse_primal("(fwd_pass_style)$ (name)$ : (type)$(init)$, ");
+            if ada.active {
+                r.add_forward("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$(init_d)$, ");
+            }
+
+            ctx*.add_variable_declaration(name, type, ada.active);
+        }
+
+        return r;
+    }
+
+    traverse: (override inout this, decl: meta::declaration) = {
+        base::traverse(decl);
+    }
+
+
+    traverse: (override inout this, f: meta::function_declaration) = {
+        f.error("AD: Do not know how to handle function_declaration: (f.to_string())$");
+    }
+
+
+    traverse: (override inout this, o: meta::object_declaration) = {
+        lhs  : std::string = o.name();
+        type :             = o.type();
+
+        active := false;
+        if "_" != type {
+            active = ctx*.is_type_active(type);
+        }
+        else {
+            assert(o.has_initializer());
+
+            ada: autodiff_activity_check = (ctx);
+            ada.pre_traverse(o.get_initializer());
+            active = ada.active;
+        }
+
+        if active {
+
+            fwd_ad_type : = ctx*.get_fwd_ad_type(type);
+            rws_ad_type : = ctx*.get_rws_ad_type(type);
+
+            prim_init: std::string = "";
+            fwd_init : std::string = "";
+            rws_init : std::string = "";
+
+            if o.has_initializer() {
+                ad: autodiff_expression_handler = (ctx);
+                ad.pre_traverse(o.get_initializer());
+                append(ad);
+
+                prim_init = " = " + ad.primal_expr;
+                fwd_init  = " = " + ad.fwd_expr;
+                rws_init  = " = ()"; // TODO: Proper initialization.
+
+                if ad.rws_expr != "()" {
+                    diff.add_reverse_backprop(ad.prepare_backprop(ad.rws_expr, lhs));
+                }
+
+                if type == "_" && ad.fwd_expr == "()" {
+                    // Special handling for auto initialization from a literal.
+                    fwd_init = " = " + ctx*.get_fwd_ad_type("double") + "()";
+                }
+            }
+
+            diff.add_forward("(lhs)$(ctx*.fwd_suffix)$ : (fwd_ad_type)$(fwd_init)$;\n");
+            diff.add_forward("(lhs)$   : (type)$(prim_init)$;\n");
+
+            diff.add_reverse_primal("(lhs)$(ctx*.rws_suffix)$ : (rws_ad_type)$(rws_init)$;\n");
+            diff.add_reverse_primal("(lhs)$   : (type)$(prim_init)$;\n");
+        }
+        else {
+            diff += "(lhs)$: (type)$";
+            if o.has_initializer() {
+                diff += " = (o.get_initializer().to_string())$";
+            }
+            diff += ";\n";
+        }
+
+        ctx*.add_variable_declaration(lhs, type, active);
+    }
+
+
+    traverse: (override inout this, t: meta::type_declaration) = {
+        t.error("AD: Do not know how to handle type_declaration: (t.to_string())$");
+    }
+
+
+    traverse: (override inout this, t: meta::parameter_declaration) = {
+        t.error("AD: Do not know how to handle parameter_declaration: (t.to_string())$");
+    }
+
+
+    traverse: (override inout this, stmt: meta::statement) = {
+        // TODO: Remove this hack when statements like compound_statement can access their root statement.
+        last_params = stmt.get_parameters();
+        base::traverse(stmt);
+    }
+
+
+    traverse: (override inout this, stmt: meta::compound_statement) = {
+        ad         : autodiff_stmt_handler = (ctx, mf);
+        ad_push_pop: autodiff_stmt_handler = (ctx, mf);
+        ad_push_pop.overwrite_push_pop = true;
+
+        diff.add_forward("{\n");
+        diff.add_reverse_primal("{\n");
+        diff.add_reverse_backprop("}\n");
+
+        for stmt.get_statements() do (cur) {
+            ad.pre_traverse(cur);
+            ad_push_pop.pre_traverse(cur);
+        }
+
+        for ad.overwritten do (cur) {
+            r := ctx*.lookup_variable_declaration(cur);
+            diff.add_reverse_primal("cpp2::ad_stack::push<(r.decl)$>((cur)$);");
+        }
+
+        diff.add_forward(ad.diff.fwd);
+        diff.add_reverse_primal(ad.diff.rws_primal);
+        diff.add_reverse_backprop(ad_push_pop.diff.rws_backprop);
+        diff.add_reverse_backprop(ad_push_pop.diff.rws_primal);
+
+        for ad.overwritten do (cur) {
+            r := ctx*.lookup_variable_declaration(cur);
+            diff.add_reverse_backprop("(cur)$ = cpp2::ad_stack::pop<(r.decl)$>();");
+        }
+
+        diff.add_forward("}\n");
+        diff.add_reverse_primal("}\n");
+        diff.add_reverse_backprop("{\n");
+    }
+
+
+    traverse: (override inout this, stmt: meta::return_statement) = {
+        if stmt.has_expression() {
+            // Return with expression.
+            // TODO: Remove assumptions
+            //     - Return expression is always active. (Look this up in mf or so.)
+            //     - Return was converted to a two parameter return with the name r.
+            ad: autodiff_expression_handler = (ctx);
+            ad..pre_traverse(stmt.get_expression());
+            ad.gen_assignment("r",);
+            append(ad);
+        }
+        else {
+            diff += "return;\n";
+        }
+    }
+
+    reverse_next: (this, expr: std::string) -> std::string = {
+        if expr.contains("+=") {
+            return string_util::replace_all(expr, "+=", "-=");
+        }
+        else if expr.contains("-=") {
+            return string_util::replace_all(expr, "-=", "+=");
+        }
+
+        mf.error("AD: Do not know how to reverse: (expr)$");
+
+        return "Error";
+
+    }
+
+
+    traverse: (override inout this, stmt: meta::iteration_statement) = {
+        diff_params := handle_stmt_parameters(last_params);
+
+        if ctx*.is_reverse() && (stmt.is_while() || stmt.is_do()) {
+            stmt.error("AD: Alpha limitiation now reverse mode for while or do while.");
+        }
+
+        if stmt.is_while() {
+            if !last_params.empty() {
+                diff.add_forward("(" + diff_params.fwd + ")");
+            }
+            // TODO: Assumption is here that nothing is in the condition
+            diff += "while (stmt.get_do_while_condition().to_string())$ ";
+            if stmt.has_next() {
+                // TODO: Assumption is here that nothing is in the next expression
+                diff += "next (stmt.get_next_expression().to_string())$ ";
+            }
+
+            pre_traverse(stmt.get_do_while_body());
+        }
+        else if stmt.is_do() {
+            if !last_params.empty() {
+                diff.add_forward("(" + diff_params.fwd + ")");
+            }
+
+            // TODO: Assumption is here that nothing is in the condition
+            diff += "do ";
+            pre_traverse(stmt.get_do_while_body());
+
+            if stmt.has_next() {
+                // TODO: Assumption is here that nothing is in the next expression
+                diff += "next (stmt.get_next_expression().to_string())$ ";
+            }
+            diff += "while (stmt.get_do_while_condition().to_string())$;";
+        }
+        else {
+            assert(stmt.is_for());
+            // No zip view available in cpp 20 do a piggy back for range
+
+            // TODO: Assumption that this is just an id expression.
+            range := stmt.get_for_range().to_string();
+
+            param := stmt.get_for_parameter();
+            param_style := to_string_view(param.get_passing_style());
+            param_decl := param.get_declaration();
+
+            rws        : std::string = "(";
+            rws_restore: std::string = "";
+            diff.add_forward("("); // Open statment parameter scope. If the loop has parameters, they are alrady handled and the brace is left open.
+            diff.add_reverse_primal("{\n");
+            if !last_params.empty() {
+                for last_params do (cur) {
+                    if cur.get_declaration().has_initializer() {
+                        // TODO: Handle no type and no initializer. Handle passing style.
+                        diff.add_reverse_primal("(cur.get_declaration().name())$: (cur.get_declaration().type())$ = (cur.get_declaration().get_initializer().to_string())$;\n");
+                        rws_restore += "cpp2::ad_stack::push<(cur.get_declaration().type())$>((cur.get_declaration().name())$);\n";
+                        rws += "(to_string_view(cur.get_passing_style()))$ (cur.get_declaration().name())$: (cur.get_declaration().type())$ = cpp2::ad_stack::pop<(cur.get_declaration().type())$>(), ";
+                    }
+                }
+                diff.add_forward(diff_params.fwd);
+            }
+            diff.add_forward("copy (param_decl.name())$(ctx*.fwd_suffix)$_iter := (range)$(ctx*.fwd_suffix)$.begin())\n");
+            diff.add_forward("for (range)$ next (");
+
+            rws += "copy (param_decl.name())$(ctx*.rws_suffix)$_iter := (range)$(ctx*.rws_suffix)$.rbegin())\n";
+            rws += "for std::ranges::reverse_view((range)$) next (";
+            diff.add_reverse_primal("for (range)$ next (");
+            if stmt.has_next() {
+                // TODO: Assumption is here that nothing is in the next expression
+                diff.add_forward("(stmt.get_next_expression().to_string())$, ");
+                diff.add_reverse_primal("(stmt.get_next_expression().to_string())$, ");
+                rws += "(reverse_next(stmt.get_next_expression().to_string()))$, ";
+            }
+            diff.add_forward("(param_decl.name())$(ctx*.fwd_suffix)$_iter++");
+            diff.add_forward(") do ((param_style)$ (param_decl.name())$: (param_decl.type())$) {\n");
+            rws += "(param_decl.name())$(ctx*.rws_suffix)$_iter++";
+            rws += ") do ((param_style)$ (param_decl.name())$: (param_decl.type())$) {\n";
+            rws +=  "(inout (param_decl.name())$(ctx*.rws_suffix)$ := (param_decl.name())$(ctx*.rws_suffix)$_iter*)\n";
+
+            diff.add_reverse_primal(") do ((param_style)$ (param_decl.name())$: (param_decl.type())$)");
+            diff.add_forward("((param_style)$ (param_decl.name())$(ctx*.fwd_suffix)$: (param_decl.type())$ = (param_decl.name())$(ctx*.fwd_suffix)$_iter*)");
+
+            ctx*.add_variable_declaration("(param_decl.name())$", "(param_decl.type())$", true); // TODO: Handle loop/compound context variable declarations.
+            diff.add_reverse_backprop("}\n");
+
+            pre_traverse(stmt.get_for_body());
+            diff.add_forward("}\n");
+
+            if stmt.has_next() {
+                diff.add_reverse_primal("(reverse_next(stmt.get_next_expression().to_string()))$;\n");
+            }
+            diff.add_reverse_primal(rws_restore);
+            diff.add_reverse_primal("}\n");
+            diff.add_reverse_backprop(rws);
+        }
+    }
+
+
+    traverse: (override inout this, stmt: meta::selection_statement) = {
+        // TODO: Currently assuming that nothing bad happens in the condition
+        diff += "if (stmt.get_expression().to_string())$";
+        pre_traverse(stmt.get_true_branch());
+
+        if stmt.has_false_branch() {
+            diff += "else ";
+            pre_traverse(stmt.get_false_branch());
+        }
+    }
+
+    traverse : (override inout this, expr: meta::expression) = {
+        base::traverse(expr);
+    }
+
+    traverse: (override inout this, binexpr: meta::assignment_expression) = {
+        ada: autodiff_activity_check = (ctx);
+        ada.pre_traverse(binexpr.get_lhs_postfix_expression());
+        if "_" == binexpr.get_lhs_postfix_expression().to_string() {
+            ada.pre_traverse(binexpr.get_terms()[1].get_term());
+        }
+
+        if ada.active {
+            h_lhs: autodiff_expression_handler = (ctx);
+            h_lhs.pre_traverse(binexpr.get_lhs_postfix_expression());
+
+            //  Cpp2 doesn't allow chained assignment, so rhs must be a single logical_or_expression
+            assignment_terms := binexpr.get_terms();
+
+            h: autodiff_expression_handler = (ctx);
+            h.pre_traverse(assignment_terms[1].get_term());
+
+            is_overwrite := h.primal_expr.contains(h_lhs.primal_expr);
+            if overwrite_push_pop && is_overwrite {
+                r := ctx*.lookup_variable_declaration(h_lhs.primal_expr);
+                diff.add_reverse_primal("cpp2::ad_stack::push<(r.decl)$>((h_lhs.primal_expr)$);");
+            }
+
+            if is_overwrite && ctx*.is_reverse() {
+                t_b := ctx*.gen_temporary() + ctx*.rws_suffix;
+                h.gen_assignment(h_lhs.primal_expr, h_lhs.fwd_expr, t_b);
+                append(h);
+                diff.add_reverse_backprop("(h_lhs.rws_expr)$ = 0.0;\n");
+                diff.add_reverse_backprop("(t_b)$ := (h_lhs.rws_expr)$;\n");
+            }
+            else {
+                h.gen_assignment(h_lhs.primal_expr, h_lhs.fwd_expr, h_lhs.rws_expr);
+                append(h);
+            }
+
+            if overwrite_push_pop && is_overwrite {
+                r := ctx*.lookup_variable_declaration(h_lhs.primal_expr);
+                diff.add_reverse_backprop("(h_lhs.primal_expr)$ = cpp2::ad_stack::pop<(r.decl)$>();");
+            }
+
+            // Simple overwrite check
+            if is_overwrite {
+                overwritten.push_back(h_lhs.primal_expr);
+            }
+        }
+        else {
+            diff.add_forward(binexpr.to_string() + ";\n");
+            diff.add_reverse_primal(binexpr.to_string() + ";\n");
+        }
+    }
+
+    traverse: (override inout this, binexpr: meta::logical_or_expression) = {
+        binexpr.error( "AD: Logical or expressions are not yet handled as standalone statements." );
+    }
+
+    traverse: (override inout this, binexpr: meta::logical_and_expression) = {
+        binexpr.error( "AD: Logical and expressions are not yet handled as standalone statements." );
+    }
+
+    traverse: (override inout this, binexpr: meta::bit_or_expression) = {
+        binexpr.error( "AD: Bit or expressions are not yet handled as standalone statements." );
+    }
+
+    traverse: (override inout this, binexpr: meta::bit_xor_expression) = {
+        binexpr.error( "AD: Bit xor expressions are not yet handled as standalone statements." );
+    }
+
+    traverse: (override inout this, binexpr: meta::bit_and_expression) = {
+        binexpr.error( "AD: Bit and expressions are not yet handled as standalone statements." );
+    }
+
+    traverse: (override inout this, binexpr: meta::equality_expression) = {
+        binexpr.error( "AD: Equality or expressions are not yet handled as standalone statements." );
+    }
+
+    traverse: (override inout this, binexpr: meta::relational_expression) = {
+        binexpr.error( "AD: Relational expressions are not yet handled as standalone statements." );
+    }
+
+    traverse: (override inout this, binexpr: meta::compare_expression) = {
+        binexpr.error( "AD: Compare or expressions are not yet handled as standalone statements." );
+    }
+
+    traverse: (override inout this, binexpr: meta::shift_expression) = {
+        binexpr.error( "AD: Shift or expressions are not yet handled as standalone statements." );
+    }
+
+    traverse: (override inout this, binexpr: meta::additive_expression) = {
+        binexpr.error( "AD: Additive expressions are not yet handled as standalone statements." );
+    }
+
+    traverse: (override inout this, binexpr: meta::multiplicative_expression) = {
+        binexpr.error( "AD: Multiplicative expressions are not yet handled as standalone statements." );
+    }
+
+    traverse: (override inout this, isas: meta::is_as_expression) = {
+        isas.error( "AD: Is as expressions are not yet handled as standalone statements." );
+    }
+
+    traverse: (override inout this, prefix: meta::prefix_expression) =
+    {
+        prefix.error( "AD: Prefix expressions are not yet handled as standalone statements." );
+    }
+
+    traverse: (override inout this, postfix: meta::postfix_expression) =
+    {
+        terms := postfix.get_terms();
+
+        is_func  := false;
+
+        (copy i := 0)
+        for terms next i += 1 do (term)  {
+            if term.get_op() == "." {
+                continue;
+            }
+            if term.get_op() == "(" && i + 1 == terms.ssize() { // Function operator has to be the last
+                is_func = true;
+                continue;
+            } else {
+                postfix.error("AD: Unknown operator for standalone postfix expression. op: (term.get_op())$ expr: (postfix)$");
+            }
+        }
+
+        // Check for function call, everything else is not handled.
+        if !(is_func) {
+            postfix.error( "AD: Postfix expressions are only handled for function calls, or member function calls. Do not know how to handle: (postfix.to_string())$" );
+            return;
+        }
+
+        ad: autodiff_expression_handler = (ctx);
+        ad.handle_function_call(postfix, false);
+        ad.diff += ad.fwd_expr + "\n";
+        ad.diff += ad.primal_expr + "\n";
+        append(ad);
+    }
+
+    traverse: (override inout this, primary: meta::primary_expression) =
+    {
+        primary.error( "AD: Primary expressions are not yet handled as standalone statements." );
+    }
+}
+
+autodiff_declaration_handler: type = {
+    this: simple_traverser      = ();
+    this: autodiff_handler_base;
+
+    base: type == simple_traverser;
+
+    decl: meta::type_or_namespace_declaration;
+
+    is_type_context: bool        = false;
+    diff_ad_type   : std::string = "";
+
+    operator=: (out this, ctx_: *autodiff_context, decl_: meta::type_or_namespace_declaration) = {
+        autodiff_handler_base = (ctx_);
+        decl = decl_;
+    }
+
+    traverse: (override inout this, decl_: meta::declaration) = {
+        base::traverse(decl_);
+    }
+
+
+    traverse: (override inout this, f: meta::function_declaration) = {
+        ctx*.enter_function();
+
+        // TODO: Add activity for member functions
+
+        diff.add_forward("    (f.name())$(ctx*.fwd_suffix)$: (");
+        diff.add_reverse_primal("    (f.name())$(ctx*.rws_suffix)$: (");
 
         //  1. Generate the modified signature
         //  a) Parameters
 
-        for mf.get_parameters() do (param) {
-            diff += "(param.get_declaration().name())$ : (param.get_declaration().type())$, ";
-            diff += "(param.get_declaration().name())$_d : (param.get_declaration().type())$, ";
+        for f.get_parameters() do (param) {
+            name: std::string = param.get_declaration().name();
+
+            fwd_pass_style := to_string_view(param.get_passing_style());
+            rws_pass_style := to_string_view(ctx*.get_reverse_passing_style(param.get_passing_style()));
+
+            if "this" ==  name {
+                fwd_ad_type := ctx*.get_fwd_ad_type(std::string(decl.name()));
+                rws_ad_type := ctx*.get_rws_ad_type(std::string(decl.name()));
+
+                diff.add_forward("(fwd_pass_style)$ (name)$, ");
+                diff.add_forward("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$: (fwd_ad_type)$, ");
+
+                diff.add_reverse_primal("(fwd_pass_style)$ (name)$, ");
+                if ctx*.is_taylor() { // Add forward type for higher order
+                    diff.add_reverse_primal("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$: (fwd_ad_type)$, ");
+                }
+                diff.add_reverse_primal("(rws_pass_style)$ (name)$(ctx*.rws_suffix)$: (rws_ad_type)$, ");
+            }
+            else {
+                type := param.get_declaration().type();
+
+                ada: autodiff_activity_check = (ctx);
+                ada.pre_traverse(param);
+
+                if ada.active {
+                    diff.add_forward("(fwd_pass_style)$ (name)$ : (type)$, ");
+                    diff.add_forward("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$, ");
+
+                    diff.add_reverse_primal("(fwd_pass_style)$ (name)$ : (type)$, ");
+                    if ctx*.is_taylor() {
+                        diff.add_reverse_primal("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$, ");
+                    }
+                    diff.add_reverse_primal("(rws_pass_style)$ (name)$(ctx*.rws_suffix)$ : (ctx*.get_rws_ad_type(type))$, ");
+                }
+                else {
+                    diff.add_forward("(fwd_pass_style)$ (name)$ : (type)$, ");
+                    diff.add_reverse_primal("(fwd_pass_style)$ (name)$ : (type)$, ");
+                }
+
+                ctx*.add_variable_declaration(name, type, ada.active);
+            }
         }
 
-        diff += ") -> (";
+        //  b) Add arguments for returns that become inputs
 
-        //  b) Returns
+        if f.has_non_void_return_type() && f.get_returns().empty() { // TODO: has_non_void_return_type is true for return lists: (r: double) bug/feature?
+            // TODO: check if name "r" is available. (Also needs inspection of functions at call sides.)
+            if f.has_deduced_return_type() {
+                // TODO: Take care of initialization order error.
+                diff.add_reverse_primal("inout r(ctx*.rws_suffix)$, ");
+            }
+            else {
+                diff.add_reverse_primal("inout r(ctx*.rws_suffix)$: (ctx*.get_rws_ad_type(f.get_unnamed_return_type()))$, ");
+            }
+        }
+        else {
+            for f.get_returns() do (param) {
+                name := param.get_declaration().name();
+                type := param.get_declaration().type();
 
-        for mf.get_returns() do (param) {
-            diff += "(param.get_declaration().name())$ : (param.get_declaration().type())$ = 1, ";
-            diff += "(param.get_declaration().name())$_d : (param.get_declaration().type())$ = 1, ";
+                rws_pass_style := to_string_view(ctx*.get_reverse_passing_style(param.get_passing_style()));
+                diff.add_reverse_primal("(rws_pass_style)$ (name)$(ctx*.rws_suffix)$ : (ctx*.get_rws_ad_type(type))$ , ");
+            }
         }
 
-        diff += ") = {";
+        diff.add_forward(") -> (");
+        diff.add_reverse_primal(") -> (");
+
+        //  c) Returns
+
+        if f.has_non_void_return_type() && f.get_returns().empty() { // TODO: has_non_void_return_type is true for return lists: (r: double) bug/feature?
+            // TODO: check if name "r" is available. (Also needs inspection of functions at call sides.)
+            if f.has_deduced_return_type() {
+                // TODO: Take care of initialization order error.
+                diff.add_forward("r, r(ctx*.fwd_suffix)$, ");
+                diff.add_reverse_primal("r, ");
+                if ctx*.is_taylor() {
+                    diff.add_reverse_primal("r(ctx*.fwd_suffix)$,");
+                }
+            }
+            else {
+                diff.add_forward("r: (f.get_unnamed_return_type())$ = (), r(ctx*.fwd_suffix)$: (ctx*.get_fwd_ad_type(f.get_unnamed_return_type()))$ = (), ");
+                diff.add_reverse_primal("r: (f.get_unnamed_return_type())$ = (), ");
+                if ctx*.is_taylor() {
+                    diff.add_reverse_primal("r(ctx*.fwd_suffix)$: (ctx*.get_fwd_ad_type(f.get_unnamed_return_type()))$ = (), ");
+                }
+            }
+        }
+        else {
+            for f.get_returns() do (param) {
+                name := param.get_declaration().name();
+                type := param.get_declaration().type();
+
+                fwd_pass_style := to_string_view(param.get_passing_style());
+                //rws_pass_style := to_string_view(ctx*.get_reverse_passing_style(param.get_passing_style()));
+                diff.add_forward("(fwd_pass_style)$ (name)$ : (param.get_declaration().type())$ = 0.0, ");
+                diff.add_forward("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$ = 0.0, ");
+
+                diff.add_reverse_primal("(fwd_pass_style)$ (name)$ : (param.get_declaration().type())$ = 0.0, ");
+                if ctx*.is_taylor() {
+                    diff.add_reverse_primal("(fwd_pass_style)$ (name)$(ctx*.fwd_suffix)$ : (ctx*.get_fwd_ad_type(type))$ = 0.0, ");
+                }
+
+                ctx*.add_variable_declaration("(name)$", "(type)$", true); // TODO_a: Add acitivty check
+            }
+        }
+
+        diff.add_forward(") = {");
+        diff.add_reverse_primal(") = {");
 
         //  Generate the body
 
-        if !mf.has_compound_body() {
-            mf.error( "temporary alpha limitation: a differentiable function must have a {}-enclosed body" );
+        if !f.has_compound_body() {
+            f.error( "temporary alpha limitation: a differentiable function must have a {}-enclosed body" );
             return;
         }
 
-        ad_impl : autodiff_impl = ();
+
+        ad_impl : autodiff_stmt_handler = (ctx*&, f);
 
 
-        for mf.get_compound_body().get_statements() do (stmt)
+        for f.get_compound_body().get_statements() do (stmt)
         {
-            if stmt.is_expression_statement()
-            {
-                ad_impl.handle_expression_statement(mf, stmt.as_expression_statement().get_expression());
+            ad_impl..pre_traverse(stmt);
+        }
+        diff.add_forward(ad_impl.diff.fwd);
+        diff.add_reverse_primal(ad_impl.diff.rws_primal);
+        diff.add_reverse_primal(ad_impl.diff.rws_backprop);
+
+        diff.add_forward("}");
+        diff.add_reverse_primal("}");
+
+        ctx*.leave_function();
+
+        if ctx*.is_forward() {
+            decl.add_member( diff.fwd );
+        }
+        if ctx*.is_reverse() {
+            decl.add_member( diff.rws_primal );
+        }
+        diff.reset();
+
+        ctx*.add_as_differentiated(f);
+    }
+
+
+    traverse: (override inout this, o: meta::object_declaration) = {
+        ad_name : std::string = "(o.name())$(ctx*.fwd_suffix)$";
+        fwd_ad_type : std::string = ctx*.get_fwd_ad_type(o.type());
+        ad_init : std::string = "";
+
+        if o.has_initializer() {
+            ad: autodiff_expression_handler = (ctx);
+            ad.pre_traverse(o.get_initializer());
+
+            assert(ad.diff.empty());
+            ad_init = " = " +ad.fwd_expr;
+        }
+
+        diff = "(ad_name)$ : (fwd_ad_type)$(ad_init)$;";
+
+        if is_type_context {
+
+            diff_ad_type += "public (diff.fwd)$\n";
+        }
+        else {
+            decl.add_member(diff.fwd);
+        }
+        diff = "";
+
+        ctx*.add_variable_declaration("(o.name())$", "(o.type())$", true, true); // TODO_a: Add acitivty check
+    }
+
+
+    traverse: (override inout this, t: meta::type_declaration) = {
+        ctx*.push_stack(t);
+        ad: autodiff_declaration_handler = (ctx, t);
+        ad.is_type_context = true;
+
+        for t.get_members()
+        do  (m)
+        {
+            ad.pre_traverse(m);
+        }
+
+        ctx*.pop_stack();
+
+        if !ad.diff_ad_type.empty() {
+            diff = "(t.name())$(ctx*.fwd_suffix)$ : type = {\n";
+            diff += "(ad.diff_ad_type)$";
+            diff += "}";
+
+            decl.add_member(diff.fwd);
+            diff = "";
+        }
+    }
+
+
+    traverse: (override inout this, t: meta::parameter_declaration) = {
+        t.error("AD: Do not know how to handle parameter_declaration: (t.to_string())$");
+    }
+
+
+    traverse: (override inout this, stmt: meta::statement) = {
+        stmt.error("AD: Do not know how to handle statement in declaration context: (stmt.to_string())$");
+    }
+}
+
+
+autodiff: (inout t: meta::type_declaration) =
+{
+
+    suffix_token      : std::string_view == "suffix=";
+    rws_suffix_token  : std::string_view == "rws_suffix=";
+    order_token       : std::string_view == "order=";
+    reverse_token     : std::string_view == "reverse";
+
+    args := t.get_arguments();
+
+    suffix    : std::string = "_d";
+    rws_suffix: std::string = "_b";
+    order     : int         = 1;
+    reverse   : bool        = false;
+    for args do (arg_str) {
+        if arg_str.starts_with("\"") && arg_str.ends_with("\"") {
+            arg := arg_str.substr(1, arg_str.ssize() - 2);
+
+            if arg.starts_with(suffix_token) {
+                suffix = arg.substr(suffix_token.size());
+                continue;
+            }
+            else if arg.starts_with(rws_suffix_token) {
+                suffix = arg.substr(rws_suffix_token.size());
+                continue;
+            }
+            else if arg.starts_with(order_token) {
+                if !string_util::string_to_int(arg.substr(order_token.size()), order) {
+                    t.error("AD: Could not parse derivative order: (arg.substr(order_token.size()))$");
+                    return;
+                }
+                continue;
+            }
+            else if arg == reverse_token {
+                reverse = true;
+                continue;
             }
         }
-        diff += ad_impl.diff;
 
-        diff += "}";
-
-        t.add_member( diff );
+        t.error("AD: Unknown argument: (arg_str)$");
+        return;
     }
+
+    ad_ctx: autodiff_context = (order, reverse);
+    ad_ctx.fwd_suffix = suffix;
+    ad_ctx.rws_suffix = rws_suffix;
+
+    if t.parent_is_nonglobal_namespace() {
+        p := t.get_parent().as_nonglobal_namespace();
+        ad_ctx.create_namespace_stack(p);
+        ad: autodiff_declaration_handler = (ad_ctx&, p);
+        ad.pre_traverse(t);
+
+    }
+    else if t.parent_is_type() {
+        p := t.get_parent().as_type();
+        ad_ctx.create_namespace_stack(p);
+        ad: autodiff_declaration_handler = (ad_ctx&, p);
+        ad.pre_traverse(t);
+    }
+    else {
+        // TODO: Remove when global namespace is available.
+        // Traverse without parent context
+        ad_ctx.push_stack(t);
+        ad: autodiff_declaration_handler = (ad_ctx&, t);
+
+        for t.get_members()
+        do  (m)
+        if  m.is_function()
+        {
+            ad.pre_traverse(m);
+        }
+        ad_ctx.pop_stack();
+    }
+
+    if 1 != order {
+        t.add_runtime_support_include( "cpp2taylor.h" );
+    }
+    if reverse {
+        t.add_runtime_support_include( "cpp2ad_stack.h" );
+    }
+
+    ad_ctx.finish();
+
+    _ = ad_ctx;
 }
 
 

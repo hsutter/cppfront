@@ -1,0 +1,259 @@
+#ifndef CPP2_CPP2TAYLOR_H
+#define CPP2_CPP2TAYLOR_H
+
+cpp2: namespace = {
+
+taylor: <R, dim: int> type  = {
+    public v : std::array<R, dim> = ();
+
+    operator=:(out this) = {}
+    operator=:(out this, d1: R) = {
+        v = ();
+        v[0] = d1;
+    }
+    operator=:(out this, that) = {}
+
+    operator=:(out this, l: std::initializer_list<R>) = {
+        (copy i := 1)
+        for l do (cur) {
+            set(i, cur);
+        }
+    }
+
+    // C++ interface
+
+    operator[]: (this, k: int) -> R = {
+        assert(1 <= k <= dim);
+        r: R = v[k - 1];
+        (copy i := 2)
+        while i <= k next i += 1 {
+            r *= i;
+        }
+        return r;
+    }
+
+    set: (inout this, k: int, value: R) = {
+        assert(1 <= k <= dim);
+        v[k - 1] = value;
+
+        (copy i := 2)
+        while i <= k next i += 1 {
+            v[k - 1] /= i;
+        }
+    }
+
+    // C++2 interface / AD interface
+
+    get: (this, i: int, v0: R) -> R = {
+        if i == 0 {
+            return v0;
+        }
+        else if i > dim {
+            return 0.0;
+        }
+
+        return v[i - 1];
+    }
+
+    // Overload for reverse AD.
+    operator+=: (inout this, o: taylor) -> forward_ref _ = {
+        this = this + o;
+        return this;
+    }
+
+    // Overload for reverse AD.
+    operator-=: (inout this, o: taylor) -> forward_ref _ = {
+        this = this - o;
+        return this;
+    }
+
+    // Overload for simple handling of connected adds.
+    operator+: (this, o: taylor) -> taylor = {
+        return add(o, 0.0, 0.0); // Primal values are not required.
+    }
+
+    // Overload for simple handling of connected minuses.
+    operator-: (this, o: taylor) -> taylor = {
+        return sub(o, 0.0, 0.0); // Primal values are not required.
+    }
+
+    // Overload for simple handling of prefix +.
+    operator+: (this) -> taylor = {
+        return this;
+    }
+
+    // Overload for simple handling of prefix -.
+    operator-: (this) -> taylor = {
+        r: taylor = ();
+
+        (copy k:= 1)
+        while k <= dim next k += 1 {
+            r.v[k - 1] = -v[k - 1];
+        }
+
+        return r;
+    }
+
+    add: (this, o: taylor, v0: R, o0: R) -> taylor = {
+        r: taylor = ();
+
+        (copy k:= 1)
+        while k <= dim next k += 1 {
+            r.v[k - 1] = get(k, v0) +  o.get(k, o0);
+        }
+
+        return r;
+    }
+
+    sub: (this, o: taylor, v0: R, o0: R) -> taylor = {
+        r: taylor = ();
+
+        (copy k:= 1)
+        while k <= dim next k += 1 {
+            r.v[k - 1] = get(k, v0) -  o.get(k, o0);
+        }
+
+        return r;
+    }
+
+    mul: <dim_o: int> (this, in_ref o: taylor<R, dim_o>, v0: R, o0: R) -> taylor<R, std::max(dim, dim_o)> = {
+        dim_r : int == std::max(dim, dim_o);
+        r: taylor<R, dim_r> = ();
+
+        (copy k:= 1)
+        while k <= dim_r next k += 1 {
+            (copy j :=  0)
+            while j <= k next j += 1 {
+                r..v[k - 1] += get(j, v0) * o..get(k - j, o0);
+            }            
+        }
+        return r;
+    }
+
+    div: (this, o: taylor, v0: R, o0: R) -> taylor = {
+        r: taylor = ();
+        r0: R = v0 / o0;
+
+        factor : R = 1.0 / o0;
+
+        (copy k:= 1)
+        while k <= dim next k += 1 {
+            r..v[k - 1] = get(k, v0);
+            (copy j :=  0)
+            while j < k next j += 1 {
+                r..v[k - 1] -= r.get(j, r0) * o..get(k - j, o0);
+            }            
+            r..v[k - 1] *= factor;
+        }
+        return r;
+    }
+
+    sqrt: (this, v0: R) -> taylor = {
+        r: taylor = ();
+        r0: R = std::sqrt(v0);
+
+        factor : R = 0.5 / r0;
+
+        (copy k:= 1)
+        while k <= dim next k += 1 {
+            r..v[k - 1] = get(k, v0);
+            (copy j :=  1)
+            while j < k next j += 1 {
+                r..v[k - 1] -= r..get(j, r0) * r..get(k - j, r0);
+            }            
+            r..v[k - 1] *= factor;
+        }
+
+        return r;
+    }
+
+    log: (this, v0: R) -> taylor = {
+        r: taylor = ();
+        r0: R = std::log(v0);
+
+        factor : R = 1.0 / v0;
+
+        (copy k:= 1)
+        while k <= dim next k += 1 {
+            r..v[k - 1] =k * get(k, v0);
+            (copy j :=  1)
+            while j < k next j += 1 {
+                r..v[k - 1] -= j * get(k - j, v0) * r..get(j, r0);
+            }            
+            r..v[k - 1] *= factor / k;
+        }
+
+        return r;
+    }
+
+    exp: (this, v0: R) -> taylor = {
+        r: taylor = ();
+        r0: R = std::exp(v0);
+
+        factor : R = 1.0 / v0;
+
+        (copy k:= 1)
+        while k <= dim next k += 1 {
+            (copy j :=  1)
+            while j <= k next j += 1 {
+                r..v[k - 1] += j * r..get(k - j, r0) * get(j, v0);
+            }
+            r..v[k - 1] /= k;
+        }
+
+        return r;
+    }
+
+
+    comp_sin_cos: (inout s: taylor, inout c: taylor, u: taylor, u0: R) = {
+        s0: R = std::sin(u0);
+        c0: R = std::cos(u0);
+
+        (copy k:= 1)
+        while k <= dim next k += 1 {
+            (copy j :=  1)
+            while j <= k next j += 1 {
+                s..v[k - 1] += j * u..get(j, u0) * c..get(k - j, c0);
+                c..v[k - 1] -= j * u..get(j, u0) * s..get(k - j, s0);
+            }
+            s..v[k - 1] /= k;
+            c..v[k - 1] /= k;
+        }
+    }
+
+
+    sin: (this, v0: R) -> taylor = {
+        t: taylor = ();
+        r: taylor = ();
+        
+        comp_sin_cos(r, t, this, v0);
+        _ = t;
+
+        return r;
+    }
+
+    cos: (this, v0: R) -> taylor = {
+        t: taylor = ();
+        r: taylor = ();
+        
+        comp_sin_cos(t, r, this, v0);
+        _ = t;
+
+        return r;
+    }
+}
+
+to_string: <R, order: int> (o: taylor<R, order>) -> std::string = {
+    r : std::string = "(";
+    (copy i := 1)
+    while i <= order next i += 1 {
+        r += " (o[i])$";
+    }
+    r += " )";
+
+    return r;
+}
+
+} // cpp2 namespace
+
+#endif // CPP2_CPP2TAYLOR_H

@@ -2196,7 +2196,9 @@ auto postfix_expression_node::to_string() const
 
     for (auto const& x : ops) {
         assert (x.op);
-        ret += x.op->as_string_view();
+        if(x.op->as_string_view() != "(") { // Brackets are handled by the expression list.
+            ret += x.op->as_string_view();
+        }
         if (x.id_expr) {
             ret += x.id_expr->to_string();
         }
