@@ -10,6 +10,8 @@ Cppfront is a compiler from an experimental C++ 'syntax 2' (Cpp2) to today's 'sy
 
 ## Documentation: [available here](https://hsutter.github.io/cppfront/)
 
+ - [Installation](https://hsutter.github.io/cppfront/welcome/overview/#how-do-i-get-and-build-cppfront)
+
 ## What's different about this project?
 
 In short, it aims to help evolve C++ itself, not to be a "C++ successor."
