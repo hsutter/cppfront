@@ -367,6 +367,36 @@ main: () = {
 
 ### For computational and functional types
 
+#### `autodiff`
+
+A `autodiff` type is extended so that derivatives can be computed. The metafunction adds for each function and member function a differentiated version. **This is a proof of concept implementation. Expect it to break.**
+A simple hello diff example is:
+```
+ad: @autodiff type = {
+    func: (x: double) -> (r: double) = {
+        r = x * x;
+    }
+}
+
+main: (args) = {
+    x := 3.0;
+    x_d := 1.0;
+
+    r := ad::func_d(x, x_d);
+
+    std::cout << "Derivative of 'x*x' at (x)$ is (r.r_d)$" << std::endl;
+}
+```
+
+The `@autodiff` metafunction mostly supports the forward mode of algorithmic differentiation. The reverse mode is only partly implemented and not yet well tested.
+See [Supported autodiff features](../notes/autodiff_status.md) for a list of supported language features.
+
+Options can be given by text template arguments, e.g. `@autodiff<"reverse">` enables the reverse mode.
+| Option | Description |
+| `"reverse"` | Reverse mode algorithmic differentiation. Default suffix `_b`. |
+| `"order=<n>"` | Higher order derivatives. `<n>` can be arbitrary. See `regression-tests/pure2-autodiff-higher-order.cpp2` for examples. |
+| `"suffix=<s>"` | Change the forward mode suffix. Can be used to apply autodiff multiple times. E.g. `@autodiff @autodiff<"suffix=_d2">`. |
+| `"rws_suffix=<s>"` | Change the reverse mode suffix. |
 
 #### `regex`
 

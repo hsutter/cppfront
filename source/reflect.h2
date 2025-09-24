@@ -6165,6 +6165,10 @@ autodiff: (inout t: meta::type_declaration) =
         return;
     }
 
+    if reverse {
+        t.error("AD: Warning reverse mode differentiation is very experimental.");
+    }
+
     ad_ctx: autodiff_context = (order, reverse);
     ad_ctx.fwd_suffix = suffix;
     ad_ctx.rws_suffix = rws_suffix;
