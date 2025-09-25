@@ -1990,9 +1990,9 @@ basic_enum: (
     max_value       : i64                            = ();
     underlying_type : std::string;
 
-    t.reserve_names( "operator=", "operator<=>" );
+    t..reserve_names( "operator=", "operator<=>" );
     if bitwise {
-        t.reserve_names( "has", "set", "clear", "to_string", "get_raw_value", "none" );
+        t..reserve_names( "has", "set", "clear", "to_string", "get_raw_value", "none" );
     }
 
     //  1. Gather: The names of all the user-written members, and find/compute the type
@@ -2520,7 +2520,7 @@ python_param_names_and_types: (mf: meta::function_declaration)
         names += std::string("pybind11::arg(\"") + param.get_declaration().name() + "\")";
         types += param.get_declaration().type();
     }
-    // TODO: Remove when fixed. Force newline for return.
+    // TODO: Remove when fixed (https://github.com/hsutter/cppfront/issues/1426). Force newline for return.
     _ = names;
 }
 

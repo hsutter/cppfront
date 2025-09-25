@@ -5678,9 +5678,9 @@ auto basic_enum(
     cpp2::i64 max_value {}; 
     cpp2::impl::deferred_init<std::string> underlying_type; 
 
-    CPP2_UFCS(reserve_names)(t, "operator=", "operator<=>");
+    t.reserve_names("operator=", "operator<=>");
     if (bitwise) {
-        CPP2_UFCS(reserve_names)(t, "has", "set", "clear", "to_string", "get_raw_value", "none");
+        t.reserve_names("has", "set", "clear", "to_string", "get_raw_value", "none");
     }
 
     //  1. Gather: The names of all the user-written members, and find/compute the type
@@ -6251,7 +6251,7 @@ auto noisy(cpp2::impl::in<meta::type_declaration> t) -> void
         names += std::string("pybind11::arg(\"") + CPP2_UFCS(name)(CPP2_UFCS(get_declaration)(param)) + "\")";
         types += CPP2_UFCS(type)(CPP2_UFCS(get_declaration)(param));
     }
-    // TODO: Remove when fixed. Force newline for return.
+    // TODO: Remove when fixed (https://github.com/hsutter/cppfront/issues/1426). Force newline for return.
     static_cast<void>(names);
 return  { std::move(names), std::move(types) }; }
 
