@@ -369,7 +369,7 @@ main: () = {
 
 #### `autodiff`
 
-A `autodiff` type is extended so that derivatives can be computed. The metafunction adds for each function and member function a differentiated version. **This is a proof of concept implementation. Expect it to break.**
+An `autodiff` type is extended so that derivatives can be computed. The metafunction adds for each function and member function a differentiated version. **This is a proof of concept implementation. Expect it to break.**
 A simple hello diff example is:
 ```
 ad: @autodiff type = {

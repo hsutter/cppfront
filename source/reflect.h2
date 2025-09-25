@@ -2520,6 +2520,8 @@ python_param_names_and_types: (mf: meta::function_declaration)
         names += std::string("pybind11::arg(\"") + param.get_declaration().name() + "\")";
         types += param.get_declaration().type();
     }
+    // TODO: Remove when fixed. Force newline for return.
+    _ = names;
 }
 
 python: (inout t: meta::type_declaration) =
@@ -4600,6 +4602,12 @@ autodiff_context: type = {
             pop_stack();
         }
     }
+
+    //TODO: Remove when autodiff_diff_code is updated
+    get_self: (inout this) -> *autodiff_context = {
+        return this&;
+    }
+
 }
 
 autodiff_diff_code: type = {
@@ -4626,7 +4634,7 @@ autodiff_diff_code: type = {
 
     // Temporary: TODO: remove when everything has been adapted to primal, fwd, rws pushes.
     operator=:(inout this, v: std::string) = {
-        ctx = ctx;
+        ctx = ctx*.get_self();
         fwd = v;
     }
 
