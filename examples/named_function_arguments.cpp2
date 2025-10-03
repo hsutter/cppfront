@@ -1,0 +1,35 @@
+#include "ntuples/full.hh"
+
+
+
+
+template <typename ...Args> 
+auto variadic_template(Args&& ...args) -> void{
+        auto t0 = bind_args(
+            @argument1 = 1, 
+            @argument2 = 15, 
+            @argument3 = nt::required<int>(), 
+            @argument4 = std::string("hello"))(
+            CPP2_FORWARD(args)...);
+
+        std::cout << t0 << std::endl;
+}
+
+auto make_ntuple(){
+    return nt::ntuple{
+        @a = 1,
+        @b = 2.5,
+        @c = std::string("three"),
+        @d = '4'
+    };
+}
+
+main: () = {
+    variadic_template( 1, 2.5, @argument4 =  std::string("five") ,  @argument3 =  12 );
+
+
+    nt1 := make_ntuple();
+
+    std::cout << nt1 << std::endl;
+}
+
