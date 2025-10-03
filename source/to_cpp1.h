@@ -15,6 +15,7 @@
 
 #include "sema.h"
 #include <filesystem>
+#include "nt_fields_support.hh"
 
 namespace cpp2 {
 
@@ -1213,6 +1214,11 @@ public:
         {
             //  Tokenize
             //
+            for (auto& e : source.get_lines()) {
+                replaceAtFields(e.text);
+            }
+             
+            
             tokens.lex(source.get_lines());
 
             //  Parse
