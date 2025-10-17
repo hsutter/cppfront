@@ -899,6 +899,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 }
+AD: Warning - reverse mode differentiation is very experimental
 
 
 ad_test_reverse:/* @autodiff<"reverse"> @print */ type = 
