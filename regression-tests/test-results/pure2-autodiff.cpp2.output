@@ -899,6 +899,7 @@ ad_test:/* @autodiff @print */ type =
         return;
     }
 }
+AD: Warning - reverse mode differentiation is very experimental
 
 
 ad_test_reverse:/* @autodiff<"reverse"> @print */ type = 
@@ -1439,6 +1440,5 @@ ad_test_2:/* @autodiff<"order=2"> @print */ type =
         return;
     }
 }
-
-pure2-autodiff.cpp2(195,1): error: while applying @autodiff - AD: Warning reverse mode differentiation is very experimental.
+ ok (all Cpp2, passes safety checks)
 

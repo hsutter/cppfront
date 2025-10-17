@@ -6174,7 +6174,7 @@ autodiff: (inout t: meta::type_declaration) =
     }
 
     if reverse {
-        t.error("AD: Warning reverse mode differentiation is very experimental.");
+        std::cout << "AD: Warning - reverse mode differentiation is very experimental\n";
     }
 
     ad_ctx: autodiff_context = (order, reverse);

@@ -10196,7 +10196,7 @@ auto autodiff(meta::type_declaration& t) -> void
     }
 
     if (reverse) {
-        CPP2_UFCS(error)(t, "AD: Warning reverse mode differentiation is very experimental.");
+        std::cout << "AD: Warning - reverse mode differentiation is very experimental\n";
     }
 
     autodiff_context ad_ctx {order, reverse}; 
