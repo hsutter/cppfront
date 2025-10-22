@@ -1788,6 +1788,178 @@ hashable: (inout t: meta::type_declaration) =
 
 //-----------------------------------------------------------------------
 //
+//  euclidean_vector
+//  (a little metafunction experiment)
+//
+//  Automatically generate +, -, * and / operators across all member variables, optionally with
+//  a single numeric type argument (eg. vector3 * float) if given a template argument. 
+//
+//  Additionally creates functions For getting the magnitude/length, normalisation, dot product.
+//
+euclidean_vector: (inout t: meta::type_declaration) =
+{
+    single_arg_type: _ = t.get_argument(0);
+    add_single_arg_fns: bool = ( single_arg_type.size() != 0 );
+
+    op_add: std::string = "operator+: (this, in_ref other: (t.name())$) -> (t.name())$ = (t.name())$( ";
+    op_sub: std::string = "operator-: (this, in_ref other: (t.name())$) -> (t.name())$ = (t.name())$( ";
+    op_mul: std::string = "operator*: (this, in_ref other: (t.name())$) -> (t.name())$ = (t.name())$( ";
+    op_div: std::string = "operator/: (this, in_ref other: (t.name())$) -> (t.name())$ = (t.name())$( ";
+
+    op_negate: std::string = "operator-: (this) -> (t.name())$ = (t.name())$( ";
+
+    op_assign_add: std::string = "operator+=: (inout this, in_ref other: (t.name())$) = { ";
+    op_assign_sub: std::string = "operator-=: (inout this, in_ref other: (t.name())$) = { ";
+    op_assign_mul: std::string = "operator*=: (inout this, in_ref other: (t.name())$) = { ";
+    op_assign_div: std::string = "operator/=: (inout this, in_ref other: (t.name())$) = { ";
+
+    op_add_sc: std::string = "operator+: (this, other: (single_arg_type)$) -> (t.name())$ = (t.name())$( ";
+    op_sub_sc: std::string = "operator-: (this, other: (single_arg_type)$) -> (t.name())$ = (t.name())$( ";
+    op_mul_sc: std::string = "operator*: (this, other: (single_arg_type)$) -> (t.name())$ = (t.name())$( ";
+    op_div_sc: std::string = "operator/: (this, other: (single_arg_type)$) -> (t.name())$ = (t.name())$( ";
+
+    op_assign_add_sc: std::string = "operator+=: (inout this, other: (single_arg_type)$) = { ";
+    op_assign_sub_sc: std::string = "operator-=: (inout this, other: (single_arg_type)$) = { ";
+    op_assign_mul_sc: std::string = "operator*=: (inout this, other: (single_arg_type)$) = { ";
+    op_assign_div_sc: std::string = "operator/=: (inout this, other: (single_arg_type)$) = { ";
+
+    fn_lengthSq: std::string = "lengthSquared: (this) -> _ = ";
+
+    fn_normalise: std::string = "normalise: (inout this) = {\n    len: _ = length();\n";
+    fn_normalised: std::string = "normalised: (this) -> (t.name())$ = {\n    len: _ = length();\n    return (t.name())$(\n";
+
+    fn_dot: std::string = "dot: (in_ref lhs: (t.name())$, in_ref rhs: (t.name())$) -> _ = ";
+
+    after_first_value_added: bool = false;
+    for  t.get_member_objects()
+    do   (o)
+    {
+        if after_first_value_added {
+            op_add += ", ";
+            op_sub += ", ";
+            op_mul += ", ";
+            op_div += ", ";
+
+            op_negate += ", ";
+
+            if add_single_arg_fns {
+                op_add_sc += ", ";
+                op_sub_sc += ", ";
+                op_mul_sc += ", ";
+                op_div_sc += ", ";
+            }
+
+            fn_lengthSq += " + ";
+            fn_dot += " + ";
+
+            fn_normalised += ",\n";
+        } else {
+            fn_normalised += "\n";
+        }
+
+        op_add += "(o.name())$ + other.(o.name())$";
+        op_sub += "(o.name())$ - other.(o.name())$";
+        op_mul += "(o.name())$ * other.(o.name())$";
+        op_div += "(o.name())$ / other.(o.name())$";
+
+        op_negate += "-(o.name())$";
+
+        fn_normalise += "(o.name())$ /= len;\n";
+        fn_normalised += "    (o.name())$ / len";
+
+        if add_single_arg_fns {
+            op_add_sc += "(o.name())$ + other";
+            op_sub_sc += "(o.name())$ - other";
+            op_mul_sc += "(o.name())$ * other";
+            op_div_sc += "(o.name())$ / other";
+        }
+
+        op_assign_add += "(o.name())$ += other.(o.name())$;";
+        op_assign_sub += "(o.name())$ -= other.(o.name())$;";
+        op_assign_mul += "(o.name())$ *= other.(o.name())$;";
+        op_assign_div += "(o.name())$ /= other.(o.name())$;";
+
+        if add_single_arg_fns {
+            op_assign_add_sc += "(o.name())$ += other;";
+            op_assign_sub_sc += "(o.name())$ -= other;";
+            op_assign_mul_sc += "(o.name())$ *= other;";
+            op_assign_div_sc += "(o.name())$ /= other;";
+        }
+
+        fn_lengthSq += "( (o.name())$ * (o.name())$ )";
+        fn_dot += "( lhs.(o.name())$ * rhs.(o.name())$ )";
+
+        after_first_value_added = true;
+    }
+
+    op_assign_add += " }";
+    op_assign_sub += " }";
+    op_assign_mul += " }";
+    op_assign_div += " }";
+
+    if add_single_arg_fns {
+        op_assign_add_sc += " }";
+        op_assign_sub_sc += " }";
+        op_assign_mul_sc += " }";
+        op_assign_div_sc += " }";
+    }
+
+    op_add += " );";
+    op_sub += " );";
+    op_mul += " );";
+    op_div += " );";
+
+    op_negate += " );";
+
+    if add_single_arg_fns {
+        op_add_sc += " );";
+        op_sub_sc += " );";
+        op_mul_sc += " );";
+        op_div_sc += " );";
+    }
+
+    fn_lengthSq += ";";
+    fn_dot += ";";
+
+    fn_normalise += "}";
+    fn_normalised += ");\n}";
+
+    t.add_member( fn_lengthSq );
+    t.add_member( "length: (this) -> _ = std::sqrt( lengthSquared() );" );
+
+    t.add_member( fn_normalise );
+    t.add_member( fn_normalised );
+
+    t.add_member( fn_dot );
+
+    t.add_member( op_add );
+    t.add_member( op_sub );
+    t.add_member( op_mul );
+    t.add_member( op_div );
+
+    t.add_member( op_negate );
+
+    t.add_member( op_assign_add );
+    t.add_member( op_assign_sub );
+    t.add_member( op_assign_mul );
+    t.add_member( op_assign_div );
+
+    if add_single_arg_fns {
+        t.add_member( op_add_sc );
+        t.add_member( op_sub_sc );
+        t.add_member( op_mul_sc );
+        t.add_member( op_div_sc );
+
+        t.add_member( op_assign_add_sc );
+        t.add_member( op_assign_sub_sc );
+        t.add_member( op_assign_mul_sc );
+        t.add_member( op_assign_div_sc );
+    }
+}
+
+
+//-----------------------------------------------------------------------
+//
 //  basic_value
 //
 //  A regular type: copyable, plus has public default construction
@@ -8605,6 +8777,9 @@ apply_metafunctions: (
         }
         else if name == "hashable" {
             hashable( rtype );
+        }
+        else if name == "euclidean_vector" {
+            euclidean_vector( rtype );
         }
         else if name == "basic_value" {
             basic_value( rtype );
