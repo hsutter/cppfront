@@ -1,0 +1,11 @@
+
+All these cases satisfy "matches std::string"
+
+variant<int, int, string>
+    ... matches std::string
+
+string
+    ... matches std::string
+
+optional<string>
+    ... matches std::string
