@@ -7,7 +7,7 @@ point: @value type = {
     }
 }
 
-check: (p: point) p;
+check: (copy p: point) -> point = p;
 
 main: () = {
     assert(check((17, 29)).x == 17);

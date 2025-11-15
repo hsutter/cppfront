@@ -30,7 +30,7 @@ public: explicit point();
 #line 8 "pure2-bugfix-for-nested-lists.cpp2"
 };
 
-[[nodiscard]] auto check(cpp2::impl::in<point> p) -> auto;
+[[nodiscard]] auto check(point p) -> point;
 
 auto main() -> int;
 
@@ -67,7 +67,7 @@ auto point::operator=(point&& that) noexcept -> point& {
                                 return *this;}
 point::point(){}
 #line 10 "pure2-bugfix-for-nested-lists.cpp2"
-[[nodiscard]] auto check(cpp2::impl::in<point> p) -> auto { return p;  }
+[[nodiscard]] auto check(point p) -> point { return cpp2::move(p);  }
 
 #line 12 "pure2-bugfix-for-nested-lists.cpp2"
 auto main() -> int{
@@ -90,6 +90,6 @@ auto main() -> int{
 #line 29 "pure2-bugfix-for-nested-lists.cpp2"
 auto issue_1283() -> void{
   auto f {[]() -> void{}}; 
-  static_cast<void>([_0 = (&f)]() mutable -> void { (*cpp2::impl::assert_not_null(_0))();  });
+  static_cast<void>([_0 = (&f)]() mutable -> decltype(auto) { return (*cpp2::impl::assert_not_null(_0))();  });
 }
 
