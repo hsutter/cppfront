@@ -44,9 +44,9 @@ auto print_subrange(auto const& rng, cpp2::impl::in<int> start, cpp2::impl::in<i
     auto count {0}; 
     for ( 
 
-          auto const& i : rng )  { do 
+          auto const& i : rng )  { bool _for_break = false; do 
         if (cpp2::impl::cmp_less_eq(start,count) && cpp2::impl::cmp_less_eq(count,end)) {
             std::cout << i << "\n";
-        } while (false); ++count; }
+        } while (false); if (_for_break) { break; } ++count; }
 }
 

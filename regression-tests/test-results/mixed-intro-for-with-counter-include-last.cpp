@@ -30,8 +30,8 @@
 {
     std::vector<int> v {1, 2, 3, 4, 5}; 
     auto counter {42}; 
-    for (                         auto const& i : cpp2::move(v) )  { do {
+    for (                         auto const& i : cpp2::move(v) )  { bool _for_break = false; do {
         std::cout << i << " " << counter << "\n";
-    } while (false); counter *= 2; }
+    } while (false); if (_for_break) { break; } counter *= 2; }
 }
 
