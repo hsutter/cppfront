@@ -223,7 +223,7 @@ template<typename Error_out> class regex_generator;
 
 #line 1 "reflect.h2"
 
-//  Copyright 2022-2025 Herb Sutter
+//  Copyright 2022-2026 Herb Sutter
 //  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //  
 //  Part of the Cppfront Project, under the Apache License v2.0 with LLVM Exceptions.
