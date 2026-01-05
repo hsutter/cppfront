@@ -1,5 +1,5 @@
 
-#define CPP2_IMPORT_STD          Yes
+#define CPP2_INCLUDE_STD         Yes
 #include "cpp2taylor.h"
 
 //=== Cpp2 type declarations ====================================================
