@@ -68,5 +68,5 @@ auto print_decorated(auto const& x) -> void{
 }
 
 #line 32 "mixed-initialization-safety-3.cpp2"
-[[nodiscard]] auto flip_a_coin() -> bool { return std::mt19937()() % 2 == 0;  }
+[[nodiscard]] auto flip_a_coin() -> bool { return std::mt19937()() % CPP2_ASSERT_NOT_ZERO_LITERAL(CPP2_TYPEOF(std::mt19937()()),2) == 0;  }
 

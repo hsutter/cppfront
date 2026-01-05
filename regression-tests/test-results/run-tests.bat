@@ -14,7 +14,7 @@ for %%f in (mixed-*.cpp2) do (
 )
 for %%f in (pure2-*.cpp2) do (
     echo Starting cppfront.exe %%f -p
-    cppfront.exe -p %%f > %%f.output 2>&1
+    cppfront.exe -p -in %%f > %%f.output 2>&1
     del %%f
     set /a count+=1
 )

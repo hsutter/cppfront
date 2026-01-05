@@ -69,7 +69,7 @@ auto parameter_styles(
     ++z;
     b += "plugh";
 
-    if (std::rand() % 2) {
+    if (std::rand() % CPP2_ASSERT_NOT_ZERO_LITERAL(CPP2_TYPEOF(std::rand()),2)) {
         ++z;
         copy_from(cpp2::move(b));// definite last use
     }
@@ -83,7 +83,7 @@ auto parameter_styles(
 
     copy_from(z);
 
-    if (std::time(nullptr) % 2 == 0) {
+    if (std::time(nullptr) % CPP2_ASSERT_NOT_ZERO_LITERAL(CPP2_TYPEOF(std::time(nullptr)),2) == 0) {
         copy_from(cpp2::move(z));
     }
 
