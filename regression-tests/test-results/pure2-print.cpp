@@ -1,5 +1,5 @@
 
-#define CPP2_IMPORT_STD          Yes
+#define CPP2_INCLUDE_STD         Yes
 
 //=== Cpp2 type declarations ====================================================
 
@@ -114,7 +114,7 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias{ 42 };
             if (cpp2::impl::cmp_less(*cpp2::impl::assert_not_null(p),0)) {
                 ret = -*cpp2::impl::assert_not_null(cpp2::move(p));
             }
-            ret += strlen(s) - 10 + CPP2_UFCS(strlen)(s) * (16 / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(16),(3 & 2))) % 3;
+            ret += strlen(s) - 10 + CPP2_UFCS(strlen)(s) * (16 / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(16),(3 & 2))) % CPP2_ASSERT_NOT_ZERO_LITERAL(CPP2_TYPEOF((16 / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(16),(3 & 2)))),3);
 
             map<int const,string> m {}; 
             CPP2_ASSERT_IN_BOUNDS_LITERAL(m, 0) = cpp2::impl::as_<string>("har");

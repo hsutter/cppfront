@@ -56,7 +56,7 @@ requires (std::is_convertible_v<CPP2_TYPEOF(e), std::add_const_t<std::string>&>)
     ++z;
     b += "plugh";
 
-    if (std::rand() % 2) {
+    if (std::rand() % CPP2_ASSERT_NOT_ZERO_LITERAL(CPP2_TYPEOF(std::rand()),2)) {
         ++z;
         copy_from(cpp2::move(b));// definite last use
     }
@@ -71,7 +71,7 @@ requires (std::is_convertible_v<CPP2_TYPEOF(e), std::add_const_t<std::string>&>)
 
     copy_from(z);
 
-    if (std::time(nullptr) % 2 == 0) {
+    if (std::time(nullptr) % CPP2_ASSERT_NOT_ZERO_LITERAL(CPP2_TYPEOF(std::time(nullptr)),2) == 0) {
         copy_from(cpp2::move(z));
     }
 
