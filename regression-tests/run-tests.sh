@@ -154,17 +154,10 @@ else
 
     compiler_version=$("$cxx_compiler" --version)
 
-    if [[ "$compiler_version" == *"Apple clang version 14.0"* ||
-          "$compiler_version" == *"Homebrew clang version 15.0"* ]]; then
-        exec_out_dir="$expected_results_dir/apple-clang-14"
-        # We share the expected results dir for these two compilers, but there is one
-        # test which (as expected) fails to compile on both compilers, but has a slightly
-        # different error diagnostic because the clang path differs. So we exclude it from
-        # running. The alternative would be to duplicate the expected results files, which
-        # seems wasteful for just one test (that doesn't even compile).
-        exclude_test_filter="pure2-expected-is-as.cpp2"
-    elif [[ "$compiler_version" == *"Apple clang version 15.0"* ]]; then
+    if [[ "$compiler_version" == *"Apple clang version 15.0"* ]]; then
         exec_out_dir="$expected_results_dir/apple-clang-15"
+    elif [[ "$compiler_version" == *"Apple clang version 17.0"* ]]; then
+        exec_out_dir="$expected_results_dir/apple-clang-17"
     elif [[ "$compiler_version" == *"clang version 12.0"* ]]; then 
         exec_out_dir="$expected_results_dir/clang-12"
     elif [[ "$compiler_version" == *"clang version 15.0"* ]]; then 
@@ -216,8 +209,9 @@ else
     printf "\ncompiler_cmd: $compiler_cmd\n\n"
 fi
 
+printf "Full compiler version for '$cxx_compiler':\n$compiler_version\n\n"
+
 if [[ -d "$exec_out_dir" ]]; then
-    printf "Full compiler version for '$cxx_compiler':\n$compiler_version\n\n"
 
     printf "Directory with reference compilation/execution files to use:\n$exec_out_dir\n\n"
 else
