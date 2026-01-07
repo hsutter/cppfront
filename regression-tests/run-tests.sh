@@ -282,7 +282,8 @@ for test_file in $tests; do
     # Using naming convention to discriminate pure Cpp2 code
     if [[ $test_name == "pure2"* ]]; then
         descr="pure Cpp2 code"
-        opt="-p"
+        # NB the -include-std option is added temporarily until modules are more stable
+        opt="-p -include-std"
     fi
     echo "    Testing $descr: $test_name.cpp2"
 
