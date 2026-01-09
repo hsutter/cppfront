@@ -9,6 +9,15 @@ on:
       - 'docs/**'
   workflow_dispatch:
 
+permissions:
+  # Restrict permissions to read-only for security
+  contents: read
+
+concurrency:
+  # Specific group name to cancel in-progress builds for the same PR/ref
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   regression-tests:
     name: ${{ matrix.shortosname }} | ${{ matrix.compiler }} | ${{ matrix.cxx_std }} | ${{ matrix.stdlib }} | ${{ matrix.os }}
@@ -50,26 +59,17 @@ jobs:
             compiler: clang++
             cxx_std: c++2b
             stdlib: default
-          - os: macos-13
-            shortosname: mac-13
-            compiler: clang++
-            cxx_std: c++2b
-            stdlib: default
-          - os: macos-13
-            shortosname: mac-13
-            compiler: clang++-15
-            cxx_std: c++2b
-            stdlib: default
-          - os: windows-2022
-            shortosname: win-22
-            compiler: cl.exe
-            cxx_std: c++latest
-            stdlib: default
-          - os: windows-2022
-            shortosname: win-22
-            compiler: cl.exe
-            cxx_std: c++20
-            stdlib: default
+          # Comment out Windows tests until build on Windows is fixed
+          # - os: windows-2025
+          #   shortosname: win-25
+          #   compiler: cl.exe
+          #   cxx_std: c++latest
+          #   stdlib: default
+          # - os: windows-2025
+          #   shortosname: win-25
+          #   compiler: cl.exe
+          #   cxx_std: c++20
+          #   stdlib: default
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4

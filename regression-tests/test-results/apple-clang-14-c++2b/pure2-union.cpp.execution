@@ -1,4 +1,0 @@
-sizeof(x) - alignof(x) == max(sizeof(fields)) is true
-(not a name)
-xyz
-42
