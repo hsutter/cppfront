@@ -382,6 +382,31 @@ outer: while i<M next i++ {      // loop named "outer"
 ```
 
 
+### <a id="catch"></a> `#!cpp throw`, `#!cpp try`, `#!cpp catch` — Exceptions
+
+**`#!cpp throw`**, **`#!cpp try`** and **`#!cpp catch`** are like always in C++, except:
+
+- `#!cpp throw(something)` requires parentheses around the thrown value
+- `#!cpp catch` uses Cpp2's usual [parameter syntax](#parameters), so you can write `#!cpp catch(obj: type)` to catch an exception of a specific type, and `#!cpp catch(_)` to catch any thrown exception
+
+For example:
+
+``` cpp title="Throw, try, catch"
+//  This program will print "caught something else"
+main: () = {
+    try {
+        throw( "xyzzy" );
+    }
+    catch( i: int ) {
+        std::cout << "caught int with value " << i;
+    }
+    catch( _ ) {
+        std::cout << "caught something else";
+    }
+}
+```
+
+
 ## <a id="definite-last-use"></a> Move/forward from definite last use
 
 In a function body, a **definite last use** of a local name is a single use of that name in a statement that is not in a loop, where no control flow path after that statement mentions the name again.
