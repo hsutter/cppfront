@@ -102,6 +102,23 @@ outer: @print type = {
 
     y: (_: type_of(0)) = { }
 
+    ff: (_: int) = { }
+
+    try_catch: () =
+    {
+        fptr := ff&;
+        try {
+            fptr(-666);
+        } catch (i: int) {
+            std::cout << "oh look, a thrown int: " << i << std::endl;
+        }
+        try {
+            ff(-42);
+        } catch (_) {
+            std::cout << "oh look, another exception" << std::endl;
+        }
+    }
+
 }
 
 main: () = {

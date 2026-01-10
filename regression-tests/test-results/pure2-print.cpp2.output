@@ -147,6 +147,29 @@ outer:/* @print */ type =
     y:(in _: type_of(0), ) = 
     {
     }
+
+    ff:(in _: int, ) = 
+    {
+    }
+
+    try_catch:() = 
+    {
+        fptr: _ = ff&;
+        try {
+            fptr(-666);
+        }
+        catch (in i: int ) 
+        {
+            std::cout << "oh look, a thrown int: " << i << std::endl;
+        }
+        try {
+            ff(-42);
+        }
+        catch (in _: _ ) 
+        {
+            std::cout << "oh look, another exception" << std::endl;
+        }
+    }
 }
  ok (all Cpp2, passes safety checks)
 

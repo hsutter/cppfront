@@ -79,12 +79,16 @@ CPP2_REQUIRES_ (cpp2::impl::cmp_greater_eq(sizeof...(Args),0u)) ;
 
 #line 103 "pure2-print.cpp2"
     public: static auto y([[maybe_unused]] cpp2::impl::in<CPP2_TYPEOF(0)> unnamed_param_1) -> void;
+
+    public: static auto ff([[maybe_unused]] cpp2::impl::in<int> unnamed_param_1) -> void;
+
+    public: static auto try_catch() -> void;
     public: outer() = default;
     public: outer(outer const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(outer const&) -> void = delete;
 
 
-#line 105 "pure2-print.cpp2"
+#line 122 "pure2-print.cpp2"
 };
 
 auto main() -> int;
@@ -219,7 +223,26 @@ requires (cpp2::impl::cmp_greater_eq(sizeof...(Args),0u)) {
 #line 103 "pure2-print.cpp2"
     auto outer::y([[maybe_unused]] cpp2::impl::in<CPP2_TYPEOF(0)> unnamed_param_1) -> void{}
 
+#line 105 "pure2-print.cpp2"
+    auto outer::ff([[maybe_unused]] cpp2::impl::in<int> unnamed_param_1) -> void{}
+
 #line 107 "pure2-print.cpp2"
+    auto outer::try_catch() -> void
+    {
+        auto fptr {&ff}; 
+        try {
+            cpp2::move(fptr)(-666);
+        } catch (cpp2::impl::in<int> i) {
+            std::cout << "oh look, a thrown int: " << i << std::endl;
+        }
+        try {
+            ff(-42);
+        } catch (...) {
+            std::cout << "oh look, another exception" << std::endl;
+        }
+    }
+
+#line 124 "pure2-print.cpp2"
 auto main() -> int{
     outer::test();
 }

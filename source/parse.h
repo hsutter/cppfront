@@ -2235,12 +2235,19 @@ auto postfix_expression_node::visit(auto& v, int depth)
 
 
 struct statement_node;
+struct parameter_declaration_node;
 
 struct compound_statement_node
 {
     source_position open_brace;
     source_position close_brace;
     std::vector<std::unique_ptr<statement_node>> statements;
+
+    struct handler {
+        std::unique_ptr<parameter_declaration_node> param;
+        std::unique_ptr<compound_statement_node>    statement;
+    };
+    std::vector<handler> handlers;
 
     colno_t body_indent = 0;
 
@@ -4787,13 +4794,16 @@ auto parameter_declaration_node::is_in_function_scope() const
     -> bool
 {
     return
-        my_list->in_statement_param_list
-        || (
-            declaration->parent_is_function()
-            && !declaration->parent_declaration->parent_is_type()
-            && !declaration->parent_declaration->parent_is_namespace()
-            )
-        ;
+        my_list
+        && declaration
+        && (
+            my_list->in_statement_param_list
+            || (
+                declaration->parent_is_function()
+                && !declaration->parent_declaration->parent_is_type()
+                && !declaration->parent_declaration->parent_is_namespace()
+                )
+        );
 }
 
 
@@ -5851,12 +5861,19 @@ auto pretty_print_visualize(compound_statement_node const& n, int indent, bool a
         && n.statements[0]->get_parameters().empty()
         )
     {
+        assert (n.handlers.empty());
         ret += pretty_print_visualize(*n.statements[0], indent, true);
     }
 
     else
     {
-        ret += std::string{"\n"} + pre(indent) + "{";
+        ret += std::string{"\n"} + pre(indent);
+
+        if (!n.handlers.empty()) {
+            ret += "try ";
+        }
+
+        ret += "{";
 
         for (auto& stmt : n.statements) {
             assert (stmt);
@@ -5864,6 +5881,13 @@ auto pretty_print_visualize(compound_statement_node const& n, int indent, bool a
         }
 
         ret += std::string{"\n"} + pre(indent) + "}";
+
+        for (auto& h: n.handlers)
+        {
+            ret += std::string{"\n"} + pre(indent) + "catch ("
+                +  pretty_print_visualize(*h.param, indent+1) + " ) "
+                +  pretty_print_visualize(*h.statement, indent);
+        }
     }
 
     return ret;
@@ -8725,6 +8749,71 @@ private:
     }
 
 
+    //G try-block:
+    //G     'try' compound-statement handler-seq
+    //G
+    //G handler-seq:
+    //G     handler
+    //G     handler-seq handler
+    //G
+    //G handler:
+    //G     'catch' '(' parameter-declaration ')' compound-statement
+    //G
+    auto try_block()
+        -> std::unique_ptr<compound_statement_node>
+    {
+        if (curr() != "try") {
+            return {};
+        }
+        next();
+
+        auto n = std::unique_ptr<compound_statement_node>{};
+        if (!compound_statement( n )) {
+            error("'try' must be followed by a block enclosed in braces");
+            return {};
+        }
+
+        if (curr() != "catch") {
+            error("a 'try' block must be followed by at least one 'catch' handler");
+            return {};
+        }
+
+        while (curr() == "catch")
+        {
+            next();
+
+            if (curr() != "(") {
+                error("'catch' must be followed by a parenthesized parameter declaration");
+                return {};
+            }
+            next();
+
+            auto hnd = compound_statement_node::handler{};
+
+            hnd.param = parameter_declaration(nullptr, false, false, false);
+            if (!hnd.param) {
+                error("'catch (' must be followed by a parameter declaration");
+                return {};
+            }
+
+            if (curr() != ")") {
+                error("expected ')' after catch parameter declaration");
+                return {};
+            }
+            next();
+
+            if (!compound_statement(hnd.statement)) {
+                error("'catch()' must be followed by a block enclosed in braces");
+                return {};
+            }
+
+            n->handlers.push_back( std::move(hnd) );
+        }
+
+        return n;
+    }
+
+
     //G statement:
     //G     selection-statement
     //G     using-statement
@@ -8736,12 +8825,11 @@ private:
     //G     contract-statement
     //G     declaration
     //G     expression-statement
+    //G     try-block
     //G
     //G contract-statement:
     //G     contract ';'
     //
-    //GTODO     try-block
-    //G
     auto statement(
         std::unique_ptr<statement_node>& n, // using an inout param makes partial parses available to reflection
         bool                             semicolon_required    = true,
@@ -8852,6 +8940,12 @@ private:
         else if (auto s = expression_statement(semicolon_required, allow_angle_operators)) {
             n->statement = std::move(s);
             assert (n->is_expression());
+            return;
+        }
+
+        else if (auto s = try_block()) {
+            n->statement = std::move(s);
+            assert (n->is_compound());
             return;
         }
 

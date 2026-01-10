@@ -1,15 +1,1 @@
 pure2-autodiff-higher-order.cpp
-C:\github\cppfront\include\cpp2util.h(1250): error C7595: 'std::source_location::current': call to immediate function is not a constant expression
-C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.43.34808\include\source_location(37): note: failure was caused by attempting to access a member on an object of dynamic type 'std::source_location' in which the member is not defined
-C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.43.34808\include\source_location(37): note: see usage of 'std::source_location::source_location'
-C:\github\cppfront\include\cpp2util.h(1250): note: the call stack of the evaluation (the oldest call first) is
-C:\github\cppfront\include\cpp2util.h(1250): note: while evaluating function 'std::source_location std::source_location::current(const uint_least32_t,const uint_least32_t,const char *const ,const char *const ) noexcept'
-C:\github\cppfront\include\cpp2util.h(1250): note: the template instantiation context (the oldest one first) is
-pure2-autodiff-higher-order.cpp2(14): note: see reference to class template instantiation 'cpp2::taylor<double,6>' being compiled
-cpp2taylor.h2(16): note: while compiling class template member function 'cpp2::taylor<double,6>::taylor(const std::initializer_list<R> &)'
-        with
-        [
-            R=double
-        ]
-pure2-autodiff-higher-order.cpp2(25): note: see the first reference to 'cpp2::taylor<double,6>::taylor' in 'ad_name::func_outer_d'
-cpp2taylor.h2(35): note: while compiling class template member function 'void cpp2::taylor<double,6>::set(const int,const double) &'

@@ -2091,7 +2091,15 @@ public:
     )
         -> void
     {   STACKINSTR
+        if (!sema.check(n)) {
+            return;
+        }
+
         emit_prolog_mem_inits(function_prolog, n.body_indent+1);
+
+        if (!n.handlers.empty()) {
+            printer.print_cpp2( "try ", n.open_brace );
+        }
 
         printer.print_cpp2( "{", n.open_brace );
 
@@ -2105,6 +2113,24 @@ public:
         emit_epilog_statements( function_epilog, n.body_indent+1);
 
         printer.print_cpp2( "}", n.close_brace );
+
+        for (auto& h: n.handlers)
+        {
+            printer.print_cpp2( " catch (", n.open_brace );
+            if (
+                h.param->has_name("_")
+                && h.param->declaration->has_wildcard_type()
+                )
+            {
+                printer.print_cpp2( "...", n.close_brace );
+            }
+            else
+            {
+                emit(*h.param);
+            }
+            printer.print_cpp2( ") ", n.open_brace );
+            emit(*h.statement);
+        }
     }
 
 

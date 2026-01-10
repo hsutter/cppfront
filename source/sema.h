@@ -2150,6 +2150,25 @@ public:
     }
 
 
+    auto check(compound_statement_node const& n)
+        -> bool
+    {
+        for (auto& h: n.handlers)
+        {
+            if (h.param->pass != passing_style::in)
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "a catch handler handler must be an 'in' parameter"
+                );
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+
     //-----------------------------------------------------------------------
     //  Visitor functions
     //

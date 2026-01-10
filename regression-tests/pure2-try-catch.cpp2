@@ -1,0 +1,24 @@
+throwing_pred: (_: int) -> bool
+= {
+    throw(42); 
+    return false;
+}
+
+f: (x: int)
+    pre( throwing_pred(x), "a throwing predicate failed, oh my" )
+= { }
+
+main: () =
+{
+    fptr := f&;
+    try {
+        fptr(-666);
+    } catch (i: int) {
+        std::cout << "oh look, a thrown int: " << i << std::endl;
+    }
+    try {
+        f(-42);
+    } catch (_) {
+        std::cout << "oh look, another exception" << std::endl;
+    }
+}
