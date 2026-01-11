@@ -139,7 +139,7 @@ compiler_services: @polymorphic_base @copy_constructible type =
                 tokens*.get_map().begin()*.second,
                 generated_tokens*
               );
-        if !ret {
+        if !(ret as bool) {
             error( "parse failed - the source string is not a valid statement:\n(original_source)$");
         }
     }
@@ -2460,6 +2460,76 @@ union: (inout t : meta::type_declaration)
                       + value_set
                     );
     }
+}
+
+
+//-----------------------------------------------------------------------
+//
+//  encapsulated
+//
+//  A type with no public data members
+//
+encapsulated: (inout t: meta::type_declaration) =
+{
+    for t.get_member_objects()
+    do  (m)
+    {
+        m.require( 
+            !m.is_public(),
+            "an @encapsulated type must not have public data members"
+        );
+    }
+}
+
+
+//-----------------------------------------------------------------------
+//
+//  noncopyable
+//
+//  A type with no copy/move construction/assignment
+//
+noncopyable: (inout t: meta::type_declaration) =
+{
+    smfs := t.query_declared_value_set_functions();
+    t.require(
+        !smfs.out_this_in_that
+        && !smfs.out_this_move_that
+        && !smfs.inout_this_in_that
+        && !smfs.inout_this_move_that,
+        "a @noncopyable type must not have operator= with this and that parameters" 
+    );
+}
+
+
+//-----------------------------------------------------------------------
+//
+//  singleton
+// 
+//  An encapsulated noncopyable type with a single instance accessed via
+//  an ::instance() function
+//
+//  A private default constructor is provided.
+//
+singleton: (inout t: meta::type_declaration) =
+{
+    t.noncopyable();
+    t.encapsulated();
+
+    for t.get_member_functions()
+    do  (m)
+    {
+        m.require(
+            !m.is_constructor(),
+            "a @singleton type must not have a user-written constructor - "
+            "a private default constructor will be generated automatically"
+        );
+    }
+
+    t.add_member( "    private operator=: (out this) = { }\n" );
+    t.add_member( "    instance: () -> forward (t.name())$ = {\n"
+                  "        static _instance: (t.name())$ = ();"
+                  "        return _instance;\n"
+                  "    }\n" );
 }
 
 
@@ -8632,6 +8702,15 @@ apply_metafunctions: (
         }
         else if name == "union" {
             cpp2_union( rtype );
+        }
+        else if name == "encapsulated" {
+            encapsulated( rtype );
+        }
+        else if name == "noncopyable" {
+            noncopyable( rtype );
+        }
+        else if name == "singleton" {
+            singleton( rtype );
         }
         else if name == "print" {
             print( rtype );

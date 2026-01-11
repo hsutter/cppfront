@@ -3552,6 +3552,8 @@ struct declaration_node
         std::unique_ptr<alias_node>
     > type;
 
+    bool is_static = false;
+
     std::vector<std::unique_ptr<id_expression_node>> metafunctions;
     std::unique_ptr<parameter_declaration_list_node> template_parameters;
     source_position                                  requires_pos = {};
@@ -6347,6 +6349,10 @@ auto pretty_print_visualize(
     }
     if (!n.is_parameter() && n.name()) {
         ret += std::string{"\n"} + pre(indent);
+    }
+
+    if (n.is_static) {
+        ret += "static ";
     }
 
     switch (n.access) {
@@ -10455,6 +10461,13 @@ private:
 
         auto n = std::unique_ptr<declaration_node>{};
 
+        auto is_static = false;
+        if (curr() == "static")
+        {
+            is_static = true;
+            next();
+        }
+
         //  This scope is to ensure that once we've moved 'id' into the
         //  declaration_node, we don't access the moved-from local name
         //  (and similar hygiene for 'access' though that one doesn't matter as much)
@@ -10609,6 +10622,9 @@ private:
                 return {};
             }
         }
+
+        assert(n);
+        n->is_static = is_static;
 
         //  Note: Do this after trying to parse this as a declaration, for parse backtracking
 

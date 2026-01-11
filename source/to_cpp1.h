@@ -1621,8 +1621,8 @@ public:
         //---------------------------------------------------------------------
         //  Emit any extra build steps
 
+        auto build = std::ofstream("cpp2_post_build.sh", std::ios::binary);
         if (!extra_build.empty()) {
-            auto build = std::ofstream("cpp2_post_build.sh", std::ios::binary);
             for (auto& e: extra_build) {
                 build << e << "\n";
             }
@@ -2521,6 +2521,7 @@ public:
             else if (
                 !is_parameter_name
                 && sema.get_declaration_of(*tok)
+                && !sema.get_declaration_of(*tok)->declaration->is_static
                 && !sema.is_captured(*tok)
                 )
             {
@@ -7019,6 +7020,11 @@ public:
             }
 
             emit_requires_clause();
+
+            if (n.is_static)
+            {
+                printer.print_cpp2( "static ", n.position() );
+            }
 
             if (
                 printer.get_phase() != printer.phase2_func_defs

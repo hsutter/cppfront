@@ -391,7 +391,7 @@ outer: while i<M next i++ {      // loop named "outer"
 
 For example:
 
-``` cpp title="Throw, try, catch"
+``` cpp title="Throw, try, catch" hl_lines="1 3-5 9-11"
 //  This program will print "caught something else"
 main: () = {
     try {
@@ -403,6 +403,39 @@ main: () = {
     catch( _ ) {
         std::cout << "caught something else";
     }
+}
+```
+
+
+### <a id="static"></a> `#!cpp static` — Global variables inside functions
+
+**`#!cpp static`** can be specified as the first token of a local variable declaration at function scope, to denote that the variable is a global value initialized thread-safely the first time the line is executed (aka C++ "function local static," aka "magic static").
+
+For example (see also [`@singleton`](metafunctions.md#singleton)):
+
+``` cpp title="static variable (function local scope only)" hl_lines="15"
+//  For exposition only - normally, use @singleton for convenience
+my_singleton: type = {
+    value    : int = 42;
+
+    print    : (this) = std::cout << "(value)$\n";
+
+    //--------------------------------------------------------------------
+    //  writing '@singleton type' above would generate these two functions
+    //  but this example shows them for exposition of 'static'
+    //
+    private
+    operator=: (out this) = { }
+    
+    instance : () -> forward my_singleton = { 
+        static _instance: my_singleton = ();    // singleton variable
+        return _instance; 
+    }
+    //--------------------------------------------------------------------
+}
+
+main: () = {
+    my_singleton::instance().print();
 }
 ```
 

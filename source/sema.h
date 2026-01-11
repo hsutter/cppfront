@@ -1576,6 +1576,22 @@ public:
             return false;
         }
 
+        //  A 'singleton'-declarated object is only allowed at function local scope (aka "magic static")
+        if (
+            n.is_static
+            && (
+                !n.is_object()
+                || !n.parent_is_function()
+                )
+            )
+        {
+            handle_error(
+                n.position(),
+                "an object declared as 'static' must be in a function body scope"
+            );
+            return false;
+        }
+
         //  An object of deduced type must have an initializer
         if (
             n.is_object()

@@ -365,13 +365,44 @@ main: () = {
 ```
 
 
+### For other common types
+
+#### `encapsulated`
+
+An `encapsulated` type is one that has no public data members.
+
+
+#### `noncopyable`
+
+A `noncopyable` type is one that has no user-defined copy or move functions (`operator=` with `this` and `that` parameters).
+
+
+#### <a id="singleton"></a> `singleton`
+
+A `singleton` type is one that has only one global object (instance) in the whole program. The single object is initialized lazily the first time it is accessed. A singleton type has no constructors other than a generated default constructor (note: therefore all data members must have default values), and provides a generated `instance()` function to create and give access to the global instance.
+
+For example:
+
+``` cpp title="A templated custom safe union type" hl_lines="1 7"
+my_singleton: @singleton type = {
+    value: int = 42;
+    print: (this) = std::cout << "(value)$\n";
+}
+
+main: () = {
+    my_singleton::instance().print();
+}
+```
+
+
 ### For computational and functional types
 
 #### `autodiff`
 
 An `autodiff` type is extended so that derivatives can be computed. The metafunction adds for each function and member function a differentiated version. **This is a proof of concept implementation. Expect it to break.**
 A simple hello diff example is:
-```
+
+``` cpp
 ad: @autodiff type = {
     func: (x: double) -> (r: double) = {
         r = x * x;
