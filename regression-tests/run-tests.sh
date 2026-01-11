@@ -172,6 +172,10 @@ else
         exec_out_dir="$expected_results_dir/gcc-13"
     elif [[ "$compiler_version" == *"g++-14"* ]]; then
         exec_out_dir="$expected_results_dir/gcc-14"
+    elif [[ "$compiler_version" == *"g++-15"* ||
+            "$compiler_version" == *"g++ (Ubuntu 15"*
+         ]]; then
+        exec_out_dir="$expected_results_dir/gcc-15"
     else
         printf "Unhandled compiler version:\n$compiler_version\n\n"
         exit 2

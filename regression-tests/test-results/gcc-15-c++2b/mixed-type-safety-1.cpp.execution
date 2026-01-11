@@ -1,0 +1,6 @@
+1.1 is int? false
+1   is int? true
+
+s* is Shape?  true
+s* is Circle? true
+s* is Square? false

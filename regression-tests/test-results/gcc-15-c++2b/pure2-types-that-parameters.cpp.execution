@@ -1,0 +1,7 @@
+name 'Henry', addr '123 Ford Dr.'
+-----
+name 'Henry', addr '123 Ford Dr.'
+name 'Henry', addr '123 Ford Dr.'
+-----
+name '', addr ''
+name 'Henry', addr '123 Ford Dr.'

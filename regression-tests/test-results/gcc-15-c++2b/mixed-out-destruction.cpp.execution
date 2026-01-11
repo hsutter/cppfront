@@ -1,0 +1,21 @@
+enter main
+enter f00
+enter f01
++X 1
+exit f01
+-X 1
+exit f00
+
+enter f10
+enter f11
+enter f12
+enter f13
+enter f14
++X 2
+exit f14
+exit f13
+exit f12
+-X 2
+exit f11
+exit f10
+exit main

@@ -1,0 +1,8 @@
+                        double value is not an int
+     variant<int, double, int> value is not an int
+                           any value is not an int
+                 optional<int> value is not an int
+                           int value is 42
+     variant<int, double, int> value is 1
+                           any value is 2
+                 optional<int> value is 3

@@ -1,0 +1,2 @@
+sending error to my framework... [dynamic null dereference attempt detected]
+from source location: mixed-lifetime-safety-and-null-contracts.cpp2(17) void try_pointer_stuff()
