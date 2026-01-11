@@ -46,9 +46,9 @@ auto add_42_to_subrange(auto& rng, cpp2::impl::in<int> start, cpp2::impl::in<int
     auto count {0}; 
     for ( 
 
-          auto& i : rng )  { do 
+          auto& i : rng )  { bool _for_break = false; do 
         if ([_0 = start, _1 = count, _2 = end]{ return cpp2::impl::cmp_less_eq(_0,_1) && cpp2::impl::cmp_less_eq(_1,_2); }()) {
             i += 42;
-        } while (false); ++count; }
+        } while (false); if (_for_break) { break; } ++count; }
 }
 
