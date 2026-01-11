@@ -1,0 +1,2338 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../../cppfront/options/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>@regex status: Regular expression features - Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#supported-regular-expression-features" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Cpp2 and cppfront — An experimental &#39;C++ syntax 2&#39; and its first compiler" class="md-header__button md-logo" aria-label="Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              @regex status: Regular expression features
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6m0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4M7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Cpp2 and cppfront — An experimental &#39;C++ syntax 2&#39; and its first compiler" class="md-nav__button md-logo" aria-label="Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Welcome & getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Welcome & getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../welcome/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview: What are Cpp2 and cppfront? How do I get and build cppfront?
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../welcome/hello-world/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hello, world!
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../welcome/integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Adding cppfront to your existing C++ project
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cpp2 reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Cpp2 reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/common/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Common concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/expressions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Expressions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/declarations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Declarations and aliases
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/objects/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Objects, initialization, and memory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Functions, branches, and loops
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/contracts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types and inheritance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/metafunctions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metafunctions and reflection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/namespaces/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Namespaces
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/safety/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Safety and "unchecked"
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cppfront reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Cppfront reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cppfront/mixed/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using Cpp1 (today's syntax) and Cpp2 in the same source file
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cppfront/options/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cppfront command line options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Notes and supplemental topics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Notes and supplemental topics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    @regex status: Regular expression features
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    @regex status: Regular expression features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#currently-supported-or-planned-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Currently supported or planned features
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Currently supported or planned features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#modifiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modifiers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#escape-sequences-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Escape sequences (Complete)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quantifiers-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quantifiers (Complete)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#character-classes-and-other-special-escapes-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Character Classes and other Special Escapes (Complete)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#assertions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assertions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#capture-groups-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Capture groups (Complete)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quoting-metacharacters-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quoting metacharacters (Complete)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extended-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extended Patterns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lookaround-assertions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lookaround Assertions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#special-backtracking-control-verbs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Special Backtracking Control Verbs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#not-planned-mainly-because-of-unicode-or-perl-specifics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Not planned (Mainly because of Unicode or perl specifics)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Not planned (Mainly because of Unicode or perl specifics)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#modifiers_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modifiers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#escape-sequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Escape sequences
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#character-classes-and-other-special-escapes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Character Classes and other Special Escapes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#assertions_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assertions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extended-patterns_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extended Patterns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#script-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Script runs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#currently-supported-or-planned-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Currently supported or planned features
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Currently supported or planned features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#modifiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modifiers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#escape-sequences-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Escape sequences (Complete)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quantifiers-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quantifiers (Complete)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#character-classes-and-other-special-escapes-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Character Classes and other Special Escapes (Complete)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#assertions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assertions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#capture-groups-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Capture groups (Complete)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quoting-metacharacters-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quoting metacharacters (Complete)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extended-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extended Patterns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lookaround-assertions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lookaround Assertions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#special-backtracking-control-verbs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Special Backtracking Control Verbs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#not-planned-mainly-because-of-unicode-or-perl-specifics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Not planned (Mainly because of Unicode or perl specifics)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Not planned (Mainly because of Unicode or perl specifics)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#modifiers_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modifiers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#escape-sequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Escape sequences
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#character-classes-and-other-special-escapes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Character Classes and other Special Escapes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#assertions_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assertions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extended-patterns_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extended Patterns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#script-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Script runs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="supported-regular-expression-features">Supported regular expression features</h1>
+<p>The listings are taken from the <a href="https://perldoc.perl.org/perlre">Perl regex docs</a>. Regular expressions are applied via the <a href="../../cpp2/metafunctions/#regex"><code>regex</code> metafunction</a>.</p>
+<h2 id="currently-supported-or-planned-features">Currently supported or planned features</h2>
+<h3 id="modifiers">Modifiers</h3>
+<table>
+<thead>
+<tr>
+<th>Modifier</th>
+<th>Notes</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>i</code></strong></td>
+<td>Do case-insensitive pattern matching. For example, "A" will match "a" under <code>/i</code>.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>m</code></strong></td>
+<td>Treat the string being matched against as multiple lines. That is, change <code>^</code> and <code>$</code> from matching the start of the string's first line and the end of its last line to matching the start and end of each line within the string.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>s</code></strong></td>
+<td>Treat the string as single line. That is, change <code>.</code> to match any character whatsoever, even a newline, which normally it would not match.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong>*<code>x</code> and <code>xx</code></strong></td>
+<td>Extend your pattern's legibility by permitting whitespace and comments. For details see: <a href="https://perldoc.perl.org/perlre#/x-and-/xx">Perl regex docs: <code>/x</code> and <code>/xx</code></a>.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>n</code></strong></td>
+<td>Prevent the grouping metacharacters <code>(</code> and <code>)</code> from capturing. This modifier will stop <code>$1</code>, <code>$2</code>, etc. from being filled in.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>c</code></strong></td>
+<td>Keep the current position during repeated matching.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+</tbody>
+</table>
+<h3 id="escape-sequences-complete">Escape sequences <strong>(Complete)</strong></h3>
+<table>
+<thead>
+<tr>
+<th>Escape sequence</th>
+<th>Notes</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>\t</code></strong></td>
+<td>Tab (HT, TAB)X</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\n</code></strong></td>
+<td>Newline (LF, NL)</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\r</code></strong></td>
+<td>Return (CR)</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\f</code></strong></td>
+<td>Form feed (FF)</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\a</code></strong></td>
+<td>Alarm (bell) (BEL)</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\e</code></strong></td>
+<td>Escape (think troff) (ESC)</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\x{}</code>, <code>\x00</code></strong></td>
+<td>Character whose ordinal is the given hexadecimal number</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\o{}</code>, <code>\000</code></strong></td>
+<td>Character whose ordinal is the given octal number</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+</tbody>
+</table>
+<h3 id="quantifiers-complete">Quantifiers <strong>(Complete)</strong></h3>
+<table>
+<thead>
+<tr>
+<th>Quantifier</th>
+<th>Notes</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>*</code></strong></td>
+<td>Match 0 or more times</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>+</code></strong></td>
+<td>Match 1 or more times</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>?</code></strong></td>
+<td>Match 1 or 0 times</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>{n}</code></strong></td>
+<td>Match exactly n times</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>{n,}</code></strong></td>
+<td>Match at least n times</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>{,n}</code></strong></td>
+<td>Match at most n times</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>{n,m}</code></strong></td>
+<td>Match at least n but not more than m times</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><strong><code>*?</code></strong></td>
+<td>Match 0 or more times, not greedily</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>+?</code></strong></td>
+<td>Match 1 or more times, not greedily</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>??</code></strong></td>
+<td>Match 0 or 1 time, not greedily</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>{n}?</code></strong></td>
+<td>Match exactly n times, not greedily (redundant)</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>{n,}?</code></strong></td>
+<td>Match at least n times, not greedily</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>{,n}?</code></strong></td>
+<td>Match at most n times, not greedily</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>{n,m}?</code></strong></td>
+<td>Match at least n but not more than m times, not greedily</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><strong><code>*+</code></strong></td>
+<td>Match 0 or more times and give nothing back</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>++</code></strong></td>
+<td>Match 1 or more times and give nothing back</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>?+</code></strong></td>
+<td>Match 0 or 1 time and give nothing back</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>{n}+</code></strong></td>
+<td>Match exactly n times and give nothing back (redundant)</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>{n,}+</code></strong></td>
+<td>Match at least n times and give nothing back</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>{,n}+</code></strong></td>
+<td>Match at most n times and give nothing back</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>{n,m}+</code></strong></td>
+<td>Match at least n but not more than m times and give nothing back</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+</tbody>
+</table>
+<h3 id="character-classes-and-other-special-escapes-complete">Character Classes and other Special Escapes <strong>(Complete)</strong></h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Notes</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>[</code>...<code>]</code></strong></td>
+<td>Match a character according to the rules of the bracketed character class defined by the "...". Example: <code>[a-z]</code> matches "a" or "b" or "c" ... or "z"</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>[[:</code>...<code>:]]</code></strong></td>
+<td>Match a character according to the rules of the POSIX character class "..." within the outer bracketed character class.  Example: <code>[[:upper:]]</code> matches any uppercase character.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\g1</code></strong> or <strong><code>\g{-1}</code></strong></td>
+<td>Backreference to a specific or previous group. The number may be negative indicating a relative previous group and may optionally be wrapped in curly brackets for safer parsing.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\g{name}</code></strong></td>
+<td>Named backreference</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\k&lt;name&gt;</code></strong></td>
+<td>Named backreference</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\k'name'</code></strong></td>
+<td>Named backreference</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\k{name}</code></strong></td>
+<td>Named backreference</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\w</code></strong></td>
+<td>Match a "word" character (alphanumeric plus "_", plus other connector punctuation chars plus Unicode marks)</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\W</code></strong></td>
+<td>Match a non-"word" character</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\s</code></strong></td>
+<td>Match a whitespace character</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\S</code></strong></td>
+<td>Match a non-whitespace character</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\d</code></strong></td>
+<td>Match a decimal digit character</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\D</code></strong></td>
+<td>Match a non-digit character</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\v</code></strong></td>
+<td>Vertical whitespace</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\V</code></strong></td>
+<td>Not vertical whitespace</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\h</code></strong></td>
+<td>Horizontal whitespace</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\H</code></strong></td>
+<td>Not horizontal whitespace</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\1</code></strong></td>
+<td>Backreference to a specific capture group or buffer. '1' may actually be any positive integer.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\N</code></strong></td>
+<td>Any character but \n.  Not affected by /s modifier</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\K</code></strong></td>
+<td>Keep the stuff left of the \K, don't include it in $&amp;</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+</tbody>
+</table>
+<h3 id="assertions">Assertions</h3>
+<table>
+<thead>
+<tr>
+<th>Assertion</th>
+<th>Notes</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>\b</code></strong></td>
+<td>Match a \w\W or \W\w boundary</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\B</code></strong></td>
+<td>Match except at a \w\W or \W\w boundary</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\A</code></strong></td>
+<td>Match only at beginning of string</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\Z</code></strong></td>
+<td>Match only at end of string, or before newline at the end</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\z</code></strong></td>
+<td>Match only at end of string</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>\G</code></strong></td>
+<td>Match only at pos() (e.g. at the end-of-match position of prior m//g)</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+</tbody>
+</table>
+<h3 id="capture-groups-complete">Capture groups <strong>(Complete)</strong></h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>(</code>...<code>)</code></strong></td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+</tbody>
+</table>
+<h3 id="quoting-metacharacters-complete">Quoting metacharacters <strong>(Complete)</strong></h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>For <code>^.[]$()*{}?+|\</code></strong></td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+</tbody>
+</table>
+<h3 id="extended-patterns">Extended Patterns</h3>
+<table>
+<thead>
+<tr>
+<th>Extended pattern</th>
+<th>Notes</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>(?&lt;NAME&gt;pattern)</code></strong></td>
+<td>Named capture group</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>(?#text)</code></strong></td>
+<td>Comments</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>(?adlupimnsx-imnsx)</code></strong></td>
+<td>Modification for surrounding context</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>(?^alupimnsx)</code></strong></td>
+<td>Modification for surrounding context</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>(?:pattern)</code></strong></td>
+<td>Clustering, does not generate a group index.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>(?adluimnsx-imnsx:pattern)</code></strong></td>
+<td>Clustering, does not generate a group index and modifications for the cluster.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>(?^aluimnsx:pattern)</code></strong></td>
+<td>Clustering, does not generate a group index and modifications for the cluster.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>(?</code><code>&#124;</code><code>pattern)</code></strong></td>
+<td>Branch reset</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>(?'NAME'pattern)</code></strong></td>
+<td>Named capture group</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>(?(condition)yes-pattern</code><code>&#124;</code><code>no-pattern)</code></strong></td>
+<td>Conditional patterns.</td>
+<td><span style="color:gray">Planned</span></td>
+</tr>
+<tr>
+<td><strong><code>(?(condition)yes-pattern)</code></strong></td>
+<td>Conditional patterns.</td>
+<td><span style="color:gray">Planned</span></td>
+</tr>
+<tr>
+<td><strong><code>(?&gt;pattern)</code></strong></td>
+<td>Atomic patterns. (Disable backtrack.)</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>(*atomic:pattern)</code></strong></td>
+<td>Atomic patterns. (Disable backtrack.)</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+</tbody>
+</table>
+<h3 id="lookaround-assertions">Lookaround Assertions</h3>
+<table>
+<thead>
+<tr>
+<th>Lookaround assertion</th>
+<th>Notes</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>(?=pattern)</code></strong></td>
+<td>Positive look ahead.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>(*pla:pattern)</code></strong></td>
+<td>Positive look ahead.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>(*positive_lookahead:pattern)</code></strong></td>
+<td>Positive look ahead.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>(?!pattern)</code></strong></td>
+<td>Negative look ahead.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>(*nla:pattern)</code></strong></td>
+<td>Negative look ahead.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>(*negative_lookahead:pattern)</code></strong></td>
+<td>Negative look ahead.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>(?&lt;=pattern)</code></strong></td>
+<td>Positive look behind.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>(*plb:pattern)</code></strong></td>
+<td>Positive look behind.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>(*positive_lookbehind:pattern)</code></strong></td>
+<td>Positive look behind.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>(?&lt;!pattern)</code></strong></td>
+<td>Negative look behind.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>(*nlb:pattern)</code></strong></td>
+<td>Negative look behind.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+<tr>
+<td><strong><code>(*negative_lookbehind:pattern)</code></strong></td>
+<td>Negative look behind.</td>
+<td><span style="color:green">Supported</span></td>
+</tr>
+</tbody>
+</table>
+<h3 id="special-backtracking-control-verbs">Special Backtracking Control Verbs</h3>
+<table>
+<thead>
+<tr>
+<th>Backtracking control verb</th>
+<th>Notes</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>(*SKIP) (*SKIP:NAME)</code></strong></td>
+<td>Start next search here.</td>
+<td><span style="color:gray">Planned</span></td>
+</tr>
+<tr>
+<td><strong><code>(*PRUNE) (*PRUNE:NAME)</code></strong></td>
+<td>No backtracking over this point.</td>
+<td><span style="color:gray">Planned</span></td>
+</tr>
+<tr>
+<td><strong><code>(*MARK:NAME) (*:NAME)</code></strong></td>
+<td>Place a named mark.</td>
+<td><span style="color:gray">Planned</span></td>
+</tr>
+<tr>
+<td><strong><code>(*THEN) (*THEN:NAME)</code></strong></td>
+<td>Like PRUNE.</td>
+<td><span style="color:gray">Planned</span></td>
+</tr>
+<tr>
+<td><strong><code>(*COMMIT) (*COMMIT:arg)</code></strong></td>
+<td>Stop searching.</td>
+<td><span style="color:gray">Planned</span></td>
+</tr>
+<tr>
+<td><strong><code>(*FAIL) (*F) (*FAIL:arg)</code></strong></td>
+<td>Fail the pattern/branch.</td>
+<td><span style="color:gray">Planned</span></td>
+</tr>
+<tr>
+<td><strong><code>(*ACCEPT) (*ACCEPT:arg)</code></strong></td>
+<td>Accept the pattern/subpattern.</td>
+<td><span style="color:gray">Planned</span></td>
+</tr>
+</tbody>
+</table>
+<h2 id="not-planned-mainly-because-of-unicode-or-perl-specifics">Not planned (Mainly because of Unicode or perl specifics)</h2>
+<h3 id="modifiers_1">Modifiers</h3>
+<table>
+<thead>
+<tr>
+<th>Modifier</th>
+<th>Notes</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>p</code></td>
+<td>Preserve the string matched such that ${^PREMATCH}, ${^MATCH}, and ${^POSTMATCH} are available for use after matching.</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>a</code>, <code>d</code>, <code>l</code>, and <code>u</code></td>
+<td>These modifiers affect which character-set rules (Unicode, etc.) are used, as described below in "Character set modifiers".</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>g</code></td>
+<td>globally match the pattern repeatedly in the string</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>e</code></td>
+<td>evaluate the right-hand side as an expression</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>ee</code></td>
+<td>evaluate the right side as a string then eval the result</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>o</code></td>
+<td>pretend to optimize your code, but actually introduce bugs</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>r</code></td>
+<td>perform non-destructive substitution and return the new value</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+</tbody>
+</table>
+<h3 id="escape-sequences">Escape sequences</h3>
+<table>
+<thead>
+<tr>
+<th>Escape sequence</th>
+<th>Notes</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>\cK</code></td>
+<td>control char          (example: VT)</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>\N{name}</code></td>
+<td>named Unicode character or character sequence</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>\N{U+263D}</code></td>
+<td>Unicode character     (example: FIRST QUARTER MOON)</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>\l</code></td>
+<td>lowercase next char (think vi)</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>\u</code></td>
+<td>uppercase next char (think vi)</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>\L</code></td>
+<td>lowercase until \E (think vi)</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>\U</code></td>
+<td>uppercase until \E (think vi)</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>\Q</code></td>
+<td>quote (disable) pattern metacharacters until \E</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>\E</code></td>
+<td>end either case modification or quoted section, think vi</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+</tbody>
+</table>
+<h3 id="character-classes-and-other-special-escapes">Character Classes and other Special Escapes</h3>
+<table>
+<thead>
+<tr>
+<th>Character class or escape</th>
+<th>Notes</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>(?[...])</code></td>
+<td>Extended bracketed character class</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>\pP</code></td>
+<td>Match P, named property.  Use \p{Prop} for longer names</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>\PP</code></td>
+<td>Match non-P</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>\X</code></td>
+<td>Match Unicode "eXtended grapheme cluster"</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>\R</code></td>
+<td>Linebreak</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+</tbody>
+</table>
+<h3 id="assertions_1">Assertions</h3>
+<table>
+<thead>
+<tr>
+<th>Assertion</th>
+<th>Notes</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>\b{}</code></td>
+<td>Match at Unicode boundary of specified type</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>\B{}</code></td>
+<td>Match where corresponding \b{} doesn't match</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+</tbody>
+</table>
+<h3 id="extended-patterns_1">Extended Patterns</h3>
+<table>
+<thead>
+<tr>
+<th>Extended pattern</th>
+<th>Notes</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>(?{ code })</code></td>
+<td>Perl code execution.</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>(*{ code })</code></td>
+<td>Perl code execution.</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>(??{ code })</code></td>
+<td>Perl code execution.</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>(?PARNO)</code> <code>(?-PARNO)</code> <code>(?+PARNO)</code> <code>(?R)</code> <code>(?0)</code></td>
+<td>Recursive subpattern.</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>(?&amp;NAME)</code></td>
+<td>Recursive subpattern.</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+</tbody>
+</table>
+<h3 id="script-runs">Script runs</h3>
+<table>
+<thead>
+<tr>
+<th>Script runs</th>
+<th>Notes</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>(*script_run:pattern)</code></td>
+<td>All chars in pattern need to be of the same script.</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>(*sr:pattern)</code></td>
+<td>All chars in pattern need to be of the same script.</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>(*atomic_script_run:pattern)</code></td>
+<td>Without backtracking.</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+<tr>
+<td><code>(*asr:pattern)</code></td>
+<td>Without backtracking.</td>
+<td><span style="color:darkred">Not planned</span></td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy <a href="https://github.com/hsutter" target="_blank" rel="noopener">Herb Sutter</a> &bull; <a href="https://github.com/hsutter/cppfront/blob/main/LICENSE">cppfront license </a>
+
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.instant", "navigation.instant.preview", "navigation.top", "search.suggest", "search.highlight", "content.tabs.link", "content.code.annotate", "content.code.annotation", "content.code.copy", "content.footnote.tooltips"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

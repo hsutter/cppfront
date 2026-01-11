@@ -1,0 +1,1652 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../expressions/">
+      
+      
+        <link rel="next" href="../objects/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Declarations and aliases - Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#declarations-and-aliases" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Cpp2 and cppfront — An experimental &#39;C++ syntax 2&#39; and its first compiler" class="md-header__button md-logo" aria-label="Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Declarations and aliases
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6m0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4M7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Cpp2 and cppfront — An experimental &#39;C++ syntax 2&#39; and its first compiler" class="md-nav__button md-logo" aria-label="Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Welcome & getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Welcome & getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../welcome/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview: What are Cpp2 and cppfront? How do I get and build cppfront?
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../welcome/hello-world/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hello, world!
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../welcome/integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Adding cppfront to your existing C++ project
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cpp2 reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Cpp2 reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../common/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Common concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../expressions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Expressions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Declarations and aliases
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Declarations and aliases
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#unified-declarations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unified declarations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Unified declarations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#unnamed-declaration-expressions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unnamed declaration expressions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-functions-to-local-scopes-and-back-again" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From functions to local scopes, and back again
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#template-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Template parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requires-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        requires constraints
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Aliases
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Aliases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#namespace-aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Namespace aliases
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#type-aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Type aliases
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Function aliases
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#object-aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Object aliases
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../objects/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Objects, initialization, and memory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Functions, branches, and loops
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contracts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types and inheritance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../metafunctions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metafunctions and reflection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../namespaces/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Namespaces
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../safety/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Safety and "unchecked"
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cppfront reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Cppfront reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cppfront/mixed/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using Cpp1 (today's syntax) and Cpp2 in the same source file
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cppfront/options/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cppfront command line options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Notes and supplemental topics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Notes and supplemental topics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notes/regex_status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    @regex status: Regular expression features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#unified-declarations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unified declarations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Unified declarations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#unnamed-declaration-expressions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unnamed declaration expressions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-functions-to-local-scopes-and-back-again" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From functions to local scopes, and back again
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#template-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Template parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requires-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        requires constraints
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Aliases
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Aliases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#namespace-aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Namespace aliases
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#type-aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Type aliases
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Function aliases
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#object-aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Object aliases
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="declarations-and-aliases">Declarations and aliases</h1>
+<h2 id="unified-declarations">Unified declarations</h2>
+<p>All Cpp2 declarations are written as <strong>"<em>name</em> <code>:</code> <em>kind</em> <code>=</code> <em>statement</em>"</strong>.</p>
+<ul>
+<li>
+<p>The <em>name</em> must be a valid identifier (start with a letter, and consist of letters, digits, or <code>_</code>). The name can be variadic (be a name for a list of zero or more things) by writing a <code>...</code> suffix at the end of the name.</p>
+</li>
+<li>
+<p>The <code>:</code> is pronounced <strong>"is a."</strong></p>
+</li>
+<li>
+<p>The <em>kind</em> can start with <a href="#template-parameters">template parameters</a> and end with <a href="#requires"><code class="highlight"><span class="k">requires</span></code> constraints</a>.</p>
+</li>
+<li>
+<p>The <code>=</code> is pronounced <strong>"defined as."</strong> For the definition of something that will always have the same value, write <code>==</code>, pronounced <strong>"defined as a synonym for"</strong>.</p>
+</li>
+<li>
+<p>The <em>statement</em> is typically an expression statement (e.g., <code class="highlight"><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span><span class="p">();</span></code>) or a compound statement (e.g., <code class="highlight"><span class="p">{</span><span class="w"> </span><span class="cm">/*...*/</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">c</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">e</span><span class="p">;</span><span class="w"> </span><span class="p">}</span></code>).</p>
+</li>
+</ul>
+<p>Various parts of the syntax allow a <code>_</code> "don't care" wildcard or can be omitted entirely to accept a default (e.g., <code class="highlight"><span class="nl">x</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span></code> can be equivalently written <code class="highlight"><span class="nl">x</span><span class="p">:</span><span class="w"> </span><span class="n">_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span></code> or <code class="highlight"><span class="nl">x</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span></code> both of which deduce the type).</p>
+<blockquote>
+<p>Notes:</p>
+<ul>
+<li>
+<p>When the type is omitted, whitespace does not matter, and writing <code class="highlight"><span class="nl">x</span><span class="p">:</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span></code> or <code class="highlight"><span class="nl">x</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span></code> or <code class="highlight"><span class="nl">x</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span></code> or other whitespace is just a stylistic choice. This documentation's style uses the last one, except when there are multiple adjacent declaration lines this style lines up their <code>:</code> and <code>=</code>.</p>
+</li>
+<li>
+<p><code>==</code> stresses that this name will always have the given value, to express <a href="#aliases">aliases</a> and side-effect-free 'constexpr' <a href="#function-aliases">function aliases</a>.</p>
+</li>
+</ul>
+</blockquote>
+<h3 id="unnamed-declaration-expressions"><a id="unnamed-declarations"></a> Unnamed declaration expressions</h3>
+<p>In an expression, most declarations can be written without a name (just starting with <code>:</code>). Such unnamed declaration expressions are useful for single-use temporary variables or 'lambda' functions that don't need a name to be reused elsewhere. For example:</p>
+<ul>
+<li>
+<p><code class="highlight"><span class="o">:</span><span class="n">widget</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">42</span></code> is an unnamed expression-local (aka temporary) object of type <code>widget</code> defined as having the initial value <code class="highlight"><span class="mi">42</span></code>. It uses the same general syntax, just without declaring a name.</p>
+</li>
+<li>
+<p><code class="highlight"><span class="o">:</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span></code> is an unnamed expression-local generic function expression (aka lambda) defined as having the given one-statement body. The body can include <a href="../expressions/#captures">captures</a>.</p>
+</li>
+</ul>
+<p>Both just omit the name and make the final <code>;</code> optional. Otherwise, they have the identical syntax and meaning as if you declared the same thing with a name outside expression scope (e.g., <code>w: widget = 42;</code> or <code>f: (x) = std::cout &lt;&lt; x;</code>) and then used the name in the expression.</p>
+<blockquote>
+<p>Note: Throughout Cpp2, every declaration is written with <code>:</code>, and every use of <code>:</code> is a declaration.</p>
+</blockquote>
+<h3 id="from-functions-to-local-scopes-and-back-again"><a id="function-scope-unification"></a> From functions to local scopes, and back again</h3>
+<p>The function syntax is deliberately designed to be general, so you can omit parts. This means Cpp2 has no special "lambda function" syntax for unnamed functions; an unnamed function is really an unnamed function, written using the ordinary function just without a name. This scales all the way down to ordinary blocks and statements, which are written the same as functions that have no name or parameters.</p>
+<p>We can illustrate this in two directions. First, let's start with a full function, and successively omit optional parts that we aren't currently using:</p>
+<div class="highlight"><span class="filename">Start with a full function, and successively omit optional parts if unused</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="hll"><span class="c1">// Full named function</span>
+</span><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nl">f</span><span class="p">:(</span><span class="n">x</span><span class="o">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">init</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/*...*/</span><span class="w"> </span><span class="p">}</span><span class="w">     </span><span class="c1">// x is a parameter to the function</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nl">f</span><span class="p">:(</span><span class="n">x</span><span class="o">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">init</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">statement</span><span class="p">;</span><span class="w">      </span><span class="c1">// same, except return type is deduced</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="hll"><span class="c1">// Omit name =&gt; anonymous function (aka &#39;lambda&#39;)</span>
+</span><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w"> </span><span class="o">:</span><span class="p">(</span><span class="n">x</span><span class="o">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">init</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/*...*/</span><span class="w"> </span><span class="p">}</span><span class="w">     </span><span class="c1">// x is a parameter to the function</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w"> </span><span class="o">:</span><span class="p">(</span><span class="n">x</span><span class="o">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">init</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">statement</span><span class="p">;</span><span class="w">      </span><span class="c1">// same, except return type is deduced</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="hll"><span class="c1">// Omit declaration =&gt; local and immediate (aka &#39;let&#39; in other languages)</span>
+</span><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">  </span><span class="p">(</span><span class="n">x</span><span class="o">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">init</span><span class="p">)</span><span class="w">   </span><span class="p">{</span><span class="w"> </span><span class="cm">/*...*/</span><span class="w"> </span><span class="p">}</span><span class="w">     </span><span class="c1">// x is a parameter to this</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">  </span><span class="p">(</span><span class="n">x</span><span class="o">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">init</span><span class="p">)</span><span class="w">   </span><span class="n">statement</span><span class="p">;</span><span class="w">      </span><span class="c1">//  compound or single-statement</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="hll"><span class="c1">// Omit parameters =&gt; ordinary block or statement</span>
+</span><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">                    </span><span class="p">{</span><span class="w"> </span><span class="cm">/*...*/</span><span class="w"> </span><span class="p">}</span><span class="w">     </span><span class="c1">// ordinary compound statement</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">                    </span><span class="n">statement</span><span class="p">;</span><span class="w">      </span><span class="c1">// ordinary statement</span>
+</code></pre></div>
+<p>Conversely, we can start with an ordinary block or statement, and successively build it up to make it more powerful:</p>
+<div class="highlight"><span class="filename">Start with an ordinary block or statement, and successively add parts</span><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="hll"><span class="c1">// Ordinary block or statement</span>
+</span><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">                    </span><span class="p">{</span><span class="w"> </span><span class="cm">/*...*/</span><span class="w"> </span><span class="p">}</span><span class="w">     </span><span class="c1">// ordinary compound statement</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">                    </span><span class="n">statement</span><span class="p">;</span><span class="w">      </span><span class="c1">// ordinary statement</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="hll"><span class="c1">// Add parameters =&gt; more RAII locally-scoped variables</span>
+</span><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="p">(</span><span class="n">x</span><span class="o">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">init</span><span class="p">)</span><span class="w">   </span><span class="p">{</span><span class="w"> </span><span class="cm">/*...*/</span><span class="w"> </span><span class="p">}</span><span class="w">     </span><span class="c1">// x is destroyed after this</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="p">(</span><span class="n">x</span><span class="o">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">init</span><span class="p">)</span><span class="w">   </span><span class="n">statement</span><span class="p">;</span><span class="w">      </span><span class="c1">//  compound or single-statement</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="hll"><span class="c1">// Add declaration =&gt; treat the code as a callable object</span>
+</span><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w"> </span><span class="o">:</span><span class="p">(</span><span class="n">x</span><span class="o">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">init</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/*...*/</span><span class="w"> </span><span class="p">}</span><span class="w">     </span><span class="c1">// x is a parameter to the function</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w"> </span><span class="o">:</span><span class="p">(</span><span class="n">x</span><span class="o">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">init</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">statement</span><span class="p">;</span><span class="w">      </span><span class="c1">// same, except return type is deduced</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="hll"><span class="c1">// Add name =&gt; full named function</span>
+</span><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="nl">f</span><span class="p">:(</span><span class="n">x</span><span class="o">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">init</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/*...*/</span><span class="w"> </span><span class="p">}</span><span class="w">     </span><span class="c1">// x is a parameter to the function</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="nl">f</span><span class="p">:(</span><span class="n">x</span><span class="o">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">init</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">statement</span><span class="p">;</span><span class="w">      </span><span class="c1">// same, except return type is deduced</span>
+</code></pre></div>
+<h3 id="template-parameters"><a id="template-parameters"></a> Template parameters</h3>
+<p>A template parameter list is a <a href="../common/#lists">list</a> enclosed by <code>&lt;</code> <code>&gt;</code> angle brackets, and the parameters separated by commas. Each parameter is declared using the <a href="./">same syntax as any type or object</a>. If a parameter's <strong><code>:</code></strong> <strong><em>kind</em></strong> is not specified, the default is <code>: type</code>.</p>
+<p>For example:</p>
+<div class="highlight"><span class="filename">Declaring template parameters</span><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="hll"><span class="nl">array</span><span class="p">:</span><span class="w"> </span><span class="o">&lt;</span><span class="n">T</span><span class="o">:</span><span class="w"> </span><span class="n">type</span><span class="p">,</span><span class="w"> </span><span class="n">size</span><span class="o">:</span><span class="w"> </span><span class="n">i32</span><span class="o">&gt;</span><span class="w"> </span><span class="n">type</span>
+</span><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="hll"><span class="w">    </span><span class="c1">// parameter T is a type</span>
+</span><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="hll"><span class="w">    </span><span class="c1">// parameter size is a 32-bit int</span>
+</span><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="c1">// ...</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">}</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="hll"><span class="nl">tuple</span><span class="p">:</span><span class="w"> </span><span class="o">&lt;</span><span class="n">Ts</span><span class="p">...</span><span class="o">:</span><span class="w"> </span><span class="n">type</span><span class="o">&gt;</span><span class="w"> </span><span class="n">type</span>
+</span><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="hll"><span class="w">    </span><span class="c1">// parameter Ts is variadic list of zero or more types</span>
+</span><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">    </span><span class="c1">// ...</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="requires-constraints"><a id="requires"></a> <code class="highlight"><span class="k">requires</span></code> constraints</h3>
+<p>A <code class="highlight"><span class="k">requires</span></code> <strong><em>condition</em></strong> constraint appears at the end of the <strong><em>kind</em></strong> of a templated declaration. If the condition evaluates to <code class="highlight"><span class="nb">false</span></code>, that specialization of the template is ignored as if not declared.</p>
+<p>For example:</p>
+<div class="highlight"><span class="filename">A requires constraint on a variadic function</span><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nl">print</span><span class="p">:</span><span class="w"> </span><span class="o">&lt;</span><span class="n">Args</span><span class="p">...</span><span class="o">:</span><span class="w"> </span><span class="n">type</span><span class="o">&gt;</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">       </span><span class="p">(</span><span class="n">inout</span><span class="w"> </span><span class="n">out</span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="p">,</span><span class="w"> </span><span class="n">args</span><span class="p">...</span><span class="o">:</span><span class="w"> </span><span class="n">Args</span><span class="p">)</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="hll"><span class="w">       </span><span class="k">requires</span><span class="w"> </span><span class="k">sizeof</span><span class="p">...(</span><span class="n">Args</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">1u</span>
+</span><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="p">(</span><span class="n">out</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">args</span><span class="p">);</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="examples">Examples</h3>
+<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Consistent declarations — name : kind = statement</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-4-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-4-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-4-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-4-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-4-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-4-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-4-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-4-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-4-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-4-10">10</a></span>
+<span class="normal"><a href="#__codelineno-4-11">11</a></span>
+<span class="normal"><a href="#__codelineno-4-12">12</a></span>
+<span class="normal"><a href="#__codelineno-4-13">13</a></span>
+<span class="normal"><a href="#__codelineno-4-14">14</a></span>
+<span class="normal"><a href="#__codelineno-4-15">15</a></span>
+<span class="normal"><a href="#__codelineno-4-16">16</a></span>
+<span class="normal"><a href="#__codelineno-4-17">17</a></span>
+<span class="normal"><a href="#__codelineno-4-18">18</a></span>
+<span class="normal"><a href="#__codelineno-4-19">19</a></span>
+<span class="normal"><a href="#__codelineno-4-20">20</a></span>
+<span class="normal"><a href="#__codelineno-4-21">21</a></span>
+<span class="normal"><a href="#__codelineno-4-22">22</a></span>
+<span class="normal"><a href="#__codelineno-4-23">23</a></span>
+<span class="normal"><a href="#__codelineno-4-24">24</a></span>
+<span class="normal"><a href="#__codelineno-4-25">25</a></span>
+<span class="normal"><a href="#__codelineno-4-26">26</a></span>
+<span class="normal"><a href="#__codelineno-4-27">27</a></span>
+<span class="normal"><a href="#__codelineno-4-28">28</a></span>
+<span class="normal"><a href="#__codelineno-4-29">29</a></span>
+<span class="normal"><a href="#__codelineno-4-30">30</a></span>
+<span class="normal"><a href="#__codelineno-4-31">31</a></span>
+<span class="normal"><a href="#__codelineno-4-32">32</a></span>
+<span class="normal"><a href="#__codelineno-4-33">33</a></span>
+<span class="normal"><a href="#__codelineno-4-34">34</a></span>
+<span class="normal"><a href="#__codelineno-4-35">35</a></span>
+<span class="normal"><a href="#__codelineno-4-36">36</a></span>
+<span class="normal"><a href="#__codelineno-4-37">37</a></span>
+<span class="normal"><a href="#__codelineno-4-38">38</a></span>
+<span class="normal"><a href="#__codelineno-4-39">39</a></span>
+<span class="normal"><a href="#__codelineno-4-40">40</a></span>
+<span class="normal"><a href="#__codelineno-4-41">41</a></span>
+<span class="normal"><a href="#__codelineno-4-42">42</a></span>
+<span class="normal"><a href="#__codelineno-4-43">43</a></span>
+<span class="normal"><a href="#__codelineno-4-44">44</a></span>
+<span class="normal"><a href="#__codelineno-4-45">45</a></span>
+<span class="normal"><a href="#__codelineno-4-46">46</a></span>
+<span class="normal"><a href="#__codelineno-4-47">47</a></span>
+<span class="normal"><a href="#__codelineno-4-48">48</a></span>
+<span class="normal"><a href="#__codelineno-4-49">49</a></span>
+<span class="normal"><a href="#__codelineno-4-50">50</a></span>
+<span class="normal"><a href="#__codelineno-4-51">51</a></span>
+<span class="normal"><a href="#__codelineno-4-52">52</a></span>
+<span class="normal"><a href="#__codelineno-4-53">53</a></span>
+<span class="normal"><a href="#__codelineno-4-54">54</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1"></a><span class="c1">//  n is a namespace defined as the following scope</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2"></a><span class="hll"><span class="nl">n</span><span class="p">:</span><span class="w"> </span><span class="k">namespace</span>
+</span><a id="__codelineno-4-3" name="__codelineno-4-3"></a><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4"></a><span class="w">    </span><span class="c1">//  shape is a templated type with one type parameter T</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5"></a><span class="w">    </span><span class="c1">//  (equivalent to &#39;&lt;T: type&gt;&#39;) defined as the following scope</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6"></a><span class="hll"><span class="w">    </span><span class="nl">shape</span><span class="p">:</span><span class="w"> </span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="w"> </span><span class="n">type</span>
+</span><a id="__codelineno-4-7" name="__codelineno-4-7"></a><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8"></a><span class="w">        </span><span class="c1">//  point is a type defined as being always the same as</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9"></a><span class="w">        </span><span class="c1">//  (i.e., an alias for) T</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10"></a><span class="hll"><span class="w">        </span><span class="nl">point_type</span><span class="p">:</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">T</span><span class="p">;</span>
+</span><a id="__codelineno-4-11" name="__codelineno-4-11"></a>
+<a id="__codelineno-4-12" name="__codelineno-4-12"></a><span class="w">        </span><span class="c1">//  points is an object of type std::vector&lt;point_type&gt;,</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13"></a><span class="w">        </span><span class="c1">//  defined as having an empty default value</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14"></a><span class="w">        </span><span class="c1">//  (type-scope objects are private by default)</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15"></a><span class="hll"><span class="w">        </span><span class="nl">points</span><span class="p">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">point_type</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">();</span>
+</span><a id="__codelineno-4-16" name="__codelineno-4-16"></a>
+<a id="__codelineno-4-17" name="__codelineno-4-17"></a><span class="w">        </span><span class="c1">//  draw is a function taking &#39;this&#39; and &#39;canvas&#39; parameters</span>
+<a id="__codelineno-4-18" name="__codelineno-4-18"></a><span class="w">        </span><span class="c1">//  and returning bool, defined as the following body</span>
+<a id="__codelineno-4-19" name="__codelineno-4-19"></a><span class="w">        </span><span class="c1">//  (type-scope functions are public by default)</span>
+<a id="__codelineno-4-20" name="__codelineno-4-20"></a><span class="w">        </span><span class="c1">//</span>
+<a id="__codelineno-4-21" name="__codelineno-4-21"></a><span class="w">        </span><span class="c1">//  this is an object of type shape (as if written &#39;this: shape&#39;)</span>
+<a id="__codelineno-4-22" name="__codelineno-4-22"></a><span class="w">        </span><span class="c1">//</span>
+<a id="__codelineno-4-23" name="__codelineno-4-23"></a><span class="w">        </span><span class="c1">//  where is an object of type canvas</span>
+<a id="__codelineno-4-24" name="__codelineno-4-24"></a><span class="hll"><span class="w">        </span><span class="nl">draw</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">where</span><span class="o">:</span><span class="w"> </span><span class="n">canvas</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">bool</span>
+</span><a id="__codelineno-4-25" name="__codelineno-4-25"></a><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-26" name="__codelineno-4-26"></a><span class="w">            </span><span class="c1">//  pen is an object of deduced (omitted) type &#39;color&#39;,</span>
+<a id="__codelineno-4-27" name="__codelineno-4-27"></a><span class="w">            </span><span class="c1">//  defined as having initial value &#39;color::red&#39;</span>
+<a id="__codelineno-4-28" name="__codelineno-4-28"></a><span class="hll"><span class="w">            </span><span class="nl">pen</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">color</span><span class="o">::</span><span class="n">red</span><span class="p">;</span>
+</span><a id="__codelineno-4-29" name="__codelineno-4-29"></a>
+<a id="__codelineno-4-30" name="__codelineno-4-30"></a><span class="w">            </span><span class="c1">//  success is an object of deduced (omitted) type bool,</span>
+<a id="__codelineno-4-31" name="__codelineno-4-31"></a><span class="w">            </span><span class="c1">//  defined as having initial value &#39;false&#39;</span>
+<a id="__codelineno-4-32" name="__codelineno-4-32"></a><span class="hll"><span class="w">            </span><span class="nl">success</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+</span><a id="__codelineno-4-33" name="__codelineno-4-33"></a>
+<a id="__codelineno-4-34" name="__codelineno-4-34"></a><span class="w">            </span><span class="c1">// ...</span>
+<a id="__codelineno-4-35" name="__codelineno-4-35"></a>
+<a id="__codelineno-4-36" name="__codelineno-4-36"></a><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">success</span><span class="p">;</span>
+<a id="__codelineno-4-37" name="__codelineno-4-37"></a><span class="w">        </span><span class="p">}</span>
+<a id="__codelineno-4-38" name="__codelineno-4-38"></a>
+<a id="__codelineno-4-39" name="__codelineno-4-39"></a><span class="w">        </span><span class="c1">//  count is a function taking &#39;this&#39; and returning a type</span>
+<a id="__codelineno-4-40" name="__codelineno-4-40"></a><span class="w">        </span><span class="c1">//  deduced from its body, defined as a single-expression body</span>
+<a id="__codelineno-4-41" name="__codelineno-4-41"></a><span class="w">        </span><span class="c1">//  (equivalent to &#39;= { return points.ssize(); }&#39; but omitting</span>
+<a id="__codelineno-4-42" name="__codelineno-4-42"></a><span class="w">        </span><span class="c1">//  syntax where we&#39;re using the language defaults)</span>
+<a id="__codelineno-4-43" name="__codelineno-4-43"></a><span class="hll"><span class="w">        </span><span class="nl">count</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="k">this</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">points</span><span class="p">.</span><span class="n">ssize</span><span class="p">();</span>
+</span><a id="__codelineno-4-44" name="__codelineno-4-44"></a>
+<a id="__codelineno-4-45" name="__codelineno-4-45"></a><span class="w">        </span><span class="c1">//  ...</span>
+<a id="__codelineno-4-46" name="__codelineno-4-46"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-4-47" name="__codelineno-4-47"></a>
+<a id="__codelineno-4-48" name="__codelineno-4-48"></a><span class="w">    </span><span class="c1">//  color is an @enum type (see Note) defined as having these enumerators</span>
+<a id="__codelineno-4-49" name="__codelineno-4-49"></a><span class="hll"><span class="w">    </span><span class="nl">color</span><span class="p">:</span><span class="w"> </span><span class="err">@</span><span class="k">enum</span><span class="w"> </span><span class="nc">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">red</span><span class="p">;</span><span class="w"> </span><span class="n">green</span><span class="p">;</span><span class="w"> </span><span class="n">blue</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+</span><a id="__codelineno-4-50" name="__codelineno-4-50"></a>
+<a id="__codelineno-4-51" name="__codelineno-4-51"></a><span class="w">    </span><span class="c1">//  calc_next_year is a function defined as always returning the same</span>
+<a id="__codelineno-4-52" name="__codelineno-4-52"></a><span class="w">    </span><span class="c1">//  value for the same input (i.e., &#39;constexpr&#39;, side effect-free)</span>
+<a id="__codelineno-4-53" name="__codelineno-4-53"></a><span class="hll"><span class="w">    </span><span class="nl">calc_next_year</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">year</span><span class="o">:</span><span class="w"> </span><span class="n">i32</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">i32</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">year</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+</span><a id="__codelineno-4-54" name="__codelineno-4-54"></a><span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+<blockquote>
+<p>Note: <code>@enum</code> is a metafunction, which provides an easy way to opt into a group of defaults, constraints, and generated functions. For details, see <a href="../metafunctions/#enum"><code>@enum</code></a>.</p>
+</blockquote>
+<h2 id="aliases"><a id="aliases"></a> Aliases</h2>
+<p>Aliases are pronounced <strong>"synonym for"</strong>, and written using the same <strong>name <code>:</code> kind <code>=</code> value</strong> <a href="./">declaration syntax</a> as everything in Cpp2:</p>
+<ul>
+<li>
+<p><strong>name</strong> is declared to be a synonym for <strong>value</strong>.</p>
+</li>
+<li>
+<p><strong>kind</strong> can be any of the kinds: <code>namespace</code>, <code>type</code>, a function signature, or a type.</p>
+</li>
+<li>
+<p><strong><code>==</code></strong>, pronounced <strong>"defined as a synonym for"</strong>, always precedes the value. The <code>==</code> syntax stresses that during compilation every use of the name could be equivalently replaced with the value.</p>
+</li>
+<li>
+<p><strong>value</strong> is the expression that the <strong>name</strong> is a synonym for.</p>
+</li>
+</ul>
+<h3 id="namespace-aliases"><a id="namespace-aliases"></a> Namespace aliases</h3>
+<p>A namespace alias is written the same way as a <a href="../namespaces/">namespace</a>, but using <code>==</code> and with the name of another namespace as its value. For example:</p>
+<div class="highlight"><span class="filename">Namespace aliases</span><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="hll"><span class="c1">//  &#39;chr&#39; is a namespace defined as a synonym for &#39;std::chrono&#39;</span>
+</span><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="hll"><span class="nl">chr</span><span class="w">    </span><span class="p">:</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nn">std</span><span class="o">::</span><span class="nn">chrono</span><span class="p">;</span>
+</span><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="hll"><span class="c1">//  &#39;chrlit&#39; is a namespace defined as a synonym for &#39;std::chrono_literals&#39;</span>
+</span><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="hll"><span class="nl">chrlit</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nn">std</span><span class="o">::</span><span class="nn">chrono_literals</span><span class="p">;</span>
+</span><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="nl">main</span><span class="p">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="hll"><span class="w">    </span><span class="k">using</span><span class="w"> </span><span class="n">chrlit</span><span class="o">::</span><span class="n">_</span><span class="w"> </span><span class="p">;</span>
+</span><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">    </span><span class="c1">//  The next two lines are equivalent</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;1s is (std::chrono::nanoseconds(1s).count())$ns</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="hll"><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;1s is (chr::nanoseconds(1s).count())$ns</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</span><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="p">}</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="c1">//  Prints:</span>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="c1">//      1s is 1000000000ns</span>
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="hll"><span class="c1">//      1s is 1000000000ns</span>
+</span></code></pre></div>
+<h3 id="type-aliases"><a id="type-aliases"></a> Type aliases</h3>
+<p>A type alias is written the same way as a <a href="../types/">type</a>, but using <code>==</code> and with the name of another type as its value. For example:</p>
+<div class="highlight"><span class="filename">Type aliases</span><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="hll"><span class="c1">//  &#39;imap&lt;T&gt;&#39; is a type defined as a synonym for &#39;std::map&lt;i32, T&gt;&#39;</span>
+</span><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="hll"><span class="nl">imap</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">map</span><span class="o">&lt;</span><span class="n">i32</span><span class="p">,</span><span class="w"> </span><span class="n">T</span><span class="o">&gt;</span><span class="p">;</span>
+</span><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="nl">main</span><span class="p">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="c1">//  The next two lines declare two objects with identical type</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">    </span><span class="nl">map1</span><span class="p">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">map</span><span class="o">&lt;</span><span class="n">i32</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">();</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="hll"><span class="w">    </span><span class="nl">map2</span><span class="p">:</span><span class="w"> </span><span class="n">imap</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">();</span>
+</span><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">    </span><span class="c1">//  Assertion they are the same type, using the same_as concept</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="hll"><span class="w">    </span><span class="k">static_assert</span><span class="p">(</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">same_as</span><span class="o">&lt;</span><span class="w"> </span><span class="k">decltype</span><span class="p">(</span><span class="n">map1</span><span class="p">),</span><span class="w"> </span><span class="k">decltype</span><span class="p">(</span><span class="n">map2</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="p">);</span>
+</span><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="function-aliases"><a id="function-aliases"></a> Function aliases</h3>
+<p>A function alias is written the same way as a <a href="../functions/">function</a>, but using <code>==</code> and with a side-effect-free body as its value; the body must always return the same value for the same input arguments. For example:</p>
+<div class="highlight"><span class="filename">Function aliases</span><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="hll"><span class="c1">//  &#39;square&#39; is a function defined as a synonym for the value of &#39;i * i&#39;</span>
+</span><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="hll"><span class="nl">square</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="o">:</span><span class="w"> </span><span class="n">i32</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">_</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+</span><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="nl">main</span><span class="p">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">    </span><span class="c1">//  It can be used at compile time, with compile time values</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="hll"><span class="w">    </span><span class="nl">ints</span><span class="p">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="n">i32</span><span class="p">,</span><span class="w"> </span><span class="n">square</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">();</span>
+</span><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">    </span><span class="c1">//  Assertion that the size is the square of 4</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="hll"><span class="w">    </span><span class="k">static_assert</span><span class="p">(</span><span class="w"> </span><span class="n">ints</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">16</span><span class="w"> </span><span class="p">);</span>
+</span><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">    </span><span class="c1">//  And it can be used at run time, with run time values</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="hll"><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;the square of 4 is (square(4))$</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</span><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="p">}</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="c1">//  Prints:</span>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="hll"><span class="c1">//      the square of 4 is 16</span>
+</span></code></pre></div>
+<blockquote>
+<p>Note: A function alias is compiled to a Cpp1 <code class="highlight"><span class="k">constexpr</span></code> function.</p>
+</blockquote>
+<h3 id="object-aliases"><a id="object-aliases"></a> Object aliases</h3>
+<p>An object alias is written the same way as an <a href="../objects/">object</a>, but using <code>==</code> and with a side-effect-free value. For example:</p>
+<div class="highlight"><span class="filename">Function aliases</span><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="hll"><span class="c1">//  &#39;BufferSize&#39; is an object defined as a synonym for the value 1&#39;000&#39;000</span>
+</span><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="hll"><span class="nl">BufferSize</span><span class="p">:</span><span class="w"> </span><span class="n">i32</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1&#39;000&#39;000</span><span class="p">;</span>
+</span><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="nl">main</span><span class="p">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="hll"><span class="w">    </span><span class="nl">buf</span><span class="p">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">byte</span><span class="p">,</span><span class="w"> </span><span class="n">BufferSize</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">();</span>
+</span><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="hll"><span class="w">    </span><span class="k">static_assert</span><span class="p">(</span><span class="w"> </span><span class="n">buf</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">BufferSize</span><span class="w"> </span><span class="p">);</span>
+</span><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="p">}</span>
+</code></pre></div>
+<blockquote>
+<p>Note: An object alias is compiled to a Cpp1 <code class="highlight"><span class="k">constexpr</span></code> object.</p>
+</blockquote>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy <a href="https://github.com/hsutter" target="_blank" rel="noopener">Herb Sutter</a> &bull; <a href="https://github.com/hsutter/cppfront/blob/main/LICENSE">cppfront license </a>
+
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.instant", "navigation.instant.preview", "navigation.top", "search.suggest", "search.highlight", "content.tabs.link", "content.code.annotate", "content.code.annotation", "content.code.copy", "content.footnote.tooltips"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

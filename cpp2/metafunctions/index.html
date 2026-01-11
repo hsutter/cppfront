@@ -1,0 +1,2234 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../types/">
+      
+      
+        <link rel="next" href="../namespaces/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Metafunctions and reflection - Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#metafunctions" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Cpp2 and cppfront — An experimental &#39;C++ syntax 2&#39; and its first compiler" class="md-header__button md-logo" aria-label="Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Metafunctions and reflection
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6m0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4M7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Cpp2 and cppfront — An experimental &#39;C++ syntax 2&#39; and its first compiler" class="md-nav__button md-logo" aria-label="Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Welcome & getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Welcome & getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../welcome/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview: What are Cpp2 and cppfront? How do I get and build cppfront?
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../welcome/hello-world/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hello, world!
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../welcome/integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Adding cppfront to your existing C++ project
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cpp2 reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Cpp2 reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../common/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Common concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../expressions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Expressions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../declarations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Declarations and aliases
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../objects/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Objects, initialization, and memory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Functions, branches, and loops
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contracts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types and inheritance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metafunctions and reflection
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metafunctions and reflection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#applying-metafunctions-using" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Applying metafunctions using @
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#generating-source-code-at-compile-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generating source code at compile time
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#built-in-metafunctions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Built-in metafunctions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Built-in metafunctions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#for-regular-value-like-types-copyable-comparable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        For regular value-like types (copyable, comparable)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="For regular value-like types (copyable, comparable)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ordered-weakly_ordered-partially_ordered" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ordered, weakly_ordered, partially_ordered
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#copyable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        copyable
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#basic_value-value-weakly_ordered_value-partially_ordered_value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        basic_value, value, weakly_ordered_value, partially_ordered_value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#struct" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        struct
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hashable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hashable
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#for-polymorphic-types-interfaces-base-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        For polymorphic types (interfaces, base classes)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="For polymorphic types (interfaces, base classes)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        interface
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#polymorphic_base" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        polymorphic_base
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#for-enumeration-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        For enumeration types
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="For enumeration types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        enum
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#flag_enum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        flag_enum
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#for-dynamic-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        For dynamic types
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="For dynamic types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#union" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        union
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#for-other-common-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        For other common types
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="For other common types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#encapsulated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        encapsulated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#noncopyable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        noncopyable
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#singleton" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        singleton
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#for-computational-and-functional-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        For computational and functional types
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="For computational and functional types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#autodiff" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        autodiff
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        regex
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helpers-and-utilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Helpers and utilities
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Helpers and utilities">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cpp1_rule_of_zero" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cpp1_rule_of_zero
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#print" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        print
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../namespaces/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Namespaces
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../safety/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Safety and "unchecked"
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cppfront reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Cppfront reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cppfront/mixed/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using Cpp1 (today's syntax) and Cpp2 in the same source file
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cppfront/options/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cppfront command line options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Notes and supplemental topics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Notes and supplemental topics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notes/regex_status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    @regex status: Regular expression features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#applying-metafunctions-using" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Applying metafunctions using @
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#generating-source-code-at-compile-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generating source code at compile time
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#built-in-metafunctions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Built-in metafunctions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Built-in metafunctions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#for-regular-value-like-types-copyable-comparable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        For regular value-like types (copyable, comparable)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="For regular value-like types (copyable, comparable)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ordered-weakly_ordered-partially_ordered" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ordered, weakly_ordered, partially_ordered
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#copyable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        copyable
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#basic_value-value-weakly_ordered_value-partially_ordered_value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        basic_value, value, weakly_ordered_value, partially_ordered_value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#struct" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        struct
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hashable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hashable
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#for-polymorphic-types-interfaces-base-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        For polymorphic types (interfaces, base classes)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="For polymorphic types (interfaces, base classes)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        interface
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#polymorphic_base" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        polymorphic_base
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#for-enumeration-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        For enumeration types
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="For enumeration types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        enum
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#flag_enum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        flag_enum
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#for-dynamic-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        For dynamic types
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="For dynamic types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#union" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        union
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#for-other-common-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        For other common types
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="For other common types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#encapsulated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        encapsulated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#noncopyable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        noncopyable
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#singleton" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        singleton
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#for-computational-and-functional-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        For computational and functional types
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="For computational and functional types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#autodiff" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        autodiff
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        regex
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helpers-and-utilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Helpers and utilities
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Helpers and utilities">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cpp1_rule_of_zero" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cpp1_rule_of_zero
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#print" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        print
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="metafunctions">Metafunctions</h1>
+<h2 id="overview">Overview</h2>
+<p>A metafunction is a compile-time function that can participate in interpreting the meaning of a declaration, and can:</p>
+<ul>
+<li>
+<p>apply defaults (e.g., <code>interface</code> makes functions virtual by default)</p>
+</li>
+<li>
+<p>enforce constraints (e.g., <code>value</code> enforces that the type has no virtual functions)</p>
+</li>
+<li>
+<p>generate additional functions and other code (e.g., <code>value</code> generates copy/move/comparison operations for a type if it didn't write them explicitly)</p>
+</li>
+</ul>
+<p>The most important thing about metafunctions is that they are not hardwired language features — they are compile-time library code that uses the reflection and code generation API, that lets the author of an ordinary type easily opt into a named set of defaults, requirements, and generated contents. This approach is essential to making the language simpler, because it lets us avoid hardwiring special "extra" types into the language and compiler.</p>
+<h2 id="applying-metafunctions-using"><a id="applying-metafunctions"></a> Applying metafunctions using <code>@</code></h2>
+<p>Metafunctions provide an easy way for a type author to opt into a group of defaults, constraints, and generated functions: Just write <code>@name</code> afer the <code>:</code> of a declaration, where <code>name</code> is the name of the metafunction. This lets the type author declare (and the human reader see) the intent up front: "This isn't just any <code>type</code>, this is a <code>@value type</code>" which automatically gives the type default/copy/move construction and assignment, <code>&lt;=&gt;</code> with <code>std::strong_ordering</code> comparisons, and guarantees that it has a public destructor and no protected or virtual functions:</p>
+<div class="highlight"><span class="filename">Using the value metafunction when writing a type</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="hll"><span class="nl">point2d</span><span class="p">:</span><span class="w"> </span><span class="err">@</span><span class="n">value</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+</span><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="nl">x</span><span class="p">:</span><span class="w"> </span><span class="n">i32</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nl">y</span><span class="p">:</span><span class="w"> </span><span class="n">i32</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="c1">// @value automatically generates default/copy/move</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="c1">// construction/assignment and &lt;=&gt; strong_ordering comparison,</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="c1">// and emits an error if you try to write a non-public</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="c1">// destructor or any protected or virtual function</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="p">}</span>
+</code></pre></div>
+<h2 id="generating-source-code-at-compile-time"><a id="generating-source"></a>Generating source code at compile time</h2>
+<p>A metafunction applied to a definition using <code>@</code> gets to participate in interpreting the meaning of the definition by inspecting and manipulating the definition's parse tree. For example:</p>
+<div class="highlight"><span class="filename">shape.cpp2: Using @interface @print</span><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="hll"><span class="nl">shape</span><span class="p">:</span><span class="w"> </span><span class="err">@</span><span class="n">interface</span><span class="w"> </span><span class="err">@</span><span class="n">print</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+</span><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="nl">draw</span><span class="w">   </span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="nl">move_by</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">dx</span><span class="o">:</span><span class="w"> </span><span class="kt">double</span><span class="p">,</span><span class="w"> </span><span class="n">dy</span><span class="o">:</span><span class="w"> </span><span class="kt">double</span><span class="p">);</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="p">}</span>
+</code></pre></div>
+<p>The above code:</p>
+<ul>
+<li>
+<p>applies <code>@interface</code>, which makes functions pure virtual by default and defines a virtual destructor with a do-nothing body if there isn't already a virtual destructor (among other things), and</p>
+</li>
+<li>
+<p>then applies <code>@print</code>, which pretty-prints the resulting parse tree as source code to the console so that we can see the results of what the first metafunction did.</p>
+</li>
+</ul>
+<p>The result of compiling this is the following cppfront output, which is the <code>@interface</code>-modified Cpp2 source code as printed by <code>@print</code>:</p>
+<div class="highlight"><span class="filename">'cppfront shape.cpp2' output to the console, from @print</span><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="hll"><span class="nl">shape</span><span class="p">:</span><span class="cm">/* @interface @print */</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">=</span>
+</span><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="p">{</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="n">draw</span><span class="o">:</span><span class="p">(</span><span class="k">virtual</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="k">this</span><span class="p">);</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="n">move_by</span><span class="o">:</span><span class="p">(</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">        </span><span class="k">virtual</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="k">this</span><span class="p">,</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">        </span><span class="n">in</span><span class="w"> </span><span class="n">dx</span><span class="o">:</span><span class="w"> </span><span class="kt">double</span><span class="p">,</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">        </span><span class="n">in</span><span class="w"> </span><span class="n">dy</span><span class="o">:</span><span class="w"> </span><span class="kt">double</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="p">);</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">    </span><span class="k">operator</span><span class="o">=:</span><span class="p">(</span><span class="k">virtual</span><span class="w"> </span><span class="n">move</span><span class="w"> </span><span class="k">this</span><span class="p">)</span><span class="w"> </span><span class="o">=</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="p">}</span>
+</code></pre></div>
+<p>Finally, cppfront also emits the following in <code>shape.cpp</code>:</p>
+<div class="highlight"><span class="filename">'cppfront shape.cpp' output to 'shape.cpp'</span><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">shape</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="k">public</span><span class="o">:</span><span class="w"> </span><span class="k">virtual</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">draw</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="k">public</span><span class="o">:</span><span class="w"> </span><span class="k">virtual</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">move_by</span><span class="p">(</span><span class="n">cpp2</span><span class="o">::</span><span class="n">in</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">dx</span><span class="p">,</span><span class="w"> </span><span class="n">cpp2</span><span class="o">::</span><span class="n">in</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">dy</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="k">public</span><span class="o">:</span><span class="w"> </span><span class="k">virtual</span><span class="w"> </span><span class="o">~</span><span class="n">shape</span><span class="p">()</span><span class="w"> </span><span class="k">noexcept</span><span class="p">;</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="k">public</span><span class="o">:</span><span class="w"> </span><span class="n">shape</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">default</span><span class="p">;</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="k">public</span><span class="o">:</span><span class="w"> </span><span class="n">shape</span><span class="p">(</span><span class="n">shape</span><span class="w"> </span><span class="k">const</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">delete</span><span class="p">;</span><span class="w"> </span><span class="cm">/* No &#39;that&#39; constructor, suppress copy */</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="k">public</span><span class="o">:</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">shape</span><span class="w"> </span><span class="k">const</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">delete</span><span class="p">;</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="p">};</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="n">shape</span><span class="o">::~</span><span class="n">shape</span><span class="p">()</span><span class="w"> </span><span class="k">noexcept</span><span class="p">{}</span>
+</code></pre></div>
+<h2 id="built-in-metafunctions"><a id="built-in-metafunctions"></a>Built-in metafunctions</h2>
+<p>The following metafunctions are provided in the box with cppfront.</p>
+<h3 id="for-regular-value-like-types-copyable-comparable">For regular value-like types (copyable, comparable)</h3>
+<h4 id="ordered-weakly_ordered-partially_ordered"><a id="ordered"></a><code>ordered</code>, <code>weakly_ordered</code>, <code>partially_ordered</code></h4>
+<p>An <code>ordered</code> (or <code>weakly_ordered</code> or <code>partially_ordered</code>) type has an <code class="highlight"><span class="k">operator</span><span class="o">&lt;=&gt;</span></code> three-way comparison operator that returns <code>std::strong_ordering</code> (or <code>std::weak_ordering</code> or <code>std::partial_ordering</code>, respectively). This means objects of this type can be used in all binary comparisons: <code>&lt;</code>, <code>&lt;=</code>, <code>==</code>, <code>!=</code>, <code>&gt;=</code>, and <code>&gt;</code>.</p>
+<p>If the user explicitly writes <code>operator&lt;=&gt;</code>, its return type must be the same as the one implied by the metafunction they chose.</p>
+<p>If the user doesn't explicitly write <code>operator&lt;=&gt;</code>, a default memberwise <code>operator&lt;=&gt;: (this, that) -&gt; /* appropriate _ordering */;</code> will be generated for the type.</p>
+<p>These metafunctions will emit a compile-time error if:</p>
+<ul>
+<li>a user-written <code>operator&lt;=&gt;</code> returns a different type than the one implied by the metafunction they chose</li>
+</ul>
+<blockquote>
+<p>Note: This feature derived from Cpp2 was already adopted into Standard C++ via paper <a href="https://wg21.link/p0515">P0515</a>, so most of the heavy lifting is done by the Cpp1 C++20/23 compiler, including the memberwise default semantics. In contrast, cppfront has to do the work itself for default memberwise semantics for operator= assignment as those aren't yet part of Standard C++.</p>
+</blockquote>
+<h4 id="copyable"><code>copyable</code></h4>
+<p>A <code>copyable</code> type has (copy and move) x (construction and assignment).</p>
+<p>If the user explicitly writes any of the copy/move <code>operator=</code> functions, they must also write the most general one that takes <code>(out this, that)</code>.</p>
+<p>If the user doesn't write any of the copy/move <code>operator=</code> functions, a default general memberwise <code>operator=: (out this, that) = { }</code> will be generated for the type.</p>
+<p><code>copyable</code> will emit a compile-time error if:</p>
+<ul>
+<li>there is a user-written <code>operator=</code> but no user-written <code>operator=: (out this, that)</code></li>
+</ul>
+<h4 id="basic_value-value-weakly_ordered_value-partially_ordered_value"><a id="value"></a><code>basic_value</code>, <code>value</code>, <code>weakly_ordered_value</code>, <code>partially_ordered_value</code></h4>
+<p>A <code>basic_value</code> type is a regular type: <a href="#copyable"><code>copyable</code></a>, default constructible, and not polymorphic (no protected or virtual functions).</p>
+<p>A <code>value</code> (or <code>weakly_ordered_value</code> or <code>partially_ordered_value</code>) is a <code>basic_value</code> that is also <a href="#ordered"><code>ordered</code></a> (or <code>weakly_ordered</code> or <code>partially_ordered</code>, respectively).</p>
+<pre class="mermaid"><code>graph TD;
+    value----&gt;basic_value;
+    weakly_ordered_value----&gt;basic_value;
+    partially_ordered_value----&gt;basic_value;
+    basic_value--&gt;copyable;
+    value--&gt;ordered;
+    partially_ordered_value--&gt;partially_ordered;
+    weakly_ordered_value--&gt;weakly_ordered;</code></pre>
+<p>These metafunctions will emit a compile-time error if:</p>
+<ul>
+<li>
+<p>any function is protected or virtual</p>
+</li>
+<li>
+<p>the type has a destructor that is not public</p>
+</li>
+</ul>
+<h4 id="struct"><code>struct</code></h4>
+<p>A <code>struct</code> is a type with only public bases, objects, and functions, with no virtual functions, and with no user-defined constructors (i.e., no invariants) or assignment or destructors.</p>
+<p><code>struct</code> is implemented in terms of <a href="#cpp1_rule_of_zero"><code>cpp1_rule_of_zero</code></a>.</p>
+<p><code>struct</code> will emit a compile-time error if:</p>
+<ul>
+<li>
+<p>any member is non-public</p>
+</li>
+<li>
+<p>any function is virtual</p>
+</li>
+<li>
+<p>there is a user-written <code>operator=</code></p>
+</li>
+</ul>
+<h4 id="hashable"><code>hashable</code></h4>
+<p>A <code>hashable</code> type provides a <code>hash: (this) -&gt; size_t</code> function that performs a memberwise hash of its data members using <code>std::hash</code>.</p>
+<h3 id="for-polymorphic-types-interfaces-base-classes">For polymorphic types (interfaces, base classes)</h3>
+<h4 id="interface"><code>interface</code></h4>
+<p>An <code>interface</code> type is an abstract base class having only pure virtual functions.</p>
+<p>Cpp2 has no <code>interface</code> feature hardwired into the language, as C# and Java do. Instead you apply the <code>@interface</code> metafunction when writing an ordinary <code>type</code>. For a detailed example, see <a href="#generating-source-code-at-compile-time">the <code>shape</code> example above</a>.</p>
+<p><code>interface</code> will emit a compile-time error if:</p>
+<ul>
+<li>
+<p>the type contains a data object</p>
+</li>
+<li>
+<p>the type has a copy or move function (the diagnostic message will suggest a virtual <code>clone</code> function instead)</p>
+</li>
+<li>
+<p>any function has a body</p>
+</li>
+<li>
+<p>any function is nonpublic</p>
+</li>
+</ul>
+<h4 id="polymorphic_base"><code>polymorphic_base</code></h4>
+<p>A <code>polymorphic_base</code> type is a pure polymorphic base type that is not copyable, and whose destructor is either public and virtual or protected and nonvirtual.</p>
+<p>Unlike an <a href="#interface">interface</a>, it can have nonpublic and nonvirtual functions.</p>
+<p><code>polymorphic_base</code> will emit a compile-time error if:</p>
+<ul>
+<li>
+<p>the type has a copy or move function (the diagnostic message will suggest a virtual <code>clone</code> function instead)</p>
+</li>
+<li>
+<p>the type has a destructor that is not public and virtual, and also not protected and nonvirtual</p>
+</li>
+</ul>
+<h3 id="for-enumeration-types">For enumeration types</h3>
+<h4 id="enum"><code>enum</code></h4>
+<p>Cpp2 has no <code>enum</code> feature hardwired into the language. Instead you apply the <code>@enum</code> metafunction when writing an ordinary <code>type</code>.</p>
+<p><code>enum</code> will emit a compile-time error if:</p>
+<ul>
+<li>
+<p>any member has the reserved name <code>operator=</code> or <code>operator&lt;=&gt;</code>, as these will be generated by the metafunction</p>
+</li>
+<li>
+<p>an enumerator is not public or does not have a deduced type</p>
+</li>
+</ul>
+<p>For example:</p>
+<div class="highlight"><span class="filename">Using the @enum metafunction when writing a type</span><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1">// skat_game is declaratively a safe enumeration type: it has</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="c1">// default/copy/move construction/assignment and &lt;=&gt; with</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1">// std::strong_ordering, a minimal-size signed underlying type</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1">// by default if the user didn&#39;t specify a type, no implicit</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="c1">// conversion to/from the underlying type, in fact no public</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="c1">// construction except copy construction so that it can never</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1">// have a value different from its listed enumerators, inline</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="c1">// constexpr enumerators with values that automatically start</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="c1">// at 1 and increment by 1 if the user didn&#39;t write their own</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="c1">// value, and conveniences like to_string()... the word &quot;enum&quot;</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="c1">// carries all that meaning as a convenient and readable</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="c1">// opt-in, without hardwiring &quot;enum&quot; specially into the language</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="c1">//</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="hll"><span class="nl">skat_game</span><span class="p">:</span><span class="w"> </span><span class="err">@</span><span class="k">enum</span><span class="o">&lt;</span><span class="n">i16</span><span class="o">&gt;</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+</span><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">    </span><span class="nl">diamonds</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="mi">9</span><span class="p">;</span>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="w">    </span><span class="n">hearts</span><span class="p">;</span><span class="w">  </span><span class="c1">// 10</span>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="w">    </span><span class="n">spades</span><span class="p">;</span><span class="w">  </span><span class="c1">// 11</span>
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="w">    </span><span class="n">clubs</span><span class="p">;</span><span class="w">   </span><span class="c1">// 12</span>
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="w">    </span><span class="nl">grand</span><span class="w">    </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="mi">20</span><span class="p">;</span>
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="w">    </span><span class="nl">null</span><span class="w">     </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="mi">23</span><span class="p">;</span>
+<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a><span class="p">}</span>
+</code></pre></div>
+<p>Consider <code>hearts</code>: It's a member object declaration, but it doesn't have a type (or a default value) which is normally illegal, but here it's okay because the <code>@enum&lt;i16&gt;</code> metafunction fills them in: It iterates over all the data members and gives each one the underlying type (here explicitly specified as <code>i16</code>, otherwise it would be computed as the smallest signed type that's big enough), and an initializer (by default one higher than the previous enumerator).</p>
+<p>Unlike C <code class="highlight"><span class="k">enum</span></code>, this <code>@enum</code> is scoped and strongly typed (does not implicitly convert to the underlying type).</p>
+<p>Unlike C++11 <code class="highlight"><span class="k">enum</span><span class="w"> </span><span class="k">class</span></code>, it's "just a <code>type</code>" which means it can naturally also have member functions and other things that a type can have:</p>
+<div class="highlight"><span class="filename">An @enum type with a member function</span><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="hll"><span class="nl">janus</span><span class="p">:</span><span class="w"> </span><span class="err">@</span><span class="k">enum</span><span class="w"> </span><span class="nc">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+</span><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="n">past</span><span class="p">;</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="n">future</span><span class="p">;</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="nl">flip</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">inout</span><span class="w"> </span><span class="k">this</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="k">this</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">past</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">this</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">future</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">this</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">past</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="p">}</span>
+</code></pre></div>
+<h4 id="flag_enum"><code>flag_enum</code></h4>
+<p><code>flag_enum</code> is a variation on <code>enum</code> that has power-of-two default enumerator values, a default signed underlying type that is large enough to hold the values, and supports bitwise operators to combine and test values.</p>
+<p><code>flag_enum</code> will emit a compile-time error if:</p>
+<ul>
+<li>
+<p>any member has the reserved name <code>operator=</code>, <code>operator&lt;=&gt;</code>, <code>has</code>, <code>set</code>, <code>clear</code>, <code>to_string</code>, <code>get_raw_value</code>, or <code>none</code>, as these will be generated by the metafunction</p>
+</li>
+<li>
+<p>an enumerator is not public or does not have a deduced type</p>
+</li>
+<li>
+<p>the values are outside the range that can be represented by the largest default underlying type</p>
+</li>
+</ul>
+<p>For example:</p>
+<div class="highlight"><span class="filename">Using the @flag_enum metafunction when writing a type</span><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1">// file_attributes is declaratively a safe flag enum type:</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1">// same as enum, but with a minimal-size unsigned underlying</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="c1">// type by default, and values that automatically start at 1</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1">// and rise by powers of two if the user didn&#39;t write their</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1">// own value, and bitwise operations plus .has(flags),</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="c1">// .set(flags), and .clear(flags)... the word &quot;flag_enum&quot;</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="c1">// carries all that meaning as a convenient and readable</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="c1">// opt-in without hardwiring &quot;[Flags]&quot; specially into the</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="c1">// language</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="c1">//</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="hll"><span class="nl">file_attributes</span><span class="p">:</span><span class="w"> </span><span class="err">@</span><span class="n">flag_enum</span><span class="o">&lt;</span><span class="n">u8</span><span class="o">&gt;</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+</span><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">    </span><span class="n">cached</span><span class="p">;</span><span class="w">     </span><span class="c1">// 1</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">    </span><span class="n">current</span><span class="p">;</span><span class="w">    </span><span class="c1">// 2</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">    </span><span class="n">obsolete</span><span class="p">;</span><span class="w">   </span><span class="c1">// 4</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">    </span><span class="nl">cached_and_current</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">cached</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">current</span><span class="p">;</span>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="for-dynamic-types">For dynamic types</h3>
+<h4 id="union"><code>union</code></h4>
+<p><code>@union</code> declaratively opts into writing a safe discriminated union/variant dynamic type.</p>
+<p><code>union</code> will emit a compile-time error if:</p>
+<ul>
+<li>
+<p>any alternative is not public or has an initializer</p>
+</li>
+<li>
+<p>any member starts with the reserved name prefix <code>is_</code> or <code>set_</code>, as these will be generated by the metafunction</p>
+</li>
+</ul>
+<p>For example:</p>
+<div class="highlight"><span class="filename">Using the @union metafunction when writing a type</span><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1">// name_or_number is declaratively a safe union/variant type:</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="c1">// it has a discriminant that enforces only one alternative</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="c1">// can be active at a time, members always have a name, and</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1">// each member has .is_member(), .set_member(), and .member()</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="c1">// accessors using the member name... the word &quot;union&quot;</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="c1">// carries all that meaning as a convenient and readable</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1">// opt-in without hardwiring &quot;union&quot; specially into the</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="c1">// language</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="c1">//</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="hll"><span class="nl">name_or_number</span><span class="p">:</span><span class="w"> </span><span class="err">@</span><span class="k">union</span><span class="w"> </span><span class="nc">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+</span><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">    </span><span class="nl">name</span><span class="p">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">;</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">    </span><span class="nl">num</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">i32</span><span class="p">;</span>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="p">}</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="nl">main</span><span class="p">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="w">    </span><span class="nl">x</span><span class="p">:</span><span class="w"> </span><span class="n">name_or_number</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">();</span>
+<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>
+<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="hll"><span class="w">    </span><span class="n">x</span><span class="p">.</span><span class="n">set_name</span><span class="p">(</span><span class="s">&quot;xyzzy&quot;</span><span class="p">);</span><span class="w">            </span><span class="c1">// now x is a string</span>
+</span><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="hll"><span class="w">    </span><span class="n">assert</span><span class="p">(</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">is_name</span><span class="p">()</span><span class="w"> </span><span class="p">);</span>
+</span><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="hll"><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">name</span><span class="p">();</span><span class="w">          </span><span class="c1">// prints the string</span>
+</span><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a>
+<a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a><span class="w">    </span><span class="c1">// trying to use x.num() here would cause a Type safety</span>
+<a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a><span class="w">    </span><span class="c1">// contract violation, because x is currently a string</span>
+<a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a>
+<a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a><span class="hll"><span class="w">    </span><span class="n">x</span><span class="p">.</span><span class="n">set_num</span><span class="p">(</span><span class="w"> </span><span class="mi">120</span><span class="w"> </span><span class="p">);</span><span class="w">               </span><span class="c1">// now x is a number</span>
+</span><a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a><span class="hll"><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">num</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span><span class="w">       </span><span class="c1">// prints 123</span>
+</span><a id="__codelineno-7-27" name="__codelineno-7-27" href="#__codelineno-7-27"></a><span class="p">}</span>
+</code></pre></div>
+<p>Unlike C <code class="highlight"><span class="k">union</span></code>, this <code>@union</code> is safe to use because it always ensures only the active type is accessed.</p>
+<p>Unlike C++11 <code>std::variant</code>, this <code>@union</code> is easier to use because its alternatives are anonymous, and safer to use because each union type is a distinct type. <sup id="fnref:variant"><a class="footnote-ref" href="#fn:variant">1</a></sup></p>
+<p>Each <code>@union</code> type has its own type-safe name, has clear and unambiguous named members, and safely encapsulates a discriminator to rule them all. It uses type-unsafe casts in the implementation, but they are fully encapsulated, where they can be tested once and be safe in all uses.</p>
+<p>Because a <code>@union type</code> is still a <code>type</code>, it can naturally have other things normal types can have, such as template parameter lists and member functions:</p>
+<div class="highlight"><span class="filename">A templated custom safe union type</span><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="hll"><span class="nl">name_or_other</span><span class="p">:</span><span class="w"> </span><span class="err">@</span><span class="k">union</span><span class="w"> </span><span class="o">&lt;</span><span class="n">T</span><span class="o">:</span><span class="n">type</span><span class="o">&gt;</span><span class="w"> </span><span class="n">type</span>
+</span><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span><span class="nl">name</span><span class="w">  </span><span class="p">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">;</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span><span class="nl">other</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">T</span><span class="p">;</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">    </span><span class="c1">// a custom member function</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">    </span><span class="nl">to_string</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="k">this</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="n">is_name</span><span class="p">()</span><span class="w">       </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">name</span><span class="p">();</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">is_other</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">other</span><span class="p">()</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="w">        </span><span class="k">else</span><span class="w">               </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;invalid value&quot;</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="p">}</span>
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="nl">main</span><span class="p">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="w">    </span><span class="nl">x</span><span class="p">:</span><span class="w"> </span><span class="n">name_or_other</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">();</span>
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="w">    </span><span class="n">x</span><span class="p">.</span><span class="n">set_other</span><span class="p">(</span><span class="mi">42</span><span class="p">);</span>
+<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">other</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">3.14</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">to_string</span><span class="p">();</span><span class="w"> </span><span class="c1">// prints &quot;42&quot; here, but is legal</span>
+<a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a><span class="w">                                </span><span class="c1">// whichever alternative is active</span>
+<a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="for-other-common-types">For other common types</h3>
+<h4 id="encapsulated"><code>encapsulated</code></h4>
+<p>An <code>encapsulated</code> type is one that has no public data members.</p>
+<h4 id="noncopyable"><code>noncopyable</code></h4>
+<p>A <code>noncopyable</code> type is one that has no user-defined copy or move functions (<code>operator=</code> with <code>this</code> and <code>that</code> parameters).</p>
+<h4 id="singleton"><a id="singleton"></a> <code>singleton</code></h4>
+<p>A <code>singleton</code> type is one that has only one global object (instance) in the whole program. The single object is initialized lazily the first time it is accessed. A singleton type has no constructors other than a generated default constructor (note: therefore all data members must have default values), and provides a generated <code>instance()</code> function to create and give access to the global instance.</p>
+<p>For example:</p>
+<div class="highlight"><span class="filename">A templated custom safe union type</span><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="hll"><span class="nl">my_singleton</span><span class="p">:</span><span class="w"> </span><span class="err">@</span><span class="n">singleton</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+</span><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span><span class="nl">value</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">42</span><span class="p">;</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="nl">print</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="k">this</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;(value)$</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="p">}</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="nl">main</span><span class="p">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="hll"><span class="w">    </span><span class="n">my_singleton</span><span class="o">::</span><span class="n">instance</span><span class="p">().</span><span class="n">print</span><span class="p">();</span>
+</span><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="for-computational-and-functional-types">For computational and functional types</h3>
+<h4 id="autodiff"><code>autodiff</code></h4>
+<p>An <code>autodiff</code> type is extended so that derivatives can be computed. The metafunction adds for each function and member function a differentiated version. <strong>This is a proof of concept implementation. Expect it to break.</strong>
+A simple hello diff example is:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nl">ad</span><span class="p">:</span><span class="w"> </span><span class="err">@</span><span class="n">autodiff</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span><span class="nl">func</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="o">:</span><span class="w"> </span><span class="kt">double</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">r</span><span class="o">:</span><span class="w"> </span><span class="kt">double</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">        </span><span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="p">}</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="nl">main</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">args</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="w">    </span><span class="nl">x</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="mf">3.0</span><span class="p">;</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="w">    </span><span class="nl">x_d</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span><span class="p">;</span>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="w">    </span><span class="nl">r</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">ad</span><span class="o">::</span><span class="n">func_d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">x_d</span><span class="p">);</span>
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>
+<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Derivative of &#39;x*x&#39; at (x)$ is (r.r_d)$&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="p">}</span>
+</code></pre></div>
+<p>The <code>@autodiff</code> metafunction mostly supports the forward mode of algorithmic differentiation. The reverse mode is only partly implemented and not yet well tested.
+See <a href="../../notes/autodiff_status/">Supported autodiff features</a> for a list of supported language features.</p>
+<p>Options can be given by text template arguments, e.g. <code>@autodiff&lt;"reverse"&gt;</code> enables the reverse mode.
+| Option | Description |
+| <code>"reverse"</code> | Reverse mode algorithmic differentiation. Default suffix <code>_b</code>. |
+| <code>"order=&lt;n&gt;"</code> | Higher order derivatives. <code>&lt;n&gt;</code> can be arbitrary. See <code>regression-tests/pure2-autodiff-higher-order.cpp2</code> for examples. |
+| <code>"suffix=&lt;s&gt;"</code> | Change the forward mode suffix. Can be used to apply autodiff multiple times. E.g. <code>@autodiff @autodiff&lt;"suffix=_d2"&gt;</code>. |
+| <code>"rws_suffix=&lt;s&gt;"</code> | Change the reverse mode suffix. |</p>
+<h4 id="regex"><code>regex</code></h4>
+<p>A <code>regex</code> type has data members that are regular expression objects. This metafunction replaces all of the type's data members named <code>regex</code> or <code>regex_*</code> with regular expression objects of the same type. For example:</p>
+<div class="highlight"><span class="filename">Regular expression example</span><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="hll"><span class="nl">name_matcher</span><span class="p">:</span><span class="w"> </span><span class="err">@</span><span class="n">regex</span><span class="w"> </span><span class="n">type</span>
+</span><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="hll"><span class="w">    </span><span class="nl">regex</span><span class="w">         </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="sa">R</span><span class="s">&quot;</span><span class="dl">(</span><span class="s">(\w+) (\w+)</span><span class="dl">)</span><span class="s">&quot;</span><span class="p">;</span><span class="w">  </span><span class="c1">// for example: Margaret Hamilton</span>
+</span><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="hll"><span class="w">    </span><span class="nl">regex_no_case</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="sa">R</span><span class="s">&quot;</span><span class="dl">(</span><span class="s">/(ab)+/i</span><span class="dl">)</span><span class="s">&quot;</span><span class="p">;</span><span class="w">     </span><span class="c1">// case insensitive match of &quot;ab&quot;+</span>
+</span><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="p">}</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="nl">main</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">args</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">    </span><span class="nl">m</span><span class="p">:</span><span class="w"> </span><span class="n">name_matcher</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">();</span>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>
+<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">    </span><span class="nl">data</span><span class="p">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Donald Duck&quot;</span><span class="p">;</span>
+<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="n">args</span><span class="p">.</span><span class="n">ssize</span><span class="p">()</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="w">        </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+<a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a>
+<a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a><span class="w">    </span><span class="c1">//  regex.match requires matches to match the entire string, from start to end</span>
+<a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a><span class="hll"><span class="w">    </span><span class="nl">result</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">regex</span><span class="p">.</span><span class="n">match</span><span class="p">(</span><span class="n">data</span><span class="p">);</span>
+</span><a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a><span class="hll"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="n">matched</span><span class="w"> </span><span class="p">{</span>
+</span><a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a><span class="w">        </span><span class="c1">//  We found a match; reverse the order of the substrings</span>
+<a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a><span class="hll"><span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Hello (result.group(2))$, (result.group(1))$!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</span><a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a><span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-11-22" name="__codelineno-11-22" href="#__codelineno-11-22"></a><span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;I only know names of the form: &lt;name&gt; &lt;family name&gt;.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<a id="__codelineno-11-23" name="__codelineno-11-23" href="#__codelineno-11-23"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-11-24" name="__codelineno-11-24" href="#__codelineno-11-24"></a>
+<a id="__codelineno-11-25" name="__codelineno-11-25" href="#__codelineno-11-25"></a><span class="w">    </span><span class="c1">//  regex.search finds a match anywhere within the target string</span>
+<a id="__codelineno-11-26" name="__codelineno-11-26" href="#__codelineno-11-26"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Case insensitive match: &quot;</span>
+<a id="__codelineno-11-27" name="__codelineno-11-27" href="#__codelineno-11-27"></a><span class="hll"><span class="w">                 </span><span class="s">&quot;(m.regex_no_case.search(</span><span class="se">\&quot;</span><span class="s">blubabABblah</span><span class="se">\&quot;</span><span class="s">).group(0))$</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</span><a id="__codelineno-11-28" name="__codelineno-11-28" href="#__codelineno-11-28"></a><span class="p">}</span>
+<a id="__codelineno-11-29" name="__codelineno-11-29" href="#__codelineno-11-29"></a><span class="c1">//  Prints:</span>
+<a id="__codelineno-11-30" name="__codelineno-11-30" href="#__codelineno-11-30"></a><span class="hll"><span class="c1">//      Hello Duck, Donald!</span>
+</span><a id="__codelineno-11-31" name="__codelineno-11-31" href="#__codelineno-11-31"></a><span class="hll"><span class="c1">//      Case insensitive match: abAB</span>
+</span></code></pre></div>
+<p>The <code>@regex</code> metafunction currently supports most of <a href="https://perldoc.perl.org/perlre">Perl regex syntax</a>, except for Unicode characters and the syntax tokens associated with them. See <a href="../../notes/regex_status/">Supported regular expression features</a> for a list of regex options.</p>
+<p>Each regex object has the type <code>cpp2::regex::regular_expression</code>, which is defined in <code>include/cpp2regex.h2</code>. The member functions are:</p>
+<div class="highlight"><span class="filename">Member functions for regular expressions</span><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1">//  .match() requires matches to match the entire string, from start to end</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="c1">//  .search() finds a match anywhere within the target string</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="nl">match</span><span class="w"> </span><span class="p">:</span><span class="w">        </span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">str</span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">)</span><span class="w">                </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">search_return</span><span class="p">;</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="nl">search</span><span class="p">:</span><span class="w">        </span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">str</span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">)</span><span class="w">                </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">search_return</span><span class="p">;</span>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="nl">match</span><span class="w"> </span><span class="p">:</span><span class="w">        </span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">str</span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">start</span><span class="p">)</span><span class="w">         </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">search_return</span><span class="p">;</span>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="nl">search</span><span class="p">:</span><span class="w">        </span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">str</span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">start</span><span class="p">)</span><span class="w">         </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">search_return</span><span class="p">;</span>
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="nl">match</span><span class="w"> </span><span class="p">:</span><span class="w">        </span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">str</span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="n">length</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">search_return</span><span class="p">;</span>
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="nl">search</span><span class="p">:</span><span class="w">        </span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">str</span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="n">length</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">search_return</span><span class="p">;</span>
+<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>
+<a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a><span class="nl">match</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="o">&lt;</span><span class="n">Iter</span><span class="o">&gt;</span><span class="w"> </span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">start</span><span class="o">:</span><span class="w"> </span><span class="n">Iter</span><span class="p">,</span><span class="w"> </span><span class="n">end</span><span class="o">:</span><span class="w"> </span><span class="n">Iter</span><span class="p">)</span><span class="w">               </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">search_return</span><span class="p">;</span>
+<a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a><span class="nl">search</span><span class="p">:</span><span class="w"> </span><span class="o">&lt;</span><span class="n">Iter</span><span class="o">&gt;</span><span class="w"> </span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">start</span><span class="o">:</span><span class="w"> </span><span class="n">Iter</span><span class="p">,</span><span class="w"> </span><span class="n">end</span><span class="o">:</span><span class="w"> </span><span class="n">Iter</span><span class="p">)</span><span class="w">               </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">search_return</span><span class="p">;</span>
+</code></pre></div>
+<p>The return type <code>search_return</code> is defined in <code>cpp2::regex::regular_expression</code>. It has these members:</p>
+<div class="highlight"><span class="filename">Members of a regular expression result</span><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nl">matched</span><span class="p">:</span><span class="w"> </span><span class="kt">bool</span><span class="p">;</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="nl">pos</span><span class="p">:</span><span class="w">     </span><span class="kt">int</span><span class="p">;</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="c1">//  Functions to access groups by number</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="nl">group_number</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="k">this</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">size_t</span><span class="p">;;</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="nl">group</span><span class="p">:</span><span class="w">        </span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">g</span><span class="o">:</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">;</span>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="nl">group_start</span><span class="p">:</span><span class="w">  </span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">g</span><span class="o">:</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">int</span><span class="p">;</span>
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="nl">group_end</span><span class="p">:</span><span class="w">    </span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">g</span><span class="o">:</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">int</span><span class="p">;</span>
+<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>
+<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="c1">//  Functions to access groups by name</span>
+<a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="nl">group</span><span class="p">:</span><span class="w">        </span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">g</span><span class="o">:</span><span class="w"> </span><span class="n">bstring</span><span class="o">&lt;</span><span class="n">CharT</span><span class="o">&gt;</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">;</span>
+<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="nl">group_start</span><span class="p">:</span><span class="w">  </span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">g</span><span class="o">:</span><span class="w"> </span><span class="n">bstring</span><span class="o">&lt;</span><span class="n">CharT</span><span class="o">&gt;</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">int</span><span class="p">;</span>
+<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="nl">group_end</span><span class="p">:</span><span class="w">    </span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">g</span><span class="o">:</span><span class="w"> </span><span class="n">bstring</span><span class="o">&lt;</span><span class="n">CharT</span><span class="o">&gt;</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">int</span><span class="p">;</span>
+</code></pre></div>
+<h3 id="helpers-and-utilities">Helpers and utilities</h3>
+<h4 id="cpp1_rule_of_zero"><code>cpp1_rule_of_zero</code></h4>
+<p>A <code>cpp1_rule_of_zero</code> type is one that has no user-written copy/move/destructor functions, and for which Cpp2 should generate nothing so that the Cpp1 defaults for generated special member functions are accepted.</p>
+<blockquote>
+<p>C.20: If you can avoid defining default operations, do.
+Reason: It's the simplest and gives the cleanest semantics.
+This is known as "the rule of zero".
+— Stroustrup, Sutter, et al. (C++ Core Guidelines)</p>
+</blockquote>
+<h4 id="print"><code>print</code></h4>
+<p><code>print</code> prints a pretty-printed visualization of the type to the console.</p>
+<p>This is most useful for debugging metafunctions, and otherwise seeing the results of applying previous metafunctions.</p>
+<p>For a detailed example, see <a href="#generating-source-code-at-compile-time">the <code>shape</code> example above</a>.</p>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:variant">
+<p>With <code>variant</code>, there's no way to distinguish in the type system between a <code>variant&lt;int,string&gt;</code> that stores either an employee id or employee name, and a <code>variant&lt;int,string&gt;</code> that stores either a lucky number or a pet unicorn's dominant color.&#160;<a class="footnote-backref" href="#fnref:variant" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy <a href="https://github.com/hsutter" target="_blank" rel="noopener">Herb Sutter</a> &bull; <a href="https://github.com/hsutter/cppfront/blob/main/LICENSE">cppfront license </a>
+
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.instant", "navigation.instant.preview", "navigation.top", "search.suggest", "search.highlight", "content.tabs.link", "content.code.annotate", "content.code.annotation", "content.code.copy", "content.footnote.tooltips"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
