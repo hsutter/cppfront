@@ -1,0 +1,2053 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../objects/">
+      
+      
+        <link rel="next" href="../contracts/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Functions, branches, and loops - Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#functions" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Cpp2 and cppfront — An experimental &#39;C++ syntax 2&#39; and its first compiler" class="md-header__button md-logo" aria-label="Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Functions, branches, and loops
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6m0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4M7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Cpp2 and cppfront — An experimental &#39;C++ syntax 2&#39; and its first compiler" class="md-nav__button md-logo" aria-label="Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Welcome & getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Welcome & getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../welcome/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview: What are Cpp2 and cppfront? How do I get and build cppfront?
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../welcome/hello-world/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hello, world!
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../welcome/integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Adding cppfront to your existing C++ project
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cpp2 reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Cpp2 reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../common/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Common concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../expressions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Expressions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../declarations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Declarations and aliases
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../objects/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Objects, initialization, and memory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Functions, branches, and loops
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Functions, branches, and loops
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#function-signatures-parameters-returns-and-using-function-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Function signatures: Parameters, returns, and using function types
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Function signatures: Parameters, returns, and using function types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#overview_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return values
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Return values">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#single-anonymous-return-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Single anonymous return values
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-parameter-lists-nameable-return-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return parameter lists: Nameable return value(s)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-outputs-are-not-implicitly-discardable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Function outputs are not implicitly discardable
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-function-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using function types
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#control-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Control flow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Control flow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#if-else-branches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        if, else — Branches
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#for-while-do-loops" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        for, while, do — Loops
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="for, while, do — Loops">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#loop-names-break-and-continue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loop names, break, and continue
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#throw-try-catch-exceptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        throw, try, catch — Exceptions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#static-global-variables-inside-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        static — Global variables inside functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#moveforward-from-definite-last-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Move/forward from definite last use
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#generality-note-summary-of-function-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generality note: Summary of function defaults
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contracts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types and inheritance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../metafunctions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metafunctions and reflection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../namespaces/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Namespaces
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../safety/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Safety and "unchecked"
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cppfront reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Cppfront reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cppfront/mixed/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using Cpp1 (today's syntax) and Cpp2 in the same source file
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cppfront/options/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cppfront command line options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Notes and supplemental topics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Notes and supplemental topics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notes/regex_status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    @regex status: Regular expression features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#function-signatures-parameters-returns-and-using-function-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Function signatures: Parameters, returns, and using function types
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Function signatures: Parameters, returns, and using function types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#overview_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return values
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Return values">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#single-anonymous-return-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Single anonymous return values
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-parameter-lists-nameable-return-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return parameter lists: Nameable return value(s)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-outputs-are-not-implicitly-discardable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Function outputs are not implicitly discardable
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-function-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using function types
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#control-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Control flow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Control flow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#if-else-branches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        if, else — Branches
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#for-while-do-loops" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        for, while, do — Loops
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="for, while, do — Loops">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#loop-names-break-and-continue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loop names, break, and continue
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#throw-try-catch-exceptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        throw, try, catch — Exceptions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#static-global-variables-inside-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        static — Global variables inside functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#moveforward-from-definite-last-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Move/forward from definite last use
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#generality-note-summary-of-function-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generality note: Summary of function defaults
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="functions">Functions</h1>
+<h2 id="overview">Overview</h2>
+<p>A function is defined by writing a function signature after the <code>:</code> and a statement (expression or <code>{</code> <code>}</code> compound statement) after the <code>=</code>. After the optional <a href="../declarations/#template-parameters">template parameters</a> available for all declarations, a function signature consists of a possibly-empty <a href="#parameters">parameter list</a>, and one or more optional <a href="#return-values">return values</a>.</p>
+<p>For example, the minimal function named <code>func</code> that takes no parameters and returns nothing (<code class="highlight"><span class="kt">void</span></code>) is:</p>
+<div class="highlight"><span class="filename">A minimal function</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nl">func</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="cm">/* no parameters */</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* empty body */</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<h2 id="function-signatures-parameters-returns-and-using-function-types"><a id="function-signatures"></a> Function signatures: Parameters, returns, and using function types</h2>
+<h3 id="overview_1"><a id="parameter-kinds"></a> Overview</h3>
+<p>There are six kinds of function parameters, and two of them are the kinds of functions returns:</p>
+<table>
+<thead>
+<tr>
+<th>Kind</th>
+<th>Parameter</th>
+<th>Return</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>in</code></td>
+<td>⭐</td>
+<td></td>
+</tr>
+<tr>
+<td><code>inout</code></td>
+<td>✅</td>
+<td></td>
+</tr>
+<tr>
+<td><code>out</code></td>
+<td>✅</td>
+<td></td>
+</tr>
+<tr>
+<td><code>copy</code></td>
+<td>✅</td>
+<td></td>
+</tr>
+<tr>
+<td><code>move</code></td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><code>forward</code></td>
+<td>✅</td>
+<td>⭐</td>
+</tr>
+</tbody>
+</table>
+<p>The two cases marked ⭐ can automatically pass/return by value or by reference, and so they can be optionally written with <code>_ref</code> to require pass/return by reference and not by value (i.e., <code>in_ref</code>, <code>-&gt; forward_ref</code>).</p>
+<p>That's it. For details, see below.</p>
+<h3 id="parameters"><a id="parameters"></a> Parameters</h3>
+<p>The parameter list is a <a href="../common/#lists">list</a> enclosed by <code>(</code> <code>)</code> parentheses. Each parameter is declared using the <a href="../declarations/">same unified syntax</a> as used for all declarations. For example:</p>
+<div class="highlight"><span class="filename">Declaring parameters</span><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nl">func</span><span class="p">:</span><span class="w"> </span><span class="p">(</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="hll"><span class="w">    </span><span class="nl">x</span><span class="p">:</span><span class="w"> </span><span class="n">i32</span><span class="p">,</span><span class="w">                         </span><span class="c1">// parameter x is a 32-bit int</span>
+</span><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="hll"><span class="w">    </span><span class="nl">y</span><span class="p">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span><span class="w">                 </span><span class="c1">// parameter y is a std::string</span>
+</span><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="hll"><span class="w">    </span><span class="nl">z</span><span class="p">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">map</span><span class="o">&lt;</span><span class="n">i32</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w">   </span><span class="c1">// parameter z is a std::map</span>
+</span><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="p">)</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="c1">// ...</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="p">}</span>
+</code></pre></div>
+<p>The parameter type can be deduced by writing <code>_</code> (the default, so it can be omitted). You can use <code>is</code> to declare a type constraint (e.g., a concept) that a deduced type must match, in which case <code>_</code> is required. For example:</p>
+<div class="highlight"><span class="filename">Declaring a parameter of constrained deduced type</span><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">//  ordinary generic function, x&#39;s type is deduced</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="hll"><span class="nl">print</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="o">:</span><span class="w"> </span><span class="n">_</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+</span><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="hll"><span class="nl">print</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="c1">// same, using the _ default</span>
+</span><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1">//  number&#39;s type is deduced, but must match the std::integral concept</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="hll"><span class="nl">calc</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">number</span><span class="o">:</span><span class="w"> </span><span class="n">_</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">integral</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/*...*/</span><span class="w"> </span><span class="p">}</span>
+</span></code></pre></div>
+<p>There are six ways to pass parameters that cover all use cases, that can be written before the parameter name:</p>
+<table>
+<thead>
+<tr>
+<th>Parameter&nbsp;<strong><em>kind</em></strong></th>
+<th>"Pass an <code>x</code> the function ______"</th>
+<th>Accepts arguments that are</th>
+<th>Special semantics</th>
+<th><strong><em>kind</em></strong> <code>x: X</code> compiles&nbsp;to&nbsp;Cpp1&nbsp;as</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><big><strong><code>in</code></strong></big> (default)</td>
+<td>can read from</td>
+<td>anything</td>
+<td>always <code class="highlight"><span class="k">const</span></code><p>automatically passes by value if cheaply copyable<br><br>to guarantee a by-reference passing, use <code>in_ref</code></td>
+<td><code>X const x</code> or <br> <code>X const&amp; x</code></td>
+</tr>
+<tr>
+<td><big><strong><code>copy</code></strong></big></td>
+<td>gets a copy of</td>
+<td>anything</td>
+<td>acts like a normal local variable initialized with the argument</td>
+<td><code>X x</code></td>
+</tr>
+<tr>
+<td><big><strong><code>inout</code></strong></big></td>
+<td>can read from and write to</td>
+<td>lvalues</td>
+<td></td>
+<td><code>X&amp; x</code></td>
+</tr>
+<tr>
+<td><big><strong><code>out</code></strong></big></td>
+<td>writes to (including construct)</td>
+<td>lvalues (including uninitialized)</td>
+<td>must <code>=</code> assign/construct before other uses</td>
+<td><code>cpp2::impl::out&lt;X&gt;</code></td>
+</tr>
+<tr>
+<td><big><strong><code>move</code></strong></big></td>
+<td>moves from (consume the value of)</td>
+<td>rvalues</td>
+<td>automatically moves from every definite last use</td>
+<td><code>X&amp;&amp;</code></td>
+</tr>
+<tr>
+<td><big><strong><code>forward</code></strong></big></td>
+<td>forwards</td>
+<td>anything</td>
+<td>automatically forwards from every definite last use</td>
+<td><code>auto&amp;&amp;</code>, and if a specific type is named also a <code>requires</code>-constraint requiring convertibilty to that type</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Note: All parameters and other objects in Cpp2 are <code class="highlight"><span class="k">const</span></code> by default, except for local variables. For details, see <a href="https://github.com/hsutter/cppfront/wiki/Design-note%3A-const-objects-by-default">Design note: <code class="highlight"><span class="k">const</span></code> objects by default</a>.</p>
+</blockquote>
+<p>For example:</p>
+<div class="highlight"><span class="filename">Declaring parameter kinds</span><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nl">append_x_to_y</span><span class="p">:</span><span class="w"> </span><span class="p">(</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="hll"><span class="w">    </span><span class="nl">x</span><span class="w">       </span><span class="p">:</span><span class="w"> </span><span class="n">i32</span><span class="p">,</span><span class="w">          </span><span class="c1">// an i32 I can read from (i.e., const)</span>
+</span><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="hll"><span class="w">    </span><span class="n">inout</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w">   </span><span class="c1">// a string I can read from and write to</span>
+</span><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="p">)</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">to_string</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w">   </span><span class="c1">// read x, read and write y</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="p">}</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="nl">wrap_f</span><span class="p">:</span><span class="w"> </span><span class="p">(</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="hll"><span class="w">    </span><span class="n">forward</span><span class="w"> </span><span class="n">x</span><span class="w">               </span><span class="c1">// a generic value of deduced type I can forward</span>
+</span><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="p">)</span><span class="w">                           </span><span class="c1">//  (omitting x&#39;s  type means the same as &#39;: _&#39;)</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">    </span><span class="n">global_counter</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w">    </span><span class="c1">// ok to read x</span>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="w">    </span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w">                   </span><span class="c1">// last use: automatically does &#39;std::forward&lt;T&gt;(x)&#39;</span>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="return-values"><a id="return-values"></a> Return values</h3>
+<p>A function can return either a single anonymous return value, or a return parameter list containing named return value(s). The default is <code class="highlight"><span class="o">-&gt;</span><span class="w"> </span><span class="kt">void</span></code>.</p>
+<h4 id="single-anonymous-return-values">Single anonymous return values</h4>
+<p><strong><code class="highlight"><span class="o">-&gt;</span></code> <em>kind</em> <code>X</code></strong> to return a single unnamed value of type <code>X</code> using the same kinds as in the <a href="#parameters">parameters</a> syntax, but where the only legal kinds are <code>move</code> (the default) or <code>forward</code> (with optional <code>forward_ref</code>; see below).  The type can be  <code class="highlight"><span class="o">-&gt;</span><span class="w"> </span><span class="kt">void</span></code> to signify the function has no return value. If <code>X</code> is not <code class="highlight"><span class="kt">void</span></code>, the function body must have a <code class="highlight"><span class="k">return</span><span class="w"> </span><span class="cm">/*value*/</span><span class="p">;</span></code> statement that returns a value of type <code>X</code> on every path that exits the function, or must be a single expression of type <code>X</code>.</p>
+<p>To deduce the return type, write <code>_</code>:</p>
+<ul>
+<li><code>-&gt; _</code> deduces by-value return.</li>
+<li><code>-&gt; forward _</code> deduces by-value return (if the function returns a prvalue or type member object) or by-reference return (everything else), based on the <code>decltype</code> of the returned expression.</li>
+<li><code>-&gt; forward_ref _</code> deduces by-reference return only.</li>
+</ul>
+<p>A function whose body is a single expression <code>= expr;</code> defaults to <code>-&gt; forward _ = { return expr; }</code>.</p>
+<p>For example:</p>
+<div class="highlight"><span class="filename">Functions with an unnamed return value</span><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1">//  A function returning no value (void)</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="hll"><span class="nl">increment_in_place</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">inout</span><span class="w"> </span><span class="n">a</span><span class="o">:</span><span class="w"> </span><span class="n">i32</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">a</span><span class="o">++</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+</span><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1">//  Or, using syntactic defaults, the following has identical meaning:</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="hll"><span class="nl">increment_in_place</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">inout</span><span class="w"> </span><span class="n">a</span><span class="o">:</span><span class="w"> </span><span class="n">i32</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">a</span><span class="o">++</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+</span><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="c1">//  A function returning a single value of type i32</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="hll"><span class="nl">add_one</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="o">:</span><span class="w"> </span><span class="n">i32</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">i32</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">a</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+</span><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="c1">//  Or, using syntactic defaults, the following has identical meaning:</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="hll"><span class="nl">add_one</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="o">:</span><span class="w"> </span><span class="n">i32</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">i32</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span>
+</span><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="c1">//  A generic function returning a single value of deduced type</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="hll"><span class="nl">add</span><span class="p">:</span><span class="w"> </span><span class="o">&lt;</span><span class="n">T</span><span class="o">:</span><span class="w"> </span><span class="n">type</span><span class="p">,</span><span class="w"> </span><span class="n">U</span><span class="o">:</span><span class="w"> </span><span class="n">type</span><span class="o">&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="o">:</span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="o">:</span><span class="n">U</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">forward</span><span class="w"> </span><span class="n">_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+</span><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="c1">//  Or, using syntactic defaults, the following have identical meaning:</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="hll"><span class="nl">add</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">forward</span><span class="w"> </span><span class="n">_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="p">;</span>
+</span><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="hll"><span class="nl">add</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="p">;</span>
+</span><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="c1">//  A generic function expression returning a single value of deduced type</span>
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="hll"><span class="n">vec</span><span class="p">.</span><span class="n">std</span><span class="o">::</span><span class="n">ranges</span><span class="o">::</span><span class="n">sort</span><span class="p">(</span><span class="w"> </span><span class="o">:</span><span class="p">(</span><span class="n">x</span><span class="o">:</span><span class="n">_</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="o">:</span><span class="n">_</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">forward</span><span class="w"> </span><span class="n">_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">y</span><span class="o">&lt;</span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">);</span>
+</span><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="c1">//  Or, using syntactic defaults, the following has identical meaning:</span>
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="hll"><span class="n">vec</span><span class="p">.</span><span class="n">std</span><span class="o">::</span><span class="n">ranges</span><span class="o">::</span><span class="n">sort</span><span class="p">(</span><span class="w"> </span><span class="o">:</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">y</span><span class="o">&lt;</span><span class="n">x</span><span class="w"> </span><span class="p">);</span>
+</span><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a><span class="c1">//  Both are identical to this, which uses the most verbose possible syntax:</span>
+<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a><span class="hll"><span class="n">vec</span><span class="p">.</span><span class="n">std</span><span class="o">::</span><span class="n">ranges</span><span class="o">::</span><span class="n">sort</span><span class="p">(</span><span class="w"> </span><span class="o">:&lt;</span><span class="n">X</span><span class="o">:</span><span class="n">type</span><span class="p">,</span><span class="w"> </span><span class="n">Y</span><span class="o">:</span><span class="n">type</span><span class="o">&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="o">:</span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="o">:</span><span class="n">Y</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">forward</span><span class="w"> </span><span class="n">_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">y</span><span class="o">&lt;</span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">);</span>
+</span></code></pre></div>
+<h4 id="return-parameter-lists-nameable-return-values">Return parameter lists: Nameable return value(s)</h4>
+<p><strong><code class="highlight"><span class="o">-&gt;</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="cm">/* parameter list */</span><span class="w"> </span><span class="p">)</span></code></strong> to return a list of named return parameters using the same <a href="#parameters">parameters</a> syntax, but where the only needed kinds are <code>out</code> (the default, which moves where possible) or <code>forward</code>. The function body must <a href="../objects/#init">initialize</a> the value of each return-parameter <code>ret</code> in its body the same way as any other local variable. An explicit return statement is written just <code class="highlight"><span class="k">return</span><span class="p">;</span></code> and returns the named values; the function has an implicit <code class="highlight"><span class="k">return</span><span class="p">;</span></code> at the end. If only a single return parameter is in the list, it is emitted in the lowered Cpp1 code the same way as a single anonymous return value above, so its name is only available inside the function body.</p>
+<p>For example:</p>
+<div class="highlight"><span class="filename">Function with multiple/named return values</span><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="hll"><span class="nl">divide</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">dividend</span><span class="o">:</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="n">divisor</span><span class="o">:</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">quotient</span><span class="o">:</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="n">remainder</span><span class="o">:</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+</span><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="n">divisor</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="hll"><span class="w">        </span><span class="n">quotient</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                      </span><span class="c1">// constructs quotient</span>
+</span><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="hll"><span class="w">        </span><span class="n">remainder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                      </span><span class="c1">// constructs remainder</span>
+</span><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="hll"><span class="w">        </span><span class="n">quotient</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dividend</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">divisor</span><span class="p">;</span><span class="w">      </span><span class="c1">// constructs quotient</span>
+</span><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="hll"><span class="w">        </span><span class="n">remainder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dividend</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="n">divisor</span><span class="p">;</span><span class="w">     </span><span class="c1">// constructs remainder</span>
+</span><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="p">}</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="nl">main</span><span class="p">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">    </span><span class="nl">div</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">divide</span><span class="p">(</span><span class="mi">11</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">);</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="hll"><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;(div.quotient)$, (div.remainder)$</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</span><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="p">}</span>
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="hll"><span class="c1">//  Prints:</span>
+</span><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="hll"><span class="c1">//     2, 1</span>
+</span></code></pre></div>
+<p>This next example declares a <a href="../types/#this-parameter">member function</a> with multiple return values in a <a href="../types/">type</a> named <code>set</code>:</p>
+<div class="highlight"><span class="filename">Member function with multiple/named return values</span><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nl">set</span><span class="p">:</span><span class="w"> </span><span class="o">&lt;</span><span class="n">Key</span><span class="o">&gt;</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="nl">container</span><span class="p">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">set</span><span class="o">&lt;</span><span class="n">Key</span><span class="o">&gt;</span><span class="p">;</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="nl">iterator</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">set</span><span class="o">&lt;</span><span class="n">Key</span><span class="o">&gt;::</span><span class="n">iterator</span><span class="p">;</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="c1">//  A std::set::insert-like function using named return values</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">    </span><span class="c1">//  instead of just a std::pair/tuple</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="hll"><span class="w">    </span><span class="nl">insert</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">inout</span><span class="w"> </span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="o">:</span><span class="w"> </span><span class="n">Key</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">where</span><span class="o">:</span><span class="w"> </span><span class="n">iterator</span><span class="p">,</span><span class="w"> </span><span class="n">inserted</span><span class="o">:</span><span class="w"> </span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+</span><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">        </span><span class="nl">set_returned</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">container</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="hll"><span class="w">        </span><span class="n">where</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="n">set_returned</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
+</span><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="hll"><span class="w">        </span><span class="n">inserted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">set_returned</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
+</span><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">    </span><span class="nl">ssize</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="k">this</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">i64</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">ssize</span><span class="p">(</span><span class="n">container</span><span class="p">);</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">    </span><span class="c1">// ...</span>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="p">}</span>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="nl">use_inserted_position</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">_</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="nl">main</span><span class="p">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="w">    </span><span class="nl">m</span><span class="p">:</span><span class="w"> </span><span class="n">set</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">();</span>
+<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a><span class="hll"><span class="w">    </span><span class="nl">ret</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="s">&quot;xyzzy&quot;</span><span class="p">);</span>
+</span><a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a><span class="hll"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="n">ret</span><span class="p">.</span><span class="n">inserted</span><span class="w"> </span><span class="p">{</span>
+</span><a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a><span class="hll"><span class="w">        </span><span class="n">use_inserted_position</span><span class="p">(</span><span class="w"> </span><span class="n">ret</span><span class="p">.</span><span class="n">where</span><span class="w"> </span><span class="p">);</span>
+</span><a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a><span class="w">    </span><span class="n">assert</span><span class="p">(</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">ssize</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">);</span>
+<a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a><span class="p">}</span>
+</code></pre></div>
+<h4 id="function-outputs-are-not-implicitly-discardable"><a id="nodiscard-outputs"></a> Function outputs are not implicitly discardable</h4>
+<p>A function's outputs are its return values, and the "out" state of any <code>out</code> and <code>inout</code> parameters.</p>
+<p>Function outputs cannot be silently discarded. To explicitly discard a function output, assign it to <code>_</code>. For example:</p>
+<div class="highlight"><span class="filename">No silent discard</span><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nl">f</span><span class="p">:</span><span class="w"> </span><span class="p">()</span><span class="w">             </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nl">g</span><span class="p">:</span><span class="w"> </span><span class="p">()</span><span class="w">             </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">int</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nl">h</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">inout</span><span class="w"> </span><span class="n">x</span><span class="o">:</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="nl">main</span><span class="p">:</span><span class="w"> </span><span class="p">()</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">    </span><span class="n">f</span><span class="p">();</span><span class="w">                    </span><span class="c1">// ok, no return value</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="hll"><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">g</span><span class="p">();</span><span class="w">       </span><span class="c1">// ok, use return value</span>
+</span><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="hll"><span class="w">    </span><span class="n">_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">g</span><span class="p">();</span><span class="w">                </span><span class="c1">// ok, explicitly discard return value</span>
+</span><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="hll"><span class="w">    </span><span class="n">g</span><span class="p">();</span><span class="w">                    </span><span class="c1">// ERROR, return value is ignored</span>
+</span><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="w">        </span><span class="nl">x</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="hll"><span class="w">        </span><span class="n">h</span><span class="p">(</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="p">);</span><span class="w">             </span><span class="c1">// ok, x is referred to again...</span>
+</span><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="hll"><span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w">     </span><span class="c1">// ... here, so its new value is used</span>
+</span><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>
+<a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a><span class="w">        </span><span class="nl">x</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a><span class="hll"><span class="w">        </span><span class="n">h</span><span class="p">(</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="p">);</span><span class="w">             </span><span class="c1">// ok, x is referred to again...</span>
+</span><a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a><span class="hll"><span class="w">        </span><span class="n">_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w">              </span><span class="c1">// ... here where its value explicitly discarded</span>
+</span><a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a>
+<a id="__codelineno-7-27" name="__codelineno-7-27" href="#__codelineno-7-27"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-7-28" name="__codelineno-7-28" href="#__codelineno-7-28"></a><span class="w">        </span><span class="nl">x</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<a id="__codelineno-7-29" name="__codelineno-7-29" href="#__codelineno-7-29"></a><span class="hll"><span class="w">        </span><span class="n">h</span><span class="p">(</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="p">);</span><span class="w">             </span><span class="c1">// ERROR, this is a definite last use of x</span>
+</span><a id="__codelineno-7-30" name="__codelineno-7-30" href="#__codelineno-7-30"></a><span class="hll"><span class="w">    </span><span class="p">}</span><span class="w">                       </span><span class="c1">// so x is not referred to again, and its</span>
+</span><a id="__codelineno-7-31" name="__codelineno-7-31" href="#__codelineno-7-31"></a><span class="w">                            </span><span class="c1">// &#39;out&#39; value can&#39;t be implicitly discarded</span>
+<a id="__codelineno-7-32" name="__codelineno-7-32" href="#__codelineno-7-32"></a><span class="p">}</span>
+</code></pre></div>
+<blockquote>
+<p>Cpp2 imbues Cpp1 code with nondiscardable semantics, while staying fully compatible as usual:</p>
+<ul>
+<li>
+<p>A function written in Cpp2 syntax that returns something other than <code class="highlight"><span class="kt">void</span></code> is always compiled to Cpp1 with <code>[[nodiscard]]</code>.</p>
+</li>
+<li>
+<p>A function call written in Cpp2 <code>x.f()</code> member call syntax always treats a non-<code class="highlight"><span class="kt">void</span></code> return type as not discardable, even if the function was written in Cpp1 syntax that did not write <code>[[nodiscard]]</code>.</p>
+</li>
+</ul>
+</blockquote>
+<p>For details and rationale, see <a href="https://github.com/hsutter/cppfront/wiki/Design-note%3A-Explicit-discard">Design note: Explicit discard</a>.</p>
+<h3 id="using-function-types"><a id = "function-types"></a> Using function types</h3>
+<p>The same function parameter/return syntax can be used as a function type, for example to instantiate <code>std::function</code> or to declare a pointer to function variable. For example:</p>
+<div class="highlight"><span class="filename">Using function types with std::function and *pfunc</span><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nl">decorate_int</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="o">:</span><span class="w"> </span><span class="n">i32</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;--&gt; (i)$ &lt;--&quot;</span><span class="p">;</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="nl">main</span><span class="p">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="hll"><span class="w">    </span><span class="nl">pf1</span><span class="p">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="o">:</span><span class="w"> </span><span class="n">i32</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">decorate_int</span><span class="o">&amp;</span><span class="p">;</span>
+</span><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;pf1(123) returned </span><span class="se">\&quot;</span><span class="s">(pf1(123))$</span><span class="se">\&quot;\n</span><span class="s">&quot;</span><span class="p">;</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="hll"><span class="w">    </span><span class="nl">pf2</span><span class="p">:</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="o">:</span><span class="w"> </span><span class="n">i32</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">decorate_int</span><span class="o">&amp;</span><span class="p">;</span>
+</span><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;pf2(456) returned </span><span class="se">\&quot;</span><span class="s">(pf2(456))$</span><span class="se">\&quot;\n</span><span class="s">&quot;</span><span class="p">;</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="p">}</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="c1">//  Prints:</span>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="c1">//    pf1 returned &quot;--&gt; 123 &lt;--&quot;</span>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="c1">//    pf2 returned &quot;--&gt; 456 &lt;--&quot;</span>
+</code></pre></div>
+<h2 id="control-flow"><a id="control flow"></a> Control flow</h2>
+<h3 id="if-else-branches"><a id="branches"></a> <code class="highlight"><span class="k">if</span></code>, <code class="highlight"><span class="k">else</span></code> — Branches</h3>
+<p><code>if</code> and <code>else</code> are like always in C++, except that <code>(</code> <code>)</code> parentheses around the condition are not required. Instead, <code>{</code> <code>}</code> braces around a branch body <em>are</em> required. For example:</p>
+<div class="highlight"><span class="filename">Using if and else</span><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="hll"><span class="k">if</span><span class="w"> </span><span class="n">vec</span><span class="p">.</span><span class="n">ssize</span><span class="p">()</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">100</span><span class="w"> </span><span class="p">{</span>
+</span><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span><span class="n">do_general_algorithm</span><span class="p">(</span><span class="w"> </span><span class="n">container</span><span class="w"> </span><span class="p">);</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="p">}</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="hll"><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+</span><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">    </span><span class="n">do_linear_scan</span><span class="p">(</span><span class="w"> </span><span class="n">vec</span><span class="w"> </span><span class="p">);</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="for-while-do-loops"><a id="loops"></a> <code class="highlight"><span class="k">for</span></code>, <code class="highlight"><span class="k">while</span></code>, <code class="highlight"><span class="k">do</span></code> — Loops</h3>
+<p><strong><code class="highlight"><span class="k">do</span></code></strong> and <strong><code class="highlight"><span class="k">while</span></code></strong> are like always in C++, except that <code>(</code> <code>)</code> parentheses around the condition are not required. Instead, <code>{</code> <code>}</code> braces around the loop body <em>are</em> required.</p>
+<p><strong><code class="highlight"><span class="k">for</span><span class="w"> </span><span class="n">range</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="n">e</span><span class="p">)</span></code></strong> <strong><em>statement</em></strong> says "for each element in <code>range</code>, call it <code>e</code> and perform the statement." The loop parameter <code>(e)</code> is an ordinary parameter that can be passed using any <a href="#parameters">parameter kinds</a>; as always, the default is <code>in</code>, which is read-only and expresses a read-only loop. The statement is not required to be enclosed in braces.</p>
+<p>Every loop can have a <code>next</code> clause, that is performed at the end of each loop body execution. This makes it easy to have a counter for any loop, including a range <code class="highlight"><span class="k">for</span></code> loop.</p>
+<blockquote>
+<p>Note: Whitespace is just a stylistic choice. This documentation's style generally puts each keyword on its own line and lines up what follows.</p>
+</blockquote>
+<p>For example:</p>
+<div class="highlight"><span class="filename">Using loops</span><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nl">words</span><span class="p">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;Adam&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Betty&quot;</span><span class="p">);</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="nl">i</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="hll"><span class="k">while</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">words</span><span class="p">.</span><span class="n">ssize</span><span class="p">()</span><span class="w"> </span><span class="c1">// while this condition is true</span>
+</span><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="hll"><span class="n">next</span><span class="w">  </span><span class="n">i</span><span class="o">++</span><span class="w">               </span><span class="c1">// and increment i after each loop body is run</span>
+</span><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="p">{</span><span class="w">                       </span><span class="c1">// do this loop body</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;word: (words[i])$</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="p">}</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="c1">//  prints:</span>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="c1">//      word: Adam</span>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="c1">//      word: Betty</span>
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>
+<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="hll"><span class="k">do</span><span class="w"> </span><span class="p">{</span><span class="w">                    </span><span class="c1">// do this loop body</span>
+</span><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;**</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a><span class="p">}</span>
+<a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a><span class="hll"><span class="n">next</span><span class="w">  </span><span class="n">i</span><span class="o">--</span><span class="w">               </span><span class="c1">// and decrement i after each loop body is run</span>
+</span><a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a><span class="hll"><span class="k">while</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">            </span><span class="c1">// while this condition is true</span>
+</span><a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a><span class="c1">//  prints:</span>
+<a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a><span class="c1">//      **</span>
+<a id="__codelineno-10-20" name="__codelineno-10-20" href="#__codelineno-10-20"></a><span class="c1">//      **</span>
+<a id="__codelineno-10-21" name="__codelineno-10-21" href="#__codelineno-10-21"></a>
+<a id="__codelineno-10-22" name="__codelineno-10-22" href="#__codelineno-10-22"></a><span class="hll"><span class="k">for</span><span class="w">  </span><span class="n">words</span><span class="w">              </span><span class="c1">// for each element in &#39;words&#39;</span>
+</span><a id="__codelineno-10-23" name="__codelineno-10-23" href="#__codelineno-10-23"></a><span class="hll"><span class="n">next</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="w">                </span><span class="c1">// and increment i after each loop body is run</span>
+</span><a id="__codelineno-10-24" name="__codelineno-10-24" href="#__codelineno-10-24"></a><span class="hll"><span class="k">do</span><span class="w">   </span><span class="p">(</span><span class="n">inout</span><span class="w"> </span><span class="n">word</span><span class="p">)</span><span class="w">       </span><span class="c1">// declare via &#39;inout&#39; the loop can change the contents</span>
+</span><a id="__codelineno-10-25" name="__codelineno-10-25" href="#__codelineno-10-25"></a><span class="p">{</span><span class="w">                       </span><span class="c1">// do this loop body</span>
+<a id="__codelineno-10-26" name="__codelineno-10-26" href="#__codelineno-10-26"></a><span class="w">    </span><span class="n">word</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;[&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">word</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;]&quot;</span><span class="p">;</span>
+<a id="__codelineno-10-27" name="__codelineno-10-27" href="#__codelineno-10-27"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;counter: (i)$, word: (word)$</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<a id="__codelineno-10-28" name="__codelineno-10-28" href="#__codelineno-10-28"></a><span class="p">}</span>
+<a id="__codelineno-10-29" name="__codelineno-10-29" href="#__codelineno-10-29"></a><span class="c1">//  prints:</span>
+<a id="__codelineno-10-30" name="__codelineno-10-30" href="#__codelineno-10-30"></a><span class="c1">//      counter: 0, word: [Adam]</span>
+<a id="__codelineno-10-31" name="__codelineno-10-31" href="#__codelineno-10-31"></a><span class="c1">//      counter: 1, word: [Betty]</span>
+</code></pre></div>
+<p>There is no special "select" or "where" to perform the loop body for only a subset of matches, because this can naturally be expressed with <code>if</code>. For example:</p>
+<div class="highlight"><span class="filename">Using loops + if</span><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1">//  Continuing the previous example</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="k">for</span><span class="w">  </span><span class="n">words</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="n">next</span><span class="w"> </span><span class="n">i</span><span class="o">++</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="k">do</span><span class="w">   </span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="hll"><span class="k">if</span><span class="w">   </span><span class="n">i</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w">         </span><span class="c1">// if i is odd</span>
+</span><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="p">{</span><span class="w">                       </span><span class="c1">// do this loop body</span>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;counter: (i)$, word: (word)$</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="p">}</span>
+<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="c1">//  prints:</span>
+<a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="c1">//      counter: 1, word: [Betty]</span>
+</code></pre></div>
+<p>Here is the equivalent of the Cpp1 code <code>for ( int i = 0; i &lt; 10; ++i ){ std::cout &lt;&lt; i; }</code>:</p>
+<div class="highlight"><span class="filename">Equivalent of Cpp1 'for ( int i = 0; i < 10; ++i ){ std::cout << i; }'</span><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="p">(</span><span class="n">copy</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="k">while</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">10</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="n">next</span><span class="w">  </span><span class="n">i</span><span class="o">++</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="p">}</span>
+</code></pre></div>
+<p>Line by line:</p>
+<ul>
+<li><code>(copy i := 0)</code>: Any statement can have <a href="../declarations/#from-functions-to-local-scopes-and-back-again">statement-local parameters</a>, and this is declaring <code>i</code> as an <code>int</code> that's local to the loop. Parameters by default are <code>const</code>, and for not-cheap-to-copy types they bind to the original value; so because we want to modify <code>i</code> we say <code>copy</code> to explicitly declare this is the loop's own mutable scratch variable.</li>
+<li><code>while i &lt; 10</code>: The termination condition.</li>
+<li><code>next i++</code>: The end-of-loop-iteration statement. Note <code>++</code> is always postfix in Cpp2.</li>
+</ul>
+<h4 id="loop-names-break-and-continue">Loop names, <code class="highlight"><span class="k">break</span></code>, and <code class="highlight"><span class="k">continue</span></code></h4>
+<p>Loops can be named using the usual <strong>name <code>:</code></strong> syntax that introduces all names, and <code class="highlight"><span class="k">break</span></code> and <code class="highlight"><span class="k">continue</span></code> can refer to those names. For example:</p>
+<div class="highlight"><span class="filename">Using named break and continue</span><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="hll"><span class="nl">outer</span><span class="p">:</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">M</span><span class="w"> </span><span class="n">next</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="w"> </span><span class="p">{</span><span class="w">      </span><span class="c1">// loop named &quot;outer&quot;</span>
+</span><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">    </span><span class="c1">// ...</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="hll"><span class="w">    </span><span class="nl">inner</span><span class="p">:</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">N</span><span class="w"> </span><span class="n">next</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="w"> </span><span class="p">{</span><span class="w">  </span><span class="c1">// loop named &quot;inner&quot;</span>
+</span><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">        </span><span class="c1">// ...</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="n">something</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="hll"><span class="w">            </span><span class="k">continue</span><span class="w"> </span><span class="n">inner</span><span class="p">;</span><span class="w">      </span><span class="c1">// continue the inner loop</span>
+</span><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">        </span><span class="p">}</span>
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">        </span><span class="c1">// ...</span>
+<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="n">something_else</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="hll"><span class="w">            </span><span class="k">break</span><span class="w"> </span><span class="n">outer</span><span class="p">;</span><span class="w">         </span><span class="c1">// break the outer loop</span>
+</span><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="w">        </span><span class="p">}</span>
+<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="w">        </span><span class="c1">// ...</span>
+<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a><span class="w">    </span><span class="c1">// ...</span>
+<a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="throw-try-catch-exceptions"><a id="catch"></a> <code class="highlight"><span class="k">throw</span></code>, <code class="highlight"><span class="k">try</span></code>, <code class="highlight"><span class="k">catch</span></code> — Exceptions</h3>
+<p><strong><code class="highlight"><span class="k">throw</span></code></strong>, <strong><code class="highlight"><span class="k">try</span></code></strong> and <strong><code class="highlight"><span class="k">catch</span></code></strong> are like always in C++, except:</p>
+<ul>
+<li><code class="highlight"><span class="k">throw</span><span class="p">(</span><span class="n">something</span><span class="p">)</span></code> requires parentheses around the thrown value</li>
+<li><code class="highlight"><span class="k">catch</span></code> uses Cpp2's usual <a href="#parameters">parameter syntax</a>, so you can write <code class="highlight"><span class="k">catch</span><span class="p">(</span><span class="n">obj</span><span class="o">:</span><span class="w"> </span><span class="n">type</span><span class="p">)</span></code> to catch an exception of a specific type, and <code class="highlight"><span class="k">catch</span><span class="p">(</span><span class="n">_</span><span class="p">)</span></code> to catch any thrown exception</li>
+</ul>
+<p>For example:</p>
+<div class="highlight"><span class="filename">Throw, try, catch</span><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="hll"><span class="c1">//  This program will print &quot;caught something else&quot;</span>
+</span><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="nl">main</span><span class="p">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="hll"><span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+</span><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="hll"><span class="w">        </span><span class="k">throw</span><span class="p">(</span><span class="w"> </span><span class="s">&quot;xyzzy&quot;</span><span class="w"> </span><span class="p">);</span>
+</span><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="hll"><span class="w">    </span><span class="p">}</span>
+</span><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">    </span><span class="k">catch</span><span class="p">(</span><span class="w"> </span><span class="n">i</span><span class="o">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;caught int with value &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="hll"><span class="w">    </span><span class="k">catch</span><span class="p">(</span><span class="w"> </span><span class="n">_</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="hll"><span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;caught something else&quot;</span><span class="p">;</span>
+</span><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="hll"><span class="w">    </span><span class="p">}</span>
+</span><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="static-global-variables-inside-functions"><a id="static"></a> <code class="highlight"><span class="k">static</span></code> — Global variables inside functions</h3>
+<p><strong><code class="highlight"><span class="k">static</span></code></strong> can be specified as the first token of a local variable declaration at function scope, to denote that the variable is a global value initialized thread-safely the first time the line is executed (aka C++ "function local static," aka "magic static").</p>
+<p>For example (see also <a href="../metafunctions/#singleton"><code>@singleton</code></a>):</p>
+<div class="highlight"><span class="filename">static variable (function local scope only)</span><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1">//  For exposition only - normally, use @singleton for convenience</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="nl">my_singleton</span><span class="p">:</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">    </span><span class="nl">value</span><span class="w">    </span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">42</span><span class="p">;</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">    </span><span class="nl">print</span><span class="w">    </span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="k">this</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;(value)$</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="w">    </span><span class="c1">//--------------------------------------------------------------------</span>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="w">    </span><span class="c1">//  writing &#39;@singleton type&#39; above would generate these two functions</span>
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="w">    </span><span class="c1">//  but this example shows them for exposition of &#39;static&#39;</span>
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="w">    </span><span class="c1">//</span>
+<a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="w">    </span><span class="k">private</span>
+<a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="w">    </span><span class="k">operator</span><span class="o">=:</span><span class="w"> </span><span class="p">(</span><span class="n">out</span><span class="w"> </span><span class="k">this</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>
+<a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a><span class="w">    </span><span class="nl">instance</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">forward</span><span class="w"> </span><span class="n">my_singleton</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span>
+<a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a><span class="hll"><span class="w">        </span><span class="k">static</span><span class="w"> </span><span class="n">_instance</span><span class="o">:</span><span class="w"> </span><span class="n">my_singleton</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">();</span><span class="w">    </span><span class="c1">// singleton variable</span>
+</span><a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">_instance</span><span class="p">;</span><span class="w"> </span>
+<a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a><span class="w">    </span><span class="c1">//--------------------------------------------------------------------</span>
+<a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a><span class="p">}</span>
+<a id="__codelineno-15-20" name="__codelineno-15-20" href="#__codelineno-15-20"></a>
+<a id="__codelineno-15-21" name="__codelineno-15-21" href="#__codelineno-15-21"></a><span class="nl">main</span><span class="p">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-15-22" name="__codelineno-15-22" href="#__codelineno-15-22"></a><span class="w">    </span><span class="n">my_singleton</span><span class="o">::</span><span class="n">instance</span><span class="p">().</span><span class="n">print</span><span class="p">();</span>
+<a id="__codelineno-15-23" name="__codelineno-15-23" href="#__codelineno-15-23"></a><span class="p">}</span>
+</code></pre></div>
+<h2 id="moveforward-from-definite-last-use"><a id="definite-last-use"></a> Move/forward from definite last use</h2>
+<p>In a function body, a <strong>definite last use</strong> of a local name is a single use of that name in a statement that is not in a loop, where no control flow path after that statement mentions the name again.</p>
+<p>For each definite last use:</p>
+<ul>
+<li>
+<p>If the name is a <code>copy</code> or <code>move</code> parameter or is a local object whose name does not start with <code>guard</code>, we know the object will not be used again before being destroyed, and so the object is automatically treated as an rvalue (move candidate). If the expression that contains the last use is able to move from the rvalue, the move will happen automatically.</p>
+</li>
+<li>
+<p>If the name is a <code>forward</code> parameter, the object is automatically forwarded to preserve its constness and value category (<code>std::forward</code>-ed).</p>
+</li>
+</ul>
+<blockquote>
+<p>Note: This gives language meaning to a naming convention of <code>guard</code> as a name prefix for "guard" stack objects, such as local <code>std::scoped_lock</code> objects, whose destructors are always the object's real last use.</p>
+</blockquote>
+<p>For example:</p>
+<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Definite last uses</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-16-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-16-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-16-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-16-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-16-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-16-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-16-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-16-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-16-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-16-10">10</a></span>
+<span class="normal"><a href="#__codelineno-16-11">11</a></span>
+<span class="normal"><a href="#__codelineno-16-12">12</a></span>
+<span class="normal"><a href="#__codelineno-16-13">13</a></span>
+<span class="normal"><a href="#__codelineno-16-14">14</a></span>
+<span class="normal"><a href="#__codelineno-16-15">15</a></span>
+<span class="normal"><a href="#__codelineno-16-16">16</a></span>
+<span class="normal"><a href="#__codelineno-16-17">17</a></span>
+<span class="normal"><a href="#__codelineno-16-18">18</a></span>
+<span class="normal"><a href="#__codelineno-16-19">19</a></span>
+<span class="normal"><a href="#__codelineno-16-20">20</a></span>
+<span class="normal"><a href="#__codelineno-16-21">21</a></span>
+<span class="normal"><a href="#__codelineno-16-22">22</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1"></a><span class="nl">f</span><span class="p">:</span><span class="w"> </span><span class="p">(</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2"></a><span class="w">    </span><span class="n">copy</span><span class="w">    </span><span class="n">x</span><span class="o">:</span><span class="w"> </span><span class="n">some_type</span><span class="p">,</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3"></a><span class="w">    </span><span class="n">move</span><span class="w">    </span><span class="n">y</span><span class="o">:</span><span class="w"> </span><span class="n">some_type</span><span class="p">,</span>
+<a id="__codelineno-16-4" name="__codelineno-16-4"></a><span class="w">    </span><span class="n">forward</span><span class="w"> </span><span class="n">z</span><span class="o">:</span><span class="w"> </span><span class="n">some_type</span>
+<a id="__codelineno-16-5" name="__codelineno-16-5"></a><span class="w">    </span><span class="p">)</span>
+<a id="__codelineno-16-6" name="__codelineno-16-6"></a><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-16-7" name="__codelineno-16-7"></a><span class="w">    </span><span class="nl">w</span><span class="p">:</span><span class="w"> </span><span class="n">some_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">;</span>
+<a id="__codelineno-16-8" name="__codelineno-16-8"></a>
+<a id="__codelineno-16-9" name="__codelineno-16-9"></a><span class="w">    </span><span class="n">prepare</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w">                     </span><span class="c1">// NOT a definite last use</span>
+<a id="__codelineno-16-10" name="__codelineno-16-10"></a>
+<a id="__codelineno-16-11" name="__codelineno-16-11"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="n">something</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-16-12" name="__codelineno-16-12"></a><span class="w">        </span><span class="n">process</span><span class="p">(</span><span class="n">y</span><span class="p">);</span>
+<a id="__codelineno-16-13" name="__codelineno-16-13"></a><span class="hll"><span class="w">        </span><span class="n">z</span><span class="p">.</span><span class="n">process</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w">               </span><span class="c1">// definite last uses of x and z</span>
+</span><a id="__codelineno-16-14" name="__codelineno-16-14"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-16-15" name="__codelineno-16-15"></a><span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-16-16" name="__codelineno-16-16"></a><span class="hll"><span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">z</span><span class="p">;</span><span class="w">                  </span><span class="c1">// definite last use of z</span>
+</span><a id="__codelineno-16-17" name="__codelineno-16-17"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-16-18" name="__codelineno-16-18"></a>
+<a id="__codelineno-16-19" name="__codelineno-16-19"></a><span class="hll"><span class="w">    </span><span class="n">transfer</span><span class="p">(</span><span class="n">y</span><span class="p">);</span><span class="w">                    </span><span class="c1">// definite last use of y</span>
+</span><a id="__codelineno-16-20" name="__codelineno-16-20"></a>
+<a id="__codelineno-16-21" name="__codelineno-16-21"></a><span class="hll"><span class="w">    </span><span class="n">offload</span><span class="p">(</span><span class="n">w</span><span class="p">);</span><span class="w">                     </span><span class="c1">// definite last use of w</span>
+</span><a id="__codelineno-16-22" name="__codelineno-16-22"></a><span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+<p>In this example:</p>
+<ul>
+<li>
+<p><code>x</code> has a definite last use on one path, but not another. Line 13 is a definite last use that automatically treats <code>x</code> as an rvalue. However, if the <code class="highlight"><span class="k">else</span></code> is taken, <code>x</code> gets no special automatic handling. Line 9 is not a definite last use because <code>x</code> could be used again where it is mentioned later on line 13.</p>
+</li>
+<li>
+<p><code>y</code> has a definite last use on every path, in this case the same on all executions of the function. Line 19 is a definite last use that automatically treats <code>x</code> as an rvalue.</p>
+</li>
+<li>
+<p><code>z</code> has a definite last use on every path, but unlike <code>y</code> it can be a different last use on different executions of the function. That's fine, each of lines 13 and 16 is a definite last use that automatically forwards the constness and value category of <code>z</code>.</p>
+</li>
+<li>
+<p><code>w</code> has a definite last use on every path, in this case the same on all executions of the function. Line 21 is a definite last use that automatically treats <code>w</code> as an rvalue.</p>
+</li>
+</ul>
+<h2 id="generality-note-summary-of-function-defaults"><a id="function-defaults"></a> Generality note: Summary of function defaults</h2>
+<p>There is a single function syntax, designed so we can just omit the parts we're not currently using.</p>
+<p>For example, let's express in full verbose detail that <code>equals</code> is a function template that has two type parameters <code>T</code> and <code>U</code>, two ordinary <code>in</code> parameters <code>a</code> and <code>b</code> of type <code>T</code> and <code>U</code> respectively, and a deduced return type, and its body returns the result of <code>a == b</code>:</p>
+<div class="highlight"><span class="filename">equals: A generic function written in full detail (using no defaults)</span><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nl">equals</span><span class="p">:</span><span class="w"> </span><span class="o">&lt;</span><span class="n">T</span><span class="o">:</span><span class="w"> </span><span class="n">type</span><span class="p">,</span><span class="w"> </span><span class="n">U</span><span class="o">:</span><span class="w"> </span><span class="n">type</span><span class="o">&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">in</span><span class="w"> </span><span class="n">a</span><span class="o">:</span><span class="w"> </span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="n">b</span><span class="o">:</span><span class="w"> </span><span class="n">U</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p>We can write all that, but we don't have to.</p>
+<p>First, <code>: type</code> is the default for template parameters, so we can omit it since that's what we want:</p>
+<div class="highlight"><span class="filename">equals: Identical meaning, now using the :type default for template parameters</span><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="nl">equals</span><span class="p">:</span><span class="w"> </span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="n">U</span><span class="o">&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">in</span><span class="w"> </span><span class="n">a</span><span class="o">:</span><span class="w"> </span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="n">b</span><span class="o">:</span><span class="w"> </span><span class="n">U</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p>So far, the return type is already using one common default available throughout Cpp2: the wildcard <code>_</code> (pronounced "don't care"). Since this function's body doesn't actually use the parameter type names <code>T</code> and <code>U</code>, we can just use wildcards for the parameter types too:</p>
+<div class="highlight"><span class="filename">equals: Identical meaning, now using the _ wildcard also for the parameter types</span><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nl">equals</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">in</span><span class="w"> </span><span class="n">a</span><span class="o">:</span><span class="w"> </span><span class="n">_</span><span class="p">,</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="n">b</span><span class="o">:</span><span class="w"> </span><span class="n">_</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p>Next, <code>: _</code> is also the default parameter type, so we don't need to write even that:</p>
+<div class="highlight"><span class="filename">equals: Identical meaning, now using the :_ default parameter type</span><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nl">equals</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">in</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p>Next, <code>in</code> is the default <a href="#parameters">parameter kind</a>. So we can use that default too:</p>
+<div class="highlight"><span class="filename">equals: Identical meaning, now using the 'in' default parameter kind</span><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="nl">equals</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p>We already saw that <code>{ return</code> ... <code>; }</code> is the default for a single-expression function body that deduces its return type:</p>
+<div class="highlight"><span class="filename">equals: Identical meaning, now using the { return ... } default body decoration</span><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="nl">equals</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+</code></pre></div>
+<p>Next, <code class="highlight"><span class="o">-&gt;</span><span class="w"> </span><span class="n">forward</span><span class="w"> </span><span class="n">_</span></code> (fully deduced return type) is the default for single-expression functions that return something, and in this case will have the same meaning as <code class="highlight"><span class="o">-&gt;</span><span class="w"> </span><span class="n">_</span></code> :</p>
+<div class="highlight"><span class="filename">equals: Identical meaning, now using the -> _ = default for functions that return something</span><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="nl">equals</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+</code></pre></div>
+<p>Finally, at expression scope (aka "lambda/temporary") functions/objects aren't named, and the trailing <code>;</code> is optional:</p>
+<div class="highlight"><span class="filename">(not) 'equals': Identical meaning, but without a name as an unnamed function at expression scope</span><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="o">:</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">b</span>
+</code></pre></div>
+<p>Here are some additional examples of unnamed function expressions:</p>
+<div class="highlight"><span class="filename">Some more examples of unnamed function expressions</span><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="n">std</span><span class="o">::</span><span class="n">ranges</span><span class="o">::</span><span class="n">for_each</span><span class="p">(</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="o">:</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="p">);</span>
+<a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>
+<a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="n">std</span><span class="o">::</span><span class="n">ranges</span><span class="o">::</span><span class="n">transform</span><span class="p">(</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">back_inserter</span><span class="p">(</span><span class="n">b</span><span class="p">),</span><span class="w"> </span><span class="o">:</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="w"> </span><span class="p">);</span>
+<a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a>
+<a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="n">where_is</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">ranges</span><span class="o">::</span><span class="n">find_if</span><span class="p">(</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="o">:</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">waldo$</span><span class="w"> </span><span class="p">);</span>
+</code></pre></div>
+<blockquote>
+<p>Note: Cpp2 doesn't have a separate "lambda" syntax; you just use the regular function syntax at expression scope to write an unnamed function, and the syntactic defaults are chosen to make such function expressions convenient to write. And because in Cpp2 every local variable <a href="../expressions/#captures">capture</a> (for example, <code>waldo$</code> above) is written in the body, it doesn't affect the function syntax.</p>
+</blockquote>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy <a href="https://github.com/hsutter" target="_blank" rel="noopener">Herb Sutter</a> &bull; <a href="https://github.com/hsutter/cppfront/blob/main/LICENSE">cppfront license </a>
+
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.instant", "navigation.instant.preview", "navigation.top", "search.suggest", "search.highlight", "content.tabs.link", "content.code.annotate", "content.code.annotation", "content.code.copy", "content.footnote.tooltips"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,1766 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../mixed/">
+      
+      
+        <link rel="next" href="../../notes/regex_status/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Cppfront command line options - Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#cppfront-command-line-options" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Cpp2 and cppfront — An experimental &#39;C++ syntax 2&#39; and its first compiler" class="md-header__button md-logo" aria-label="Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Cppfront command line options
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6m0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4M7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Cpp2 and cppfront — An experimental &#39;C++ syntax 2&#39; and its first compiler" class="md-nav__button md-logo" aria-label="Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Welcome & getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Welcome & getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../welcome/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview: What are Cpp2 and cppfront? How do I get and build cppfront?
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../welcome/hello-world/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hello, world!
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../welcome/integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Adding cppfront to your existing C++ project
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cpp2 reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Cpp2 reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/common/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Common concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/expressions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Expressions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/declarations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Declarations and aliases
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/objects/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Objects, initialization, and memory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Functions, branches, and loops
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/contracts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types and inheritance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/metafunctions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metafunctions and reflection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/namespaces/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Namespaces
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/safety/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Safety and "unchecked"
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cppfront reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Cppfront reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mixed/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using Cpp1 (today's syntax) and Cpp2 in the same source file
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cppfront command line options
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cppfront command line options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#basic-command-line-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic command line options
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Basic command line options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-help-h-" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -help, -h, -?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-import-std-im" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -import-std, -im
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-include-std-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -include-std, -in
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-pure-cpp2-p" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -pure-cpp2, -p
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-version-vers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -version, -vers
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-dynamic-safety-check-controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Additional dynamic safety check controls
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Additional dynamic safety check controls">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-no-comparison-checks-no-c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -no-comparison-checks, -no-c
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-no-div-zero-checks-no-d" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -no-div-zero-checks, -no-d
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-no-null-checks-no-n" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -no-null-checks, -no-n
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-no-subscript-checks-no-s" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -no-subscript-checks, -no-s
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#support-for-constrained-target-environments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Support for constrained target environments
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Support for constrained target environments">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-fno-exceptions-fno-e" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -fno-exceptions, -fno-e
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-fno-rtti-fno-r" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -fno-rtti, -fno-r
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cpp1-file-content-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cpp1 file content options
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cpp1 file content options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-clean-cpp1-cl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -clean-cpp1, -cl
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-emit-cppfront-info-e" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -emit-cppfront-info, -e
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-line-paths-l" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -line-paths, -l
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cppfront-output-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cppfront output options
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cppfront output options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-cwd-path-cw-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -cwd path, -cw path
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-debug-d" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -debug, -d
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-format-colon-errors-fo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -format-colon-errors, -fo
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-output-filename-o-filename" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -output filename, -o filename
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-quiet-q" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -quiet, -q
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-verbose-verb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -verbose, -verb
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Notes and supplemental topics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Notes and supplemental topics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notes/regex_status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    @regex status: Regular expression features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#basic-command-line-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic command line options
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Basic command line options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-help-h-" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -help, -h, -?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-import-std-im" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -import-std, -im
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-include-std-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -include-std, -in
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-pure-cpp2-p" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -pure-cpp2, -p
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-version-vers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -version, -vers
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-dynamic-safety-check-controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Additional dynamic safety check controls
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Additional dynamic safety check controls">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-no-comparison-checks-no-c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -no-comparison-checks, -no-c
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-no-div-zero-checks-no-d" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -no-div-zero-checks, -no-d
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-no-null-checks-no-n" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -no-null-checks, -no-n
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-no-subscript-checks-no-s" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -no-subscript-checks, -no-s
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#support-for-constrained-target-environments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Support for constrained target environments
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Support for constrained target environments">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-fno-exceptions-fno-e" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -fno-exceptions, -fno-e
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-fno-rtti-fno-r" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -fno-rtti, -fno-r
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cpp1-file-content-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cpp1 file content options
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cpp1 file content options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-clean-cpp1-cl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -clean-cpp1, -cl
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-emit-cppfront-info-e" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -emit-cppfront-info, -e
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-line-paths-l" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -line-paths, -l
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cppfront-output-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cppfront output options
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cppfront output options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-cwd-path-cw-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -cwd path, -cw path
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-debug-d" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -debug, -d
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-format-colon-errors-fo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -format-colon-errors, -fo
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-output-filename-o-filename" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -output filename, -o filename
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-quiet-q" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -quiet, -q
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-verbose-verb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        -verbose, -verb
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="cppfront-command-line-options">Cppfront command line options</h1>
+<p>Cppfront is invoked using</p>
+<div class="highlight"><pre><span></span><code>cppfront [options] file ...
+</code></pre></div>
+<p>where</p>
+<ul>
+<li>
+<p><strong>options</strong> is optional, and can include options described on this page</p>
+</li>
+<li>
+<p><strong>file ...</strong> is a list of one or more <code>.cpp2</code> filenames to be compiled</p>
+</li>
+</ul>
+<p>Command line options are spelled starting with <code>-</code> or <code>/</code> followed by the option name. For example, <code>-help</code> prints help.</p>
+<p>For convenience, you can shorten the name to any unique prefix not shared with another option. For example:</p>
+<ul>
+<li><code>-help</code> can be equivalently written as <code>-hel</code>, <code>-he</code>, or <code>-h</code>, because no other option starts with <code>h</code>.</li>
+<li><code>-import-std</code> and <code>-include-std</code> can be shortened to <code>-im</code> and <code>-in</code> respectively, but not <code>-i</code> which would be ambiguous with each other.</li>
+</ul>
+<h2 id="basic-command-line-options">Basic command line options</h2>
+<h3 id="-help-h-"><code>-help</code>, <code>-h</code>, <code>-?</code></h3>
+<p>Prints an abbreviated version of this documentation page.</p>
+<h3 id="-import-std-im"><code>-import-std</code>, <code>-im</code></h3>
+<p>Makes the entire C++ standard library (namespace <code>std::</code>) available via a module <code>import std.compat;</code> (which implies <code>import std;</code>).</p>
+<blockquote>
+<p>When you use either <code>-import-std</code> or <code>-include-std</code>, your <code>.cpp2</code> program will not need to explicitly <code>import</code> any C++ standard library module or <code>#include</code> any C++ standard library header (it can still do that, but it would be redundant).</p>
+</blockquote>
+<p>This option is implicitly set if <code>-pure-cpp2</code> is selected.</p>
+<p>This option is ignored if <code>-include-std</code> is selected. If your Cpp1 compiler does not yet support standard library modules <code>std</code> and <code>std.compat</code>, this option automatically uses  <code>-include-std</code> instead as a fallback.</p>
+<h3 id="-include-std-in"><code>-include-std</code>, <code>-in</code></h3>
+<p>Makes the entire C++ standard library (namespace <code>std::</code>) available via an '#include" of every standard header.</p>
+<p>This option should always work with all standard headers, including draft-standard C++26 headers that are not yet in a published standard, because it tracks new headers as they are added and uses feature tests to not include headers that are not yet available on your Cpp1 implementation.</p>
+<h3 id="-pure-cpp2-p"><code>-pure-cpp2</code>, <code>-p</code></h3>
+<p>Allow Cpp2 syntax only.</p>
+<p>This option also sets <code>-import-std</code>.</p>
+<h3 id="-version-vers"><code>-version</code>, <code>-vers</code></h3>
+<p>Print version, build, copyright, and license information.</p>
+<h2 id="additional-dynamic-safety-check-controls">Additional dynamic safety check controls</h2>
+<h3 id="-no-comparison-checks-no-c"><code>-no-comparison-checks</code>, <code>-no-c</code></h3>
+<p>Disable mixed-sign comparison safety checks. If not disabled, mixed-sign comparisons are diagnosed by default.</p>
+<h3 id="-no-div-zero-checks-no-d"><code>-no-div-zero-checks</code>, <code>-no-d</code></h3>
+<p>Disable integer division by zero checks. If not disabled, integer division by zero checks are performed by default when both the numerator and denominator are integer types.</p>
+<h3 id="-no-null-checks-no-n"><code>-no-null-checks</code>, <code>-no-n</code></h3>
+<p>Disable null safety checks. If not disabled, null dereference checks are performed by default.</p>
+<h3 id="-no-subscript-checks-no-s"><code>-no-subscript-checks</code>, <code>-no-s</code></h3>
+<p>Disable subscript bounds safety checks. If not disabled, subscript bounds safety checks are performed by default.</p>
+<h2 id="support-for-constrained-target-environments">Support for constrained target environments</h2>
+<h3 id="-fno-exceptions-fno-e"><code>-fno-exceptions</code>, <code>-fno-e</code></h3>
+<p>Disable C++ exception handling. This should be used only if you must run in an environment that bans C++ exception handling, and so you are already using a similar command line option for your Cpp1 compiler.</p>
+<p>If this option is selected, a failed <code>as</code> for <code>std::variant</code> will assert.</p>
+<h3 id="-fno-rtti-fno-r"><code>-fno-rtti</code>, <code>-fno-r</code></h3>
+<p>Disable C++ run-time type information (RTTI). This should be used only if you must run in an environment that bans C++ RTTI, and so you are already using a similar command line option for your Cpp1 compiler.</p>
+<p>If this option is selected, trying to using <code>as</code> for <code>*</code> (raw pointers) or <code>std::any</code> will assert.</p>
+<h2 id="cpp1-file-content-options">Cpp1 file content options</h2>
+<h3 id="-clean-cpp1-cl"><code>-clean-cpp1</code>, <code>-cl</code></h3>
+<p>Emit clean <code>.cpp</code> files without <code>#line</code> directives and other extra information that cppfront normally emits in the <code>.cpp</code> to light up C++ tools (e.g., to let IDEs integrate cppfront error message output, debuggers step to the right lines in Cpp2 source code, and so forth). In normal use, you won't need <code>-c</code>.</p>
+<h3 id="-emit-cppfront-info-e"><code>-emit-cppfront-info</code>, <code>-e</code></h3>
+<p>Emit cppfront version and build in the <code>.cpp</code> file.</p>
+<h3 id="-line-paths-l"><code>-line-paths</code>, <code>-l</code></h3>
+<p>Emit absolute paths in <code>#line</code> directives.</p>
+<h2 id="cppfront-output-options">Cppfront output options</h2>
+<h3 id="-cwd-path-cw-path"><code>-cwd</code> <em>path</em>, <code>-cw</code> <em>path</em></h3>
+<p>Changes the current working directory to 'path'. Can be useful in build scripts to control where generated Cpp1 files are places; see also <code>-output</code>.</p>
+<h3 id="-debug-d"><code>-debug</code>, <code>-d</code></h3>
+<p>Emit compiler debug output. This is only useful when debugging cppfront itself.</p>
+<h3 id="-format-colon-errors-fo"><code>-format-colon-errors</code>, <code>-fo</code></h3>
+<p>Emit cppfront diagnostics using <code>:line:col:</code> format for line and column numbers, if that is the format better recognized by your IDE, so that it will pick up cppfront messages and integrate them in its normal error message output location. If not set, by default cppfront diagnostics use <code>(line,col)</code> format.</p>
+<h3 id="-output-filename-o-filename"><code>-output</code> <em>filename</em>, <code>-o</code> <em>filename</em></h3>
+<p>Output to 'filename' (can be 'stdout'). If not set, the default output filename for is the same as the input filename without the <code>2</code> (e.g., compiling <code>hello.cpp2</code> by default writes its output to <code>hello.cpp</code>, and <code>header.h2</code> to <code>header.h</code>).</p>
+<h3 id="-quiet-q"><code>-quiet</code>, <code>-q</code></h3>
+<p>Print no console output unless there are errors to report.</p>
+<h3 id="-verbose-verb"><code>-verbose</code>, <code>-verb</code></h3>
+<p>Print verbose statistics and <code>-debug</code> output.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy <a href="https://github.com/hsutter" target="_blank" rel="noopener">Herb Sutter</a> &bull; <a href="https://github.com/hsutter/cppfront/blob/main/LICENSE">cppfront license </a>
+
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.instant", "navigation.instant.preview", "navigation.top", "search.suggest", "search.highlight", "content.tabs.link", "content.code.annotate", "content.code.annotation", "content.code.copy", "content.footnote.tooltips"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

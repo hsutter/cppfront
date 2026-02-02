@@ -1,0 +1,1332 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../overview/">
+      
+      
+        <link rel="next" href="../integration/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Hello, world! - Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#hello-world" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Cpp2 and cppfront — An experimental &#39;C++ syntax 2&#39; and its first compiler" class="md-header__button md-logo" aria-label="Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Hello, world!
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6m0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4M7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Cpp2 and cppfront — An experimental &#39;C++ syntax 2&#39; and its first compiler" class="md-nav__button md-logo" aria-label="Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Welcome & getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Welcome & getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview: What are Cpp2 and cppfront? How do I get and build cppfront?
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hello, world!
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hello, world!
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#a-hellocpp2-program" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A hello.cpp2 program
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building-hellocpp2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Building hello.cpp2
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building-and-running-hellocpp-with-any-recent-c-compiler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Building and running hello.cpp with any recent C++ compiler
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Building and running hello.cpp with any recent C++ compiler">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#next-adding-cppfront-to-your-existing-c-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        &#10148; Next: Adding cppfront to your existing C++ project
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Adding cppfront to your existing C++ project
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cpp2 reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Cpp2 reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/common/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Common concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/expressions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Expressions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/declarations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Declarations and aliases
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/objects/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Objects, initialization, and memory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Functions, branches, and loops
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/contracts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types and inheritance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/metafunctions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metafunctions and reflection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/namespaces/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Namespaces
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cpp2/safety/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Safety and "unchecked"
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cppfront reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Cppfront reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cppfront/mixed/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using Cpp1 (today's syntax) and Cpp2 in the same source file
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cppfront/options/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cppfront command line options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Notes and supplemental topics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Notes and supplemental topics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notes/regex_status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    @regex status: Regular expression features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#a-hellocpp2-program" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A hello.cpp2 program
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building-hellocpp2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Building hello.cpp2
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building-and-running-hellocpp-with-any-recent-c-compiler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Building and running hello.cpp with any recent C++ compiler
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Building and running hello.cpp with any recent C++ compiler">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#next-adding-cppfront-to-your-existing-c-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        &#10148; Next: Adding cppfront to your existing C++ project
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="hello-world"><strong>Hello, world!</strong></h1>
+<pre class="mermaid"><code>graph LR
+  A["` hello.cpp**2** `"] ==&gt; B(["` **cppfront** `"]);
+  B ==&gt; C[hello.cpp];
+  C ==&gt; D([Your favorite&lt;br&gt; C++ compiler&lt;p&gt;... and IDE / libraries / build&lt;br&gt;system / in-house tools / ...]);</code></pre>
+<h2 id="a-hellocpp2-program"><a id="hello-cpp2"></a> A <code>hello.cpp2</code> program</h2>
+<p>Here is the usual one-line starter program that prints <code>Hello, world!</code>. Note that this is a complete program, no <code class="highlight"><span class="cp">#include</span></code> required:</p>
+<div class="highlight"><span class="filename">hello.cpp2 — on one line</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nl">main</span><span class="p">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Hello, world!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</code></pre></div>
+<p>But let's add a little more, just to show a few things:</p>
+<div class="highlight"><span class="filename">hello.cpp2 — slightly more interesting</span><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nl">main</span><span class="p">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="nl">words</span><span class="p">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bob&quot;</span><span class="w"> </span><span class="p">);</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="n">hello</span><span class="p">(</span><span class="w"> </span><span class="n">words</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="p">);</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="n">hello</span><span class="p">(</span><span class="w"> </span><span class="n">words</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="p">);</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">}</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="nl">hello</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">msg</span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Hello, (msg)$!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="p">}</span>
+</code></pre></div>
+<p>This short program code already illustrates a few Cpp2 essentials.</p>
+<p><strong>Consistent context-free syntax.</strong> Cpp2 is designed so that there is one general way to spell a given thing, that works consistently everywhere. All Cpp2 types/functions/objects/namespaces are written using the unambiguous and context-free <a href="../../cpp2/declarations/">declaration syntax</a> <strong>"<em>name</em> <code>:</code> <em>kind</em> <code>=</code> <em>statement</em>"</strong>. The <code>:</code> is pronounced <strong>"is a,"</strong> and the <code>=</code> is pronounced <strong>"defined as."</strong></p>
+<ul>
+<li>
+<p><code>main</code> <strong>is a</strong> function that takes no arguments and returns nothing, and is <strong>defined as</strong> the code body shown.</p>
+</li>
+<li>
+<p><code>words</code> <strong>is a</strong> <code>std::vector</code>, initially <strong>defined as</strong> holding <code class="highlight"><span class="s">&quot;Alice&quot;</span></code> and <code class="highlight"><span class="s">&quot;Bob&quot;</span></code>.</p>
+</li>
+<li>
+<p><code>hello</code> <strong>is a</strong> function that takes a <code>std::string_view</code> it will only read from and that returns nothing, and is <strong>defined as</strong> code that prints the string to <code>cout</code> the usual C++ way.</p>
+</li>
+</ul>
+<p>All grammar is context-free. In particular, we (the human reading the code, and the compiler) never need to do name lookup to figure out how to parse something — there is never a <a href="https://en.wikipedia.org/wiki/Most_vexing_parse">"vexing parse"</a> in Cpp2. For details, see <a href="https://github.com/hsutter/cppfront/wiki/Design-note%3A-Unambiguous-parsing">Design note: Unambiguous parsing</a>.</p>
+<p><strong>Simple, safe, and efficient by default.</strong> Cpp2 has contracts (tracking draft C++26 contracts), <code>inspect</code> pattern matching, string interpolation, automatic move from last use, and more.</p>
+<ul>
+<li>
+<p><a id="ctad"></a> Declaring <code>words</code> uses <strong>"CTAD"</strong> (C++'s normal <a href="https://en.cppreference.com/w/cpp/language/class_template_argument_deduction">constructor template argument deduction</a>) to deduce the type of elements in the <code>vector</code>.</p>
+</li>
+<li>
+<p>Calling <code class="highlight"><span class="n">words</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></code> and <code class="highlight"><span class="n">words</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span></code> is <strong>bounds-checked by default</strong>. From Cpp2 code, ordinary <code>std::vector</code> subscript accesses are safely bounds-checked by default without requiring any upgrade to your favorite standard library, and that's true for any similar subscript of something whose size can be queried using <code>std::size()</code> and <code>std::ssize()</code>, and for which <code>std::begin()</code> returns a random access iterator, including any in-house integer-indexed container types you already have that can easily provide <code>std::size()</code> and <code>std::ssize()</code> if they don't already.</p>
+</li>
+<li>
+<p><code>hello</code> uses <strong>string interpolation</strong> to be able to write <code class="highlight"><span class="s">&quot;Hello, (msg)$!</span><span class="se">\n</span><span class="s">&quot;</span></code> instead of <code class="highlight"><span class="s">&quot;Hello, &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;!</span><span class="se">\n</span><span class="s">&quot;</span></code>. String interpolation also supports <a href="https://en.cppreference.com/w/cpp/utility/format/spec">standard C++ format specifications</a>, so you won't need iostream manipulators.</p>
+</li>
+</ul>
+<p><strong>Simplicity through generality + defaults.</strong> A major way that Cpp2 delivers simplicity is by providing just one powerful general syntax for a given thing (e.g., one function definition syntax), but designing it so you can omit the parts you're not currently using (e.g., where you're happy with the defaults). We're already using some of those defaults above:</p>
+<ul>
+<li>
+<p>We can omit writing the <code class="highlight"><span class="o">-&gt;</span><span class="w"> </span><span class="kt">void</span></code> return type for a function that doesn't return anything, as both of these functions do.</p>
+</li>
+<li>
+<p>We can omit the <code>{</code> <code>}</code> around single-statement function bodies, as <code>hello</code> does.</p>
+</li>
+<li>
+<p>We can omit the <code>in</code> on the <code>msg</code> parameter. Cpp2 has just six ways to pass parameters: The most common ones are <code>in</code> for read-only (the default so we can omit it, as <code>hello</code> does), and <code>inout</code> for read-write.  The others are <code>copy</code>, <code>out</code>, <code>move</code>, and <code>forward</code>.</p>
+</li>
+</ul>
+<p>For details, see <a href="https://github.com/hsutter/cppfront/wiki/Design-note%3A-Defaults-are-one-way-to-say-the-same-thing">Design note: Defaults are one way to say the same thing</a>.</p>
+<p><strong>Order-independent by default.</strong> Did you notice that <code>main</code> called <code>hello</code>, which was defined later? Cpp2 code is order-independent by default — there are no forward declarations.</p>
+<p><strong>Seamless compatibility and interop.</strong> We can just use <code>std::cout</code> and <code class="highlight"><span class="n">std</span><span class="o">::</span><span class="k">operator</span><span class="o">&lt;&lt;</span></code> and <code>std::string_view</code> directly as usual. Cpp2 code works with any C++ code or library, including the standard library, using ordinary direct calls without any wrapping/marshaling/thunking.</p>
+<p><strong>C++ standard library is always available.</strong> We didn't need <code class="highlight"><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span></code> or <code class="highlight"><span class="k">import</span><span class="w"> </span><span class="n">std</span><span class="p">;</span></code>. The full C++ standard library is always available by default if your source file contains only syntax-2 code and you compile using cppfront's <code>-p</code> (short for <code>-pure-cpp2</code>), or if you use <code>-im</code> (short for <code>-import-std</code>). Cppfront is regularly updated to be compatible with C++23 and the latest draft C++26 library additions as soon as the ISO C++ committee votes them into the C++26 working draft, so as soon as you have a C++ implementation that has a new standard (or bleeding-edge draft standard!) C++ library feature, you'll be able to fully use it in Cpp2 code.</p>
+<h2 id="building-hellocpp2"><a id="build-hello-cpp2"></a> Building <code>hello.cpp2</code></h2>
+<p>Now use <code>cppfront</code> to compile <code>hello.cpp2</code> to a standard C++ file <code>hello.cpp</code>:</p>
+<div class="highlight"><span class="filename">Call cppfront to produce hello.cpp</span><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>cppfront<span class="w"> </span>hello.cpp2<span class="w"> </span>-p
+</code></pre></div>
+<p>The result is an ordinary C++ file that looks like this: <sup id="fnref:clean-cpp1"><a class="footnote-ref" href="#fn:clean-cpp1">1</a></sup></p>
+<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">hello.cpp — created by cppfront</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-3-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-3-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-3-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-3-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-3-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-3-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-3-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-3-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-3-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-3-10">10</a></span>
+<span class="normal"><a href="#__codelineno-3-11">11</a></span>
+<span class="normal"><a href="#__codelineno-3-12">12</a></span>
+<span class="normal"><a href="#__codelineno-3-13">13</a></span>
+<span class="normal"><a href="#__codelineno-3-14">14</a></span>
+<span class="normal"><a href="#__codelineno-3-15">15</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="cp">#define CPP2_IMPORT_STD          Yes</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2"></a>
+<a id="__codelineno-3-3" name="__codelineno-3-3"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;cpp2util.h&quot;</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4"></a>
+<a id="__codelineno-3-5" name="__codelineno-3-5"></a><span class="k">auto</span><span class="w"> </span><span class="n">main</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">int</span><span class="p">;</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6"></a>
+<a id="__codelineno-3-7" name="__codelineno-3-7"></a><span class="k">auto</span><span class="w"> </span><span class="n">hello</span><span class="p">(</span><span class="n">cpp2</span><span class="o">::</span><span class="n">in</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">msg</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">void</span><span class="p">;</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8"></a><span class="k">auto</span><span class="w"> </span><span class="n">main</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">int</span><span class="p">{</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="w"> </span><span class="n">words</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bob&quot;</span><span class="p">};</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10"></a><span class="w">    </span><span class="n">hello</span><span class="p">(</span><span class="n">CPP2_ASSERT_IN_BOUNDS_LITERAL</span><span class="p">(</span><span class="n">words</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">));</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11"></a><span class="w">    </span><span class="n">hello</span><span class="p">(</span><span class="n">CPP2_ASSERT_IN_BOUNDS_LITERAL</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">words</span><span class="p">),</span><span class="w"> </span><span class="mi">1</span><span class="p">));</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12"></a><span class="p">}</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13"></a>
+<a id="__codelineno-3-14" name="__codelineno-3-14"></a><span class="k">auto</span><span class="w"> </span><span class="n">hello</span><span class="p">(</span><span class="n">cpp2</span><span class="o">::</span><span class="n">in</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">msg</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-15" name="__codelineno-3-15"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;Hello, &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">cpp2</span><span class="o">::</span><span class="n">to_string</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span><span class="w">  </span><span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+<p>Here we can see more of how Cpp2 makes its features work.</p>
+<p><strong>How: Consistent context-free syntax.</strong></p>
+<ul>
+<li><strong>All compiled lines are portable C++20 code</strong> we can build with pretty much any C++ compiler released circa 2019 or later. Cpp2's context-free syntax converts directly to today's Cpp1 syntax. We can write and read our C++ types/functions/objects in simpler Cpp2 syntax without wrestling with context sensitivity and ambiguity, and they're all still just ordinary types/functions/objects.</li>
+</ul>
+<p><strong>How: Simple, safe, and efficient by default.</strong></p>
+<ul>
+<li><strong>Line 9: CTAD</strong> just works, because it turns into ordinary C++ code which already supports CTAD.</li>
+<li><strong>Lines 10-11: Automatic bounds checking</strong> is added to <code class="highlight"><span class="n">words</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></code> and <code class="highlight"><span class="n">words</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span></code> nonintrusively at the call site by default. Because it's nonintrusive, it works seamlessly with all existing container types that are <code>std::size</code> and <code>std::ssize</code>-aware, when you use them from safe Cpp2 code.</li>
+<li><strong>Line 11: Automatic move from last use</strong> ensures the last use of <code>words</code> will automatically avoid a copy if it's being passed to something that's optimized for rvalues.</li>
+<li><strong>Line 15: String interpolation</strong> performs the string capture of <code>msg</code>'s current value via <code>cpp2::to_string</code>. That uses <code>std::to_string</code> when available, and it also works for additional types (such as <code class="highlight"><span class="kt">bool</span></code>, to print <code class="highlight"><span class="nb">false</span></code> and <code class="highlight"><span class="nb">true</span></code> instead of <code>0</code> and <code>1</code>, without having to remember to use <code>std::boolalpha</code>).</li>
+</ul>
+<p><strong>How: Simplicity through generality + defaults.</strong></p>
+<ul>
+<li><strong>Line 7: <code>in</code> parameters</strong> are implemented using <code class="highlight"><span class="n">cpp2</span><span class="o">::</span><span class="n">in</span><span class="o">&lt;&gt;</span></code>, which is smart enough to pass by <code class="highlight"><span class="k">const</span></code> value when that's safe and appropriate, otherwise by <code class="highlight"><span class="k">const</span><span class="o">&amp;</span></code>, so you don't have to choose the right one by hand.</li>
+</ul>
+<p><strong>How: Order-independent by default.</strong></p>
+<ul>
+<li><strong>Lines 5 and 7: Order independence</strong> happens because cppfront generates all the type and function forward declarations for you, so you don't have to. That's why <code>main</code> can just call <code>hello</code>: both are forward-declared, so they can both see each other.</li>
+</ul>
+<p><strong>How: Seamless compatibility and interop.</strong></p>
+<ul>
+<li><strong>Lines 9-11 and 15: Ordinary direct calls</strong> to existing C++ code, so there's never a need for wrapping/marshaling/thunking.</li>
+</ul>
+<p><strong>How: C++ standard library always available.</strong></p>
+<ul>
+<li><strong>Lines 1 and 3: <code>std::</code> is available</strong> because cppfront was invoked with <code>-p</code>, which implies either <code>-im</code> (short for <code>-import-std</code>) or <code>-in</code> (short for <code>-include-std</code>, for compilers that don't support modules yet). The generated code tells <code>cpp2util.h</code> to <code class="highlight"><span class="k">import</span></code> the entire standard library as a module (or do the equivalent via headers if modules are not available).</li>
+</ul>
+<h2 id="building-and-running-hellocpp-with-any-recent-c-compiler"><a id="build-hello-cpp"></a> Building and running <code>hello.cpp</code> with any recent C++ compiler</h2>
+<p>Finally, just build <code>hello.cpp</code> using your favorite C++20 compiler, where <code>CPPFRONT_INCLUDE</code> is the path to <code>/cppfront/include</code>:</p>
+<p><image align="right" width="120" src="https://user-images.githubusercontent.com/1801526/188906112-ef377a79-b6a9-4a30-b318-10b51d8ea934.png"></p>
+<div class="highlight"><span class="filename">MSVC (Visual Studio 2019 version 16.11 or higher)</span><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>&gt; cl hello.cpp -std:c++20 -EHsc -I CPPFRONT_INCLUDE
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>&gt; hello.exe
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>Hello, world!
+</code></pre></div>
+<div class="highlight"><span class="filename">GCC (GCC 10 or higher)</span><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>$<span class="w"> </span>g++<span class="w"> </span>hello.cpp<span class="w"> </span>-std<span class="o">=</span>c++20<span class="w"> </span>-ICPPFRONT_INCLUDE<span class="w"> </span>-o<span class="w"> </span>hello
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>$<span class="w"> </span>./hello.exe
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>Hello,<span class="w"> </span>world!
+</code></pre></div>
+<div class="highlight"><span class="filename">Clang (Clang 12 or higher)</span><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>$<span class="w"> </span>clang++<span class="w"> </span>hello.cpp<span class="w"> </span>-std<span class="o">=</span>c++20<span class="w"> </span>-ICPPFRONT_INCLUDE<span class="w"> </span>-o<span class="w"> </span>hello
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>$<span class="w"> </span>./hello.exe
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>Hello,<span class="w"> </span>world!
+</code></pre></div>
+<h3 id="next-adding-cppfront-to-your-existing-c-project">&#10148; Next: <a href="../integration/">Adding cppfront to your existing C++ project</a></h3>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:clean-cpp1">
+<p>For presentation purposes, this documentation generally shows the <code>.cpp</code> as generated when using cppfront's <code>-cl</code> (short for <code>-clean-cpp1</code>), which suppresses extra information cppfront normally emits in the <code>.cpp</code> to light up C++ tools (e.g., to let IDEs integrate cppfront error message output, debuggers step to the right lines in Cpp2 source code, and so forth). In normal use, you won't need or even want <code>-cl</code>.&#160;<a class="footnote-backref" href="#fnref:clean-cpp1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy <a href="https://github.com/hsutter" target="_blank" rel="noopener">Herb Sutter</a> &bull; <a href="https://github.com/hsutter/cppfront/blob/main/LICENSE">cppfront license </a>
+
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.instant", "navigation.instant.preview", "navigation.top", "search.suggest", "search.highlight", "content.tabs.link", "content.code.annotate", "content.code.annotation", "content.code.copy", "content.footnote.tooltips"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
