@@ -19,7 +19,7 @@ class test;
 #line 2 "pure2-singleton-and-static.cpp2"
 class test {
     private: int value {42}; 
-    public: [[nodiscard]] auto print() const& -> decltype(auto);
+    public: auto print() const& -> void;
     private: explicit test();
 public: [[nodiscard]] static auto instance() -> test&;
 
@@ -36,7 +36,7 @@ auto main() -> int;
 #line 1 "pure2-singleton-and-static.cpp2"
 
 #line 4 "pure2-singleton-and-static.cpp2"
-    [[nodiscard]] auto test::print() const& -> decltype(auto) { return std::cout << "" + cpp2::to_string(value) + "\n";  }
+    auto test::print() const& -> void{std::cout << "" + cpp2::to_string(value) + "\n"; }
 
     test::test(){}
 [[nodiscard]] auto test::instance() -> test&{

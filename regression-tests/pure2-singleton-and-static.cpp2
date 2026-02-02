@@ -1,7 +1,7 @@
 
 test: @singleton type = {
     value: int = 42;
-    print: (this) = std::cout << "(value)$\n";
+    print: (this) = { std::cout << "(value)$\n"; }
 }
 
 main: () = {
