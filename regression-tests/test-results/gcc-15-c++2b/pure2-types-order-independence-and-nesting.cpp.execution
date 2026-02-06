@@ -1,0 +1,5 @@
+made a safely initialized cycle
+leaving call to 'why(5)'
+leaving call to 'why(3)'
+leaving call to 'why(1)'
+hallo welt
