@@ -144,7 +144,7 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias{ 42 };
 
             do {} while ( [&]{ b() ; return true; }() && CPP2_UFCS(empty)(s));
 
-            for ( [[maybe_unused]] auto const& unnamed_param_1 : m ) { { do {goto CONTINUE_label; } while (false); c(); } CPP2_CONTINUE_BREAK(label) }
+            for ( [[maybe_unused]] auto const& unnamed_param_1 : m ) { { bool _for_break = false; do {goto CONTINUE_label; } while (false); if (_for_break) { break; } c(); } CPP2_CONTINUE_BREAK(label) }
 
 #line 47 "pure2-print.cpp2"
             if (cpp2::impl::is(!(CPP2_UFCS(empty)(s)), (true))) {cpp2::move(a)(); }
