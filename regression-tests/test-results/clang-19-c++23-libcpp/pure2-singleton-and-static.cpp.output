@@ -1,4 +1,0 @@
-pure2-singleton-and-static.cpp2:8:21: warning: ignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]
-    8 |     CPP2_UFCS(print)(test::instance());
-      |     ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~
-1 warning generated.
