@@ -1,0 +1,1 @@
+pure2-assert-shared-ptr-not-null.cpp2(15) int bad_shared_ptr_access(): Null safety violation: std::shared_ptr is empty
