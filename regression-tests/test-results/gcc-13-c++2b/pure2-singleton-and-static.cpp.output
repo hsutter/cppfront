@@ -1,6 +1,0 @@
-pure2-singleton-and-static.cpp2: In function ‘int main()’:
-pure2-singleton-and-static.cpp2:8:21: warning: ignoring return value of ‘main()::<lambda(Obj&&, Params&& ...)> [with Obj = test&; Params = {}; bool IsNothrow = false]’, declared with attribute ‘nodiscard’ [-Wunused-result]
-In file included from pure2-singleton-and-static.cpp:7:
-../../../include/cpp2util.h:10059:1: note: declared here
-../../../include/cpp2util.h:10091:59: note: in expansion of macro ‘CPP2_UFCS_’
-pure2-singleton-and-static.cpp2:8:5: note: in expansion of macro ‘CPP2_UFCS’
