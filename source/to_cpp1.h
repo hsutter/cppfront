@@ -4220,13 +4220,6 @@ public:
             !(n.inside_initializer && current_declarations.back()->initializer->position() != n.open_paren->position())
             ;
 
-        if (n.default_initializer) {
-            if (add_parens) {
-                printer.print_cpp2("{}", n.position());
-            }
-            return;
-        }
-
         if (add_parens) {
             printer.print_cpp2( *n.open_paren, n.position());
         }
@@ -4264,7 +4257,22 @@ public:
 
             assert(x.expr);
             current_args.push_back( {x.pass} );
-            emit(*x.expr);
+            //  In a nested expression-list in an initializer, we can
+            //  take over direct control of emitting it without needing to
+            //  go through the whole grammar, and surround it with braces
+            if (
+                n.inside_initializer
+                && x.expr->is_expression_list()
+                )
+            {
+                printer.print_cpp2( "{ ", n.position() );
+                emit(*x.expr->get_expression_list(), false);
+                printer.print_cpp2( " }", n.position() );
+            }
+            //  Otherwise, just emit the general expression as usual
+            else {
+                emit(*x.expr);
+            }
             current_args.pop_back();
 
             if (is_out) {
