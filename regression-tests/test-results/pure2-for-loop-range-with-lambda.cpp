@@ -50,7 +50,7 @@ auto main(int const argc_, char** argv_) -> int{
 
    for (                            auto const& i : [_0 = args]() mutable -> decltype(auto) { return _0; }() ) static_cast<void>(i);
    for (                            auto const& j : [](auto&& x) -> decltype(auto) { return CPP2_FORWARD(x); }(args) ) static_cast<void>(j);
-   for (                                                              auto const& k : [](auto&& x) -> decltype(auto) { return CPP2_FORWARD(x); }(args) )  { do static_cast<void>(k); while (false); static_cast<void>([_0 = args]() mutable -> decltype(auto) { return _0; }()); }
-   for (                                                              auto const& l : [](auto&& x) -> decltype(auto) { return CPP2_FORWARD(x); }(args) )  { do static_cast<void>(l); while (false); static_cast<void>([](auto&& x) -> decltype(auto) { return x; }(args)); }
+   for (                                                              auto const& k : [](auto&& x) -> decltype(auto) { return CPP2_FORWARD(x); }(args) )  { bool _for_break = false; do static_cast<void>(k); while (false); if (_for_break) { break; } static_cast<void>([_0 = args]() mutable -> decltype(auto) { return _0; }()); }
+   for (                                                              auto const& l : [](auto&& x) -> decltype(auto) { return CPP2_FORWARD(x); }(args) )  { bool _for_break = false; do static_cast<void>(l); while (false); if (_for_break) { break; } static_cast<void>([](auto&& x) -> decltype(auto) { return x; }(args)); }
 }
 
