@@ -656,7 +656,7 @@ auto issue_683(auto const& args) -> void{
     }
 
     cpp2::impl::deferred_init<int> n; 
-    n.construct(0);
+    n.construct_from([&]() -> typename CPP2_TYPEOF(n)::value_type { return typename CPP2_TYPEOF(n)::value_type{0}; });
 }
 
 #line 114 "pure2-last-use.cpp2"
@@ -1298,7 +1298,7 @@ auto draw() -> void{
 auto enum_0() -> void{
     cpp2::impl::deferred_init<std::string> underlying_type; 
     if (true) {}
-    underlying_type.construct("");
+    underlying_type.construct_from([&]() -> typename CPP2_TYPEOF(underlying_type)::value_type { return typename CPP2_TYPEOF(underlying_type)::value_type{""}; });
 }
 #line 799 "pure2-last-use.cpp2"
 auto enum_1() -> void{
@@ -1362,14 +1362,14 @@ return ret; }
 #line 853 "pure2-last-use.cpp2"
 auto deferred_non_copyable_0() -> void{
   cpp2::impl::deferred_init<std::unique_ptr<int>> p; 
-  p.construct();
+  p.construct_from([&]() -> typename CPP2_TYPEOF(p)::value_type { return typename CPP2_TYPEOF(p)::value_type{}; });
   f_copy(std::move(cpp2::move(p.value())));
 }
 
 #line 859 "pure2-last-use.cpp2"
 [[nodiscard]] auto deferred_non_copyable_1() -> auto{
   cpp2::impl::deferred_init<std::unique_ptr<int>> p; 
-  p.construct();
+  p.construct_from([&]() -> typename CPP2_TYPEOF(p)::value_type { return typename CPP2_TYPEOF(p)::value_type{}; });
   return std::move(cpp2::move(p.value())); 
 }
 
@@ -1377,7 +1377,7 @@ auto deferred_non_copyable_0() -> void{
 [[nodiscard]] auto deferred_non_copyable_2() -> deferred_non_copyable_2_ret{
       cpp2::impl::deferred_init<std::unique_ptr<int>> p;
 #line 866 "pure2-last-use.cpp2"
-  p.construct();
+  p.construct_from([&]() -> typename CPP2_TYPEOF(p)::value_type { return typename CPP2_TYPEOF(p)::value_type{}; });
 return std::move(p.value()); }
 
 #line 869 "pure2-last-use.cpp2"

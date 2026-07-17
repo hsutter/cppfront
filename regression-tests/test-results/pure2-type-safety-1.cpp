@@ -113,8 +113,8 @@ auto test_1365(auto const& o) -> void{
 #line 63 "pure2-type-safety-1.cpp2"
 auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void{
     cpp2::impl::deferred_init<char const*> bmsg; 
-    if (b) { bmsg.construct("true");}
-    else {bmsg.construct("false"); }
+    if (b) { bmsg.construct_from([&]() -> typename CPP2_TYPEOF(bmsg)::value_type { return typename CPP2_TYPEOF(bmsg)::value_type{"true"}; });}
+    else {bmsg.construct_from([&]() -> typename CPP2_TYPEOF(bmsg)::value_type { return typename CPP2_TYPEOF(bmsg)::value_type{"false"}; }); }
     std::cout << std::setw(40) << msg << cpp2::move(bmsg.value()) << "\n";
 }
 

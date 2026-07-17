@@ -112,7 +112,7 @@ namespace N {
 
 #line 10 "pure2-types-order-independence-and-nesting.cpp2"
     X::X(cpp2::impl::out<Y> y)
-        : py{(y.construct(&(*this)), &y.value() )}{
+        : py{(y.construct_from([&]() -> typename CPP2_TYPEOF(y)::value_type { return typename CPP2_TYPEOF(y)::value_type{&(*this)}; }), &y.value() )}{
         //  === The following comments will stay close to, but not exactly at,
         //      the corresponding lines that get moved to the Cpp1 mem-init-list
 
@@ -138,7 +138,7 @@ namespace N {
     }
 #line 10 "pure2-types-order-independence-and-nesting.cpp2"
     auto X::operator=(cpp2::impl::out<Y> y) -> X& {
-        y.construct(&(*this));
+        y.construct_from([&]() -> typename CPP2_TYPEOF(y)::value_type { return typename CPP2_TYPEOF(y)::value_type{&(*this)}; });
         py = &y.value();
 
 #line 31 "pure2-types-order-independence-and-nesting.cpp2"

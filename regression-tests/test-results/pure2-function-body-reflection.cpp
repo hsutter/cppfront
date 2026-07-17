@@ -98,9 +98,9 @@ auto sample_function_before_type() -> void{}
             cpp2::impl::deferred_init<float> s;
             cpp2::impl::deferred_init<std::string> t;
 #line 14 "pure2-function-body-reflection.cpp2"
-        r.construct(42.0);
-        s.construct(2.71828f);
-        t.construct("e times pi");
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{42.0}; });
+        s.construct_from([&]() -> typename CPP2_TYPEOF(s)::value_type { return typename CPP2_TYPEOF(s)::value_type{2.71828f}; });
+        t.construct_from([&]() -> typename CPP2_TYPEOF(t)::value_type { return typename CPP2_TYPEOF(t)::value_type{"e times pi"}; });
     return  { std::move(r.value()), std::move(s.value()), std::move(t.value()) }; }
 
 #line 19 "pure2-function-body-reflection.cpp2"

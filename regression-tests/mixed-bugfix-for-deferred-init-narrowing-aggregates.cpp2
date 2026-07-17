@@ -1,0 +1,52 @@
+#include <cstdint>
+
+struct S {
+    std::int8_t x;
+    std::int8_t y;
+};
+
+struct Nested {
+    S left;
+    S right;
+};
+
+inline constexpr std::int16_t constexpr_i16 = 100;
+inline constexpr std::int8_t  constexpr_i8  = 8;
+
+main: () -> int = {
+    runtime_i8: i8 = 8;
+
+    s_good0: S = (constexpr_i16, runtime_i8);
+    s_good: S;
+    s_good = (constexpr_i16, runtime_i8);
+
+    s_reverse0: S = (runtime_i8, constexpr_i16);
+    s_reverse: S;
+    s_reverse = (runtime_i8, constexpr_i16);
+
+    s_constexpr0: S = (constexpr_i16, constexpr_i16);
+    s_constexpr: S;
+    s_constexpr = (constexpr_i16, constexpr_i16);
+
+    s_runtime0: S = (runtime_i8, runtime_i8);
+    s_runtime: S;
+    s_runtime = (runtime_i8, runtime_i8);
+
+    nested0: Nested = (
+        :S = (constexpr_i16, runtime_i8),
+        :S = (constexpr_i8, runtime_i8)
+    );
+    nested: Nested;
+    nested = (
+        :S = (constexpr_i16, runtime_i8),
+        :S = (constexpr_i8, runtime_i8)
+    );
+
+    assert(s_good0.x == 100 && s_good.y == 8);
+    assert(s_reverse0.x == 8 && s_reverse.y == 100);
+    assert(s_constexpr0.x == 100 && s_constexpr.y == 100);
+    assert(s_runtime0.x == 8 && s_runtime.y == 8);
+    assert(nested0.left.x == 100 && nested.right.y == 8);
+
+    return 0;
+}

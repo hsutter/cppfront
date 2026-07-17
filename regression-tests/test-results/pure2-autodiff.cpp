@@ -566,7 +566,7 @@ namespace ad_name {
 [[nodiscard]] auto func_outer(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> func_outer_ret{
       cpp2::impl::deferred_init<double> ret;
 #line 4 "pure2-autodiff.cpp2"
-  ret.construct(x + y);
+  ret.construct_from([&]() -> typename CPP2_TYPEOF(ret)::value_type { return typename CPP2_TYPEOF(ret)::value_type{x + y}; });
 return std::move(ret.value()); }
 
 #line 10 "pure2-autodiff.cpp2"
@@ -593,133 +593,133 @@ return std::move(ret.value()); }
     [[nodiscard]] auto ad_test::add_1(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> add_1_ret{
             cpp2::impl::deferred_init<double> r;
 #line 18 "pure2-autodiff.cpp2"
-        r.construct(x + y);
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x + y}; });
     return std::move(r.value()); }
 
 #line 21 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::add_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> add_2_ret{
             cpp2::impl::deferred_init<double> r;
 #line 22 "pure2-autodiff.cpp2"
-        r.construct(x + y + x);
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x + y + x}; });
     return std::move(r.value()); }
 
 #line 25 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::sub_1(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> sub_1_ret{
             cpp2::impl::deferred_init<double> r;
 #line 26 "pure2-autodiff.cpp2"
-        r.construct(x - y);
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x - y}; });
     return std::move(r.value()); }
 
 #line 29 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::sub_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> sub_2_ret{
             cpp2::impl::deferred_init<double> r;
 #line 30 "pure2-autodiff.cpp2"
-        r.construct(x - y - x);
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x - y - x}; });
     return std::move(r.value()); }
 
 #line 33 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::add_sub_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> add_sub_2_ret{
             cpp2::impl::deferred_init<double> r;
 #line 34 "pure2-autodiff.cpp2"
-        r.construct(x + y - x);
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x + y - x}; });
     return std::move(r.value()); }
 
 #line 37 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::mul_1(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> mul_1_ret{
             cpp2::impl::deferred_init<double> r;
 #line 38 "pure2-autodiff.cpp2"
-        r.construct(x * y);
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x * y}; });
     return std::move(r.value()); }
 
 #line 41 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::mul_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> mul_2_ret{
             cpp2::impl::deferred_init<double> r;
 #line 42 "pure2-autodiff.cpp2"
-        r.construct(x * y * x);
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x * y * x}; });
     return std::move(r.value()); }
 
 #line 45 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::div_1(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> div_1_ret{
             cpp2::impl::deferred_init<double> r;
 #line 46 "pure2-autodiff.cpp2"
-        r.construct(x / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(x),y));
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(x),y)}; });
     return std::move(r.value()); }
 
 #line 49 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::div_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> div_2_ret{
             cpp2::impl::deferred_init<double> r;
 #line 50 "pure2-autodiff.cpp2"
-        r.construct(x / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(x),y) / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(y),y));
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(x),y) / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(y),y)}; });
     return std::move(r.value()); }
 
 #line 53 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::mul_div_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> mul_div_2_ret{
             cpp2::impl::deferred_init<double> r;
 #line 54 "pure2-autodiff.cpp2"
-        r.construct(x * y / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(y),x));
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x * y / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(y),x)}; });
     return std::move(r.value()); }
 
 #line 57 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::mul_add(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> mul_add_ret{
             cpp2::impl::deferred_init<double> r;
 #line 58 "pure2-autodiff.cpp2"
-        r.construct(x * (x + y));
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x * (x + y)}; });
     return std::move(r.value()); }
 
 #line 61 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::add_mul(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> add_mul_ret{
             cpp2::impl::deferred_init<double> r;
 #line 62 "pure2-autodiff.cpp2"
-        r.construct(x + x * y);
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x + x * y}; });
     return std::move(r.value()); }
 
 #line 65 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::prefix_add(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> prefix_add_ret{
             cpp2::impl::deferred_init<double> r;
 #line 66 "pure2-autodiff.cpp2"
-        r.construct(+x + y);
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{+x + y}; });
     return std::move(r.value()); }
 
 #line 69 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::prefix_sub(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> prefix_sub_ret{
             cpp2::impl::deferred_init<double> r;
 #line 70 "pure2-autodiff.cpp2"
-        r.construct(-x + y);
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{-x + y}; });
     return std::move(r.value()); }
 
 #line 73 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::func(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> func_ret{
           cpp2::impl::deferred_init<double> ret;
 #line 74 "pure2-autodiff.cpp2"
-      ret.construct(x + y);
+      ret.construct_from([&]() -> typename CPP2_TYPEOF(ret)::value_type { return typename CPP2_TYPEOF(ret)::value_type{x + y}; });
     return std::move(ret.value()); }
 
 #line 77 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::func_call(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> func_call_ret{
           cpp2::impl::deferred_init<double> r;
 #line 78 "pure2-autodiff.cpp2"
-      r.construct(x * func(x, y));
+      r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x * func(x, y)}; });
     return std::move(r.value()); }
 
 #line 81 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::func_outer_call(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> func_outer_call_ret{
           cpp2::impl::deferred_init<double> r;
 #line 82 "pure2-autodiff.cpp2"
-      r.construct(x * func_outer(x, y));
+      r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x * func_outer(x, y)}; });
     return std::move(r.value()); }
 
 #line 85 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::sin_call(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> sin_call_ret{
           cpp2::impl::deferred_init<double> r;
 #line 86 "pure2-autodiff.cpp2"
-      r.construct(sin(x - y));
+      r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{sin(x - y)}; });
     return std::move(r.value()); }
 
 #line 89 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::if_branch(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> if_branch_ret{
           cpp2::impl::deferred_init<double> r;
 #line 90 "pure2-autodiff.cpp2"
-      r.construct(x);
+      r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x}; });
 
       if (cpp2::impl::cmp_less(x,0.0)) {
         r.value() = y;
@@ -731,10 +731,10 @@ return std::move(ret.value()); }
           cpp2::impl::deferred_init<double> r;
 #line 98 "pure2-autodiff.cpp2"
       if (cpp2::impl::cmp_less(x,0.0)) {
-        r.construct(y);
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{y}; });
       }
       else {
-        r.construct(x);
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x}; });
       }return std::move(r.value()); 
     }
 
@@ -749,7 +749,7 @@ return std::move(ret.value()); }
 #line 111 "pure2-autodiff.cpp2"
       double t {x + y}; 
 
-      r.construct(cpp2::move(t));
+      r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{cpp2::move(t)}; });
     return std::move(r.value()); }
 
 #line 116 "pure2-autodiff.cpp2"
@@ -757,7 +757,7 @@ return std::move(ret.value()); }
           cpp2::impl::deferred_init<double> r;
 #line 117 "pure2-autodiff.cpp2"
       int i {}; 
-      r.construct(x + y);
+      r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x + y}; });
       i = 2;
 
       static_cast<void>(cpp2::move(i));
@@ -770,7 +770,7 @@ return std::move(ret.value()); }
       auto t {0.0}; 
       t = x + y;
 
-      r.construct(cpp2::move(t));
+      r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{cpp2::move(t)}; });
     return std::move(r.value()); }
 
 #line 131 "pure2-autodiff.cpp2"
@@ -780,7 +780,7 @@ return std::move(ret.value()); }
       double t {}; 
       t = x + y;
 
-      r.construct(cpp2::move(t));
+      r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{cpp2::move(t)}; });
     return std::move(r.value()); }
 
 #line 138 "pure2-autodiff.cpp2"
@@ -788,16 +788,16 @@ return std::move(ret.value()); }
           cpp2::impl::deferred_init<double> r;
 #line 139 "pure2-autodiff.cpp2"
       cpp2::impl::deferred_init<double> t; 
-      t.construct(x + y);
+      t.construct_from([&]() -> typename CPP2_TYPEOF(t)::value_type { return typename CPP2_TYPEOF(t)::value_type{x + y}; });
 
-      r.construct(cpp2::move(t.value()));
+      r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{cpp2::move(t.value())}; });
     return std::move(r.value()); }
 
 #line 145 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test::while_loop(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> while_loop_ret{
           cpp2::impl::deferred_init<double> r;
 #line 146 "pure2-autodiff.cpp2"
-      r.construct(x);
+      r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x}; });
 {
 int i{0};
 double t{0.0};
@@ -818,7 +818,7 @@ double t{0.0};
     [[nodiscard]] auto ad_test::do_while_loop(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> do_while_loop_ret{
           cpp2::impl::deferred_init<double> r;
 #line 156 "pure2-autodiff.cpp2"
-      r.construct(x);
+      r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x}; });
 {
 auto i{0};
 
@@ -844,7 +844,7 @@ auto i{0};
       CPP2_UFCS(push_back)(v, x);
       CPP2_UFCS(push_back)(v, y);
 
-      r.construct(0.0);
+      r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{0.0}; });
       for ( 
       auto const& t : cpp2::move(v) ) 
       {
@@ -859,7 +859,7 @@ auto i{0};
       type_outer t {}; 
       t.a = x;
 
-      r.construct(cpp2::move(t).a + y);
+      r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{cpp2::move(t).a + y}; });
     return std::move(r.value()); }
 
 #line 187 "pure2-autodiff.cpp2"
@@ -869,7 +869,7 @@ auto i{0};
       type_outer t {}; 
       t.a = x;
 
-      r.construct(CPP2_UFCS(add)(cpp2::move(t), y));
+      r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{CPP2_UFCS(add)(cpp2::move(t), y)}; });
     return std::move(r.value()); }
 
     [[nodiscard]] auto ad_test::add_1_d(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d, cpp2::impl::in<double> y, cpp2::impl::in<double> y_d) -> add_1_d_ret{
@@ -1128,8 +1128,8 @@ double t_d {};
 cpp2::impl::deferred_init<double> t_d; 
 
     cpp2::impl::deferred_init<double> t; 
-    t_d.construct(x_d + y_d);
-    t.construct(x + y);
+    t_d.construct_from([&]() -> typename CPP2_TYPEOF(t_d)::value_type { return typename CPP2_TYPEOF(t_d)::value_type{x_d + y_d}; });
+    t.construct_from([&]() -> typename CPP2_TYPEOF(t)::value_type { return typename CPP2_TYPEOF(t)::value_type{x + y}; });
     r_d = cpp2::move(t_d.value());
     r = cpp2::move(t.value());
     return  { std::move(r), std::move(r_d) }; 
@@ -1243,112 +1243,112 @@ type_outer_d t_d {};
     [[nodiscard]] auto ad_test_reverse::add_1(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> add_1_ret{
             cpp2::impl::deferred_init<double> r;
 #line 198 "pure2-autodiff.cpp2"
-        r.construct(x + y);
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x + y}; });
     return std::move(r.value()); }
 
 #line 201 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::add_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> add_2_ret{
             cpp2::impl::deferred_init<double> r;
 #line 202 "pure2-autodiff.cpp2"
-        r.construct(x + y + x);
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x + y + x}; });
     return std::move(r.value()); }
 
 #line 205 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::sub_1(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> sub_1_ret{
             cpp2::impl::deferred_init<double> r;
 #line 206 "pure2-autodiff.cpp2"
-        r.construct(x - y);
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x - y}; });
     return std::move(r.value()); }
 
 #line 209 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::sub_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> sub_2_ret{
             cpp2::impl::deferred_init<double> r;
 #line 210 "pure2-autodiff.cpp2"
-        r.construct(x - y - x);
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x - y - x}; });
     return std::move(r.value()); }
 
 #line 213 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::add_sub_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> add_sub_2_ret{
             cpp2::impl::deferred_init<double> r;
 #line 214 "pure2-autodiff.cpp2"
-        r.construct(x + y - x);
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x + y - x}; });
     return std::move(r.value()); }
 
 #line 217 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::mul_1(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> mul_1_ret{
             cpp2::impl::deferred_init<double> r;
 #line 218 "pure2-autodiff.cpp2"
-        r.construct(x * y);
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x * y}; });
     return std::move(r.value()); }
 
 #line 221 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::mul_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> mul_2_ret{
             cpp2::impl::deferred_init<double> r;
 #line 222 "pure2-autodiff.cpp2"
-        r.construct(x * y * x);
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x * y * x}; });
     return std::move(r.value()); }
 
 #line 225 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::div_1(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> div_1_ret{
             cpp2::impl::deferred_init<double> r;
 #line 226 "pure2-autodiff.cpp2"
-        r.construct(x / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(x),y));
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(x),y)}; });
     return std::move(r.value()); }
 
 #line 229 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::div_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> div_2_ret{
             cpp2::impl::deferred_init<double> r;
 #line 230 "pure2-autodiff.cpp2"
-        r.construct(x / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(x),y) / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(y),y));
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(x),y) / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(y),y)}; });
     return std::move(r.value()); }
 
 #line 233 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::mul_div_2(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> mul_div_2_ret{
             cpp2::impl::deferred_init<double> r;
 #line 234 "pure2-autodiff.cpp2"
-        r.construct(x * y / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(y),x));
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x * y / CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(y),x)}; });
     return std::move(r.value()); }
 
 #line 237 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::mul_add(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> mul_add_ret{
             cpp2::impl::deferred_init<double> r;
 #line 238 "pure2-autodiff.cpp2"
-        r.construct(x * (x + y));
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x * (x + y)}; });
     return std::move(r.value()); }
 
 #line 241 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::add_mul(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> add_mul_ret{
             cpp2::impl::deferred_init<double> r;
 #line 242 "pure2-autodiff.cpp2"
-        r.construct(x + x * y);
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x + x * y}; });
     return std::move(r.value()); }
 
 #line 245 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::sin_call(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> sin_call_ret{
           cpp2::impl::deferred_init<double> r;
 #line 246 "pure2-autodiff.cpp2"
-      r.construct(sin(x - y));
+      r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{sin(x - y)}; });
     return std::move(r.value()); }
 
 #line 249 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::func(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> func_ret{
           cpp2::impl::deferred_init<double> ret;
 #line 250 "pure2-autodiff.cpp2"
-      ret.construct(x + y);
+      ret.construct_from([&]() -> typename CPP2_TYPEOF(ret)::value_type { return typename CPP2_TYPEOF(ret)::value_type{x + y}; });
     return std::move(ret.value()); }
 
 #line 253 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::func_call(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> func_call_ret{
           cpp2::impl::deferred_init<double> r;
 #line 254 "pure2-autodiff.cpp2"
-      r.construct(x * func(x, y));
+      r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x * func(x, y)}; });
     return std::move(r.value()); }
 
 #line 257 "pure2-autodiff.cpp2"
     [[nodiscard]] auto ad_test_reverse::func_outer_call(cpp2::impl::in<double> x, cpp2::impl::in<double> y) -> func_outer_call_ret{
           cpp2::impl::deferred_init<double> r;
 #line 258 "pure2-autodiff.cpp2"
-      r.construct(x * func_outer(x, y));
+      r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x * func_outer(x, y)}; });
     return std::move(r.value()); }
 
     [[nodiscard]] auto ad_test_reverse::add_1_b(cpp2::impl::in<double> x, double& x_b, cpp2::impl::in<double> y, double& y_b, double& r_b) -> add_1_b_ret{
@@ -1526,7 +1526,7 @@ double temp_2_b {0.0};
     [[nodiscard]] auto ad_test_twice::mul_1(cpp2::impl::in<double> x) -> mul_1_ret{
             cpp2::impl::deferred_init<double> r;
 #line 265 "pure2-autodiff.cpp2"
-        r.construct(x * x);
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{x * x}; });
     return std::move(r.value()); }
 
     [[nodiscard]] auto ad_test_twice::mul_1_d(cpp2::impl::in<double> x, cpp2::impl::in<double> x_d) -> mul_1_d_ret{
@@ -1581,15 +1581,15 @@ auto write_output_reverse(cpp2::impl::in<std::string> func, cpp2::impl::in<doubl
 #line 282 "pure2-autodiff.cpp2"
         if (cpp2::impl::cmp_less(x,-3)) 
         {
-            y.construct(x * x);
+            y.construct_from([&]() -> typename CPP2_TYPEOF(y)::value_type { return typename CPP2_TYPEOF(y)::value_type{x * x}; });
         }
         else {if (cpp2::impl::cmp_less(x,3)) 
         {
-            y.construct(x + sin(x) + 10);
+            y.construct_from([&]() -> typename CPP2_TYPEOF(y)::value_type { return typename CPP2_TYPEOF(y)::value_type{x + sin(x) + 10}; });
         }
         else 
         {
-            y.construct(sin(x) * x * x);
+            y.construct_from([&]() -> typename CPP2_TYPEOF(y)::value_type { return typename CPP2_TYPEOF(y)::value_type{sin(x) * x * x}; });
         }}return std::move(y.value()); 
     }
 
