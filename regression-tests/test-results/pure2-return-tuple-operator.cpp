@@ -55,8 +55,8 @@ auto main() -> int;
             cpp2::impl::deferred_init<int> x;
             cpp2::impl::deferred_init<int> y;
 #line 4 "pure2-return-tuple-operator.cpp2"
-        x.construct(12);
-        y.construct(34);
+        x.construct_from([&]() -> typename CPP2_TYPEOF(x)::value_type { return typename CPP2_TYPEOF(x)::value_type{12}; });
+        y.construct_from([&]() -> typename CPP2_TYPEOF(y)::value_type { return typename CPP2_TYPEOF(y)::value_type{34}; });
         return  { std::move(x.value()), std::move(y.value()) }; 
     }
 #line 8 "pure2-return-tuple-operator.cpp2"
@@ -64,8 +64,8 @@ auto main() -> int;
             cpp2::impl::deferred_init<int> x;
             cpp2::impl::deferred_init<int> y;
 #line 9 "pure2-return-tuple-operator.cpp2"
-        x.construct(23);
-        y.construct(45);
+        x.construct_from([&]() -> typename CPP2_TYPEOF(x)::value_type { return typename CPP2_TYPEOF(x)::value_type{23}; });
+        y.construct_from([&]() -> typename CPP2_TYPEOF(y)::value_type { return typename CPP2_TYPEOF(y)::value_type{45}; });
         return  { std::move(x.value()), std::move(y.value()) }; 
     }
 #line 13 "pure2-return-tuple-operator.cpp2"
@@ -73,8 +73,8 @@ auto main() -> int;
             cpp2::impl::deferred_init<int> x;
             cpp2::impl::deferred_init<int> y;
 #line 14 "pure2-return-tuple-operator.cpp2"
-        x.construct(34 * (idx + 1));
-        y.construct(56 * (idx + 1));
+        x.construct_from([&]() -> typename CPP2_TYPEOF(x)::value_type { return typename CPP2_TYPEOF(x)::value_type{34 * (idx + 1)}; });
+        y.construct_from([&]() -> typename CPP2_TYPEOF(y)::value_type { return typename CPP2_TYPEOF(y)::value_type{56 * (idx + 1)}; });
         return  { std::move(x.value()), std::move(y.value()) }; 
     }
 

@@ -25,7 +25,7 @@ using vals_ret = int;
 [[nodiscard]] auto vals() -> vals_ret{
         cpp2::impl::deferred_init<int> i;
 #line 2 "pure2-bugfix-for-name-lookup-and-value-decoration.cpp2"
-    i.construct(42);
+    i.construct_from([&]() -> typename CPP2_TYPEOF(i)::value_type { return typename CPP2_TYPEOF(i)::value_type{42}; });
     return std::move(i.value()); 
 }
 

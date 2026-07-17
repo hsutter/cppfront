@@ -50,7 +50,7 @@ template<typename T, typename U> [[nodiscard]] auto g(T const& a, U const& b) ->
 [[nodiscard]] auto doubler(cpp2::impl::in<int> a) -> doubler_ret{
         cpp2::impl::deferred_init<int> i;
 #line 6 "pure2-trailing-commas.cpp2"
-    i.construct(a * 2);
+    i.construct_from([&]() -> typename CPP2_TYPEOF(i)::value_type { return typename CPP2_TYPEOF(i)::value_type{a * 2}; });
 return std::move(i.value()); }
 
 vals::vals(auto&& i_)

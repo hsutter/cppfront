@@ -47,18 +47,18 @@ auto main(int const argc_, char** argv_) -> int{
     auto d {4}; 
 
     if (CPP2_UFCS(size)(args) == 3) {
-        p.construct(&a);
+        p.construct_from([&]() -> typename CPP2_TYPEOF(p)::value_type { return typename CPP2_TYPEOF(p)::value_type{&a}; });
     }else {if (true) {
         if (CPP2_UFCS(size)(args) == 2) {
-            p.construct(&c);
+            p.construct_from([&]() -> typename CPP2_TYPEOF(p)::value_type { return typename CPP2_TYPEOF(p)::value_type{&c}; });
         }else {if (cpp2::impl::cmp_greater(cpp2::move(b),0)) {
-                p.construct(&a);
+                p.construct_from([&]() -> typename CPP2_TYPEOF(p)::value_type { return typename CPP2_TYPEOF(p)::value_type{&a}; });
         }
         else {
-            p.construct(&d);
+            p.construct_from([&]() -> typename CPP2_TYPEOF(p)::value_type { return typename CPP2_TYPEOF(p)::value_type{&d}; });
         }}
     }else {
-        p.construct(&c);
+        p.construct_from([&]() -> typename CPP2_TYPEOF(p)::value_type { return typename CPP2_TYPEOF(p)::value_type{&c}; });
     }}
 
     std::cout << *cpp2::impl::assert_not_null(cpp2::move(p.value())) << std::endl;
@@ -69,22 +69,22 @@ auto main(int const argc_, char** argv_) -> int{
             cpp2::impl::deferred_init<double> r;
 #line 29 "pure2-initialization-safety-with-else-if.cpp2"
         cpp2::impl::deferred_init<double> t; 
-        t.construct(x + y);
+        t.construct_from([&]() -> typename CPP2_TYPEOF(t)::value_type { return typename CPP2_TYPEOF(t)::value_type{x + y}; });
 
-        r.construct(cpp2::move(t.value()));// OK, after t but it's a return value
+        r.construct_from([&]() -> typename CPP2_TYPEOF(r)::value_type { return typename CPP2_TYPEOF(r)::value_type{cpp2::move(t.value())}; });// OK, after t but it's a return value
     return std::move(r.value()); }
 
 #line 36 "pure2-initialization-safety-with-else-if.cpp2"
 auto ok() -> void{
     cpp2::impl::deferred_init<int> i; 
     if (true) {
-        i.construct(42);
+        i.construct_from([&]() -> typename CPP2_TYPEOF(i)::value_type { return typename CPP2_TYPEOF(i)::value_type{42}; });
         while( true ) { // OK: in-branch loop is after initialization
             i.value() = 42;
         }
     }
     else {
-        i.construct(42);
+        i.construct_from([&]() -> typename CPP2_TYPEOF(i)::value_type { return typename CPP2_TYPEOF(i)::value_type{42}; });
     }
     i.value() = 42;
 }

@@ -4112,15 +4112,22 @@ public:
 
             //  Normally we'll just emit the operator, but if this is an
             //  assignment that's a definite initialization, change it to
-            //  a .construct() call
+            //  a .construct_from() call so brace-init stays in the caller's context
             if (
                 x.op->type() == lexeme::Assignment
                 && in_definite_init
                 )
             {
-                printer.print_cpp2( ".construct(", n.position() );
+                auto const type =
+                    "typename CPP2_TYPEOF("
+                    + print_to_string(*n.expr->get_postfix_expression_node()->get_first_token_ignoring_this())
+                    + ")::value_type";
+                printer.print_cpp2(
+                    ".construct_from([&]() -> " + type + " { return " + type + "{",
+                    n.position()
+                );
                 emit(*x.expr);
-                printer.print_cpp2( ")", n.position() );
+                printer.print_cpp2( "}; })", n.position() );
             }
             else
             {

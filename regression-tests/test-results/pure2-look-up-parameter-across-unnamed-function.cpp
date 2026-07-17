@@ -43,7 +43,7 @@ using g_ret = int;
 [[nodiscard]] auto g() -> g_ret{
         cpp2::impl::deferred_init<int> ri;
 #line 10 "pure2-look-up-parameter-across-unnamed-function.cpp2"
-    ri.construct(0);
+    ri.construct_from([&]() -> typename CPP2_TYPEOF(ri)::value_type { return typename CPP2_TYPEOF(ri)::value_type{0}; });
     auto pred {[](auto const& e) -> decltype(auto) { return e == 1;  }}; 
     ri.value() = 42;
     cpp2::move(pred)(ri.value());

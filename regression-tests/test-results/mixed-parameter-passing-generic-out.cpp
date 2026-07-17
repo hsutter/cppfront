@@ -36,7 +36,7 @@ auto f(auto x_) -> void;
 auto f(auto x_) -> void{
     auto x = cpp2::impl::out(x_); 
 #line 12 "mixed-parameter-passing-generic-out.cpp2"
-    x.construct(42);
+    x.construct_from([&]() -> typename CPP2_TYPEOF(x)::value_type { return typename CPP2_TYPEOF(x)::value_type{42}; });
 }
 
 #line 15 "mixed-parameter-passing-generic-out.cpp2"
