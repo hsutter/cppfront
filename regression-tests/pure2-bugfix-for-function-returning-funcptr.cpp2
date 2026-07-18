@@ -1,0 +1,32 @@
+g_inttemplate: std::optional<int> = std::nullopt;
+g_template: std::optional<*(_: int) -> void> = std::nullopt;
+g_signal_handlers: std::unordered_map<int, *(_: int) -> void> = ();
+
+intfuncptr: type == *(_: int) -> void;
+
+set_signal: (signum: int, handler: *(_: int) -> void) -> *(_: int) -> void = {
+    default_handler := :(foo: int) -> void = { 
+        // Default handler does nothing
+        _ = foo;
+    };
+    old_handler: intfuncptr = default_handler;
+    if g_signal_handlers.find(signum) != g_signal_handlers.end() {
+        old_handler = g_signal_handlers[signum];
+    }
+    g_signal_handlers[signum] = handler;
+    return old_handler;
+}
+
+g_signal: i64 = 0;
+inc_signal: (signum: int) -> void = {
+    g_signal += signum;
+}
+dec_signal: (signum: int) -> void = {
+    g_signal -= signum;
+}
+
+main: () -> int = {
+    _ = set_signal(1, inc_signal);
+    cmpx := set_signal(1, dec_signal);
+    return cmpx != inc_signal;
+}
