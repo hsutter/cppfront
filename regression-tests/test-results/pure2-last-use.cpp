@@ -1393,8 +1393,8 @@ auto loops() -> void{
     auto x {cpp2_new<int>(0)}; 
     for ( 
 
-    [[maybe_unused]] auto const& unnamed_param_1 : { 0 } )  { do 
-    {} while (false); f_inout(x); }
+    [[maybe_unused]] auto const& unnamed_param_1 : { 0 } )  { bool _for_break = false; do 
+    {} while (false); if (_for_break) { break; } f_inout(x); }
   });
 
   static_cast<void>([]() -> void{
