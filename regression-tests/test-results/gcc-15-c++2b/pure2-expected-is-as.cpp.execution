@@ -1,0 +1,15 @@
+ex1 is int
+ex1 is 123
+ex1 as int = 123
+ex2 is unexpected<int> and error is: -1
+ex2 is 'empty' aka unexpected<int> and error is: -1
+ex2 as std::unexpected<int> and error = -1
+
+expected<int, int> with value
+    ...integer 123
+
+expected<int, int> with unexpected
+    ...unexpected<int> -1
+
+expected<string, size_t> with value
+    ...string Expect the unexpected

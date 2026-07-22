@@ -1,0 +1,14 @@
+Running tests_01_char_matcher:
+01_y: OK regex: abc parsed_regex: abc str: abc result_expr: $& expected_results abc
+02_y: OK regex: abc parsed_regex: abc str: abc result_expr: $-[0] expected_results 0
+03_y: OK regex: abc parsed_regex: abc str: abc result_expr: $+[0] expected_results 3
+04_n: OK regex: abc parsed_regex: abc str: xbc result_expr: - expected_results -
+05_n: OK regex: abc parsed_regex: abc str: axc result_expr: - expected_results -
+06_n: OK regex: abc parsed_regex: abc str: abx result_expr: - expected_results -
+07_y: OK regex: abc parsed_regex: abc str: xabcy result_expr: $& expected_results abc
+08_y: OK regex: abc parsed_regex: abc str: xabcy result_expr: $-[0] expected_results 1
+09_y: OK regex: abc parsed_regex: abc str: xabcy result_expr: $+[0] expected_results 4
+10_y: OK regex: abc parsed_regex: abc str: ababc result_expr: $& expected_results abc
+11_y: OK regex: abc parsed_regex: abc str: ababc result_expr: $-[0] expected_results 2
+12_y: OK regex: abc parsed_regex: abc str: ababc result_expr: $+[0] expected_results 5
+

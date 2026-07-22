@@ -1,0 +1,12 @@
+Running tests_04_start_end:
+01_y: OK regex: ^abc$ parsed_regex: ^abc$ str: abc result_expr: $& expected_results abc
+02_n: OK regex: ^abc$ parsed_regex: ^abc$ str: abcc result_expr: - expected_results -
+03_y: OK regex: ^abc parsed_regex: ^abc str: abcc result_expr: $& expected_results abc
+04_n: OK regex: ^abc$ parsed_regex: ^abc$ str: aabc result_expr: - expected_results -
+05_y: OK regex: abc$ parsed_regex: abc$ str: aabc result_expr: $& expected_results abc
+06_n: OK regex: abc$ parsed_regex: abc$ str: aabcd result_expr: - expected_results -
+07_y: OK regex: ^ parsed_regex: ^ str: abc result_expr: $& expected_results 
+08_y: OK regex: $ parsed_regex: $ str: abc result_expr: $& expected_results 
+09_n: OK regex: $b parsed_regex: $b str: b result_expr: - expected_results -
+10_n: OK regex: \GX.*X parsed_regex: \GX.*X str: aaaXbX result_expr: - expected_results -
+

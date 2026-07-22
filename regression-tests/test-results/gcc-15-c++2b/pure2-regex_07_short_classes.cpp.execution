@@ -1,0 +1,26 @@
+Running tests_07_short_classes:
+01_y: OK regex: \w parsed_regex: \w str: a result_expr: - expected_results -
+02_n: OK regex: \w parsed_regex: \w str: - result_expr: - expected_results -
+03_n: OK regex: \W parsed_regex: \W str: a result_expr: - expected_results -
+04_y: OK regex: \W parsed_regex: \W str: - result_expr: - expected_results -
+05_y: OK regex: a\sb parsed_regex: a\sb str: a b result_expr: - expected_results -
+06_n: OK regex: a\sb parsed_regex: a\sb str: a-b result_expr: - expected_results -
+07_n: OK regex: a\Sb parsed_regex: a\Sb str: a b result_expr: - expected_results -
+08_y: OK regex: a\Sb parsed_regex: a\Sb str: a-b result_expr: - expected_results -
+09_y: OK regex: \d parsed_regex: \d str: 1 result_expr: - expected_results -
+10_n: OK regex: \d parsed_regex: \d str: - result_expr: - expected_results -
+11_n: OK regex: \D parsed_regex: \D str: 1 result_expr: - expected_results -
+12_y: OK regex: \D parsed_regex: \D str: - result_expr: - expected_results -
+13_y: OK regex: [\w] parsed_regex: [\w] str: a result_expr: - expected_results -
+14_n: OK regex: [\w] parsed_regex: [\w] str: - result_expr: - expected_results -
+15_n: OK regex: [\W] parsed_regex: [\W] str: a result_expr: - expected_results -
+16_y: OK regex: [\W] parsed_regex: [\W] str: - result_expr: - expected_results -
+17_y: OK regex: a[\s]b parsed_regex: a[\s]b str: a b result_expr: - expected_results -
+18_n: OK regex: a[\s]b parsed_regex: a[\s]b str: a-b result_expr: - expected_results -
+19_n: OK regex: a[\S]b parsed_regex: a[\S]b str: a b result_expr: - expected_results -
+20_y: OK regex: a[\S]b parsed_regex: a[\S]b str: a-b result_expr: - expected_results -
+21_y: OK regex: [\d] parsed_regex: [\d] str: 1 result_expr: - expected_results -
+22_n: OK regex: [\d] parsed_regex: [\d] str: - result_expr: - expected_results -
+23_n: OK regex: [\D] parsed_regex: [\D] str: 1 result_expr: - expected_results -
+24_y: OK regex: [\D] parsed_regex: [\D] str: - result_expr: - expected_results -
+

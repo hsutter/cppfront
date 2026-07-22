@@ -1,0 +1,4 @@
+Running tests_08_alternatives:
+01_y: OK regex: ab|cd parsed_regex: ab|cd str: abc result_expr: $& expected_results ab
+02_y: OK regex: ab|cd parsed_regex: ab|cd str: abcd result_expr: $& expected_results ab
+

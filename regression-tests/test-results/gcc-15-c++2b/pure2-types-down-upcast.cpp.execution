@@ -1,0 +1,24 @@
+const foo 
+const foo 
+const foo 
+const foo 
+foo 
+foo 
+Call B const: 0.000000
+Call B const: 0.000000
+Call A const: 0
+Call B const: 0.000000
+Call B const: 0.000000
+Call A const: 0
+Call B mut: 0.000000
+Call B mut: 0.000000
+Call A mut: 0
+Call A const: 0
+Call B const: 0.000000
+Call A const: 0
+Call A const: 0
+Call B const: 0.000000
+Call A const: 0
+Call A mut: 0
+Call B mut: 0.000000
+Call A mut: 0

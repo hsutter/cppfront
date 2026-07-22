@@ -1,0 +1,26 @@
+while_continue_inner:
+  00 inner 01 02 inner outer 10 inner 11 12 inner outer 20 inner 21 22 inner outer 
+while_continue_outer:
+  00 inner 01 10 inner 11 20 inner 21 
+while_break_inner:
+  00 inner 01 outer 10 inner 11 outer 20 inner 21 outer 
+while_break_outer:
+  00 inner 01 
+
+do_continue_inner:
+  00 inner 01 02 inner outer 10 inner 11 12 inner outer 20 inner 21 22 inner outer 
+do_continue_outer:
+  00 inner 01 10 inner 11 20 inner 21 
+do_break_inner:
+  00 inner 01 outer 10 inner 11 outer 20 inner 21 outer 
+do_break_outer:
+  00 inner 01 
+
+for_continue_inner:
+  00 inner 01 02 inner outer 10 inner 11 12 inner outer 20 inner 21 22 inner outer 
+for_continue_outer:
+  00 inner 01 10 inner 11 20 inner 21 
+for_break_inner:
+  00 inner 01 outer 10 inner 11 outer 20 inner 21 outer 
+for_break_outer:
+  00 inner 01 

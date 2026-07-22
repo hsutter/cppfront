@@ -1,0 +1,5 @@
+Running tests_17_comments:
+01_y: OK regex: ^a(?#xxx){3}c parsed_regex: ^a(?#xxx){3}c str: aaac result_expr: $& expected_results aaac
+02_y: OK Warning: Parsed regex does not match. regex: '^a (?#xxx) (?#yyy) {3}c'x parsed_regex: '^a(?#xxx)(?#yyy){3}c'x str: aaac result_expr: $& expected_results aaac
+03_y: OK Warning: Parsed regex does not match. regex: 'foo # Match foo'x parsed_regex: 'foo'x str: foobar result_expr: $& expected_results foo
+
