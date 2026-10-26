@@ -64,11 +64,13 @@ jobs:
             compiler: cl.exe
             cxx_std: c++latest
             stdlib: default
-          - os: windows-2025
-            shortosname: win-25
+            vs_version: '[17.0,18.0)'   # VS 2022
+          - os: windows-2022
+            shortosname: win-22
             compiler: cl.exe
             cxx_std: c++20
             stdlib: default
+            vs_version: '[17.0,18.0)'   # VS 2022
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
@@ -90,14 +92,64 @@ jobs:
         cd regression-tests
         bash run-tests.sh -c ${{ matrix.compiler }} -s ${{ matrix.cxx_std }} -d ${{ matrix.stdlib }} -l ${{ matrix.os }}
 
+    - name: Set up MSVC environment - Windows
+      if: startsWith(matrix.os, 'windows')
+      shell: pwsh
+      run: |
+        $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+        if (-not (Test-Path $vswhere)) { throw "vswhere.exe not found at $vswhere" }
+
+        $vsPath = & $vswhere -products * -version '${{ matrix.vs_version }}' -latest `
+                    -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+                    -property installationPath
+        if (-not $vsPath) {
+          # List what *is* installed, for diagnosis
+          & $vswhere -all -products * -format text
+          throw "No Visual Studio in range ${{ matrix.vs_version }} with x64 C++ tools found"
+        }
+        $vcvars = Join-Path $vsPath 'VC\Auxiliary\Build\vcvars64.bat'
+        if (-not (Test-Path $vcvars)) { throw "vcvars64.bat not found at $vcvars" }
+        Write-Host "Using VS at: $vsPath"
+
+        # Capture the environment before and after running vcvars
+        function Get-Env([string]$cmd) {
+          $h = @{}
+          cmd /c "$cmd set" | ForEach-Object {
+            if ($_ -match '^([^=]+)=(.*)$') { $h[$matches[1]] = $matches[2] }
+          }
+          $h
+        }
+        $before = Get-Env ''
+        $after  = Get-Env "`"$vcvars`" >nul && "
+        if (-not $after['VCToolsInstallDir']) { throw "vcvars64.bat did not set up the environment" }
+
+        # Export only what vcvars changed - never overwrite the whole PATH
+        # New PATH entries -> GITHUB_PATH (each line is prepended, so add them in reverse order)
+        $oldPath = $before['Path'] -split ';'
+        $newEntries = @(($after['Path'] -split ';') | Where-Object { $_ -and ($oldPath -notcontains $_) })
+        [array]::Reverse($newEntries)
+        $newEntries | ForEach-Object { $_ >> $env:GITHUB_PATH }
+
+        # Other new/changed variables -> GITHUB_ENV
+        foreach ($k in $after.Keys) {
+          if ($k -ieq 'Path') { continue }
+          if ($before[$k] -ne $after[$k]) { "$k=$($after[$k])" >> $env:GITHUB_ENV }
+        }
+
     - name: Run regression tests - Windows version
       if: startsWith(matrix.os, 'windows')
+      shell: bash
       run: |
-        "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && ^
-        git config --local core.autocrlf false && ^
-        cd regression-tests && ^
+        echo "--- Tool resolution ---"
+        for t in cl.exe link.exe git diff bash; do echo "$t -> $(command -v $t)"; done
+        echo "VCToolsInstallDir=$VCToolsInstallDir"
+        # MSVC version banner (cl prints it to stderr). `|| true` because GitHub runs bash
+        # with `-e -o pipefail`, and cl.exe without inputs / SIGPIPE from head must not fail the step
+        cl.exe 2>&1 >/dev/null | head -n 1 || true
+        echo "-----------------------"
+        git config --local core.autocrlf false
+        cd regression-tests
         bash run-tests.sh -c ${{ matrix.compiler }} -s ${{ matrix.cxx_std }} -d ${{ matrix.stdlib }} -l ${{ matrix.os }}
-      shell: cmd
 
     - name: Upload patch
       if: success() || failure()
