@@ -6,3 +6,6 @@ mixed-parameter-passing.cpp2(44): error C2079: 'container<int>::buf' uses undefi
         ]
 mixed-parameter-passing.cpp2(44): note: the template instantiation context (the oldest one first) is
 mixed-parameter-passing.cpp2(54): note: see reference to class template instantiation 'container<int>' being compiled
+mixed-parameter-passing.cpp2(44): error C2439: 'container<int>::buf': member could not be initialized
+mixed-parameter-passing.cpp2(44): note: see declaration of 'container<int>::buf'
+mixed-parameter-passing.cpp2(54): note: see reference to function 'container<int>::container(void)'

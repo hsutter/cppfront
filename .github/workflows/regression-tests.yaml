@@ -64,13 +64,13 @@ jobs:
             compiler: cl.exe
             cxx_std: c++latest
             stdlib: default
-            vs_version: '[17.0,18.0)'   # VS 2022
-          - os: windows-2022
-            shortosname: win-22
+            vs_version: '[18.0,19.0)'   # VS 2026
+          - os: windows-2025
+            shortosname: win-25
             compiler: cl.exe
             cxx_std: c++20
             stdlib: default
-            vs_version: '[17.0,18.0)'   # VS 2022
+            vs_version: '[18.0,19.0)'   # VS 2026
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
