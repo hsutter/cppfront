@@ -59,17 +59,16 @@ jobs:
             compiler: clang++
             cxx_std: c++2b
             stdlib: default
-          # Comment out Windows tests until build on Windows is fixed
-          # - os: windows-2025
-          #   shortosname: win-25
-          #   compiler: cl.exe
-          #   cxx_std: c++latest
-          #   stdlib: default
-          # - os: windows-2025
-          #   shortosname: win-25
-          #   compiler: cl.exe
-          #   cxx_std: c++20
-          #   stdlib: default
+          - os: windows-2025
+            shortosname: win-25
+            compiler: cl.exe
+            cxx_std: c++latest
+            stdlib: default
+          - os: windows-2025
+            shortosname: win-25
+            compiler: cl.exe
+            cxx_std: c++20
+            stdlib: default
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
