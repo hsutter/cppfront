@@ -80,29 +80,15 @@ jobs:
       run: |
         sudo apt-get install -y clang-19
 
-    - name: Run regression tests - Linux and macOS version
-      if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
-      run: |
-        cd regression-tests
-        bash run-tests.sh -c ${{ matrix.compiler }} -s ${{ matrix.cxx_std }} -d ${{ matrix.stdlib }} -l ${{ matrix.os }}
-
     - name: Set up MSVC - Windows
       if: startsWith(matrix.os, 'windows')
       uses: ilammy/msvc-dev-cmd@v1
       with:
         vsversion: ${{ matrix.vs_version }}
 
-    - name: Run regression tests - Windows version
-      if: startsWith(matrix.os, 'windows')
+    - name: Run regression tests
       shell: bash
       run: |
-        echo "--- Tool resolution ---"
-        for t in cl.exe link.exe git diff bash; do echo "$t -> $(command -v $t)"; done
-        echo "VCToolsInstallDir=$VCToolsInstallDir"
-        # MSVC version banner (cl prints it to stderr). `|| true` because GitHub runs bash
-        # with `-e -o pipefail`, and cl.exe without inputs / SIGPIPE from head must not fail the step
-        cl.exe 2>&1 >/dev/null | head -n 1 || true
-        echo "-----------------------"
         git config --local core.autocrlf false
         cd regression-tests
         bash run-tests.sh -c ${{ matrix.compiler }} -s ${{ matrix.cxx_std }} -d ${{ matrix.stdlib }} -l ${{ matrix.os }}
