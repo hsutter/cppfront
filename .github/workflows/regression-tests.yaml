@@ -75,16 +75,10 @@ jobs:
     - name: Checkout repo
       uses: actions/checkout@v4
 
-    - name: Prepare compilers - macOS
-      if: matrix.os == 'macos-13'
+    - name: Prepare compiler - Clang 19
+      if: matrix.os == 'ubuntu-24.04' && startsWith(matrix.compiler, 'clang')
       run: |
-        sudo xcode-select --switch /Applications/Xcode_14.3.1.app
-        sudo ln -s "$(brew --prefix llvm@15)/bin/clang" /usr/local/bin/clang++-15
-
-    - name: Prepare compilers - Ubuntu 24.04
-      if: matrix.os == 'ubuntu-24.04'
-      run: |
-        sudo sudo apt-get install clang-19
+        sudo apt-get install -y clang-19
 
     - name: Run regression tests - Linux and macOS version
       if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
