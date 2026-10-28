@@ -1,27 +1,27 @@
 pure2-last-use.cpp
 pure2-last-use.cpp2(274): error C2039: 'move_only_function': is not a member of 'std'
-predefined C++ types (compiler internal)(357): note: see declaration of 'std'
+C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include\variant(37): note: see declaration of 'std'
 pure2-last-use.cpp2(274): error C7568: argument list missing after assumed function template 'move_only_function'
-pure2-last-use.cpp2(274): error C2062: type 'unknown-type' unexpected
+pure2-last-use.cpp2(274): error C2062: type '<error>' unexpected
 pure2-last-use.cpp2(274): error C2238: unexpected token(s) preceding ';'
 pure2-last-use.cpp2(275): error C2039: 'move_only_function': is not a member of 'std'
-predefined C++ types (compiler internal)(357): note: see declaration of 'std'
+C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include\variant(37): note: see declaration of 'std'
 pure2-last-use.cpp2(275): error C7568: argument list missing after assumed function template 'move_only_function'
-pure2-last-use.cpp2(275): error C2062: type 'unknown-type' unexpected
+pure2-last-use.cpp2(275): error C2062: type '<error>' unexpected
 pure2-last-use.cpp2(275): error C2238: unexpected token(s) preceding ';'
 pure2-last-use.cpp2(277): error C2760: syntax error: '>' was unexpected here; expected 'expression'
 pure2-last-use.cpp2(277): error C2760: syntax error: '>' was unexpected here; expected ';'
 pure2-last-use.cpp2(277): error C2059: syntax error: '>'
 pure2-last-use.cpp2(344): error C2039: 'move_only_function': is not a member of 'std'
-predefined C++ types (compiler internal)(357): note: see declaration of 'std'
+C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include\variant(37): note: see declaration of 'std'
 pure2-last-use.cpp2(344): error C7568: argument list missing after assumed function template 'move_only_function'
-pure2-last-use.cpp2(344): error C2062: type 'unknown-type' unexpected
+pure2-last-use.cpp2(344): error C2062: type '<error>' unexpected
 pure2-last-use.cpp2(344): error C2238: unexpected token(s) preceding ';'
 pure2-last-use.cpp2(348): error C2760: syntax error: '>' was unexpected here; expected 'expression'
 pure2-last-use.cpp2(348): error C2760: syntax error: '>' was unexpected here; expected ';'
 pure2-last-use.cpp2(348): error C2059: syntax error: '>'
 pure2-last-use.cpp2(773): error C2039: 'move_only_function': is not a member of 'std'
-predefined C++ types (compiler internal)(357): note: see declaration of 'std'
+C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include\variant(37): note: see declaration of 'std'
 pure2-last-use.cpp2(773): error C2061: syntax error: identifier 'move_only_function'
 pure2-last-use.cpp2(279): error C2760: syntax error: '>' was unexpected here; expected 'expression'
 pure2-last-use.cpp2(278): error C2244: 'issue_857_4::{ctor}': unable to match function definition to an existing declaration
@@ -37,7 +37,7 @@ pure2-last-use.cpp2(279): error C2059: syntax error: '>'
 pure2-last-use.cpp2(279): error C2065: 'mg_': undeclared identifier
 pure2-last-use.cpp2(279): error C3553: decltype expects an expression not a type
 pure2-last-use.cpp2(279): error C2039: 'move_only_function': is not a member of 'std'
-predefined C++ types (compiler internal)(357): note: see declaration of 'std'
+C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include\variant(37): note: see declaration of 'std'
 pure2-last-use.cpp2(279): error C2143: syntax error: missing ')' before 'attribute specifier'
 pure2-last-use.cpp2(279): error C2065: 'move_only_function': undeclared identifier
 pure2-last-use.cpp2(279): error C2059: syntax error: 'attribute specifier'
@@ -85,26 +85,23 @@ pure2-last-use.cpp2(352): error C2059: syntax error: '{'
 pure2-last-use.cpp2(352): error C2143: syntax error: missing ';' before '{'
 pure2-last-use.cpp2(352): error C2447: '{': missing function header (old-style formal list?)
 pure2-last-use.cpp2(773): error C2039: 'move_only_function': is not a member of 'std'
-predefined C++ types (compiler internal)(357): note: see declaration of 'std'
+C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include\variant(37): note: see declaration of 'std'
 pure2-last-use.cpp2(773): error C2061: syntax error: identifier 'move_only_function'
 pure2-last-use.cpp2(774): error C3861: 'size': identifier not found
-pure2-last-use.cpp2(774): note: This diagnostic occurred in the compiler generated function 'decltype(auto) issue_888_1::<lambda_1>::operator ()(Obj &&,Params ...) noexcept(<expr>) const'
 pure2-last-use.cpp2(774): error C2065: 'size': undeclared identifier
-pure2-last-use.cpp2(774): note: This diagnostic occurred in the compiler generated function 'decltype(auto) issue_888_1::<lambda_1>::operator ()(Obj &&,Params ...) noexcept(<expr>) const'
-pure2-last-use.cpp2(774): error C2338: static_assert failed: 'this function call syntax tries 'obj.func(...)', then 'func(obj,...);', but both failed - if this function call is passing a local variable that will be modified by the function, but that variable is never used again in the function so the new value is never used, that's likely the problem - if that's what you intended, add another line '_ = obj;' afterward to explicitly discard the new value of the object'
+pure2-last-use.cpp2(774): error C2057: expected constant expression
+pure2-last-use.cpp2(774): error C2338: static assertion failed: 'this function call syntax tries 'obj.func(...)', then 'func(obj,...);', but both failed - if this function call is passing a local variable that will be modified by the function, but that variable is never used again in the function so the new value is never used, that's likely the problem - if that's what you intended, add another line '_ = obj;' afterward to explicitly discard the new value of the object'
 pure2-last-use.cpp2(774): note: the template instantiation context (the oldest one first) is
-pure2-last-use.cpp2(774): note: see reference to function template instantiation 'decltype(auto) issue_888_1::<lambda_1>::operator ()<int,,false>(Obj &&) noexcept(false) const' being compiled
+pure2-last-use.cpp2(774): note: see reference to function template instantiation 'decltype(auto) issue_888_1::<lambda_1>::operator ()<int,,false>(Obj &&) const' being compiled
         with
         [
             Obj=int
         ]
+pure2-last-use.cpp2(774): warning C4353: nonstandard extension used: constant 0 as function expression.  Use '__noop' function intrinsic instead
 pure2-last-use.cpp2(790): error C2039: 'move_only_function': is not a member of 'std'
-predefined C++ types (compiler internal)(357): note: see declaration of 'std'
+C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include\variant(37): note: see declaration of 'std'
 pure2-last-use.cpp2(790): error C2143: syntax error: missing ')' before 'attribute specifier'
 pure2-last-use.cpp2(790): error C2065: 'move_only_function': undeclared identifier
 pure2-last-use.cpp2(790): error C2143: syntax error: missing ';' before 'attribute specifier'
 pure2-last-use.cpp2(790): error C2059: syntax error: ')'
-pure2-last-use.cpp2(790): error C2734: 'unnamed_param_1': 'const' object must be initialized if not 'extern'
-pure2-last-use.cpp2(790): error C2143: syntax error: missing ';' before '>'
-pure2-last-use.cpp2(790): error C2059: syntax error: '>'
 pure2-last-use.cpp2(790): fatal error C1003: error count exceeds 100; stopping compilation

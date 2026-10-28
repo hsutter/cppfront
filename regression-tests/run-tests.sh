@@ -143,7 +143,8 @@ exclude_test_filter=""
 if [[ "$cxx_compiler" == *"cl.exe"* ]]; then
     compiler_cmd="cl.exe -nologo -std:${cxx_std} -MD -EHsc -I ..\..\..\include -Fe:"
     exec_out_dir="$expected_results_dir/msvc-2022-${cxx_std}"
-    compiler_version=$(cl.exe)
+    # cl.exe prints its version banner to stderr
+    compiler_version=$(cl.exe 2>&1 >/dev/null)
 else
     # Verify the compiler command
     which "$cxx_compiler" > /dev/null

@@ -59,50 +59,43 @@ jobs:
             compiler: clang++
             cxx_std: c++2b
             stdlib: default
-          # Comment out Windows tests until build on Windows is fixed
-          # - os: windows-2025
-          #   shortosname: win-25
-          #   compiler: cl.exe
-          #   cxx_std: c++latest
-          #   stdlib: default
-          # - os: windows-2025
-          #   shortosname: win-25
-          #   compiler: cl.exe
-          #   cxx_std: c++20
-          #   stdlib: default
+          - os: windows-2025
+            shortosname: win-25
+            compiler: cl.exe
+            cxx_std: c++latest
+            stdlib: default
+            vs_version: '18' # VS 2026
+          - os: windows-2025
+            shortosname: win-25
+            compiler: cl.exe
+            cxx_std: c++20
+            stdlib: default
+            vs_version: '18' # VS 2026
     steps:
     - name: Checkout repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
-    - name: Prepare compilers - macOS
-      if: matrix.os == 'macos-13'
+    - name: Prepare compiler - Clang 19
+      if: matrix.os == 'ubuntu-24.04' && startsWith(matrix.compiler, 'clang')
       run: |
-        sudo xcode-select --switch /Applications/Xcode_14.3.1.app
-        sudo ln -s "$(brew --prefix llvm@15)/bin/clang" /usr/local/bin/clang++-15
+        sudo apt-get install -y clang-19
 
-    - name: Prepare compilers - Ubuntu 24.04
-      if: matrix.os == 'ubuntu-24.04'
-      run: |
-        sudo sudo apt-get install clang-19
+    - name: Set up MSVC - Windows
+      if: startsWith(matrix.os, 'windows')
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        vsversion: ${{ matrix.vs_version }}
 
-    - name: Run regression tests - Linux and macOS version
-      if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
+    - name: Run regression tests
+      shell: bash
       run: |
+        git config --local core.autocrlf false
         cd regression-tests
         bash run-tests.sh -c ${{ matrix.compiler }} -s ${{ matrix.cxx_std }} -d ${{ matrix.stdlib }} -l ${{ matrix.os }}
 
-    - name: Run regression tests - Windows version
-      if: startsWith(matrix.os, 'windows')
-      run: |
-        "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && ^
-        git config --local core.autocrlf false && ^
-        cd regression-tests && ^
-        bash run-tests.sh -c ${{ matrix.compiler }} -s ${{ matrix.cxx_std }} -d ${{ matrix.stdlib }} -l ${{ matrix.os }}
-      shell: cmd
-
     - name: Upload patch
       if: success() || failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.cxx_std }}-${{ matrix.stdlib }}.patch
         path: regression-tests/${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.cxx_std }}-${{ matrix.stdlib }}.patch
@@ -114,7 +107,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download all patches
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: downloaded-results
 
@@ -129,7 +122,7 @@ jobs:
 
       - name: Upload aggregated results
         if: steps.prepare_files.outputs.patch_count != '0'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: aggregated-results
           path: aggregated-results

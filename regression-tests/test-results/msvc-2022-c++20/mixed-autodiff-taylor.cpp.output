@@ -1,0 +1,8 @@
+mixed-autodiff-taylor.cpp
+cpp2taylor.h2(7): error C2079: 'cpp2::taylor<double,6>::v' uses undefined class 'std::array<R,6>'
+        with
+        [
+            R=double
+        ]
+cpp2taylor.h2(7): note: the template instantiation context (the oldest one first) is
+mixed-autodiff-taylor.cpp2(6): note: see reference to class template instantiation 'cpp2::taylor<double,6>' being compiled
