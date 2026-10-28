@@ -28,49 +28,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04]
-        shortosname: [ubu-24]
-        compiler: [g++-14, g++-13]
-        cxx_std: [c++2b]
-        stdlib: [libstdc++]
         include:
-          - os: ubuntu-24.04
-            shortosname: ubu-24
-            compiler: clang++-19
-            cxx_std: c++20
-            stdlib: libstdc++
-          - os: ubuntu-24.04
-            shortosname: ubu-24
-            compiler: clang++-19
-            cxx_std: c++23
-            stdlib: libc++-18-dev
-          - os: ubuntu-22.04
-            shortosname: ubu-22
-            compiler: clang++-15
-            cxx_std: c++20
-            stdlib: libstdc++
-          - os: ubuntu-22.04
-            shortosname: ubu-22
-            compiler: clang++-15
-            cxx_std: c++20
-            stdlib: libc++-15-dev
-          - os: macos-14
-            shortosname: mac-14
-            compiler: clang++
-            cxx_std: c++2b
-            stdlib: default
-          - os: windows-2025
-            shortosname: win-25
-            compiler: cl.exe
-            cxx_std: c++latest
-            stdlib: default
-            vs_version: '18' # VS 2026
-          - os: windows-2025
-            shortosname: win-25
-            compiler: cl.exe
-            cxx_std: c++20
-            stdlib: default
-            vs_version: '18' # VS 2026
+          # macOS
+          - { os: macos-14,     shortosname: mac-14, compiler: clang++,    cxx_std: c++2b,     stdlib: default }
+
+          # Ubuntu Clang
+          - { os: ubuntu-22.04, shortosname: ubu-22, compiler: clang++-15, cxx_std: c++20,     stdlib: libstdc++ }
+          - { os: ubuntu-22.04, shortosname: ubu-22, compiler: clang++-15, cxx_std: c++20,     stdlib: libc++-15-dev }
+          - { os: ubuntu-24.04, shortosname: ubu-24, compiler: clang++-19, cxx_std: c++20,     stdlib: libstdc++ }
+          - { os: ubuntu-24.04, shortosname: ubu-24, compiler: clang++-19, cxx_std: c++23,     stdlib: libc++-18-dev }
+
+          # Ubuntu G++
+          - { os: ubuntu-24.04, shortosname: ubu-24, compiler: g++-13,     cxx_std: c++2b,     stdlib: libstdc++ }
+          - { os: ubuntu-24.04, shortosname: ubu-24, compiler: g++-14,     cxx_std: c++2b,     stdlib: libstdc++ }
+
+          # Windows
+          - { os: windows-2025, shortosname: win-25, compiler: cl.exe,     cxx_std: c++20,     stdlib: default, vs_version: '18' }
+          - { os: windows-2025, shortosname: win-25, compiler: cl.exe,     cxx_std: c++latest, stdlib: default, vs_version: '18' }
+
     steps:
     - name: Checkout repo
       uses: actions/checkout@v7
