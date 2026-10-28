@@ -5,6 +5,8 @@ on:
     paths-ignore:
       - 'docs/**'
   push:
+    branches:
+      - main
     paths-ignore:
       - 'docs/**'
   workflow_dispatch:
@@ -15,70 +17,72 @@ permissions:
 
 concurrency:
   # Specific group name to cancel in-progress builds for the same PR/ref
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ilammy/msvc-dev-cmd@v1
-      - name: Compiler name & version
-        run: cl.exe
-      - name: Build
-        run: cl.exe source/cppfront.cpp -std:c++latest -MD -EHsc -W4 -WX
-  build-unix-like:
+  build:
+    name: ${{ matrix.shortosname }} | ${{ matrix.compiler }} | ${{ matrix.cxx_std }} | ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    env:
+      CXX: ${{ matrix.compiler }}
+      CXXFLAGS: -std=${{ matrix.cxx_std }} -Wall -Wextra -Wold-style-cast -Wunused-parameter -Wpedantic -Werror -pthread -Wno-unknown-warning -Wno-unknown-warning-option
+
     strategy:
       fail-fast: false
       matrix:
-        runs-on: [ubuntu-22.04]
-        compiler: [g++-10, g++-11, g++-12, clang++-12, clang++-14]
-        cxx-std: ['c++20', 'c++2b']
-        exclude:
-          # GCC 10 doesn't have support for c++23
-          - compiler: g++-10
-            cxx-std: 'c++2b'
-          # Clang 12 and 14 do not compile on 'c++2b' due to llvm/llvm-project#58206
-          - compiler: clang++-12
-            cxx-std: 'c++2b'
-          - compiler: clang++-14
-            cxx-std: 'c++2b'
         include:
-          - runs-on: macos-14
-            compiler: clang++
-            cxx-std: 'c++20'
-          - runs-on: macos-15
-            compiler: clang++
-            cxx-std: 'c++20'
-          - runs-on: ubuntu-22.04
-            compiler: clang++-15
-            cxx-std: 'c++20'
-          - runs-on: ubuntu-24.04
-            compiler: clang++-16
-            cxx-std: 'c++20'
-          - runs-on: ubuntu-24.04
-            compiler: clang++-17
-            cxx-std: 'c++20'
-          - runs-on: ubuntu-24.04
-            compiler: clang++-18
-            cxx-std: 'c++20'
-          - runs-on: ubuntu-24.04
-            compiler: clang++-18
-            cxx-std: 'c++23'
-          - runs-on: ubuntu-24.04
-            compiler: g++-14
-            cxx-std: 'c++2b'
-    runs-on: ${{ matrix.runs-on }}
-    env:
-      CXX: ${{ matrix.compiler }}
-      CXXFLAGS: -std=${{ matrix.cxx-std }} -Wall -Wextra -Wold-style-cast -Wunused-parameter -Wpedantic -Werror -pthread -Wno-unknown-warning -Wno-unknown-warning-option
+          # macOS
+          - { os: macos-14,     shortosname: mac-14, compiler: clang++,    cxx_std: 'c++20' }
+          - { os: macos-15,     shortosname: mac-15, compiler: clang++,    cxx_std: 'c++20' }
+
+          # Ubuntu Clang
+          - { os: ubuntu-22.04, shortosname: ubu-22, compiler: clang++-12, cxx_std: 'c++20' }
+          - { os: ubuntu-22.04, shortosname: ubu-22, compiler: clang++-14, cxx_std: 'c++20' }
+          - { os: ubuntu-22.04, shortosname: ubu-22, compiler: clang++-15, cxx_std: 'c++20' }
+          - { os: ubuntu-24.04, shortosname: ubu-24, compiler: clang++-16, cxx_std: 'c++20' }
+          - { os: ubuntu-24.04, shortosname: ubu-24, compiler: clang++-17, cxx_std: 'c++20' }
+          - { os: ubuntu-24.04, shortosname: ubu-24, compiler: clang++-18, cxx_std: 'c++20' }
+          - { os: ubuntu-24.04, shortosname: ubu-24, compiler: clang++-18, cxx_std: 'c++23' }
+
+          # Ubuntu G++
+          - { os: ubuntu-22.04, shortosname: ubu-22, compiler: g++-10,     cxx_std: 'c++20' }
+          - { os: ubuntu-22.04, shortosname: ubu-22, compiler: g++-11,     cxx_std: 'c++20' }
+          - { os: ubuntu-22.04, shortosname: ubu-22, compiler: g++-11,     cxx_std: 'c++2b' }
+          - { os: ubuntu-22.04, shortosname: ubu-22, compiler: g++-12,     cxx_std: 'c++20' }
+          - { os: ubuntu-22.04, shortosname: ubu-22, compiler: g++-12,     cxx_std: 'c++2b' }
+          - { os: ubuntu-24.04, shortosname: ubu-24, compiler: g++-14,     cxx_std: 'c++2b' }
+
+          # Windows
+          - { os: windows-2025, shortosname: win-25, compiler: cl.exe,     cxx_std: c++latest, vs_version: '18' }
+
     steps:
-    - uses: actions/checkout@v4
-    - name: Install compiler
-      if: startsWith(matrix.runs-on, 'ubuntu')
-      run: sudo apt-get install -y $CXX
-    - name: Compiler name & version
-      run: $CXX --version
-    - name: Build
-      run: $CXX source/cppfront.cpp $CXXFLAGS -o cppfront
+      - uses: actions/checkout@v7
+
+      - name: Install compiler
+        if: startsWith(matrix.os, 'ubuntu')
+        run: sudo apt-get install -y "${CXX/clang++-/clang-}"
+
+      - name: Set up MSVC - Windows
+        if: startsWith(matrix.os, 'windows')
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          vsversion: ${{ matrix.vs_version }}
+
+      - name: Compiler name & version
+        shell: bash
+        run: |
+          if [[ "$CXX" == *"cl.exe"* ]]; then
+            cl.exe 2>&1 >/dev/null | head -n 1 || true
+          else
+            $CXX --version
+          fi
+
+      - name: Build
+        shell: bash
+        run: |
+          if [[ "$CXX" == *"cl.exe"* ]]; then
+            cl.exe source/cppfront.cpp -std:${{ matrix.cxx_std }} -MD -EHsc -W4 -WX
+          else
+            $CXX source/cppfront.cpp $CXXFLAGS -o cppfront
+          fi
