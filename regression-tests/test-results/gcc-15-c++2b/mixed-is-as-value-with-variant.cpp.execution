@@ -1,0 +1,42 @@
+# std::monostate
+
+---
+# int(42)
+ 42 in(0,100)
+---
+# int(24)
+ 24 in(0,100)
+---
+# std::optional<int>(100)
+ 100 std::optional<int>(100)
+---
+# std::any(-100)
+
+---
+# *int(314)
+
+---
+# std::unique_ptr<int>(1000)
+
+---
+# my_variant(std::monostate)
+
+---
+# my_variant(int(42))
+
+---
+# my_variant(int(24))
+
+---
+# my_variant(std::optional<int>(100))
+
+---
+# my_variant(std::any(-100))
+
+---
+# my_variant(*int(314))
+
+---
+# my_variant(std::unique_ptr<int>(1000))
+
+---

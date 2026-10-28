@@ -1,0 +1,17 @@
+
+All these cases satisfy "VOYDE AND EMPTIE"
+
+unique_ptr
+    ... VOYDE AND EMPTIE
+
+vector<int>::iterator
+    ... VOYDE AND EMPTIE
+
+variant<monostate, int, int, string>
+    ... VOYDE AND EMPTIE
+
+any
+    ... VOYDE AND EMPTIE
+
+optional<string>
+    ... VOYDE AND EMPTIE

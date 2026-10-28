@@ -1,0 +1,9 @@
+3.14: unknown
+42: 42
+WithOp(): unknown
+WithGenOp(): unknown
+Cmp(): comparable
+std::string("text"): text
+"text": text
+std::string_view("text"): text
+:std::vector = ('t','e','x','t','\0'): unknown

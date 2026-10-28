@@ -1,0 +1,1 @@
+pure2-assert-optional-not-null.cpp2(14) int bad_optional_access(): Null safety violation: std::optional does not contain a value

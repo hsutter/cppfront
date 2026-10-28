@@ -1,0 +1,17 @@
+this is a string
+raw string without interpolation
+this is raw string literal
+
+that can last for multiple
+
+lines
+this is raw string literal
+that can last for multiple
+lines
+42 R"(this can be added too)"
+calculations like m["one"] + m["two"] = 3 also works
+at the beginning of the line!!!
+
+
+    4242
+1.2.0.42

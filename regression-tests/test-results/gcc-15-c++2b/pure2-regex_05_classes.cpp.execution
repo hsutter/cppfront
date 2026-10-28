@@ -1,0 +1,21 @@
+Running tests_05_classes:
+01_n: OK regex: a[bc]d parsed_regex: a[bc]d str: abc result_expr: - expected_results -
+02_y: OK regex: a[bc]d parsed_regex: a[bc]d str: abd result_expr: $& expected_results abd
+03_y: OK regex: a[b]d parsed_regex: a[b]d str: abd result_expr: $& expected_results abd
+04_y: OK regex: [a][b][d] parsed_regex: [a][b][d] str: abd result_expr: $& expected_results abd
+05_y: OK regex: .[b]. parsed_regex: .[b]. str: abd result_expr: $& expected_results abd
+06_n: OK regex: .[b]. parsed_regex: .[b]. str: aBd result_expr: - expected_results -
+07_n: OK regex: a[b-d]e parsed_regex: a[b-d]e str: abd result_expr: - expected_results -
+08_y: OK regex: a[b-d]e parsed_regex: a[b-d]e str: ace result_expr: $& expected_results ace
+09_y: OK regex: a[b-d] parsed_regex: a[b-d] str: aac result_expr: $& expected_results ac
+10_y: OK regex: a[-b] parsed_regex: a[-b] str: a- result_expr: $& expected_results a-
+11_y: OK regex: a[b-] parsed_regex: a[b-] str: a- result_expr: $& expected_results a-
+12_y: OK regex: a] parsed_regex: a] str: a] result_expr: $& expected_results a]
+13_y: OK regex: a[]]b parsed_regex: a[]]b str: a]b result_expr: $& expected_results a]b
+14_y: OK regex: a[^bc]d parsed_regex: a[^bc]d str: aed result_expr: $& expected_results aed
+15_n: OK regex: a[^bc]d parsed_regex: a[^bc]d str: abd result_expr: - expected_results -
+16_y: OK regex: a[^-b]c parsed_regex: a[^-b]c str: adc result_expr: $& expected_results adc
+17_n: OK regex: a[^-b]c parsed_regex: a[^-b]c str: a-c result_expr: - expected_results -
+18_n: OK regex: a[^]b]c parsed_regex: a[^]b]c str: a]c result_expr: - expected_results -
+19_y: OK regex: a[^]b]c parsed_regex: a[^]b]c str: adc result_expr: $& expected_results adc
+

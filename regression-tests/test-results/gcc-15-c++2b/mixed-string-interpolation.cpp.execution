@@ -1,0 +1,17 @@
+a = 2, b = (empty)
+a^2 + b = 46
+sv = my string_view
+osv = (empty)
+osv = string literal bound to optional string_view
+var = (empty)
+var = abracadabra
+var = 2.718280
+mypair = (12, 3.400000)
+tup1 = (12)
+tup2 = (12, 3.400000)
+tup3 = (12, 3.400000, 456)
+p = (first, (empty))
+t = (3.140000, (empty), (empty))
+vv = 0
+vv = (1, 2.300000)
+custom = (customize me - no cpp2::to_string overload exists for this type)

@@ -1,0 +1,1 @@
+pure2-assert-unique-ptr-not-null.cpp2(15) int bad_unique_ptr_access(): Null safety violation: std::unique_ptr is empty
