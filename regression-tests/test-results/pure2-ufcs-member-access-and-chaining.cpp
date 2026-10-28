@@ -89,7 +89,7 @@ auto no_return([[maybe_unused]] auto const& unnamed_param_1) -> void{}
 [[nodiscard]] auto fun() -> fun_ret{
         cpp2::impl::deferred_init<int> i;
 #line 36 "pure2-ufcs-member-access-and-chaining.cpp2"
-    i.construct(42);
+    i.construct_from([&]() -> typename CPP2_TYPEOF(i)::value_type { return typename CPP2_TYPEOF(i)::value_type{42}; });
     return std::move(i.value()); 
 }
 

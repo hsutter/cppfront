@@ -50,14 +50,14 @@ bool flip_a_coin() {
     //  note: i and s are uninitialized!
 
 #line 9 "mixed-multiple-return-values.cpp2"
-    i.construct(10);
+    i.construct_from([&]() -> typename CPP2_TYPEOF(i)::value_type { return typename CPP2_TYPEOF(i)::value_type{10}; });
 
     // the standard mandates that std::mt19937()() == 3499211612
     if (flip_a_coin()) {
-        s.construct("xyzzy");
+        s.construct_from([&]() -> typename CPP2_TYPEOF(s)::value_type { return typename CPP2_TYPEOF(s)::value_type{"xyzzy"}; });
     }
     else {
-        s.construct("plugh");
+        s.construct_from([&]() -> typename CPP2_TYPEOF(s)::value_type { return typename CPP2_TYPEOF(s)::value_type{"plugh"}; });
     }
 
     return  { std::move(i.value()), std::move(s.value()) }; 

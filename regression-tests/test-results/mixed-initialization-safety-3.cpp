@@ -42,7 +42,7 @@ auto print_decorated(auto const& x) -> void;
     cpp2::impl::deferred_init<std::string> x; // note: uninitialized!
 
     if (flip_a_coin()) {
-        x.construct("xyzzy");
+        x.construct_from([&]() -> typename CPP2_TYPEOF(x)::value_type { return typename CPP2_TYPEOF(x)::value_type{"xyzzy"}; });
     }else {
         fill(cpp2::impl::out(&x), "plugh", 40);// note: constructs x!
     }
@@ -59,7 +59,7 @@ auto fill(
 {
     if (cpp2::cpp2_default.is_active() && !(cpp2::impl::cmp_greater_eq(CPP2_UFCS(ssize)(value),count)) ) { cpp2::cpp2_default.report_violation(CPP2_CONTRACT_MSG("fill: value must contain at least count elements")); }
 #line 23 "mixed-initialization-safety-3.cpp2"
-    x.construct(CPP2_UFCS(substr)(value, 0, count));
+    x.construct_from([&]() -> typename CPP2_TYPEOF(x)::value_type { return typename CPP2_TYPEOF(x)::value_type{CPP2_UFCS(substr)(value, 0, count)}; });
 }
 
 #line 26 "mixed-initialization-safety-3.cpp2"

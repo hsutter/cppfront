@@ -1,0 +1,57 @@
+pure2-bugfix-for-deferred-init-narrowing-matrix-error.cpp2:19:125: error: non-constant-expression cannot be narrowed from type 'cpp2::impl::in<cpp2::i16>' (aka 'const short') to 'signed char' in initializer list [-Wc++11-narrowing]
+   19 |     a03.construct_from([&]() -> typename CPP2_TYPEOF(a03)::value_type { return typename CPP2_TYPEOF(a03)::value_type{ce_i8, rt_i16}; });// fail: runtime i16 -> i8
+      |                                                                                                                             ^~~~~~
+pure2-bugfix-for-deferred-init-narrowing-matrix-error.cpp2:19:125: note: insert an explicit cast to silence this issue
+   19 |     a03.construct_from([&]() -> typename CPP2_TYPEOF(a03)::value_type { return typename CPP2_TYPEOF(a03)::value_type{ce_i8, rt_i16}; });// fail: runtime i16 -> i8
+      |                                                                                                                             ^~~~~~
+      |                                                                                                                             static_cast<signed char>( )
+pure2-bugfix-for-deferred-init-narrowing-matrix-error.cpp2:28:126: error: non-constant-expression cannot be narrowed from type 'cpp2::impl::in<cpp2::i16>' (aka 'const short') to 'signed char' in initializer list [-Wc++11-narrowing]
+   28 |     a13.construct_from([&]() -> typename CPP2_TYPEOF(a13)::value_type { return typename CPP2_TYPEOF(a13)::value_type{ce_i16, rt_i16}; });// fail: runtime i16 -> i8
+      |                                                                                                                              ^~~~~~
+pure2-bugfix-for-deferred-init-narrowing-matrix-error.cpp2:28:126: note: insert an explicit cast to silence this issue
+   28 |     a13.construct_from([&]() -> typename CPP2_TYPEOF(a13)::value_type { return typename CPP2_TYPEOF(a13)::value_type{ce_i16, rt_i16}; });// fail: runtime i16 -> i8
+      |                                                                                                                              ^~~~~~
+      |                                                                                                                              static_cast<signed char>( )
+pure2-bugfix-for-deferred-init-narrowing-matrix-error.cpp2:37:125: error: non-constant-expression cannot be narrowed from type 'cpp2::impl::in<cpp2::i16>' (aka 'const short') to 'signed char' in initializer list [-Wc++11-narrowing]
+   37 |     a23.construct_from([&]() -> typename CPP2_TYPEOF(a23)::value_type { return typename CPP2_TYPEOF(a23)::value_type{rt_i8, rt_i16}; });// fail: runtime i16 -> i8
+      |                                                                                                                             ^~~~~~
+pure2-bugfix-for-deferred-init-narrowing-matrix-error.cpp2:37:125: note: insert an explicit cast to silence this issue
+   37 |     a23.construct_from([&]() -> typename CPP2_TYPEOF(a23)::value_type { return typename CPP2_TYPEOF(a23)::value_type{rt_i8, rt_i16}; });// fail: runtime i16 -> i8
+      |                                                                                                                             ^~~~~~
+      |                                                                                                                             static_cast<signed char>( )
+pure2-bugfix-for-deferred-init-narrowing-matrix-error.cpp2:40:118: error: non-constant-expression cannot be narrowed from type 'cpp2::impl::in<cpp2::i16>' (aka 'const short') to 'signed char' in initializer list [-Wc++11-narrowing]
+   40 |     a30.construct_from([&]() -> typename CPP2_TYPEOF(a30)::value_type { return typename CPP2_TYPEOF(a30)::value_type{rt_i16, ce_i8}; });// fail: runtime i16 -> i8
+      |                                                                                                                      ^~~~~~
+pure2-bugfix-for-deferred-init-narrowing-matrix-error.cpp2:40:118: note: insert an explicit cast to silence this issue
+   40 |     a30.construct_from([&]() -> typename CPP2_TYPEOF(a30)::value_type { return typename CPP2_TYPEOF(a30)::value_type{rt_i16, ce_i8}; });// fail: runtime i16 -> i8
+      |                                                                                                                      ^~~~~~
+      |                                                                                                                      static_cast<signed char>( )
+pure2-bugfix-for-deferred-init-narrowing-matrix-error.cpp2:42:118: error: non-constant-expression cannot be narrowed from type 'cpp2::impl::in<cpp2::i16>' (aka 'const short') to 'signed char' in initializer list [-Wc++11-narrowing]
+   42 |     a31.construct_from([&]() -> typename CPP2_TYPEOF(a31)::value_type { return typename CPP2_TYPEOF(a31)::value_type{rt_i16, ce_i16}; });// fail: runtime i16 -> i8
+      |                                                                                                                      ^~~~~~
+pure2-bugfix-for-deferred-init-narrowing-matrix-error.cpp2:42:118: note: insert an explicit cast to silence this issue
+   42 |     a31.construct_from([&]() -> typename CPP2_TYPEOF(a31)::value_type { return typename CPP2_TYPEOF(a31)::value_type{rt_i16, ce_i16}; });// fail: runtime i16 -> i8
+      |                                                                                                                      ^~~~~~
+      |                                                                                                                      static_cast<signed char>( )
+pure2-bugfix-for-deferred-init-narrowing-matrix-error.cpp2:44:118: error: non-constant-expression cannot be narrowed from type 'cpp2::impl::in<cpp2::i16>' (aka 'const short') to 'signed char' in initializer list [-Wc++11-narrowing]
+   44 |     a32.construct_from([&]() -> typename CPP2_TYPEOF(a32)::value_type { return typename CPP2_TYPEOF(a32)::value_type{rt_i16, rt_i8}; });// fail: runtime i16 -> i8
+      |                                                                                                                      ^~~~~~
+pure2-bugfix-for-deferred-init-narrowing-matrix-error.cpp2:44:118: note: insert an explicit cast to silence this issue
+   44 |     a32.construct_from([&]() -> typename CPP2_TYPEOF(a32)::value_type { return typename CPP2_TYPEOF(a32)::value_type{rt_i16, rt_i8}; });// fail: runtime i16 -> i8
+      |                                                                                                                      ^~~~~~
+      |                                                                                                                      static_cast<signed char>( )
+pure2-bugfix-for-deferred-init-narrowing-matrix-error.cpp2:46:118: error: non-constant-expression cannot be narrowed from type 'cpp2::impl::in<cpp2::i16>' (aka 'const short') to 'signed char' in initializer list [-Wc++11-narrowing]
+   46 |     a33.construct_from([&]() -> typename CPP2_TYPEOF(a33)::value_type { return typename CPP2_TYPEOF(a33)::value_type{rt_i16, rt_i16}; });// fail: runtime i16 -> i8
+      |                                                                                                                      ^~~~~~
+pure2-bugfix-for-deferred-init-narrowing-matrix-error.cpp2:46:118: note: insert an explicit cast to silence this issue
+   46 |     a33.construct_from([&]() -> typename CPP2_TYPEOF(a33)::value_type { return typename CPP2_TYPEOF(a33)::value_type{rt_i16, rt_i16}; });// fail: runtime i16 -> i8
+      |                                                                                                                      ^~~~~~
+      |                                                                                                                      static_cast<signed char>( )
+pure2-bugfix-for-deferred-init-narrowing-matrix-error.cpp2:46:126: error: non-constant-expression cannot be narrowed from type 'cpp2::impl::in<cpp2::i16>' (aka 'const short') to 'signed char' in initializer list [-Wc++11-narrowing]
+   46 |     a33.construct_from([&]() -> typename CPP2_TYPEOF(a33)::value_type { return typename CPP2_TYPEOF(a33)::value_type{rt_i16, rt_i16}; });// fail: runtime i16 -> i8
+      |                                                                                                                              ^~~~~~
+pure2-bugfix-for-deferred-init-narrowing-matrix-error.cpp2:46:126: note: insert an explicit cast to silence this issue
+   46 |     a33.construct_from([&]() -> typename CPP2_TYPEOF(a33)::value_type { return typename CPP2_TYPEOF(a33)::value_type{rt_i16, rt_i16}; });// fail: runtime i16 -> i8
+      |                                                                                                                              ^~~~~~
+      |                                                                                                                              static_cast<signed char>( )
+8 errors generated.

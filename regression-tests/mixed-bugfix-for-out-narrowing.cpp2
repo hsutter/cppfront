@@ -1,0 +1,85 @@
+#include <cstdint>
+#include <array>
+
+struct S {
+    std::int8_t x;
+    std::int8_t y;
+};
+
+struct Nested {
+    S left;
+    S right;
+};
+
+inline constexpr std::int16_t constexpr_i16 = 100;
+
+fill_i8: (out x: i8) = {
+    x = 42;
+}
+
+fill_array: (out a: std::array<i8, 3>) = {
+    a = (1, 2, 3);
+}
+
+fill_s: (out s: S, x: i8) = {
+    s = (constexpr_i16, x);
+}
+
+fill_nested: (out n: Nested, x: i8) = {
+    n = (
+        :S = (constexpr_i16, x),
+        :S = (x, constexpr_i16)
+    );
+}
+
+// out -> out forwarding still keeps brace-init in the final writer
+fill_via_fwd: (out x: i8) = {
+    fill_i8(out x);
+}
+
+// first assignment constructs; second goes through the assign path
+refill_s: (out s: S, x: i8) = {
+    s = (x, constexpr_i16);
+    s = (constexpr_i16, x);
+}
+
+overwrite_i8: (out x: i8) = {
+    x = 100;
+}
+
+main: () -> int = {
+    a: i8;
+    fill_i8(out a);
+
+    arr: std::array<i8, 3>;
+    fill_array(out arr);
+
+    runtime_i8: i8 = 8;
+
+    s: S;
+    fill_s(out s, runtime_i8);
+
+    n: Nested;
+    fill_nested(out n, runtime_i8);
+
+    b: i8;
+    fill_via_fwd(out b);
+
+    s2: S;
+    refill_s(out s2, runtime_i8);
+
+    // already-initialized target: out assigns rather than constructs
+    c: i8 = 1;
+    overwrite_i8(out c);
+
+    assert(a == 42);
+    assert(arr[0] == 1 && arr[1] == 2 && arr[2] == 3);
+    assert(s.x == 100 && s.y == 8);
+    assert(n.left.x == 100 && n.left.y == 8);
+    assert(n.right.x == 8 && n.right.y == 100);
+    assert(b == 42);
+    assert(s2.x == 100 && s2.y == 8);
+    assert(c == 100);
+
+    return 0;
+}

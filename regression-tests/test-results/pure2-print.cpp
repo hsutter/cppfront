@@ -161,8 +161,8 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias{ 42 };
                 cpp2::impl::deferred_init<int> offset;
                 cpp2::impl::deferred_init<std::string> name;
 #line 57 "pure2-print.cpp2"
-            offset.construct(53);
-            name.construct("plugh");
+            offset.construct_from([&]() -> typename CPP2_TYPEOF(offset)::value_type { return typename CPP2_TYPEOF(offset)::value_type{53}; });
+            name.construct_from([&]() -> typename CPP2_TYPEOF(name)::value_type { return typename CPP2_TYPEOF(name)::value_type{"plugh"}; });
         return  { std::move(offset.value()), std::move(name.value()) }; }
 
 #line 61 "pure2-print.cpp2"
