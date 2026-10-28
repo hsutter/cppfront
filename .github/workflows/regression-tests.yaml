@@ -5,6 +5,8 @@ on:
     paths-ignore:
       - 'docs/**'
   push:
+    branches:
+      - main
     paths-ignore:
       - 'docs/**'
   workflow_dispatch:
@@ -15,7 +17,7 @@ permissions:
 
 concurrency:
   # Specific group name to cancel in-progress builds for the same PR/ref
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
