@@ -50,7 +50,7 @@ auto g_in(      cpp2::impl::in<std::string> s) -> void{std::cout << "Come in, " 
 #line 7 "pure2-function-typeids.cpp2"
 auto g_inout(std::string& s) -> void{std::cout << "Come in awhile, but take some biscuits on your way out, " + cpp2::to_string(s) + "!\n"; }
 #line 8 "pure2-function-typeids.cpp2"
-auto g_out(cpp2::impl::out<std::string> s) -> void{s.construct("A Powerful Mage");}
+auto g_out(cpp2::impl::out<std::string> s) -> void{s.construct_from([&]() -> typename CPP2_TYPEOF(s)::value_type { return typename CPP2_TYPEOF(s)::value_type{"A Powerful Mage"}; });}
 #line 9 "pure2-function-typeids.cpp2"
 auto g_move(std::string&& s) -> void{std::cout << "I hear you've moving, " + cpp2::to_string(cpp2::move(s)) + "?\n";}
 

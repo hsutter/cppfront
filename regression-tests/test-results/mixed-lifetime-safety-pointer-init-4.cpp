@@ -41,10 +41,10 @@ bool flip_a_coin() {
 
     // ... more code ...
     if (flip_a_coin()) {
-        p.construct(&y);
+        p.construct_from([&]() -> typename CPP2_TYPEOF(p)::value_type { return typename CPP2_TYPEOF(p)::value_type{&y}; });
     }
     else {
-        p.construct(&x);
+        p.construct_from([&]() -> typename CPP2_TYPEOF(p)::value_type { return typename CPP2_TYPEOF(p)::value_type{&x}; });
     }
 
     print_and_decorate(*cpp2::impl::assert_not_null(cpp2::move(p.value())));

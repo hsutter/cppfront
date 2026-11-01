@@ -60,7 +60,7 @@ int main() {
 #line 22 "mixed-out-destruction.cpp2"
 auto f00() -> void     {   C auto_1 {"f00"}; cpp2::impl::deferred_init<X> x; f01(cpp2::impl::out(&x));}
 #line 23 "mixed-out-destruction.cpp2"
-auto f01(cpp2::impl::out<X> x) -> void{C auto_1 {"f01"}; x.construct();throw_1();}
+auto f01(cpp2::impl::out<X> x) -> void{C auto_1 {"f01"}; x.construct_from([&]() -> typename CPP2_TYPEOF(x)::value_type { return typename CPP2_TYPEOF(x)::value_type{}; });throw_1();}
 
 #line 27 "mixed-out-destruction.cpp2"
 auto f10() -> void     {   C auto_1 {"f10"}; cpp2::impl::deferred_init<X> x; f11(cpp2::impl::out(&x));}
@@ -71,5 +71,5 @@ auto f12(cpp2::impl::out<X> x) -> void{C auto_1 {"f12"}; f13(cpp2::impl::out(&x)
 #line 30 "mixed-out-destruction.cpp2"
 auto f13(cpp2::impl::out<X> x) -> void{C auto_1 {"f13"}; f14(cpp2::impl::out(&x));}
 #line 31 "mixed-out-destruction.cpp2"
-auto f14(cpp2::impl::out<X> x) -> void{C auto_1 {"f14"}; x.construct();}
+auto f14(cpp2::impl::out<X> x) -> void{C auto_1 {"f14"}; x.construct_from([&]() -> typename CPP2_TYPEOF(x)::value_type { return typename CPP2_TYPEOF(x)::value_type{}; });}
 

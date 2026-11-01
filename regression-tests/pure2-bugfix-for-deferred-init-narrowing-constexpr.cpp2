@@ -1,0 +1,31 @@
+value: i32 == 20;
+
+foo: () -> i32 == 20;
+
+add: (x: i32, y: i32) -> i32 == x + y;
+
+main: () -> int = {
+    a0: i8 = value + 100;
+    a: i8;
+    a = value + 100;
+
+    b0: i8 = foo() + 100;
+    b: i8;
+    b = foo() + 100;
+
+    c0: i16 = add(value, foo()) + 100;
+    c: i16;
+    c = add(value, foo()) + 100;
+
+    local: i32 == 10;
+
+    d0: i16 = add(local, foo()) * 2 + value;
+    d: i16;
+    d = add(local, foo()) * 2 + value;
+
+    e0: std::array<i8, 3> = (value + 100, foo() + 100, add(local, foo()));
+    e: std::array<i8, 3>;
+    e = (value + 100, foo() + 100, add(local, foo()));
+
+    return 0;
+}

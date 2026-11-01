@@ -1488,11 +1488,19 @@ class deferred_init {
     auto destroy() -> void         { if (init) { t().~T(); }  init = false; }
 
 public:
+    using value_type = T;
+
     constexpr  deferred_init() noexcept       { }
     constexpr ~deferred_init() noexcept       { destroy(); }
     constexpr auto value()     noexcept -> T& { cpp2_default.enforce(init);  return t(); }
 
-    constexpr auto construct(auto&& ...args) -> void { cpp2_default.enforce(!init);  new (&data) T{CPP2_FORWARD(args)...};  init = true; }
+    constexpr auto construct(auto&& ...args) -> void {
+        construct_from([&]() -> T { return T{CPP2_FORWARD(args)...}; });
+    }
+
+    constexpr auto construct_from(auto&& factory) -> void
+        requires std::same_as<decltype(CPP2_FORWARD(factory)()), T>
+    { cpp2_default.enforce(!init);  new (&data) T(CPP2_FORWARD(factory)());  init = true; }
 };
 
 
@@ -1512,6 +1520,8 @@ class out {
     bool called_construct_ = false;
 
 public:
+    using value_type = T;
+
     constexpr out(T*                 t_) noexcept :  t{ t_}, has_t{true}       { cpp2_default.enforce( t); }
     constexpr out(deferred_init<T>* dt_) noexcept : dt{dt_}, has_t{false}      { cpp2_default.enforce(dt); }
     constexpr out(out<T>*           ot_) noexcept : ot{ot_}, has_t{ot_->has_t} { cpp2_default.enforce(ot);
@@ -1535,10 +1545,16 @@ public:
     }
 
     constexpr auto construct(auto&& ...args) -> void {
+        construct_from([&]() -> T { return T{CPP2_FORWARD(args)...}; });
+    }
+
+    constexpr auto construct_from(auto&& factory) -> void
+        requires std::same_as<decltype(CPP2_FORWARD(factory)()), T>
+    {
         if (has_t || called_construct()) {
-            if constexpr (requires { *t = T(CPP2_FORWARD(args)...); }) {
+            if constexpr (requires { *t = CPP2_FORWARD(factory)(); }) {
                 cpp2_default.enforce( t );
-                *t = T(CPP2_FORWARD(args)...);
+                *t = CPP2_FORWARD(factory)();
             }
             else {
                 cpp2_default.report_violation("attempted to copy assign, but copy assignment is not available");
@@ -1547,15 +1563,15 @@ public:
         else {
             cpp2_default.enforce( dt );
             if (dt->init) {
-                if constexpr (requires { *t = T(CPP2_FORWARD(args)...); }) {
-                    dt->value() = T(CPP2_FORWARD(args)...);
+                if constexpr (requires { dt->value() = CPP2_FORWARD(factory)(); }) {
+                    dt->value() = CPP2_FORWARD(factory)();
                 }
                 else {
                     cpp2_default.report_violation("attempted to copy assign, but copy assignment is not available");
                 }
             }
             else {
-                dt->construct(CPP2_FORWARD(args)...);
+                dt->construct_from(CPP2_FORWARD(factory));
                 called_construct() = true;
             }
         }

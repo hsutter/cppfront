@@ -1,0 +1,54 @@
+// Target type is {i8, i8}. We try every pair from:
+//   ce_i8, ce_i16, rt_i8, rt_i16
+// = 4 x 4 = 16 combinations.
+//
+// Constexpr sources must appear by name in the initializer, otherwise they
+// stop being constant expressions and every i16 case would fail.
+
+ce_i8: i8 == 8;
+ce_i16: i16 == 8;
+
+try_all_combinations: (rt_i8: i8, rt_i16: i16) = {
+    a00: std::array<i8, 2>;
+    a00 = (ce_i8, ce_i8);
+    a01: std::array<i8, 2>;
+    a01 = (ce_i8, ce_i16);
+    a02: std::array<i8, 2>;
+    a02 = (ce_i8, rt_i8);
+    a03: std::array<i8, 2>;
+    a03 = (ce_i8, rt_i16);     // fail: runtime i16 -> i8
+
+    a10: std::array<i8, 2>;
+    a10 = (ce_i16, ce_i8);
+    a11: std::array<i8, 2>;
+    a11 = (ce_i16, ce_i16);
+    a12: std::array<i8, 2>;
+    a12 = (ce_i16, rt_i8);
+    a13: std::array<i8, 2>;
+    a13 = (ce_i16, rt_i16);    // fail: runtime i16 -> i8
+
+    a20: std::array<i8, 2>;
+    a20 = (rt_i8, ce_i8);
+    a21: std::array<i8, 2>;
+    a21 = (rt_i8, ce_i16);
+    a22: std::array<i8, 2>;
+    a22 = (rt_i8, rt_i8);
+    a23: std::array<i8, 2>;
+    a23 = (rt_i8, rt_i16);     // fail: runtime i16 -> i8
+
+    a30: std::array<i8, 2>;
+    a30 = (rt_i16, ce_i8);     // fail: runtime i16 -> i8
+    a31: std::array<i8, 2>;
+    a31 = (rt_i16, ce_i16);    // fail: runtime i16 -> i8
+    a32: std::array<i8, 2>;
+    a32 = (rt_i16, rt_i8);     // fail: runtime i16 -> i8
+    a33: std::array<i8, 2>;
+    a33 = (rt_i16, rt_i16);    // fail: runtime i16 -> i8
+}
+
+main: () -> int = {
+    rt_i8: i8 = 8;
+    rt_i16: i16 = 8;
+    try_all_combinations(rt_i8, rt_i16);
+    return 0;
+}

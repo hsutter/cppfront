@@ -85,8 +85,8 @@ auto main() -> int;
       cpp2::impl::deferred_init<double> y0;
       cpp2::impl::deferred_init<taylor> y;
 #line 7 "mixed-autodiff-taylor.cpp2"
-  y.construct(CPP2_UFCS(add)(x, x, x0, x0));
-  y0.construct(x0 + x0);
+  y.construct_from([&]() -> typename CPP2_TYPEOF(y)::value_type { return typename CPP2_TYPEOF(y)::value_type{CPP2_UFCS(add)(x, x, x0, x0)}; });
+  y0.construct_from([&]() -> typename CPP2_TYPEOF(y0)::value_type { return typename CPP2_TYPEOF(y0)::value_type{x0 + x0}; });
 return  { std::move(y0.value()), std::move(y.value()) }; }
 
 #line 11 "mixed-autodiff-taylor.cpp2"
@@ -94,8 +94,8 @@ return  { std::move(y0.value()), std::move(y.value()) }; }
       cpp2::impl::deferred_init<double> y0;
       cpp2::impl::deferred_init<taylor> y;
 #line 12 "mixed-autodiff-taylor.cpp2"
-  y0.construct(0.0);
-  y.construct(taylor());
+  y0.construct_from([&]() -> typename CPP2_TYPEOF(y0)::value_type { return typename CPP2_TYPEOF(y0)::value_type{0.0}; });
+  y.construct_from([&]() -> typename CPP2_TYPEOF(y)::value_type { return typename CPP2_TYPEOF(y)::value_type{taylor()}; });
 
   y.value() = CPP2_UFCS(sub)(y.value(), x, y0.value(), x0);
   y0.value() = y0.value() - x0;
@@ -106,8 +106,8 @@ return  { std::move(y0.value()), std::move(y.value()) }; }
       cpp2::impl::deferred_init<double> y0;
       cpp2::impl::deferred_init<taylor> y;
 #line 20 "mixed-autodiff-taylor.cpp2"
-  y0.construct(x0);
-  y.construct(x);
+  y0.construct_from([&]() -> typename CPP2_TYPEOF(y0)::value_type { return typename CPP2_TYPEOF(y0)::value_type{x0}; });
+  y.construct_from([&]() -> typename CPP2_TYPEOF(y)::value_type { return typename CPP2_TYPEOF(y)::value_type{x}; });
 {
 auto i{0};
 
@@ -128,8 +128,8 @@ auto i{0};
       cpp2::impl::deferred_init<double> y0;
       cpp2::impl::deferred_init<taylor> y;
 #line 31 "mixed-autodiff-taylor.cpp2"
-  y0.construct(1.0);
-  y.construct(taylor());
+  y0.construct_from([&]() -> typename CPP2_TYPEOF(y0)::value_type { return typename CPP2_TYPEOF(y0)::value_type{1.0}; });
+  y.construct_from([&]() -> typename CPP2_TYPEOF(y)::value_type { return typename CPP2_TYPEOF(y)::value_type{taylor()}; });
 
   y.value() = CPP2_UFCS(div)(y.value(), x, y0.value(), x0);
   y0.value() /= CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(y0.value()),x0);
@@ -140,8 +140,8 @@ return  { std::move(y0.value()), std::move(y.value()) }; }
       cpp2::impl::deferred_init<double> y0;
       cpp2::impl::deferred_init<taylor> y;
 #line 39 "mixed-autodiff-taylor.cpp2"
-  y0.construct(sqrt(x0));
-  y.construct(CPP2_UFCS(sqrt)(x, x0));
+  y0.construct_from([&]() -> typename CPP2_TYPEOF(y0)::value_type { return typename CPP2_TYPEOF(y0)::value_type{sqrt(x0)}; });
+  y.construct_from([&]() -> typename CPP2_TYPEOF(y)::value_type { return typename CPP2_TYPEOF(y)::value_type{CPP2_UFCS(sqrt)(x, x0)}; });
 return  { std::move(y0.value()), std::move(y.value()) }; }
 
 #line 43 "mixed-autodiff-taylor.cpp2"
@@ -149,8 +149,8 @@ return  { std::move(y0.value()), std::move(y.value()) }; }
       cpp2::impl::deferred_init<double> y0;
       cpp2::impl::deferred_init<taylor> y;
 #line 44 "mixed-autodiff-taylor.cpp2"
-  y0.construct(log(x0));
-  y.construct(CPP2_UFCS(log)(x, x0));
+  y0.construct_from([&]() -> typename CPP2_TYPEOF(y0)::value_type { return typename CPP2_TYPEOF(y0)::value_type{log(x0)}; });
+  y.construct_from([&]() -> typename CPP2_TYPEOF(y)::value_type { return typename CPP2_TYPEOF(y)::value_type{CPP2_UFCS(log)(x, x0)}; });
 return  { std::move(y0.value()), std::move(y.value()) }; }
 
 #line 48 "mixed-autodiff-taylor.cpp2"
@@ -158,8 +158,8 @@ return  { std::move(y0.value()), std::move(y.value()) }; }
       cpp2::impl::deferred_init<double> y0;
       cpp2::impl::deferred_init<taylor> y;
 #line 49 "mixed-autodiff-taylor.cpp2"
-  y0.construct(exp(x0));
-  y.construct(CPP2_UFCS(exp)(x, x0));
+  y0.construct_from([&]() -> typename CPP2_TYPEOF(y0)::value_type { return typename CPP2_TYPEOF(y0)::value_type{exp(x0)}; });
+  y.construct_from([&]() -> typename CPP2_TYPEOF(y)::value_type { return typename CPP2_TYPEOF(y)::value_type{CPP2_UFCS(exp)(x, x0)}; });
 return  { std::move(y0.value()), std::move(y.value()) }; }
 
 #line 53 "mixed-autodiff-taylor.cpp2"
@@ -167,8 +167,8 @@ return  { std::move(y0.value()), std::move(y.value()) }; }
       cpp2::impl::deferred_init<double> y0;
       cpp2::impl::deferred_init<taylor> y;
 #line 54 "mixed-autodiff-taylor.cpp2"
-  y0.construct(sin(x0));
-  y.construct(CPP2_UFCS(sin)(x, x0));
+  y0.construct_from([&]() -> typename CPP2_TYPEOF(y0)::value_type { return typename CPP2_TYPEOF(y0)::value_type{sin(x0)}; });
+  y.construct_from([&]() -> typename CPP2_TYPEOF(y)::value_type { return typename CPP2_TYPEOF(y)::value_type{CPP2_UFCS(sin)(x, x0)}; });
 return  { std::move(y0.value()), std::move(y.value()) }; }
 
 #line 58 "mixed-autodiff-taylor.cpp2"
@@ -176,8 +176,8 @@ return  { std::move(y0.value()), std::move(y.value()) }; }
       cpp2::impl::deferred_init<double> y0;
       cpp2::impl::deferred_init<taylor> y;
 #line 59 "mixed-autodiff-taylor.cpp2"
-  y0.construct(cos(x0));
-  y.construct(CPP2_UFCS(cos)(x, x0));
+  y0.construct_from([&]() -> typename CPP2_TYPEOF(y0)::value_type { return typename CPP2_TYPEOF(y0)::value_type{cos(x0)}; });
+  y.construct_from([&]() -> typename CPP2_TYPEOF(y)::value_type { return typename CPP2_TYPEOF(y)::value_type{CPP2_UFCS(cos)(x, x0)}; });
 return  { std::move(y0.value()), std::move(y.value()) }; }
 
 #line 63 "mixed-autodiff-taylor.cpp2"
