@@ -2435,18 +2435,17 @@ public:
                 printer.print_extra("{");
             }
 
-            //  If there's a next-expression, smuggle it in via a nested do/while(false) loop
-            //  (nested "continue" will work, but "break" won't until we do extra work to implement
-            //  that using a flag and implementing "break" as "_for_break = true; continue;")
+            //  If there's a next-expression, smuggle it in via a nested do/while(false) loop.
+            //  We implement break as "_for_break = true; continue;")
             if (n.next_expression) {
-                printer.print_cpp2(" { do ", n.position());
+                printer.print_cpp2(" { bool _for_break = false; do ", n.position());
             }
 
             assert(n.body);
             emit(*n.body);
 
             if (n.next_expression) {
-                printer.print_cpp2(" while (false); ", n.position());
+                printer.print_cpp2(" while (false); if (_for_break) { break; } ", n.position());
                 emit(*n.next_expression);
                 printer.print_cpp2("; }", n.position());
             }
@@ -2711,8 +2710,14 @@ public:
             );
         }
         else {
-            emit(*n.keyword);
-            printer.print_cpp2(";", n.position());
+            if (*n.keyword == "break" && iteration_statements.back().stmt->next_expression
+                    && *(iteration_statements.back().stmt->identifier) == "for") {
+                // if we have a next expression there is an nested "do/while(false) loop
+                printer.print_cpp2("_for_break = true; continue;", n.position());
+            } else {
+                emit(*n.keyword);
+                printer.print_cpp2(";", n.position());
+            }
         }
     }
 

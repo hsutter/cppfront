@@ -972,7 +972,7 @@ std::vector<cpp2::taylor<double,6>> v_d {};
     r = 0.0;
 {
 auto t_d_iter{CPP2_UFCS(begin)(cpp2::move(v_d))};
-    for ( auto const& t : cpp2::move(v) )  { do {
+    for ( auto const& t : cpp2::move(v) )  { bool _for_break = false; do {
 {
 auto const& t_d{*cpp2::impl::assert_not_null(t_d_iter)};
     {
@@ -981,7 +981,7 @@ auto const& t_d{*cpp2::impl::assert_not_null(t_d_iter)};
     }
 }
     }
-     while (false); (++t_d_iter); }
+     while (false); if (_for_break) { break; } (++t_d_iter); }
 }
     return  { std::move(r), std::move(r_d) }; 
     }
