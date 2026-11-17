@@ -33,8 +33,8 @@ auto cxx2(cpp2::impl::in<int> x, cpp2::impl::in<std::string> y) -> void{
 #line 9 "mixed-default-arguments.cpp2"
 auto main() -> int{
  cxx(1, "test");
- cxx({}, {});
+ cxx({  }, {  });
  cxx2(1, "test");
- cxx2({}, {});
+ cxx2({  }, {  });
 }
 
