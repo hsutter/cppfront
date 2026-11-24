@@ -37,7 +37,7 @@ auto move_next(
     while (
         i < ssize(line)
         && line[i]
-        && p(line[i])
+        && p(as_ctype(line[i]))     // p is usually a <cctype> classifier
         )
     {
         ++i;
@@ -194,7 +194,7 @@ auto starts_with_operator(std::string_view s)
         //  skip any spaces
         while (
             j < std::ssize(s)
-            && isspace(s[j])
+            && isspace(as_ctype(s[j]))
             )
         {
             ++j;
@@ -284,7 +284,7 @@ auto starts_with_identifier_colon(std::string const& line)
     //  see if it's an access-specifier
     auto s = std::string_view( &line[i], std::ssize(line) - i );
     auto j = 0;
-    assert (!isspace(s[j]));
+    assert (!isspace(as_ctype(s[j])));
     if (s.starts_with("public")) {
         j += 6;
     }
@@ -296,7 +296,7 @@ auto starts_with_identifier_colon(std::string const& line)
     }
     while (
         j < std::ssize(s)
-        && isspace(s[j])
+        && isspace(as_ctype(s[j]))
         )
     {
         ++j;
@@ -602,7 +602,7 @@ auto process_cpp_line(
 
         //  Process this source character
         //
-        if (!isspace(line[i])) {
+        if (!isspace(as_ctype(line[i]))) {
             r.empty_line = false;
         }
 
@@ -929,7 +929,18 @@ public:
             }
         };
 
+        auto first_line = true;
         while (in.getline(&buf[0], max_line_len)) {
+
+            //  Drop a UTF-8 byte order mark, which editors such as Visual Studio
+            //  may write at the start of a file; it isn't part of the source
+            if (std::exchange(first_line, false)) {
+                auto const text = std::string_view(&buf[0]);
+                if (text.starts_with("\xEF\xBB\xBF")) {
+                    //  Shift the rest of the line left, with its terminating null
+                    std::copy(&buf[3], &buf[0] + text.size() + 1, &buf[0]);
+                }
+            }
 
             //  Handle preprocessor source separately, they're outside the language
             //

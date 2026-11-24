@@ -1,0 +1,7 @@
+﻿//  A UTF-8 byte order mark starts this file. cppfront drops it rather than
+//  reading its bytes as source (they used to fail a debug CRT assertion)
+
+main: () =
+{
+    std::cout << "The byte order mark was skipped\n";
+}
