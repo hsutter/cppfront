@@ -433,23 +433,6 @@ auto _as(auto x)
 }
 
 
-//  String path prefix from filename
-//
-auto strip_path(std::string const& file)
-    -> std::string
-{
-    auto i = std::ssize(file)-1;
-    while (
-        i >= 0
-        && file[i] != '\\'
-        && file[i] != '/'
-        )
-    {
-        --i;
-    }
-    return {file, _as<size_t>(i+1)};
-}
-
 
 //-----------------------------------------------------------------------
 //
