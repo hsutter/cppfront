@@ -77,7 +77,8 @@ struct source_line
         -> int
     {
         return
-            unchecked_narrow<int>(std::find_if_not( text.begin(), text.end(), &isspace )
+            unchecked_narrow<int>(std::find_if_not( text.begin(), text.end(),
+                                                    [](char c) { return isspace(static_cast<unsigned char>(c)); } )
                                - text.begin());
     }
 

@@ -37,7 +37,7 @@ auto move_next(
     while (
         i < ssize(line)
         && line[i]
-        && p(line[i])
+        && p(as_ctype(line[i]))     // p is usually a <cctype> classifier
         )
     {
         ++i;
