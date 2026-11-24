@@ -7191,7 +7191,10 @@ public:
                 || error != *prev
                 )
             {
-                error.print(std::cerr, strip_path(sourcefile));
+                //  The path as given, not just the file name, so an IDE can
+                //  open the file even when cppfront runs in another folder
+                //  (as build systems run it, in the output folder)
+                error.print(std::cerr, sourcefile);
             }
             prev = &error;
         }
