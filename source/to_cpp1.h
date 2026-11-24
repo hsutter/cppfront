@@ -1466,7 +1466,7 @@ public:
                         flag_cpp2_only
                         && line.cat != source_line::category::comment
                         && line.cat != source_line::category::import
-                        && std::any_of(line.text.begin(), line.text.end(), [](auto c) { return !std::isspace(c); })
+                        && std::any_of(line.text.begin(), line.text.end(), [](char c) { return !std::isspace(as_ctype(c)); })
                         )
                     {
                         if (line.cat == source_line::category::preprocessor) {
@@ -2209,7 +2209,7 @@ public:
                     !statement.empty()
                     && (
                         statement.back() == ';'
-                        || isspace(statement.back())
+                        || isspace(as_ctype(statement.back()))
                         )
                     )
                 {

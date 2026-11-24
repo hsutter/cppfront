@@ -10028,7 +10028,7 @@ private:
                 {
                     if (
                         curr() == "nullptr"
-                        || isdigit(std::string_view(curr())[0])
+                        || isdigit(as_ctype(std::string_view(curr())[0]))
                         || (
                             curr() == "("
                             && peek(1)

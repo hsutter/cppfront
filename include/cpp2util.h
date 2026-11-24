@@ -612,7 +612,7 @@ inline auto split_string_list(std::string_view str)
     std::vector<std::string_view> ret;
 
     auto is_id_char = [](char c) { 
-        return std::isalnum(c) || c == '_';
+        return std::isalnum(static_cast<unsigned char>(c)) || c == '_';
     };
 
     auto pos = decltype(std::ssize(str)){ 0 };
